@@ -1,17 +1,17 @@
 # Core Libraries
 
-Every Elm project needs this package!
+Every Gren project needs this package!
 
 It provides **basic functionality** like addition and subtraction as well as **data structures** like lists, dictionaries, and sets.
 
-> **New to Elm?** Go to [elm-lang.org](https://elm-lang.org) for an overview.
+> **New to Gren?** Go to [gren-lang.org](https://gren-lang.org) for an overview.
 
 
 ## Default Imports
 
-The modules in this package are so common, that some of them are imported by default in all Elm files. So it is as if every Elm file starts with these imports:
+The modules in this package are so common, that some of them are imported by default in all Gren files. So it is as if every Gren file starts with these imports:
 
-```elm
+```gren
 import Basics exposing (..)
 import List exposing (List, (::))
 import Maybe exposing (Maybe(..))
