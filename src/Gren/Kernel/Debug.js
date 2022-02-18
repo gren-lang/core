@@ -241,14 +241,14 @@ function _Debug_crash__DEBUG(identifier, fact1, fact2, fact3, fact4)
 	switch(identifier)
 	{
 		case 0:
-			throw new Error('What node should I take over? In JavaScript I need something like:\n\n    Elm.Main.init({\n        node: document.getElementById("elm-node")\n    })\n\nYou need to do this with any Browser.sandbox or Browser.element program.');
+			throw new Error('What node should I take over? In JavaScript I need something like:\n\n    Gren.Main.init({\n        node: document.getElementById("elm-node")\n    })\n\nYou need to do this with any Browser.sandbox or Browser.element program.');
 
 		case 1:
 			throw new Error('Browser.application programs cannot handle URLs like this:\n\n    ' + document.location.href + '\n\nWhat is the root? The root of your file system? Try looking at this program with `elm reactor` or some other server.');
 
 		case 2:
 			var jsonErrorString = fact1;
-			throw new Error('Problem with the flags given to your Elm program on initialization.\n\n' + jsonErrorString);
+			throw new Error('Problem with the flags given to your Gren program on initialization.\n\n' + jsonErrorString);
 
 		case 3:
 			var portName = fact1;
@@ -260,11 +260,11 @@ function _Debug_crash__DEBUG(identifier, fact1, fact2, fact3, fact4)
 			throw new Error('Trying to send an unexpected type of value through port `' + portName + '`:\n' + problem);
 
 		case 5:
-			throw new Error('Trying to use `(==)` on functions.\nThere is no way to know if functions are "the same" in the Elm sense.\nRead more about this at https://package.elm-lang.org/packages/elm/core/latest/Basics#== which describes why it is this way and what the better version will look like.');
+			throw new Error('Trying to use `(==)` on functions.\nThere is no way to know if functions are "the same" in the Gren sense.\nRead more about this at https://package.elm-lang.org/packages/elm/core/latest/Basics#== which describes why it is this way and what the better version will look like.');
 
 		case 6:
 			var moduleName = fact1;
-			throw new Error('Your page is loading multiple Elm scripts with a module named ' + moduleName + '. Maybe a duplicate script is getting loaded accidentally? If not, rename one of them so I know which is which!');
+			throw new Error('Your page is loading multiple Gren scripts with a module named ' + moduleName + '. Maybe a duplicate script is getting loaded accidentally? If not, rename one of them so I know which is which!');
 
 		case 8:
 			var moduleName = fact1;

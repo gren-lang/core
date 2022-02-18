@@ -1,7 +1,7 @@
 /*
 
-import Elm.Kernel.List exposing (fromArray, toArray, Nil)
-import Elm.Kernel.Utils exposing (chr, Tuple2)
+import Gren.Kernel.List exposing (fromArray, toArray, Nil)
+import Gren.Kernel.Utils exposing (chr, Tuple2)
 import Maybe exposing (Just, Nothing)
 
 */

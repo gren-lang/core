@@ -7,7 +7,7 @@ module Result exposing
   )
 
 {-| A `Result` is the result of a computation that may fail. This is a great
-way to manage errors in Elm.
+way to manage errors in Gren.
 
 # Type and Constructors
 @docs Result
@@ -273,7 +273,7 @@ fromMaybe err maybe =
 
 -- FOR INTERNAL USE ONLY
 --
--- Use `case` expressions for this in Elm code!
+-- Use `case` expressions for this in Gren code!
 
 
 isOk : Result x a -> Bool

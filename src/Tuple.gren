@@ -4,7 +4,7 @@ module Tuple exposing
   , mapFirst, mapSecond, mapBoth
   )
 
-{-| Elm has built-in syntax for tuples, so you can define 2D points like this:
+{-| Gren has built-in syntax for tuples, so you can define 2D points like this:
 
     origin : (Float, Float)
     origin =
@@ -23,7 +23,7 @@ syntax!
 
 **Note 2:** If your record contains a bunch of `Bool` and `Maybe` values,
 you may want to upgrade to union types. Check out [Joël’s post][ut] for more
-info on this. (Picking appropriate data structures is super important in Elm!)
+info on this. (Picking appropriate data structures is super important in Gren!)
 
 [ut]: https://robots.thoughtbot.com/modeling-with-union-types
 

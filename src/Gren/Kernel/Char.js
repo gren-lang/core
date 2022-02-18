@@ -1,6 +1,6 @@
 /*
 
-import Elm.Kernel.Utils exposing (chr)
+import Gren.Kernel.Utils exposing (chr)
 
 */
 

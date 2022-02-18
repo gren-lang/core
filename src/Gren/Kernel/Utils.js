@@ -3,8 +3,8 @@
 import Array exposing (toList)
 import Basics exposing (LT, EQ, GT)
 import Dict exposing (toList)
-import Elm.Kernel.Debug exposing (crash)
-import Elm.Kernel.List exposing (Cons, Nil)
+import Gren.Kernel.Debug exposing (crash)
+import Gren.Kernel.List exposing (Cons, Nil)
 import Set exposing (toList)
 
 */
@@ -44,12 +44,12 @@ function _Utils_eqHelp(x, y, depth, stack)
 	}
 
 	/**__DEBUG/
-	if (x.$ === 'Set_elm_builtin')
+	if (x.$ === 'Set_gren_builtin')
 	{
 		x = __Set_toList(x);
 		y = __Set_toList(y);
 	}
-	if (x.$ === 'RBNode_elm_builtin' || x.$ === 'RBEmpty_elm_builtin')
+	if (x.$ === 'RBNode_gren_builtin' || x.$ === 'RBEmpty_gren_builtin')
 	{
 		x = __Dict_toList(x);
 		y = __Dict_toList(y);

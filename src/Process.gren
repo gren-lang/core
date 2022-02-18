@@ -35,24 +35,24 @@ they will need to handle this. The `msg` type just describes what kind of
 messages this process can be sent by strangers.
 
 We shall see though! This is just a draft that does not cover nearly everything
-it needs to, so the long-term vision for concurrency in Elm will be rolling out
+it needs to, so the long-term vision for concurrency in Gren will be rolling out
 slowly as I get more data and experience.
 
 I ask that people bullish on compiling to node.js keep this in mind. I think we
 can do better than the hopelessly bad concurrency model of node.js, and I hope
-the Elm community will be supportive of being more ambitious, even if it takes
-longer. That’s kind of what Elm is all about.
+the Gren community will be supportive of being more ambitious, even if it takes
+longer. That’s kind of what Gren is all about.
 -}
 
 import Basics exposing (Float, Never)
-import Elm.Kernel.Scheduler
-import Elm.Kernel.Process
+import Gren.Kernel.Scheduler
+import Gren.Kernel.Process
 import Platform
 import Task exposing (Task)
 
 
 {-| A light-weight process that runs concurrently. You can use `spawn` to
-get a bunch of different tasks running in different processes. The Elm runtime
+get a bunch of different tasks running in different processes. The Gren runtime
 will interleave their progress. So if a task is taking too long, we will pause
 it at an `andThen` and switch over to other stuff.
 
@@ -61,7 +61,7 @@ different sequences and *parallelism* which means running different
 sequences at the exact same time. For example, a
 [time-sharing system](https://en.wikipedia.org/wiki/Time-sharing) is definitely
 concurrent, but not necessarily parallel. So even though JS runs within a
-single OS-level thread, Elm can still run things concurrently.
+single OS-level thread, Gren can still run things concurrently.
 -}
 type alias Id =
   Platform.ProcessId
@@ -81,7 +81,7 @@ come in a later release!
 -}
 spawn : Task x a -> Task y Id
 spawn =
-  Elm.Kernel.Scheduler.spawn
+  Gren.Kernel.Scheduler.spawn
 
 
 {-| Block progress on the current process for the given number of milliseconds.
@@ -92,7 +92,7 @@ delay work until later.
 -}
 sleep : Float -> Task x ()
 sleep =
-  Elm.Kernel.Process.sleep
+  Gren.Kernel.Process.sleep
 
 
 {-| Sometimes you `spawn` a process, but later decide it would be a waste to
@@ -102,5 +102,5 @@ flight, it will also abort the request.
 -}
 kill : Id -> Task x ()
 kill =
-  Elm.Kernel.Scheduler.kill
+  Gren.Kernel.Scheduler.kill
 

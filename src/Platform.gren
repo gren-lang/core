@@ -17,7 +17,7 @@ module Platform exposing
 ## Effect Manager Helpers
 
 An extremely tiny portion of library authors should ever write effect managers.
-Fundamentally, Elm needs maybe 10 of them total. I get that people are smart,
+Fundamentally, Gren needs maybe 10 of them total. I get that people are smart,
 curious, etc. but that is not a substitute for a legitimate reason to make an
 effect manager. Do you have an *organic need* this fills? Or are you just
 curious? Public discussions of your explorations should be framed accordingly.
@@ -26,8 +26,8 @@ curious? Public discussions of your explorations should be framed accordingly.
 -}
 
 import Basics exposing (Never)
-import Elm.Kernel.Platform
-import Elm.Kernel.Scheduler
+import Gren.Kernel.Platform
+import Gren.Kernel.Scheduler
 import Platform.Cmd exposing (Cmd)
 import Platform.Sub exposing (Sub)
 
@@ -36,7 +36,7 @@ import Platform.Sub exposing (Sub)
 -- PROGRAMS
 
 
-{-| A `Program` describes an Elm program! How does it react to input? Does it
+{-| A `Program` describes an Gren program! How does it react to input? Does it
 show anything on screen? Etc.
 -}
 type Program flags model msg = Program
@@ -44,23 +44,23 @@ type Program flags model msg = Program
 
 {-| Create a [headless][] program with no user interface.
 
-This is great if you want to use Elm as the &ldquo;brain&rdquo; for something
+This is great if you want to use Gren as the &ldquo;brain&rdquo; for something
 else. For example, you could send messages out ports to modify the DOM, but do
-all the complex logic in Elm.
+all the complex logic in Gren.
 
 [headless]: https://en.wikipedia.org/wiki/Headless_software
 
 Initializing a headless program from JavaScript looks like this:
 
 ```javascript
-var app = Elm.MyThing.init();
+var app = Gren.MyThing.init();
 ```
 
-If you _do_ want to control the user interface in Elm, the [`Browser`][browser]
+If you _do_ want to control the user interface in Gren, the [`Browser`][browser]
 module has a few ways to create that kind of `Program` instead!
 
 [headless]: https://en.wikipedia.org/wiki/Headless_software
-[browser]: /packages/elm/browser/latest/Browser
+[browser]: /packages/gren/browser/latest/Browser
 -}
 worker
   : { init : flags -> ( model, Cmd msg )
@@ -69,7 +69,7 @@ worker
     }
   -> Program flags model msg
 worker =
-  Elm.Kernel.Platform.worker
+  Gren.Kernel.Platform.worker
 
 
 
@@ -106,7 +106,7 @@ be handled by the overall `update` function, just like events from `Html`.
 -}
 sendToApp : Router msg a -> msg -> Task x ()
 sendToApp =
-  Elm.Kernel.Platform.sendToApp
+  Gren.Kernel.Platform.sendToApp
 
 
 {-| Send the router a message for your effect manager. This message will
@@ -117,4 +117,4 @@ As an example, the effect manager for web sockets
 -}
 sendToSelf : Router a msg -> msg -> Task x ()
 sendToSelf =
-  Elm.Kernel.Platform.sendToSelf
+  Gren.Kernel.Platform.sendToSelf

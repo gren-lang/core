@@ -1,6 +1,6 @@
 /*
 
-import Elm.Kernel.Scheduler exposing (binding)
+import Gren.Kernel.Scheduler exposing (binding)
 
 */
 

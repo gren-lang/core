@@ -26,7 +26,7 @@ HTTP requests or writing to a database.
 -}
 
 import Basics exposing (Never, (|>), (<<))
-import Elm.Kernel.Scheduler
+import Gren.Kernel.Scheduler
 import List exposing ((::))
 import Maybe exposing (Maybe(..))
 import Platform
@@ -41,9 +41,9 @@ import Result exposing (Result(..))
 - [`focus : String -> Task Error ()`][focus]
 - [`sleep : Float -> Task x ()`][sleep]
 
-[now]: /packages/elm/time/latest/Time#now
-[focus]: /packages/elm/browser/latest/Browser-Dom#focus
-[sleep]: /packages/elm/core/latest/Process#sleep
+[now]: /packages/gren/time/latest/Time#now
+[focus]: /packages/gren/browser/latest/Browser-Dom#focus
+[sleep]: /packages/gren/core/latest/Process#sleep
 
 In each case we have a `Task` that will resolve successfully with an `a` value
 or unsuccessfully with an `x` value. So `Browser.Dom.focus` we may fail with an
@@ -67,7 +67,7 @@ type alias Task x a =
 {-| A task that succeeds immediately when run. It is usually used with
 [`andThen`](#andThen). You can use it like `map` if you want:
 
-    import Time -- elm install elm/time
+    import Time -- gren install gren/time
 
     timeInMillis : Task x Int
     timeInMillis =
@@ -77,7 +77,7 @@ type alias Task x a =
 -}
 succeed : a -> Task x a
 succeed =
-  Elm.Kernel.Scheduler.succeed
+  Gren.Kernel.Scheduler.succeed
 
 
 {-| A task that fails immediately when run. Like with `succeed`, this can be
@@ -91,18 +91,18 @@ used with `andThen` to check on the outcome of another task.
 -}
 fail : x -> Task x a
 fail =
-  Elm.Kernel.Scheduler.fail
+  Gren.Kernel.Scheduler.fail
 
 
 
 -- MAPPING
 
 
-{-| Transform a task. Maybe you want to use [`elm/time`][time] to figure
+{-| Transform a task. Maybe you want to use [`gren/time`][time] to figure
 out what time it will be in one hour:
 
     import Task exposing (Task)
-    import Time -- elm install elm/time
+    import Time -- gren install gren/time
 
     timeInOneHour : Task x Time.Posix
     timeInOneHour =
@@ -112,7 +112,7 @@ out what time it will be in one hour:
     addAnHour time =
       Time.millisToPosix (Time.posixToMillis time + 60 * 60 * 1000)
 
-[time]: /packages/elm/time/latest/
+[time]: /packages/gren/time/latest/
 -}
 map : (a -> b) -> Task x a -> Task x b
 map func taskA =
@@ -121,10 +121,10 @@ map func taskA =
 
 
 {-| Put the results of two tasks together. For example, if we wanted to know
-the current month, we could use [`elm/time`][time] to ask:
+the current month, we could use [`gren/time`][time] to ask:
 
     import Task exposing (Task)
-    import Time -- elm install elm/time
+    import Time -- gren install gren/time
 
     getMonth : Task x Int
     getMonth =
@@ -134,7 +134,7 @@ the current month, we could use [`elm/time`][time] to ask:
 order, so it would try the first request and only continue after it succeeds.
 If it fails, the whole thing fails!
 
-[time]: /packages/elm/time/latest/
+[time]: /packages/gren/time/latest/
 -}
 map2 : (a -> b -> result) -> Task x a -> Task x b -> Task x result
 map2 func taskA taskB =
@@ -194,7 +194,7 @@ successful, you give the result to the callback resulting in another task. This
 task then gets run. We could use this to make a task that resolves an hour from
 now:
 
-    import Time -- elm install elm/time
+    import Time -- gren install gren/time
     import Process
 
     timeInOneHour : Task x Time.Posix
@@ -206,7 +206,7 @@ First the process sleeps for an hour **and then** it tells us what time it is.
 -}
 andThen : (a -> Task x b) -> Task x a -> Task x b
 andThen =
-  Elm.Kernel.Scheduler.andThen
+  Gren.Kernel.Scheduler.andThen
 
 
 
@@ -226,7 +226,7 @@ callback to recover.
 -}
 onError : (x -> Task y a) -> Task x a -> Task y a
 onError =
-  Elm.Kernel.Scheduler.onError
+  Gren.Kernel.Scheduler.onError
 
 
 {-| Transform the error value. This can be useful if you need a bunch of error
@@ -258,9 +258,9 @@ type MyCmd msg =
 
 
 {-| Like I was saying in the [`Task`](#Task) documentation, just having a
-`Task` does not mean it is done. We must command Elm to `perform` the task:
+`Task` does not mean it is done. We must command Gren to `perform` the task:
 
-    import Time  -- elm install elm/time
+    import Time  -- gren install gren/time
     import Task
 
     type Msg
@@ -272,12 +272,12 @@ type MyCmd msg =
     getNewTime =
       Task.perform NewTime Time.now
 
-If you have worked through [`guide.elm-lang.org`][guide] (highly recommended!)
-you will recognize `Cmd` from the section on The Elm Architecture. So we have
-changed a task like "make delicious lasagna" into a command like "Hey Elm, make
+If you have worked through [`guide.gren-lang.org`][guide] (highly recommended!)
+you will recognize `Cmd` from the section on The Gren Architecture. So we have
+changed a task like "make delicious lasagna" into a command like "Hey Gren, make
 delicious lasagna and give it to my `update` function as a `Msg` value."
 
-[guide]: https://guide.elm-lang.org/
+[guide]: https://guide.gren-lang.org/
 -}
 perform : (a -> msg) -> Task Never a -> Cmd msg
 perform toMessage task =
@@ -287,7 +287,7 @@ perform toMessage task =
 {-| This is very similar to [`perform`](#perform) except it can handle failures!
 So we could _attempt_ to focus on a certain DOM node like this:
 
-    import Browser.Dom  -- elm install elm/browser
+    import Browser.Dom  -- gren install gren/browser
     import Task
 
     type Msg
@@ -300,13 +300,13 @@ So we could _attempt_ to focus on a certain DOM node like this:
       Task.attempt Focus (Browser.Dom.focus "my-app-search-box")
 
 So the task is "focus on this DOM node" and we are turning it into the command
-"Hey Elm, attempt to focus on this DOM node and give me a `Msg` about whether
+"Hey Gren, attempt to focus on this DOM node and give me a `Msg` about whether
 you succeeded or failed."
 
-**Note:** Definitely work through [`guide.elm-lang.org`][guide] to get a
-feeling for how commands fit into The Elm Architecture.
+**Note:** Definitely work through [`guide.gren-lang.org`][guide] to get a
+feeling for how commands fit into The Gren Architecture.
 
-[guide]: https://guide.elm-lang.org/
+[guide]: https://guide.gren-lang.org/
 -}
 attempt : (Result x a -> msg) -> Task x a -> Cmd msg
 attempt resultToMessage task =
@@ -345,7 +345,7 @@ onSelfMsg _ _ _ =
 
 spawnCmd : Platform.Router msg Never -> MyCmd msg -> Task x ()
 spawnCmd router (Perform task) =
-  Elm.Kernel.Scheduler.spawn (
+  Gren.Kernel.Scheduler.spawn (
     task
       |> andThen (Platform.sendToApp router)
   )

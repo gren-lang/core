@@ -45,7 +45,7 @@ module Array
 
 import Basics exposing (..)
 import Bitwise
-import Elm.JsArray as JsArray exposing (JsArray)
+import Gren.JsArray as JsArray exposing (JsArray)
 import List exposing ((::))
 import Maybe exposing (..)
 import Tuple
@@ -117,7 +117,7 @@ type Array a
          optimization. It makes operations at the end (push, pop, read, write)
          fast.
       -}
-      Array_elm_builtin Int Int (Tree a) (JsArray a)
+      Array_gren_builtin Int Int (Tree a) (JsArray a)
 
 
 {-| Each level in the tree is represented by a `JsArray` of `Node`s.
@@ -143,7 +143,7 @@ empty =
        `startShift` is only used when there is at least one `Node` in the
        `tree`. The minimal value is therefore equal to the `shiftStep`.
     -}
-    Array_elm_builtin 0 shiftStep JsArray.empty JsArray.empty
+    Array_gren_builtin 0 shiftStep JsArray.empty JsArray.empty
 
 
 {-| Determine if an array is empty.
@@ -151,7 +151,7 @@ empty =
     isEmpty empty == True
 -}
 isEmpty : Array a -> Bool
-isEmpty (Array_elm_builtin len _ _ _) =
+isEmpty (Array_gren_builtin len _ _ _) =
     len == 0
 
 
@@ -160,7 +160,7 @@ isEmpty (Array_elm_builtin len _ _ _) =
     length (fromList [1,2,3]) == 3
 -}
 length : Array a -> Int
-length (Array_elm_builtin len _ _ _) =
+length (Array_gren_builtin len _ _ _) =
     len
 
 
@@ -262,7 +262,7 @@ range.
     get -1 (fromList [0,1,2]) == Nothing
 -}
 get : Int -> Array a -> Maybe a
-get index (Array_elm_builtin len startShift tree tail) =
+get index (Array_gren_builtin len startShift tree tail) =
     if index < 0 || index >= len then
         Nothing
     else if index >= tailIndex len then
@@ -301,14 +301,14 @@ If the index is out of range, the array is unaltered.
     set 1 7 (fromList [1,2,3]) == fromList [1,7,3]
 -}
 set : Int -> a -> Array a -> Array a
-set index value ((Array_elm_builtin len startShift tree tail) as array) =
+set index value ((Array_gren_builtin len startShift tree tail) as array) =
     if index < 0 || index >= len then
         array
     else if index >= tailIndex len then
-        Array_elm_builtin len startShift tree <|
+        Array_gren_builtin len startShift tree <|
             JsArray.unsafeSet (Bitwise.and bitMask index) value tail
     else
-        Array_elm_builtin
+        Array_gren_builtin
             len
             startShift
             (setHelp startShift index value tree)
@@ -342,7 +342,7 @@ setHelp shift index value tree =
     push 3 (fromList [1,2]) == fromList [1,2,3]
 -}
 push : a -> Array a -> Array a
-push a ((Array_elm_builtin _ _ _ tail) as array) =
+push a ((Array_gren_builtin _ _ _ tail) as array) =
     unsafeReplaceTail (JsArray.push a tail) array
 
 
@@ -354,7 +354,7 @@ has a length equal to or beneath the `branchFactor`. Make sure this is the case
 before using this function.
 -}
 unsafeReplaceTail : JsArray a -> Array a -> Array a
-unsafeReplaceTail newTail (Array_elm_builtin len startShift tree tail) =
+unsafeReplaceTail newTail (Array_gren_builtin len startShift tree tail) =
     let
         originalTailLen =
             JsArray.length tail
@@ -379,19 +379,19 @@ unsafeReplaceTail newTail (Array_elm_builtin len startShift tree tail) =
                             JsArray.singleton (SubTree tree)
                                 |> insertTailInTree newShift len newTail
                     in
-                        Array_elm_builtin
+                        Array_gren_builtin
                             newArrayLen
                             newShift
                             newTree
                             JsArray.empty
                 else
-                    Array_elm_builtin
+                    Array_gren_builtin
                         newArrayLen
                         startShift
                         (insertTailInTree startShift len newTail tree)
                         JsArray.empty
         else
-            Array_elm_builtin
+            Array_gren_builtin
                 newArrayLen
                 startShift
                 tree
@@ -455,7 +455,7 @@ paired with its index.
     toIndexedList (fromList ["cat","dog"]) == [(0,"cat"), (1,"dog")]
 -}
 toIndexedList : Array a -> List ( Int, a )
-toIndexedList ((Array_elm_builtin len _ _ _) as array) =
+toIndexedList ((Array_gren_builtin len _ _ _) as array) =
     let
         helper entry ( index, list ) =
             ( index - 1, (index,entry) :: list )
@@ -468,7 +468,7 @@ toIndexedList ((Array_elm_builtin len _ _ _) as array) =
     foldr (+) 0 (repeat 3 5) == 15
 -}
 foldr : (a -> b -> b) -> b -> Array a -> b
-foldr func baseCase (Array_elm_builtin _ _ tree tail) =
+foldr func baseCase (Array_gren_builtin _ _ tree tail) =
     let
         helper node acc =
             case node of
@@ -486,7 +486,7 @@ foldr func baseCase (Array_elm_builtin _ _ tree tail) =
     foldl (::) [] (fromList [1,2,3]) == [3,2,1]
 -}
 foldl : (a -> b -> b) -> b -> Array a -> b
-foldl func baseCase (Array_elm_builtin _ _ tree tail) =
+foldl func baseCase (Array_gren_builtin _ _ tree tail) =
     let
         helper node acc =
             case node of
@@ -513,7 +513,7 @@ filter isGood array =
     map sqrt (fromList [1,4,9]) == fromList [1,2,3]
 -}
 map : (a -> b) -> Array a -> Array b
-map func (Array_elm_builtin len startShift tree tail) =
+map func (Array_gren_builtin len startShift tree tail) =
     let
         helper node =
             case node of
@@ -523,7 +523,7 @@ map func (Array_elm_builtin len startShift tree tail) =
                 Leaf values ->
                     Leaf <| JsArray.map func values
     in
-        Array_elm_builtin
+        Array_gren_builtin
             len
             startShift
             (JsArray.map helper tree)
@@ -535,7 +535,7 @@ map func (Array_elm_builtin len startShift tree tail) =
     indexedMap (*) (fromList [5,5,5]) == fromList [0,5,10]
 -}
 indexedMap : (Int -> a -> b) -> Array a -> Array b
-indexedMap func (Array_elm_builtin len _ tree tail) =
+indexedMap func (Array_gren_builtin len _ tree tail) =
     let
         helper node builder =
             case node of
@@ -569,7 +569,7 @@ indexedMap func (Array_elm_builtin len _ tree tail) =
     append (repeat 2 42) (repeat 3 81) == fromList [42,42,81,81,81]
 -}
 append : Array a -> Array a -> Array a
-append ((Array_elm_builtin _ _ _ aTail) as a) (Array_elm_builtin bLen _ bTree bTail) =
+append ((Array_gren_builtin _ _ _ aTail) as a) (Array_gren_builtin bLen _ bTree bTail) =
     -- The magic number 4 has been found with benchmarks
     if bLen <= (branchFactor * 4) then
         let
@@ -599,7 +599,7 @@ append ((Array_elm_builtin _ _ _ aTail) as a) (Array_elm_builtin bLen _ bTree bT
 
 
 appendHelpTree : JsArray a -> Array a -> Array a
-appendHelpTree toAppend ((Array_elm_builtin len _ tree tail) as array) =
+appendHelpTree toAppend ((Array_gren_builtin len _ tree tail) as array) =
     let
         appended =
             JsArray.appendN branchFactor tail toAppend
@@ -693,7 +693,7 @@ slice from to array =
     translateIndex 5 someArray == 5
 -}
 translateIndex : Int -> Array a -> Int
-translateIndex index (Array_elm_builtin len _ _ _) =
+translateIndex index (Array_gren_builtin len _ _ _) =
     let
         posIndex =
             if index < 0 then
@@ -722,11 +722,11 @@ slice it.
 3. Promote subTrees until the tree has the correct height.
 -}
 sliceRight : Int -> Array a -> Array a
-sliceRight end ((Array_elm_builtin len startShift tree tail) as array) =
+sliceRight end ((Array_gren_builtin len startShift tree tail) as array) =
     if end == len then
         array
     else if end >= tailIndex len then
-        Array_elm_builtin end startShift tree <|
+        Array_gren_builtin end startShift tree <|
             JsArray.slice 0 (Bitwise.and bitMask end) tail
     else
         let
@@ -743,7 +743,7 @@ sliceRight end ((Array_elm_builtin len startShift tree tail) as array) =
             newShift =
                 max 5 <| depth * shiftStep
         in
-            Array_elm_builtin
+            Array_gren_builtin
                 end
                 newShift
                 (tree
@@ -835,11 +835,11 @@ Otherwise, we do the following:
 5. Append the remaining nodes into this builder, and create the array.
 -}
 sliceLeft : Int -> Array a -> Array a
-sliceLeft from ((Array_elm_builtin len _ tree tail) as array) =
+sliceLeft from ((Array_gren_builtin len _ tree tail) as array) =
     if from == 0 then
         array
     else if from >= tailIndex len then
-        Array_elm_builtin (len - from) shiftStep JsArray.empty <|
+        Array_gren_builtin (len - from) shiftStep JsArray.empty <|
             JsArray.slice (from - tailIndex len) (JsArray.length tail) tail
     else
         let
@@ -907,7 +907,7 @@ emptyBuilder =
 {-| Converts an array to a builder.
 -}
 builderFromArray : Array a -> Builder a
-builderFromArray (Array_elm_builtin len _ tree tail) =
+builderFromArray (Array_gren_builtin len _ tree tail) =
     let
         helper node acc =
             case node of
@@ -933,7 +933,7 @@ specify if the node list should be reversed before building the array.
 builderToArray : Bool -> Builder a -> Array a
 builderToArray reverseNodeList builder =
     if builder.nodeListSize == 0 then
-        Array_elm_builtin
+        Array_gren_builtin
             (JsArray.length builder.tail)
             shiftStep
             JsArray.empty
@@ -958,7 +958,7 @@ builderToArray reverseNodeList builder =
             tree =
                 treeFromBuilder correctNodeList builder.nodeListSize
         in
-            Array_elm_builtin
+            Array_gren_builtin
                 (JsArray.length builder.tail + treeLen)
                 (max 5 <| depth * shiftStep)
                 tree

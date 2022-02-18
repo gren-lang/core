@@ -55,7 +55,7 @@ tests =
     let
         -- We don't strictly speaking need annotations in this let-expression,
         -- but having these here exercises the parser to avoid regressions like
-        -- https://github.com/elm-lang/elm-compiler/issues/1535
+        -- https://github.com/gren-lang/gren-compiler/issues/1535
         underscores : Test
         underscores =
             describe "Underscores"

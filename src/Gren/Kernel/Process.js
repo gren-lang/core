@@ -1,7 +1,7 @@
 /*
 
-import Elm.Kernel.Scheduler exposing (binding, succeed)
-import Elm.Kernel.Utils exposing (Tuple0)
+import Gren.Kernel.Scheduler exposing (binding, succeed)
+import Gren.Kernel.Utils exposing (Tuple0)
 
 */
 

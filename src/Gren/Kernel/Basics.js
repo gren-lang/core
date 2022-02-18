@@ -1,6 +1,6 @@
 /*
 
-import Elm.Kernel.Debug exposing (crash)
+import Gren.Kernel.Debug exposing (crash)
 
 */
 

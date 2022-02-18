@@ -14,7 +14,7 @@ module Bitwise exposing
 
 
 import Basics exposing (Int)
-import Elm.Kernel.Bitwise
+import Gren.Kernel.Bitwise
 
 
 
@@ -22,28 +22,28 @@ import Elm.Kernel.Bitwise
 -}
 and : Int -> Int -> Int
 and =
-  Elm.Kernel.Bitwise.and
+  Gren.Kernel.Bitwise.and
 
 
 {-| Bitwise OR
 -}
 or : Int -> Int -> Int
 or =
-  Elm.Kernel.Bitwise.or
+  Gren.Kernel.Bitwise.or
 
 
 {-| Bitwise XOR
 -}
 xor : Int -> Int -> Int
 xor =
-  Elm.Kernel.Bitwise.xor
+  Gren.Kernel.Bitwise.xor
 
 
 {-| Flip each bit individually, often called bitwise NOT
 -}
 complement : Int -> Int
 complement =
-  Elm.Kernel.Bitwise.complement
+  Gren.Kernel.Bitwise.complement
 
 
 {-| Shift bits to the left by a given offset, filling new bits with zeros.
@@ -54,7 +54,7 @@ This can be used to multiply numbers by powers of two.
 -}
 shiftLeftBy : Int -> Int -> Int
 shiftLeftBy =
-  Elm.Kernel.Bitwise.shiftLeftBy
+  Gren.Kernel.Bitwise.shiftLeftBy
 
 
 {-| Shift bits to the right by a given offset, filling new bits with
@@ -72,7 +72,7 @@ with copies of the highest bit.
 -}
 shiftRightBy : Int -> Int -> Int
 shiftRightBy =
-  Elm.Kernel.Bitwise.shiftRightBy
+  Gren.Kernel.Bitwise.shiftRightBy
 
 
 {-| Shift bits to the right by a given offset, filling new bits with zeros.
@@ -89,5 +89,5 @@ zeros.
 -}
 shiftRightZfBy : Int -> Int -> Int
 shiftRightZfBy =
-  Elm.Kernel.Bitwise.shiftRightZfBy
+  Gren.Kernel.Bitwise.shiftRightZfBy
 

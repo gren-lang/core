@@ -7,7 +7,7 @@ module List exposing
   , isEmpty, head, tail, take, drop, partition, unzip
   )
 
-{-| You can create a `List` in Elm with the `[1,2,3]` syntax, so lists are
+{-| You can create a `List` in Gren with the `[1,2,3]` syntax, so lists are
 used all over the place. This module has a bunch of functions to help you work
 with them!
 
@@ -32,7 +32,7 @@ with them!
 -}
 
 import Basics exposing (..)
-import Elm.Kernel.List
+import Gren.Kernel.List
 import Maybe exposing ( Maybe(..) )
 
 
@@ -105,7 +105,7 @@ of it like pushing an entry onto a stack.
 -}
 cons : a -> List a -> List a
 cons =
-  Elm.Kernel.List.cons
+  Gren.Kernel.List.cons
 
 
 
@@ -436,25 +436,25 @@ If one list is longer, the extra elements are dropped.
 -}
 map2 : (a -> b -> result) -> List a -> List b -> List result
 map2 =
-  Elm.Kernel.List.map2
+  Gren.Kernel.List.map2
 
 
 {-|-}
 map3 : (a -> b -> c -> result) -> List a -> List b -> List c -> List result
 map3 =
-  Elm.Kernel.List.map3
+  Gren.Kernel.List.map3
 
 
 {-|-}
 map4 : (a -> b -> c -> d -> result) -> List a -> List b -> List c -> List d -> List result
 map4 =
-  Elm.Kernel.List.map4
+  Gren.Kernel.List.map4
 
 
 {-|-}
 map5 : (a -> b -> c -> d -> e -> result) -> List a -> List b -> List c -> List d -> List e -> List result
 map5 =
-  Elm.Kernel.List.map5
+  Gren.Kernel.List.map5
 
 
 
@@ -483,7 +483,7 @@ sort xs =
 -}
 sortBy : (a -> comparable) -> List a -> List a
 sortBy =
-  Elm.Kernel.List.sortBy
+  Gren.Kernel.List.sortBy
 
 
 {-| Sort values with a custom comparison function.
@@ -501,7 +501,7 @@ to define any other: `sort == sortWith compare`
 -}
 sortWith : (a -> a -> Order) -> List a -> List a
 sortWith =
-  Elm.Kernel.List.sortWith
+  Gren.Kernel.List.sortWith
 
 
 

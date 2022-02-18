@@ -1,11 +1,11 @@
 /*
 
-import Elm.Kernel.Debug exposing (crash)
-import Elm.Kernel.Json exposing (run, wrap, unwrap, errorToString)
-import Elm.Kernel.List exposing (Cons, Nil)
-import Elm.Kernel.Process exposing (sleep)
-import Elm.Kernel.Scheduler exposing (andThen, binding, rawSend, rawSpawn, receive, send, succeed)
-import Elm.Kernel.Utils exposing (Tuple0)
+import Gren.Kernel.Debug exposing (crash)
+import Gren.Kernel.Json exposing (run, wrap, unwrap, errorToString)
+import Gren.Kernel.List exposing (Cons, Nil)
+import Gren.Kernel.Process exposing (sleep)
+import Gren.Kernel.Scheduler exposing (andThen, binding, rawSend, rawSpawn, receive, send, succeed)
+import Gren.Kernel.Utils exposing (Tuple0)
 import Result exposing (isOk)
 
 */
@@ -58,7 +58,7 @@ function _Platform_initialize(flagDecoder, args, init, update, subscriptions, st
 
 // TRACK PRELOADS
 //
-// This is used by code in elm/browser and elm/http
+// This is used by code in gren/browser and gren/http
 // to register any HTTP requests that are triggered by init.
 //
 
@@ -220,9 +220,9 @@ var _Platform_map = F2(function(tagger, bag)
 // before subscriptions from FX_1. No good! Earlier versions of this code had
 // this problem, leading to these reports:
 //
-//   https://github.com/elm/core/issues/980
-//   https://github.com/elm/core/pull/981
-//   https://github.com/elm/compiler/issues/1776
+//   https://github.com/gren/core/issues/980
+//   https://github.com/gren/core/pull/981
+//   https://github.com/gren/compiler/issues/1776
 //
 // The queue is necessary to avoid ordering issues for synchronous commands.
 
@@ -472,7 +472,7 @@ function _Platform_setupIncomingPort(name, sendToApp)
 
 
 
-// EXPORT ELM MODULES
+// EXPORT GREN MODULES
 //
 // Have DEBUG and PROD versions so that we can (1) give nicer errors in
 // debug mode and (2) not pay for the bits needed for that in prod mode.
@@ -481,9 +481,9 @@ function _Platform_setupIncomingPort(name, sendToApp)
 
 function _Platform_export__PROD(exports)
 {
-	scope['Elm']
-		? _Platform_mergeExportsProd(scope['Elm'], exports)
-		: scope['Elm'] = exports;
+	scope['Gren']
+		? _Platform_mergeExportsProd(scope['Gren'], exports)
+		: scope['Gren'] = exports;
 }
 
 
@@ -502,9 +502,9 @@ function _Platform_mergeExportsProd(obj, exports)
 
 function _Platform_export__DEBUG(exports)
 {
-	scope['Elm']
-		? _Platform_mergeExportsDebug('Elm', scope['Elm'], exports)
-		: scope['Elm'] = exports;
+	scope['Gren']
+		? _Platform_mergeExportsDebug('Gren', scope['Gren'], exports)
+		: scope['Gren'] = exports;
 }
 
 

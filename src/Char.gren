@@ -26,7 +26,7 @@ module Char exposing
 -}
 
 import Basics exposing (Bool, Int, (&&), (||), (>=), (<=))
-import Elm.Kernel.Char
+import Gren.Kernel.Char
 
 
 
@@ -201,25 +201,25 @@ isHexDigit char =
 {-| Convert to upper case. -}
 toUpper : Char -> Char
 toUpper =
-  Elm.Kernel.Char.toUpper
+  Gren.Kernel.Char.toUpper
 
 
 {-| Convert to lower case. -}
 toLower : Char -> Char
 toLower =
-  Elm.Kernel.Char.toLower
+  Gren.Kernel.Char.toLower
 
 
 {-| Convert to upper case, according to any locale-specific case mappings. -}
 toLocaleUpper : Char -> Char
 toLocaleUpper =
-  Elm.Kernel.Char.toLocaleUpper
+  Gren.Kernel.Char.toLocaleUpper
 
 
 {-| Convert to lower case, according to any locale-specific case mappings. -}
 toLocaleLower : Char -> Char
 toLocaleLower =
-  Elm.Kernel.Char.toLocaleLower
+  Gren.Kernel.Char.toLocaleLower
 
 
 {-| Convert to the corresponding Unicode [code point][cp].
@@ -234,7 +234,7 @@ toLocaleLower =
 -}
 toCode : Char -> Int
 toCode =
-  Elm.Kernel.Char.toCode
+  Gren.Kernel.Char.toCode
 
 
 {-| Convert a Unicode [code point][cp] to a character.
@@ -254,4 +254,4 @@ range, you get [the replacement character][fffd].
 -}
 fromCode : Int -> Char
 fromCode =
-  Elm.Kernel.Char.fromCode
+  Gren.Kernel.Char.fromCode

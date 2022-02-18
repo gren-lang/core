@@ -1,6 +1,6 @@
 /*
 
-import Elm.Kernel.Utils exposing (Tuple2)
+import Gren.Kernel.Utils exposing (Tuple2)
 
 */
 

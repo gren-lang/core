@@ -23,7 +23,7 @@ import Test.Tuple as Tuple
 
 tests : Test
 tests =
-    describe "Elm Standard Library Tests"
+    describe "Gren Core Library Tests"
         [ Array.tests
         , Basics.tests
         , Bitwise.tests
