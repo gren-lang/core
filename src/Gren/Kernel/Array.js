@@ -1,6 +1,5 @@
 /*
 
-import Gren.Kernel.Utils exposing (Tuple2)
 import Maybe exposing (Just, Nothing)
 
 */
