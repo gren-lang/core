@@ -13,10 +13,10 @@
             "Tuple"
         ],
         "Collections": [
-            "List",
+            "Array",
             "Dict",
             "Set",
-            "Array"
+            "Vector"
         ],
         "Error Handling": [
             "Maybe",

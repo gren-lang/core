@@ -1,6 +1,7 @@
 /*
 
 import Gren.Kernel.Utils exposing (Tuple2)
+import Maybe exposing (Just, Nothing)
 
 */
 
@@ -29,28 +30,24 @@ var _JsArray_initialize = F3(function(size, offset, func)
     return result;
 });
 
-var _JsArray_initializeFromList = F2(function (max, ls)
-{
-    var result = new Array(max);
-
-    for (var i = 0; i < max && ls.b; i++)
-    {
-        result[i] = ls.a;
-        ls = ls.b;
-    }
-
-    result.length = i;
-    return __Utils_Tuple2(result, ls);
-});
-
-var _JsArray_unsafeGet = F2(function(index, array)
-{
-    return array[index];
-});
-
-var _JsArray_unsafeSet = F3(function(index, value, array)
+var _JsArray_get = F2(function(index, array)
 {
     var length = array.length;
+    if (index < 0 || index >= length) {
+        return __Maybe_Nothing;
+    }
+        
+    return __Maybe_Just(array[index]);
+    
+});
+
+var _JsArray_set = F3(function(index, value, array)
+{
+    var length = array.length;
+    if (index < 0 || index >= length) {
+        return array;
+    }
+    
     var result = new Array(length);
 
     for (var i = 0; i < length; i++)
@@ -59,6 +56,7 @@ var _JsArray_unsafeSet = F3(function(index, value, array)
     }
 
     result[index] = value;
+    
     return result;
 });
 
@@ -129,28 +127,3 @@ var _JsArray_slice = F3(function(from, to, array)
     return array.slice(from, to);
 });
 
-var _JsArray_appendN = F3(function(n, dest, source)
-{
-    var destLen = dest.length;
-    var itemsToCopy = n - destLen;
-
-    if (itemsToCopy > source.length)
-    {
-        itemsToCopy = source.length;
-    }
-
-    var size = destLen + itemsToCopy;
-    var result = new Array(size);
-
-    for (var i = 0; i < destLen; i++)
-    {
-        result[i] = dest[i];
-    }
-
-    for (var i = 0; i < itemsToCopy; i++)
-    {
-        result[i + destLen] = source[i];
-    }
-
-    return result;
-});
