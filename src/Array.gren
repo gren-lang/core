@@ -15,10 +15,9 @@ module Array
         , slice
         )
 
-{-| This library provides an immutable version of native javascript arrays.
+{-| This library provides an immutable version of native JavaScript arrays.
 
-NOTE: All manipulations causes a copy of the entire array, this can be slow.
-When large amounts of data is involved, try the `Vector` module instead.
+NOTE: All manipulations causes a copy of the entire Array, this can be slow.
 
 # Arrays
 @docs Array
@@ -46,18 +45,18 @@ type Array a
     = Array a
 
 
-{-| Return an empty array.
+{-| The empty array.
 -}
 empty : Array a
 empty =
-    Gren.Kernel.Array.empty
+    []
 
 
 {-| Return an array containing a single value.
 -}
 singleton : a -> Array a
-singleton =
-    Gren.Kernel.Array.singleton
+singleton a =
+    [ a ]
 
 
 {-| Return the length of the array.

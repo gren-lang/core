@@ -6,13 +6,6 @@ import Maybe exposing (Just, Nothing)
 */
 
 
-var _JsArray_empty = [];
-
-function _JsArray_singleton(value)
-{
-    return [value];
-}
-
 function _JsArray_length(array)
 {
     return array.length;

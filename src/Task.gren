@@ -25,9 +25,9 @@ HTTP requests or writing to a database.
 
 -}
 
+import Array exposing (Array)
 import Basics exposing (Never, (|>), (<<))
 import Gren.Kernel.Scheduler
-import List exposing ((::))
 import Maybe exposing (Maybe(..))
 import Platform
 import Platform.Cmd exposing (Cmd)
@@ -180,9 +180,9 @@ sequence fails.
     sequence [ succeed 1, succeed 2 ] == succeed [ 1, 2 ]
 
 -}
-sequence : List (Task x a) -> Task x (List a)
+sequence : Array (Task x a) -> Task x (Array a)
 sequence tasks =
-  List.foldr (map2 (::)) (succeed []) tasks
+  Array.foldl (map2 Array.push) (succeed []) tasks
 
 
 
@@ -331,11 +331,11 @@ init =
   succeed ()
 
 
-onEffects : Platform.Router msg Never -> List (MyCmd msg) -> () -> Task Never ()
+onEffects : Platform.Router msg Never -> Array (MyCmd msg) -> () -> Task Never ()
 onEffects router commands state =
   map
     (\_ -> ())
-    (sequence (List.map (spawnCmd router) commands))
+    (sequence (Array.map (spawnCmd router) commands))
 
 
 onSelfMsg : Platform.Router msg Never -> Never -> () -> Task Never ()

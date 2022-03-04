@@ -1,6 +1,5 @@
 /*
 
-import Gren.Kernel.List exposing (fromArray, toArray, Nil)
 import Gren.Kernel.Utils exposing (chr, Tuple2)
 import Maybe exposing (Just, Nothing)
 
@@ -169,12 +168,12 @@ function _String_trimRight(str)
 
 function _String_words(str)
 {
-	return __List_fromArray(str.trim().split(/\s+/g));
+	return str.trim().split(/\s+/g);
 }
 
 function _String_lines(str)
 {
-	return __List_fromArray(str.split(/\r\n|\r|\n/g));
+	return str.split(/\r\n|\r|\n/g);
 }
 
 function _String_toUpper(str)
@@ -249,7 +248,7 @@ var _String_indexes = F2(function(sub, str)
 
 	if (subLen < 1)
 	{
-		return __List_Nil;
+		return [];
 	}
 
 	var i = 0;
@@ -261,7 +260,7 @@ var _String_indexes = F2(function(sub, str)
 		i = i + subLen;
 	}
 
-	return __List_fromArray(is);
+	return is;
 });
 
 
@@ -311,8 +310,8 @@ function _String_toFloat(s)
 	return n === n ? __Maybe_Just(n) : __Maybe_Nothing;
 }
 
-function _String_fromList(chars)
+function _String_fromArray(chars)
 {
-	return __List_toArray(chars).join('');
+	return chars.join('');
 }
 

@@ -3,11 +3,11 @@ module String exposing
   , isEmpty, length, reverse, repeat, replace
   , append, concat, split, join, words, lines
   , slice, left, right, dropLeft, dropRight
-  , contains, startsWith, endsWith, indexes, indices
+  , contains, startsWith, endsWith, indices
   , toInt, fromInt
   , toFloat, fromFloat
   , fromChar, cons, uncons
-  , toList, fromList
+  , toArray, fromArray
   , toUpper, toLower, pad, padLeft, padRight, trim, trimLeft, trimRight
   , map, filter, foldl, foldr, any, all
   )
@@ -25,7 +25,7 @@ are enclosed in `"double quotes"`. Strings are *not* lists of characters.
 @docs slice, left, right, dropLeft, dropRight
 
 # Check for Substrings
-@docs contains, startsWith, endsWith, indexes, indices
+@docs contains, startsWith, endsWith, indices
 
 # Int Conversions
 @docs toInt, fromInt
@@ -36,8 +36,8 @@ are enclosed in `"double quotes"`. Strings are *not* lists of characters.
 # Char Conversions
 @docs fromChar, cons, uncons
 
-# List Conversions
-@docs toList, fromList
+# Array Conversions
+@docs toArray, fromArray
 
 # Formatting
 Cosmetic operations such as padding with extra characters or trimming whitespace.
@@ -48,12 +48,11 @@ Cosmetic operations such as padding with extra characters or trimming whitespace
 @docs map, filter, foldl, foldr, any, all
 -}
 
+import Array exposing (Array)
 import Basics exposing (..)
 import Bitwise
 import Char exposing (Char)
-import Gren.Kernel.List
 import Gren.Kernel.String
-import List exposing ((::))
 import Maybe exposing (Maybe)
 import Result exposing (Result)
 
@@ -175,7 +174,7 @@ append =
 
     concat ["never","the","less"] == "nevertheless"
 -}
-concat : List String -> String
+concat : Array String -> String
 concat strings =
   join "" strings
 
@@ -186,9 +185,9 @@ concat strings =
     split "/" "home/evan/Desktop/" == ["home","evan","Desktop", ""]
 
 -}
-split : String -> String -> List String
-split sep string =
-  Gren.Kernel.List.fromArray (Gren.Kernel.String.split sep string)
+split : String -> String -> Array String
+split =
+  Gren.Kernel.String.split
 
 
 {-| Put many strings together with a given separator.
@@ -197,16 +196,16 @@ split sep string =
     join " " ["cat","dog","cow"]       == "cat dog cow"
     join "/" ["home","evan","Desktop"] == "home/evan/Desktop"
 -}
-join : String -> List String -> String
-join sep chunks =
-  Gren.Kernel.String.join sep (Gren.Kernel.List.toArray chunks)
+join : String -> Array String -> String
+join =
+  Gren.Kernel.String.join
 
 
 {-| Break a string into words, splitting on chunks of whitespace.
 
     words "How are \t you? \n Good?" == ["How","are","you?","Good?"]
 -}
-words : String -> List String
+words : String -> Array String
 words =
   Gren.Kernel.String.words
 
@@ -215,7 +214,7 @@ words =
 
     lines "How are you?\nGood?" == ["How are you?", "Good?"]
 -}
-lines : String -> List String
+lines : String -> Array String
 lines =
   Gren.Kernel.String.lines
 
@@ -321,19 +320,13 @@ endsWith =
   Gren.Kernel.String.endsWith
 
 
-{-| Get all of the indexes for a substring in another string.
+{-| Get all of the indices for a substring in another string.
 
     indexes "i" "Mississippi"   == [1,4,7,10]
     indexes "ss" "Mississippi"  == [2,5]
     indexes "needle" "haystack" == []
 -}
-indexes : String -> String -> List Int
-indexes =
-  Gren.Kernel.String.indexes
-
-
-{-| Alias for `indexes`. -}
-indices : String -> String -> List Int
+indices : String -> String -> Array Int
 indices =
   Gren.Kernel.String.indexes
 
@@ -502,24 +495,24 @@ fromFloat =
 
 {-| Convert a string to a list of characters.
 
-    toList "abc" == ['a','b','c']
-    toList "🙈🙉🙊" == ['🙈','🙉','🙊']
+    toArray "abc" == ['a','b','c']
+    toArray "🙈🙉🙊" == ['🙈','🙉','🙊']
 -}
-toList : String -> List Char
-toList string =
-  foldr (::) [] string
+toArray : String -> Array Char
+toArray string =
+  foldl Array.push [] string
 
 
 {-| Convert a list of characters into a String. Can be useful if you
 want to create a string primarily by consing, perhaps for decoding
 something.
 
-    fromList ['a','b','c'] == "abc"
-    fromList ['🙈','🙉','🙊'] == "🙈🙉🙊"
+    fromArray ['a','b','c'] == "abc"
+    fromArray ['🙈','🙉','🙊'] == "🙈🙉🙊"
 -}
-fromList : List Char -> String
-fromList =
-  Gren.Kernel.String.fromList
+fromArray : Array Char -> String
+fromArray =
+  Gren.Kernel.String.fromArray
 
 
 

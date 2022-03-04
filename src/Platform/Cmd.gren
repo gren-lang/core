@@ -24,6 +24,7 @@ module Platform.Cmd exposing
 
 -}
 
+import Array exposing (Array)
 import Gren.Kernel.Platform
 
 
@@ -63,7 +64,7 @@ no ordering guarantees about the results.
 **Note:** `Cmd.none` and `Cmd.batch [ Cmd.none, Cmd.none ]` and `Cmd.batch []`
 all do the same thing.
 -}
-batch : List (Cmd msg) -> Cmd msg
+batch : Array (Cmd msg) -> Cmd msg
 batch =
   Gren.Kernel.Platform.batch
 

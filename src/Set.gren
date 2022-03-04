@@ -3,7 +3,7 @@ module Set exposing
   , empty, singleton, insert, remove
   , isEmpty, member, size
   , union, intersect, diff
-  , toList, fromList
+  , toArray, fromArray
   , map, foldl, foldr, filter, partition
   )
 
@@ -25,17 +25,17 @@ Insert, remove, and query operations all take *O(log n)* time.
 # Combine
 @docs union, intersect, diff
 
-# Lists
-@docs toList, fromList
+# Arrays
+@docs toArray, fromArray
 
 # Transform
 @docs map, foldl, foldr, filter, partition
 
 -}
 
+import Array exposing (Array)
 import Basics exposing (Bool, Int)
 import Dict
-import List exposing ((::))
 import Maybe exposing (Maybe(..))
 
 
@@ -119,16 +119,16 @@ diff (Set_gren_builtin dict1) (Set_gren_builtin dict2) =
 
 {-| Convert a set into a list, sorted from lowest to highest.
 -}
-toList : Set a -> List a
-toList (Set_gren_builtin dict) =
+toArray : Set a -> Array a
+toArray (Set_gren_builtin dict) =
   Dict.keys dict
 
 
 {-| Convert a list into a set, removing any duplicates.
 -}
-fromList : List comparable -> Set comparable
-fromList list =
-  List.foldl insert empty list
+fromArray : Array comparable -> Set comparable
+fromArray list =
+  Array.foldl insert empty list
 
 
 {-| Fold over the values in a set, in order from lowest to highest.
@@ -149,7 +149,7 @@ foldr func initialState (Set_gren_builtin dict) =
 -}
 map : (comparable -> comparable2) -> Set comparable -> Set comparable2
 map func set =
-  fromList (foldl (\x xs -> func x :: xs) [] set)
+  fromArray (foldl (\x xs -> Array.push (func x) xs) [] set)
 
 
 {-| Only keep elements that pass the given test.
@@ -158,13 +158,13 @@ map func set =
 
     numbers : Set Int
     numbers =
-      Set.fromList [-2,-1,0,1,2]
+      Set.fromArray [-2,-1,0,1,2]
 
     positives : Set Int
     positives =
       Set.filter (\x -> x > 0) numbers
 
-    -- positives == Set.fromList [1,2]
+    -- positives == Set.fromArray [1,2]
 -}
 filter : (comparable -> Bool) -> Set comparable -> Set comparable
 filter isGood (Set_gren_builtin dict) =

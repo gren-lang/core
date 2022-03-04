@@ -2,7 +2,6 @@
 
 import Gren.Kernel.Debug exposing (crash)
 import Gren.Kernel.Json exposing (run, wrap, unwrap, errorToString)
-import Gren.Kernel.List exposing (Cons, Nil)
 import Gren.Kernel.Process exposing (sleep)
 import Gren.Kernel.Scheduler exposing (andThen, binding, rawSend, rawSpawn, receive, send, succeed)
 import Gren.Kernel.Utils exposing (Tuple0)
@@ -264,7 +263,7 @@ function _Platform_dispatchEffects(managers, cmdBag, subBag)
 	{
 		__Scheduler_rawSend(managers[home], {
 			$: 'fx',
-			a: effectsDict[home] || { __cmds: __List_Nil, __subs: __List_Nil }
+			a: effectsDict[home] || { __cmds: [], __subs: [] }
 		});
 	}
 }
@@ -281,9 +280,10 @@ function _Platform_gatherEffects(isCmd, bag, effectsDict, taggers)
 			return;
 
 		case __2_NODE:
-			for (var list = bag.__bags; list.b; list = list.b) // WHILE_CONS
+            var bags = bag.__bags;
+			for (var idx = 0; idx < bags.length; idx++)
 			{
-				_Platform_gatherEffects(isCmd, list.a, effectsDict, taggers);
+				_Platform_gatherEffects(isCmd, bags[0], effectsDict, taggers);
 			}
 			return;
 
@@ -318,11 +318,11 @@ function _Platform_toEffect(isCmd, home, taggers, value)
 
 function _Platform_insert(isCmd, newEffect, effects)
 {
-	effects = effects || { __cmds: __List_Nil, __subs: __List_Nil };
+	effects = effects || { __cmds: [], __subs: [] };
 
 	isCmd
-		? (effects.__cmds = __List_Cons(newEffect, effects.__cmds))
-		: (effects.__subs = __List_Cons(newEffect, effects.__subs));
+		? (effects.__cmds = A2(__Array_push, newEffect, effects.__cmds))
+		: (effects.__subs = A2(__Array_push, newEffect, effects.__subs));
 
 	return effects;
 }
@@ -370,16 +370,16 @@ function _Platform_setupOutgoingPort(name)
 	var init = __Process_sleep(0);
 
 	_Platform_effectManagers[name].__init = init;
-	_Platform_effectManagers[name].__onEffects = F3(function(router, cmdList, state)
+	_Platform_effectManagers[name].__onEffects = F3(function(router, cmdArray, state)
 	{
-		for ( ; cmdList.b; cmdList = cmdList.b) // WHILE_CONS
+		for (var idx = 0; idx < cmdArray.length; idx++)
 		{
 			// grab a separate reference to subs in case unsubscribe is called
 			var currentSubs = subs;
-			var value = __Json_unwrap(converter(cmdList.a));
-			for (var i = 0; i < currentSubs.length; i++)
+			var value = __Json_unwrap(converter(cmdArray[idx]));
+			for (var subIdx = 0; subIdx < currentSubs.length; subIdx++)
 			{
-				currentSubs[i](value);
+				currentSubs[subIdx](value);
 			}
 		}
 		return init;
@@ -438,7 +438,7 @@ var _Platform_incomingPortMap = F2(function(tagger, finalTagger)
 
 function _Platform_setupIncomingPort(name, sendToApp)
 {
-	var subs = __List_Nil;
+	var subs = [];
 	var converter = _Platform_effectManagers[name].__converter;
 
 	// CREATE MANAGER
@@ -446,9 +446,9 @@ function _Platform_setupIncomingPort(name, sendToApp)
 	var init = __Scheduler_succeed(null);
 
 	_Platform_effectManagers[name].__init = init;
-	_Platform_effectManagers[name].__onEffects = F3(function(router, subList, state)
+	_Platform_effectManagers[name].__onEffects = F3(function(router, subArray, state)
 	{
-		subs = subList;
+		subs = subArray;
 		return init;
 	});
 
@@ -461,9 +461,9 @@ function _Platform_setupIncomingPort(name, sendToApp)
 		__Result_isOk(result) || __Debug_crash(4, name, result.a);
 
 		var value = result.a;
-		for (var temp = subs; temp.b; temp = temp.b) // WHILE_CONS
+		for (var idx = 0; idx < subs.length; idx++)
 		{
-			sendToApp(temp.a(value));
+			sendToApp(subs[idx](value));
 		}
 	}
 

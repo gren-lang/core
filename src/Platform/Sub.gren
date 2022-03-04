@@ -23,6 +23,7 @@ module Platform.Sub exposing
 @docs map
 -}
 
+import Array exposing (Array)
 import Gren.Kernel.Platform
 
 
@@ -62,7 +63,7 @@ subscriptions.
 **Note:** `Sub.none` and `Sub.batch [ Sub.none, Sub.none ]` and
 `Sub.batch []` all do the same thing.
 -}
-batch : List (Sub msg) -> Sub msg
+batch : Array (Sub msg) -> Sub msg
 batch =
   Gren.Kernel.Platform.batch
 

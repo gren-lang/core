@@ -1,7 +1,7 @@
 {
     "type": "package",
     "name": "gren-lang/core",
-    "summary": "Gren's core libraries",
+    "summary": "Gren's core modules",
     "license": "BSD-3-Clause",
     "version": "1.0.0",
     "exposed-modules": {
@@ -15,8 +15,7 @@
         "Collections": [
             "Array",
             "Dict",
-            "Set",
-            "Vector"
+            "Set"
         ],
         "Error Handling": [
             "Maybe",
