@@ -35,6 +35,7 @@ NOTE: All manipulations causes a copy of the entire Array, this can be slow.
 
 
 import Basics exposing (Int)
+import Maybe exposing (Maybe)
 import Gren.Kernel.Array
 
 
@@ -81,7 +82,7 @@ initialize =
 
 {-| Returns the element at the given index, or `Nothing` if index is out of bounds.
 -}
-get : Int -> Array a -> a
+get : Int -> Array a -> Maybe a
 get =
     Gren.Kernel.Array.get
 
