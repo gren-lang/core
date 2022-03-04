@@ -101,14 +101,14 @@ var _Array_map = F2(function(func, array)
     return result;
 });
 
-var _Array_indexedMap = F3(function(func, offset, array)
+var _Array_indexedMap = F2(function(func, array)
 {
     var length = array.length;
     var result = new Array(length);
 
     for (var i = 0; i < length; i++)
     {
-        result[i] = A2(func, offset + i, array[i]);
+        result[i] = A2(func, i, array[i]);
     }
 
     return result;
