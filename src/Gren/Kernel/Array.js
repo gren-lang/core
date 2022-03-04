@@ -119,3 +119,7 @@ var _Array_slice = F3(function(from, to, array)
     return array.slice(from, to);
 });
 
+var _Array_append = F3(function(left, right)
+{
+    return left.concat(right);
+});

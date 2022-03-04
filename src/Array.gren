@@ -12,7 +12,17 @@ module Array
         , foldr
         , map
         , indexedMap
+        , filter
+        , filterMap
+        , flatten
+        , flatMap
+        , prefix
+        , postfix
         , slice
+        , dropLeft
+        , dropRight
+        , takeLeft
+        , takeRight
         )
 
 {-| This library provides an immutable version of native JavaScript arrays.
@@ -29,13 +39,16 @@ NOTE: All manipulations causes a copy of the entire Array, this can be slow.
 @docs length, get, set, push
 
 # Transformation
-@docs foldl, foldr, map, slice
+@docs foldl, foldr, map, indexedMap, filter, filterMap, concat, concatMap, prefix, postfix
+
+# Sub-arrays
+@docs slice, dropLeft, dropRight, takeLeft, takeRight
 
 -}
 
 
-import Basics exposing (Int)
-import Maybe exposing (Maybe)
+import Basics exposing (Int, Bool, (-))
+import Maybe exposing (Maybe(..))
 import Gren.Kernel.Array
 
 
@@ -124,11 +137,74 @@ map =
 
 {-| Apply a function on every element and its index in an array.
 
-    indexedMap (,) [3, 3, 3] == Array [(0,3), (1,3), (2,3)]
+    indexedMap (,) [3, 3, 3] == [(0,3), (1,3), (2,3)]
 -}
 indexedMap : (Int -> a -> b) -> Array a -> Array b
 indexedMap =
     Gren.Kernel.Array.indexedMap
+
+
+{-| Keep the values which passes the predicate
+
+    filter (\n -> n < 3) [1, 2, 3, 4] == [1, 2]
+-}
+filter : (a -> Bool) -> Array a -> Array a
+filter pred array =
+    foldl 
+        (\v acc -> 
+            if pred v then 
+                push v acc 
+            
+            else 
+                acc
+        ) 
+        [] 
+        array
+
+
+{-| TODO
+-}
+filterMap : (a -> Maybe b) -> Array a -> Array b
+filterMap mapper array =
+    foldl 
+        (\v acc -> 
+            case mapper v of
+                Just newValue ->
+                    push newValue acc 
+                
+                Nothing ->
+                    acc
+        ) 
+        [] 
+        array
+
+
+{-| TODO
+-}
+flatten : Array (Array a) -> Array a
+flatten array =
+    foldl postfix [] array
+
+
+{-| TODO
+-}
+flatMap : (a -> Array b) -> Array a -> Array b
+flatMap mapper array =
+    foldl (\v acc -> prefix acc (mapper v)) [] array
+
+
+{-| TODO
+-}
+prefix : Array a -> Array a -> Array a
+prefix =
+    Gren.Kernel.Array.append
+
+
+{-| TODO
+-}
+postfix : Array a -> Array a -> Array a
+postfix first second =
+    prefix second first
 
 
 {-| Get a sub section of an array: `(slice start end array)`.
@@ -145,3 +221,43 @@ In the case of an impossible slice, the empty array is returned.
 slice : Int -> Int -> Array a -> Array a
 slice =
     Gren.Kernel.Array.slice
+
+
+{-| Remove `n` elements from the left side of the Array.
+
+    dropLeft 1 [1, 2, 3] == [2, 3]
+-}
+dropLeft : Int -> Array a -> Array a
+dropLeft n array =
+    slice n (length array) array
+
+
+{-| Remove `n` elements from the right side of the Array.
+
+    dropRight 1 [1, 2, 3] == [1, 2]
+-}
+dropRight : Int -> Array a -> Array a
+dropRight n array =
+    slice 0 (length array - n) array
+
+
+{-| Take `n` elements from the left side of the Array.
+
+    takeLeft 1 [1, 2, 3] == [1]
+-}
+takeLeft : Int -> Array a -> Array a
+takeLeft n array =
+    slice 0 n array
+
+
+{-| Take `n` elements from the right side of the Array.
+
+    takeRight 1 [1, 2, 3] == [3]
+-}
+takeRight : Int -> Array a -> Array a
+takeRight n array =
+    let
+        len = 
+            length array
+    in
+    slice (len - n) len array
