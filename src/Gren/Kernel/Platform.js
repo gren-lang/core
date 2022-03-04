@@ -5,6 +5,7 @@ import Gren.Kernel.Json exposing (run, wrap, unwrap, errorToString)
 import Gren.Kernel.Process exposing (sleep)
 import Gren.Kernel.Scheduler exposing (andThen, binding, rawSend, rawSpawn, receive, send, succeed)
 import Gren.Kernel.Utils exposing (Tuple0)
+import Array exposing (push)
 import Result exposing (isOk)
 
 */
