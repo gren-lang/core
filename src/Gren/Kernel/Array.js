@@ -5,12 +5,12 @@ import Maybe exposing (Just, Nothing)
 */
 
 
-function _JsArray_length(array)
+function _Array_length(array)
 {
     return array.length;
 }
 
-var _JsArray_initialize = F3(function(size, offset, func)
+var _Array_initialize = F3(function(size, offset, func)
 {
     var result = new Array(size);
 
@@ -22,7 +22,7 @@ var _JsArray_initialize = F3(function(size, offset, func)
     return result;
 });
 
-var _JsArray_get = F2(function(index, array)
+var _Array_get = F2(function(index, array)
 {
     var length = array.length;
     if (index < 0 || index >= length) {
@@ -33,7 +33,7 @@ var _JsArray_get = F2(function(index, array)
     
 });
 
-var _JsArray_set = F3(function(index, value, array)
+var _Array_set = F3(function(index, value, array)
 {
     var length = array.length;
     if (index < 0 || index >= length) {
@@ -52,7 +52,7 @@ var _JsArray_set = F3(function(index, value, array)
     return result;
 });
 
-var _JsArray_push = F2(function(value, array)
+var _Array_push = F2(function(value, array)
 {
     var length = array.length;
     var result = new Array(length + 1);
@@ -66,7 +66,7 @@ var _JsArray_push = F2(function(value, array)
     return result;
 });
 
-var _JsArray_foldl = F3(function(func, acc, array)
+var _Array_foldl = F3(function(func, acc, array)
 {
     var length = array.length;
 
@@ -78,7 +78,7 @@ var _JsArray_foldl = F3(function(func, acc, array)
     return acc;
 });
 
-var _JsArray_foldr = F3(function(func, acc, array)
+var _Array_foldr = F3(function(func, acc, array)
 {
     for (var i = array.length - 1; i >= 0; i--)
     {
@@ -88,7 +88,7 @@ var _JsArray_foldr = F3(function(func, acc, array)
     return acc;
 });
 
-var _JsArray_map = F2(function(func, array)
+var _Array_map = F2(function(func, array)
 {
     var length = array.length;
     var result = new Array(length);
@@ -101,7 +101,7 @@ var _JsArray_map = F2(function(func, array)
     return result;
 });
 
-var _JsArray_indexedMap = F3(function(func, offset, array)
+var _Array_indexedMap = F3(function(func, offset, array)
 {
     var length = array.length;
     var result = new Array(length);
@@ -114,7 +114,7 @@ var _JsArray_indexedMap = F3(function(func, offset, array)
     return result;
 });
 
-var _JsArray_slice = F3(function(from, to, array)
+var _Array_slice = F3(function(from, to, array)
 {
     return array.slice(from, to);
 });
