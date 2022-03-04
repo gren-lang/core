@@ -1,11 +1,9 @@
 /*
 
-import Array exposing (toList)
 import Basics exposing (LT, EQ, GT)
-import Dict exposing (toList)
+import Dict exposing (toArray)
 import Gren.Kernel.Debug exposing (crash)
-import Gren.Kernel.List exposing (Cons, Nil)
-import Set exposing (toList)
+import Set exposing (toArray)
 
 */
 
@@ -46,32 +44,35 @@ function _Utils_eqHelp(x, y, depth, stack)
 	/**__DEBUG/
 	if (x.$ === 'Set_gren_builtin')
 	{
-		x = __Set_toList(x);
-		y = __Set_toList(y);
+		x = __Set_toArray(x);
+		y = __Set_toArray(y);
 	}
 	if (x.$ === 'RBNode_gren_builtin' || x.$ === 'RBEmpty_gren_builtin')
 	{
-		x = __Dict_toList(x);
-		y = __Dict_toList(y);
+		x = __Dict_toArray(x);
+		y = __Dict_toArray(y);
 	}
 	//*/
 
 	/**__PROD/
 	if (x.$ < 0)
 	{
-		x = __Dict_toList(x);
-		y = __Dict_toList(y);
+		x = __Dict_toArray(x);
+		y = __Dict_toArray(y);
 	}
 	//*/
 
-	for (var key in x)
+    var nextDepth = depth + 1;
+	
+    for (var key in x)
 	{
-		if (!_Utils_eqHelp(x[key], y[key], depth + 1, stack))
+		if (!_Utils_eqHelp(x[key], y[key], nextDepth, stack))
 		{
 			return false;
 		}
 	}
-	return true;
+	
+    return true;
 }
 
 var _Utils_equal = F2(_Utils_eq);
@@ -81,7 +82,7 @@ var _Utils_notEqual = F2(function(a, b) { return !_Utils_eq(a,b); });
 
 // COMPARISONS
 
-// Code in Generate/JavaScript.hs, Basics.js, and List.js depends on
+// Code in Generate/JavaScript.hs, Basics.js, and depends on
 // the particular integer values assigned to LT, EQ, and GT.
 
 function _Utils_cmp(x, y, ord)
@@ -178,16 +179,5 @@ function _Utils_ap(xs, ys)
 		return xs + ys;
 	}
 
-	// append Lists
-	if (!xs.b)
-	{
-		return ys;
-	}
-	var root = __List_Cons(xs.a, ys);
-	xs = xs.b
-	for (var curr = root; xs.b; xs = xs.b) // WHILE_CONS
-	{
-		curr = curr.b = __List_Cons(xs.a, ys);
-	}
-	return root;
+    return xs.concat(ys);
 }

@@ -1,8 +1,7 @@
 /*
 
-import Array exposing (toList)
-import Dict exposing (toList)
-import Set exposing (toList)
+import Dict exposing (toArray)
+import Set exposing (toArray)
 
 */
 
@@ -77,6 +76,21 @@ function _Debug_toAnsiString(ansi, value)
 		return _Debug_stringColor(ansi, '"' + _Debug_addSlashes(value, false) + '"');
 	}
 
+    if (Array.isArray(value))
+    {
+        var output = '[';
+
+        value.length > 0 && (output += _Debug_toAnsiString(ansi, value[0]))
+
+        for (var idx = 1; idx < value.length; idx++)
+        {
+            output += ', ' + _Debug_toAnsiString(ansi, value[idx]);
+        }
+        
+        return output + ']';
+    }
+
+
 	if (typeof value === 'object' && '$' in value)
 	{
 		var tag = value.$;
@@ -97,38 +111,18 @@ function _Debug_toAnsiString(ansi, value)
 			return '(' + output.join(',') + ')';
 		}
 
-		if (tag === 'Set_elm_builtin')
+		if (tag === 'Set_gren_builtin')
 		{
 			return _Debug_ctorColor(ansi, 'Set')
-				+ _Debug_fadeColor(ansi, '.fromList') + ' '
-				+ _Debug_toAnsiString(ansi, __Set_toList(value));
+				+ _Debug_fadeColor(ansi, '.fromArray') + ' '
+				+ _Debug_toAnsiString(ansi, __Set_toArray(value));
 		}
 
-		if (tag === 'RBNode_elm_builtin' || tag === 'RBEmpty_elm_builtin')
+		if (tag === 'RBNode_gren_builtin' || tag === 'RBEmpty_gren_builtin')
 		{
 			return _Debug_ctorColor(ansi, 'Dict')
-				+ _Debug_fadeColor(ansi, '.fromList') + ' '
-				+ _Debug_toAnsiString(ansi, __Dict_toList(value));
-		}
-
-		if (tag === 'Array_elm_builtin')
-		{
-			return _Debug_ctorColor(ansi, 'Array')
-				+ _Debug_fadeColor(ansi, '.fromList') + ' '
-				+ _Debug_toAnsiString(ansi, __Array_toList(value));
-		}
-
-		if (tag === '::' || tag === '[]')
-		{
-			var output = '[';
-
-			value.b && (output += _Debug_toAnsiString(ansi, value.a), value = value.b)
-
-			for (; value.b; value = value.b) // WHILE_CONS
-			{
-				output += ',' + _Debug_toAnsiString(ansi, value.a);
-			}
-			return output + ']';
+				+ _Debug_fadeColor(ansi, '.fromArray') + ' '
+				+ _Debug_toAnsiString(ansi, __Dict_toArray(value));
 		}
 
 		var output = '';
@@ -232,7 +226,7 @@ function _Debug_toHexDigit(n)
 
 function _Debug_crash__PROD(identifier)
 {
-	throw new Error('https://github.com/elm/core/blob/1.0.0/hints/' + identifier + '.md');
+	throw new Error('https://github.com/gren-lang/core/blob/1.0.0/hints/' + identifier + '.md');
 }
 
 
@@ -241,10 +235,10 @@ function _Debug_crash__DEBUG(identifier, fact1, fact2, fact3, fact4)
 	switch(identifier)
 	{
 		case 0:
-			throw new Error('What node should I take over? In JavaScript I need something like:\n\n    Gren.Main.init({\n        node: document.getElementById("elm-node")\n    })\n\nYou need to do this with any Browser.sandbox or Browser.element program.');
+			throw new Error('What node should I take over? In JavaScript I need something like:\n\n    Gren.Main.init({\n        node: document.getElementById("gren-node")\n    })\n\nYou need to do this with any Browser.sandbox or Browser.element program.');
 
 		case 1:
-			throw new Error('Browser.application programs cannot handle URLs like this:\n\n    ' + document.location.href + '\n\nWhat is the root? The root of your file system? Try looking at this program with `elm reactor` or some other server.');
+			throw new Error('Browser.application programs cannot handle URLs like this:\n\n    ' + document.location.href + '\n\nWhat is the root? The root of your file system?');
 
 		case 2:
 			var jsonErrorString = fact1;
@@ -260,7 +254,7 @@ function _Debug_crash__DEBUG(identifier, fact1, fact2, fact3, fact4)
 			throw new Error('Trying to send an unexpected type of value through port `' + portName + '`:\n' + problem);
 
 		case 5:
-			throw new Error('Trying to use `(==)` on functions.\nThere is no way to know if functions are "the same" in the Gren sense.\nRead more about this at https://package.elm-lang.org/packages/elm/core/latest/Basics#== which describes why it is this way and what the better version will look like.');
+			throw new Error('Trying to use `(==)` on functions.\nThere is no way to know if functions are "the same" in the Gren sense.\nRead more about this at https://package.gren-lang.org/packages/gren-lang/core/latest/Basics#== which describes why it is this way and what the better version will look like.');
 
 		case 6:
 			var moduleName = fact1;
@@ -285,7 +279,7 @@ function _Debug_crash__DEBUG(identifier, fact1, fact2, fact3, fact4)
 			);
 
 		case 10:
-			throw new Error('Bug in https://github.com/elm/virtual-dom/issues');
+			throw new Error('Bug in https://github.com/gren-lang/virtual-dom/issues');
 
 		case 11:
 			throw new Error('Cannot perform mod 0. Division by zero error.');
