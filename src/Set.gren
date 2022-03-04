@@ -149,7 +149,7 @@ foldr func initialState (Set_gren_builtin dict) =
 -}
 map : (comparable -> comparable2) -> Set comparable -> Set comparable2
 map func set =
-  fromArray (foldl (\x xs -> Array.push (func x) xs) [] set)
+  foldl (\x xs -> insert (func x) xs) empty set
 
 
 {-| Only keep elements that pass the given test.

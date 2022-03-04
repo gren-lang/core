@@ -283,7 +283,7 @@ function _Platform_gatherEffects(isCmd, bag, effectsDict, taggers)
             var bags = bag.__bags;
 			for (var idx = 0; idx < bags.length; idx++)
 			{
-				_Platform_gatherEffects(isCmd, bags[0], effectsDict, taggers);
+				_Platform_gatherEffects(isCmd, bags[idx], effectsDict, taggers);
 			}
 			return;
 

@@ -545,7 +545,7 @@ partition isGood dict =
 -}
 keys : Dict k v -> Array k
 keys dict =
-  foldr (\key value keyArray -> Array.push key keyArray) [] dict
+  foldl (\key value keyArray -> Array.push key keyArray) [] dict
 
 
 {-| Get all of the values in a dictionary, in the order of their keys.
@@ -554,13 +554,13 @@ keys dict =
 -}
 values : Dict k v -> Array v
 values dict =
-  foldr (\key value valueArray -> Array.push value valueArray) [] dict
+  foldl (\key value valueArray -> Array.push value valueArray) [] dict
 
 
 {-| Convert a dictionary into an association list of key-value pairs, sorted by keys. -}
 toArray : Dict k v -> Array (k,v)
 toArray dict =
-  foldr (\key value array -> Array.push (key,value) array) [] dict
+  foldl (\key value array -> Array.push (key,value) array) [] dict
 
 
 {-| Convert an association list into a dictionary. -}
