@@ -82,8 +82,8 @@ initialize =
 
 {-| Returns the element at the given index, or `Nothing` if index is out of bounds.
 -}
-unsafeGet : Int -> Array a -> a
-unsafeGet =
+get : Int -> Array a -> a
+get =
     Gren.Kernel.Array.get
 
 
