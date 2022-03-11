@@ -5,7 +5,7 @@ import Gren.Kernel.Json exposing (run, wrap, unwrap, errorToString)
 import Gren.Kernel.Process exposing (sleep)
 import Gren.Kernel.Scheduler exposing (andThen, binding, rawSend, rawSpawn, receive, send, succeed)
 import Gren.Kernel.Utils exposing (Tuple0)
-import Array exposing (push)
+import Array exposing (pushBack)
 import Result exposing (isOk)
 
 */
@@ -322,8 +322,8 @@ function _Platform_insert(isCmd, newEffect, effects)
 	effects = effects || { __cmds: [], __subs: [] };
 
 	isCmd
-		? (effects.__cmds = A2(__Array_push, newEffect, effects.__cmds))
-		: (effects.__subs = A2(__Array_push, newEffect, effects.__subs));
+		? (effects.__cmds = A2(__Array_pushBack, newEffect, effects.__cmds))
+		: (effects.__subs = A2(__Array_pushBack, newEffect, effects.__subs));
 
 	return effects;
 }
