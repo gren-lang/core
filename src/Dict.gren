@@ -4,7 +4,7 @@ module Dict exposing
   , isEmpty, member, get, size
   , keys, values, toArray, fromArray
   , map, foldl, foldr, filter, partition
-  , union, intersect, diff
+  , union, intersect, diff, merge
   )
 
 {-| A dictionary mapping unique keys to values. The keys can be any comparable
@@ -29,7 +29,7 @@ Insert, remove, and query operations all take *O(log n)* time.
 @docs map, foldl, foldr, filter, partition
 
 # Combine
-@docs union, intersect, diff
+@docs union, intersect, diff, merge
 
 -}
 
@@ -567,3 +567,42 @@ toArray dict =
 fromArray : Array (comparable,v) -> Dict comparable v
 fromArray assocs =
   Array.foldl (\(key,value) dict -> insert key value dict) empty assocs
+
+
+{-| The most general way of combining two dictionaries. You provide three
+accumulators for when a given key appears:
+  1. Only in the left dictionary.
+  2. In both dictionaries.
+  3. Only in the right dictionary.
+You then traverse all the keys from lowest to highest, building up whatever
+you want.
+-}
+merge
+  :  (comparable -> a -> result -> result)
+  -> (comparable -> a -> b -> result -> result)
+  -> (comparable -> b -> result -> result)
+  -> Dict comparable a
+  -> Dict comparable b
+  -> result
+  -> result
+merge leftStep bothStep rightStep leftDict rightDict initialResult =
+  let
+    stepState rKey rValue (list, result) =
+      case Array.popFirst list of
+        Nothing ->
+          (list, rightStep rKey rValue result)
+
+        Just ((lKey, lValue), rest) ->
+          if lKey < rKey then
+            stepState rKey rValue (rest, leftStep lKey lValue result)
+
+          else if lKey > rKey then
+            (list, rightStep rKey rValue result)
+
+          else
+            (rest, bothStep lKey lValue rValue result)
+
+    (leftovers, intermediateResult) =
+      foldl stepState (toArray leftDict, initialResult) rightDict
+  in
+    Array.foldl (\(k,v) result -> leftStep k v result) intermediateResult leftovers
