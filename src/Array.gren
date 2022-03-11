@@ -4,6 +4,7 @@ module Array
         , empty
         , singleton
         , length
+        , isEmpty
         , initialize
         , get
         , set
