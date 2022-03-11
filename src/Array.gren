@@ -7,7 +7,6 @@ module Array
         , initialize
         , get
         , set
-        , push
         , foldl
         , foldr
         , map
@@ -16,6 +15,8 @@ module Array
         , filterMap
         , flatten
         , flatMap
+        , pushFront
+        , pushBack
         , prefix
         , postfix
         , slice
@@ -23,6 +24,8 @@ module Array
         , dropRight
         , takeLeft
         , takeRight
+        , popFirst
+        , popLast
         )
 
 {-| This library provides an immutable version of native JavaScript arrays.
@@ -36,18 +39,18 @@ NOTE: All manipulations causes a copy of the entire Array, this can be slow.
 @docs empty, singleton, initialize
 
 # Basics
-@docs length, get, set, push
+@docs isEmpty, length, get, set, pushFront, pushBack
 
 # Transformation
 @docs foldl, foldr, map, indexedMap, filter, filterMap, concat, concatMap, prefix, postfix
 
 # Sub-arrays
-@docs slice, dropLeft, dropRight, takeLeft, takeRight
+@docs slice, dropLeft, dropRight, takeLeft, takeRight, popFirst, popLast
 
 -}
 
 
-import Basics exposing (Int, Bool, (-))
+import Basics exposing (Int, Bool, (-), (==))
 import Maybe exposing (Maybe(..))
 import Gren.Kernel.Array
 
@@ -80,6 +83,13 @@ length =
     Gren.Kernel.Array.length
 
 
+{-| Check if an array is empty.
+-}
+isEmpty : Array a -> Bool
+isEmpty array =
+    length array == 0
+
+
 {-| Initialize an array. `initalize n offset fn` creates an array of length `n`
 with the element at index `i` initialized to the result of `(f (i + offset))`.
 
@@ -105,13 +115,6 @@ get =
 set : Int -> a -> Array a -> Array a
 set =
     Gren.Kernel.Array.set
-
-
-{-| Push an element onto the array.
--}
-push : a -> Array a -> Array a
-push =
-    Gren.Kernel.Array.push
 
 
 {-| Reduce the array from the left.
@@ -153,7 +156,7 @@ filter pred array =
     foldl 
         (\v acc -> 
             if pred v then 
-                push v acc 
+                pushFront v acc 
             
             else 
                 acc
@@ -170,7 +173,7 @@ filterMap mapper array =
         (\v acc -> 
             case mapper v of
                 Just newValue ->
-                    push newValue acc 
+                    pushFront newValue acc 
                 
                 Nothing ->
                     acc
@@ -191,6 +194,19 @@ flatten array =
 flatMap : (a -> Array b) -> Array a -> Array b
 flatMap mapper array =
     foldl (\v acc -> prefix acc (mapper v)) [] array
+
+{-| TODO
+-}
+pushFront : a -> Array a -> Array a
+pushFront value array =
+    prefix [value] array
+
+
+{-| TODO
+-}
+pushBack : a -> Array a -> Array a
+pushBack =
+    Gren.Kernel.Array.push
 
 
 {-| TODO
@@ -261,3 +277,27 @@ takeRight n array =
             length array
     in
     slice (len - n) len array
+
+
+{-| TODO
+-}
+popFirst : Array a -> Maybe (a, Array a)
+popFirst array =
+    case get 0 array of
+        Just value ->
+            Just (value, dropLeft 1 array)
+
+        Nothing ->
+            Nothing
+
+
+{-| TODO
+-}
+popLast : Array a -> Maybe (a, Array a)
+popLast array =
+    case get (length array - 1) array of
+        Just value ->
+            Just (value, dropRight 1 array)
+
+        Nothing ->
+            Nothing

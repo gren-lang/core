@@ -500,7 +500,7 @@ fromFloat =
 -}
 toArray : String -> Array Char
 toArray string =
-  foldl Array.push [] string
+  foldl Array.pushBack [] string
 
 
 {-| Convert a list of characters into a String. Can be useful if you
