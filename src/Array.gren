@@ -27,6 +27,8 @@ module Array
         , takeRight
         , popFirst
         , popLast
+        , reverse
+        , intersperse
         )
 
 {-| This library provides an immutable version of native JavaScript arrays.
@@ -43,7 +45,7 @@ NOTE: All manipulations causes a copy of the entire Array, this can be slow.
 @docs isEmpty, length, get, set, pushFront, pushBack
 
 # Transformation
-@docs foldl, foldr, map, indexedMap, filter, filterMap, concat, concatMap, prefix, postfix
+@docs foldl, foldr, map, indexedMap, filter, filterMap, concat, concatMap, prefix, postfix, reverse, intersperse
 
 # Sub-arrays
 @docs slice, dropLeft, dropRight, takeLeft, takeRight, popFirst, popLast
@@ -302,3 +304,30 @@ popLast array =
 
         Nothing ->
             Nothing
+
+
+{-| TODO
+-}
+reverse : Array a -> Array a
+reverse array =
+    foldr pushBack empty array
+
+
+{-| Places the given value between all members of the given list.
+    intersperse "on" ["turtles","turtles","turtles"] == ["turtles","on","turtles","on","turtles"]
+-}
+intersperse : a -> Array a -> Array a
+intersperse sep xs =
+  case popFirst xs of
+    Nothing ->
+      []
+
+    Just (hd, tl) ->
+      let
+        step x rest =
+          pushFront sep (pushFront x rest)
+
+        spersed =
+          foldr step [] tl
+      in
+        pushFront hd spersed
