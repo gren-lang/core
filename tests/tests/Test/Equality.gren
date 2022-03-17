@@ -41,4 +41,4 @@ tests =
                             (List.range 0 size1 == List.range 0 size2)
                 ]
     in
-        describe "Equality Tests" [ diffTests, recordTests, listTests ]
+    describe "Equality Tests" [ diffTests, recordTests, listTests ]

@@ -1,62 +1,46 @@
-module Array
-    exposing
-        ( Array
-        , empty
-        , singleton
-        , length
-        , isEmpty
-        , initialize
-        , get
-        , set
-        , foldl
-        , foldr
-        , map
-        , indexedMap
-        , filter
-        , filterMap
-        , flatten
-        , flatMap
-        , pushFront
-        , pushBack
-        , prefix
-        , postfix
-        , slice
-        , dropLeft
-        , dropRight
-        , takeLeft
-        , takeRight
-        , popFirst
-        , popLast
-        , reverse
-        , intersperse
-        )
+module Array exposing
+    ( Array
+    , empty, singleton, initialize
+    , isEmpty, length, get, set, pushFront, pushBack
+    , foldl, foldr, map, indexedMap, filter, filterMap, prefix, postfix, reverse, intersperse
+    , slice, dropLeft, dropRight, takeLeft, takeRight, popFirst, popLast
+    , flatMap, flatten
+    )
 
 {-| This library provides an immutable version of native JavaScript arrays.
 
 NOTE: All manipulations causes a copy of the entire Array, this can be slow.
 
+
 # Arrays
+
 @docs Array
 
+
 # Creation
+
 @docs empty, singleton, initialize
 
+
 # Basics
+
 @docs isEmpty, length, get, set, pushFront, pushBack
 
+
 # Transformation
+
 @docs foldl, foldr, map, indexedMap, filter, filterMap, concat, concatMap, prefix, postfix, reverse, intersperse
 
+
 # Sub-arrays
+
 @docs slice, dropLeft, dropRight, takeLeft, takeRight, popFirst, popLast
 
 -}
 
-
-import Basics exposing (Int, Bool, (-), (==))
-import Maybe exposing (Maybe(..))
+import Basics exposing ((-), (==), Bool, Int)
 import Gren.Kernel.Array
-
+import Maybe exposing (Maybe(..))
 
 
 {-| Representation of a javascript array.
@@ -99,7 +83,8 @@ with the element at index `i` initialized to the result of `(f (i + offset))`.
 The offset parameter is there so one can avoid creating a closure for this use
 case. This is an optimization that has proved useful in the `Array` module.
 
-    initialize 3 5 identity == [5,6,7]
+    initialize 3 5 identity == [ 5, 6, 7 ]
+
 -}
 initialize : Int -> Int -> (Int -> a) -> Array a
 initialize =
@@ -143,7 +128,8 @@ map =
 
 {-| Apply a function on every element and its index in an array.
 
-    indexedMap (,) [3, 3, 3] == [(0,3), (1,3), (2,3)]
+    indexedMap (,) [ 3, 3, 3 ] == [ ( 0, 3 ), ( 1, 3 ), ( 2, 3 ) ]
+
 -}
 indexedMap : (Int -> a -> b) -> Array a -> Array b
 indexedMap =
@@ -152,19 +138,20 @@ indexedMap =
 
 {-| Keep the values which passes the predicate
 
-    filter (\n -> n < 3) [1, 2, 3, 4] == [1, 2]
+    filter (\n -> n < 3) [ 1, 2, 3, 4 ] == [ 1, 2 ]
+
 -}
 filter : (a -> Bool) -> Array a -> Array a
 filter pred array =
-    foldl 
-        (\v acc -> 
-            if pred v then 
-                pushFront v acc 
-            
-            else 
+    foldl
+        (\v acc ->
+            if pred v then
+                pushFront v acc
+
+            else
                 acc
-        ) 
-        [] 
+        )
+        []
         array
 
 
@@ -172,16 +159,16 @@ filter pred array =
 -}
 filterMap : (a -> Maybe b) -> Array a -> Array b
 filterMap mapper array =
-    foldl 
-        (\v acc -> 
+    foldl
+        (\v acc ->
             case mapper v of
                 Just newValue ->
-                    pushFront newValue acc 
-                
+                    pushFront newValue acc
+
                 Nothing ->
                     acc
-        ) 
-        [] 
+        )
+        []
         array
 
 
@@ -198,11 +185,12 @@ flatMap : (a -> Array b) -> Array a -> Array b
 flatMap mapper array =
     foldl (\v acc -> prefix acc (mapper v)) [] array
 
+
 {-| TODO
 -}
 pushFront : a -> Array a -> Array a
 pushFront value array =
-    prefix [value] array
+    prefix [ value ] array
 
 
 {-| TODO
@@ -236,6 +224,7 @@ of the array. Popping the last element of the array is therefore:
 `slice 0 -1 arr`.
 
 In the case of an impossible slice, the empty array is returned.
+
 -}
 slice : Int -> Int -> Array a -> Array a
 slice =
@@ -244,7 +233,8 @@ slice =
 
 {-| Remove `n` elements from the left side of the Array.
 
-    dropLeft 1 [1, 2, 3] == [2, 3]
+    dropLeft 1 [ 1, 2, 3 ] == [ 2, 3 ]
+
 -}
 dropLeft : Int -> Array a -> Array a
 dropLeft n array =
@@ -253,7 +243,8 @@ dropLeft n array =
 
 {-| Remove `n` elements from the right side of the Array.
 
-    dropRight 1 [1, 2, 3] == [1, 2]
+    dropRight 1 [ 1, 2, 3 ] == [ 1, 2 ]
+
 -}
 dropRight : Int -> Array a -> Array a
 dropRight n array =
@@ -262,7 +253,8 @@ dropRight n array =
 
 {-| Take `n` elements from the left side of the Array.
 
-    takeLeft 1 [1, 2, 3] == [1]
+    takeLeft 1 [ 1, 2, 3 ] == [ 1 ]
+
 -}
 takeLeft : Int -> Array a -> Array a
 takeLeft n array =
@@ -271,12 +263,13 @@ takeLeft n array =
 
 {-| Take `n` elements from the right side of the Array.
 
-    takeRight 1 [1, 2, 3] == [3]
+    takeRight 1 [ 1, 2, 3 ] == [ 3 ]
+
 -}
 takeRight : Int -> Array a -> Array a
 takeRight n array =
     let
-        len = 
+        len =
             length array
     in
     slice (len - n) len array
@@ -284,11 +277,11 @@ takeRight n array =
 
 {-| TODO
 -}
-popFirst : Array a -> Maybe (a, Array a)
+popFirst : Array a -> Maybe ( a, Array a )
 popFirst array =
     case get 0 array of
         Just value ->
-            Just (value, dropLeft 1 array)
+            Just ( value, dropLeft 1 array )
 
         Nothing ->
             Nothing
@@ -296,11 +289,11 @@ popFirst array =
 
 {-| TODO
 -}
-popLast : Array a -> Maybe (a, Array a)
+popLast : Array a -> Maybe ( a, Array a )
 popLast array =
     case get (length array - 1) array of
         Just value ->
-            Just (value, dropRight 1 array)
+            Just ( value, dropRight 1 array )
 
         Nothing ->
             Nothing
@@ -314,20 +307,20 @@ reverse array =
 
 
 {-| Places the given value between all members of the given list.
-    intersperse "on" ["turtles","turtles","turtles"] == ["turtles","on","turtles","on","turtles"]
+intersperse "on" ["turtles","turtles","turtles"] == ["turtles","on","turtles","on","turtles"]
 -}
 intersperse : a -> Array a -> Array a
 intersperse sep xs =
-  case popFirst xs of
-    Nothing ->
-      []
+    case popFirst xs of
+        Nothing ->
+            []
 
-    Just (hd, tl) ->
-      let
-        step x rest =
-          pushFront sep (pushFront x rest)
+        Just ( hd, tl ) ->
+            let
+                step x rest =
+                    pushFront sep (pushFront x rest)
 
-        spersed =
-          foldr step [] tl
-      in
-        pushFront hd spersed
+                spersed =
+                    foldr step [] tl
+            in
+            pushFront hd spersed

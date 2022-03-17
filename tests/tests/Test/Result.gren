@@ -1,26 +1,29 @@
 module Test.Result exposing (tests)
 
 import Basics exposing (..)
-import Result
+import Expect
 import Result exposing (Result(..))
 import String
 import Test exposing (..)
-import Expect
 
 
 isEven n =
     if modBy 2 n == 0 then
         Ok n
+
     else
         Err "number is odd"
+
 
 toIntResult : String -> Result String Int
 toIntResult s =
     case String.toInt s of
         Just i ->
             Ok i
+
         Nothing ->
             Err <| "could not convert string '" ++ s ++ "' to an Int"
+
 
 add3 a b c =
     a + b + c
@@ -57,7 +60,7 @@ tests =
 
         andThenTests =
             describe "andThen Tests"
-                [ test "andThen Ok" <| \() -> Expect.equal (Ok 42) ((toIntResult "42") |> Result.andThen isEven)
+                [ test "andThen Ok" <| \() -> Expect.equal (Ok 42) (toIntResult "42" |> Result.andThen isEven)
                 , test "andThen first Err" <|
                     \() ->
                         Expect.equal
@@ -70,8 +73,8 @@ tests =
                             (toIntResult "41" |> Result.andThen isEven)
                 ]
     in
-        describe "Result Tests"
-            [ mapTests
-            , mapNTests
-            , andThenTests
-            ]
+    describe "Result Tests"
+        [ mapTests
+        , mapNTests
+        , andThenTests
+        ]

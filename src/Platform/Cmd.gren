@@ -1,14 +1,12 @@
 module Platform.Cmd exposing
-  ( Cmd
-  , none
-  , batch
-  , map
-  )
+    ( Cmd, none, batch
+    , map
+    )
 
 {-|
 
 > **Note:** Gren has **managed effects**, meaning that things like HTTP
-> requests or writing to disk are all treated as *data* in Gren. When this
+> requests or writing to disk are all treated as _data_ in Gren. When this
 > data is given to the Gren runtime system, it can do some “query optimization”
 > before actually performing the effect. Perhaps unexpectedly, this managed
 > effects idea is the heart of why Gren is so nice for testing, reuse,
@@ -16,10 +14,14 @@ module Platform.Cmd exposing
 >
 > Gren has two kinds of managed effects: commands and subscriptions.
 
+
 # Commands
+
 @docs Cmd, none, batch
 
+
 # Fancy Stuff
+
 @docs map
 
 -}
@@ -44,16 +46,17 @@ messages that will come back into your application.
 ever, commands will make more sense as you work through [the Gren Architecture
 Tutorial](https://guide.gren-lang.org/architecture/) and see how they
 fit into a real application!
+
 -}
-type Cmd msg = Cmd
+type Cmd msg
+    = Cmd
 
 
 {-| Tell the runtime that there are no commands.
-
 -}
 none : Cmd msg
 none =
-  batch []
+    batch []
 
 
 {-| When you need the runtime system to perform a couple commands, you
@@ -63,10 +66,11 @@ no ordering guarantees about the results.
 
 **Note:** `Cmd.none` and `Cmd.batch [ Cmd.none, Cmd.none ]` and `Cmd.batch []`
 all do the same thing.
+
 -}
 batch : Array (Cmd msg) -> Cmd msg
 batch =
-  Gren.Kernel.Platform.batch
+    Gren.Kernel.Platform.batch
 
 
 
@@ -77,12 +81,11 @@ batch =
 Very similar to [`Html.map`](/packages/gren/html/latest/Html#map).
 
 This is very rarely useful in well-structured Gren code, so definitely read the
-section on [structure][] in the guide before reaching for this!
+section on [structure] in the guide before reaching for this!
 
 [structure]: https://guide.gren-lang.org/webapps/structure.html
+
 -}
 map : (a -> msg) -> Cmd a -> Cmd msg
 map =
-  Gren.Kernel.Platform.map
-
-
+    Gren.Kernel.Platform.map
