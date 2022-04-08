@@ -1,6 +1,5 @@
 module Basics exposing
-    ( Unit
-    , Int, Float, (+), (-), (*), (/), (//), (^)
+    ( Int, Float, (+), (-), (*), (/), (//), (^)
     , toFloat, round, floor, ceiling, truncate
     , (==), (/=)
     , (<), (>), (<=), (>=), max, min, compare, Order(..)
@@ -11,15 +10,10 @@ module Basics exposing
     , pi, cos, sin, tan, acos, asin, atan, atan2
     , toPolar, fromPolar
     , isNaN, isInfinite
-    , identity, always, (<|), (|>), (<<), (>>), Never, never
+    , identity, always, (<|), (|>), (<<), (>>), Unit, Never, never
     )
 
 {-| Tons of useful functions that get imported by default.
-
-
-# Unit
-
-@docs Unit
 
 
 # Math
@@ -83,7 +77,7 @@ things.
 
 # Function Helpers
 
-@docs identity, always, (<|), (|>), (<<), (>>), Never, never
+@docs identity, always, (<|), (|>), (<<), (>>), Unit, Never, never
 
 -}
 
