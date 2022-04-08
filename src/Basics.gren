@@ -1,5 +1,6 @@
 module Basics exposing
-    ( Int, Float, (+), (-), (*), (/), (//), (^)
+    ( Unit
+    , Int, Float, (+), (-), (*), (/), (//), (^)
     , toFloat, round, floor, ceiling, truncate
     , (==), (/=)
     , (<), (>), (<=), (>=), max, min, compare, Order(..)
@@ -14,6 +15,11 @@ module Basics exposing
     )
 
 {-| Tons of useful functions that get imported by default.
+
+
+# Unit
+
+@docs Unit
 
 
 # Math
@@ -171,6 +177,23 @@ compatible with any widely-used assembly language.
 -}
 type Float
     = Float -- NOTE: The compiler provides the real implementation.
+
+
+{-| A `Unit` is a type which has exactly one value. It might seem strange that
+someone would ever use such a type, but it comes in handy as a placeholder when
+you need a value, but don't really care what it is.
+
+    delayed =
+        Process.sleep 500
+            |> Task.andThen (\Unit -> Time.now)
+
+In the code above, we wait for 500 milliseconds before getting the current time.
+Since there's no reasonable value to pass on to the callback after waiting, and
+since passing on a value is required by the Task API, we pass the `Unit` value.
+
+-}
+type Unit
+    = Unit
 
 
 {-| Add two numbers. The `number` type variable means this operation can be
