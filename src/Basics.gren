@@ -33,8 +33,7 @@ module Basics exposing
 # Comparison
 
 These functions only work on `comparable` types. This includes numbers,
-characters, strings, lists of comparable things, and tuples of comparable
-things.
+characters, strings and arrays of comparable things.
 
 @docs (<), (>), (<=), (>=), max, min, compare, Order
 
