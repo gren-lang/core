@@ -1,6 +1,6 @@
 /*
 
-import Gren.Kernel.Utils exposing (Tuple0)
+import Basics exposing (Unit)
 
 */
 
@@ -95,7 +95,7 @@ var _Scheduler_send = F2(function(proc, msg)
 {
 	return _Scheduler_binding(function(callback) {
 		_Scheduler_rawSend(proc, msg);
-		callback(_Scheduler_succeed(__Utils_Tuple0));
+		callback(_Scheduler_succeed(__Basics_Unit));
 	});
 });
 
@@ -110,7 +110,7 @@ function _Scheduler_kill(proc)
 
 		proc.__root = null;
 
-		callback(_Scheduler_succeed(__Utils_Tuple0));
+		callback(_Scheduler_succeed(__Basics_Unit));
 	});
 }
 

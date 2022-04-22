@@ -37,7 +37,7 @@ function _Utils_eqHelp(x, y, depth, stack)
 
 	if (depth > 100)
 	{
-		stack.push(_Utils_Tuple2(x,y));
+		stack.push({ a = x, b = y });
 		return true;
 	}
 
@@ -133,15 +133,6 @@ var _Utils_compare = F2(function(x, y)
 
 
 // COMMON VALUES
-
-var _Utils_Tuple0__PROD = 0;
-var _Utils_Tuple0__DEBUG = { $: '#0' };
-
-function _Utils_Tuple2__PROD(a, b) { return { a: a, b: b }; }
-function _Utils_Tuple2__DEBUG(a, b) { return { $: '#2', a: a, b: b }; }
-
-function _Utils_Tuple3__PROD(a, b, c) { return { a: a, b: b, c: c }; }
-function _Utils_Tuple3__DEBUG(a, b, c) { return { $: '#3', a: a, b: b, c: c }; }
 
 function _Utils_chr__PROD(c) { return c; }
 function _Utils_chr__DEBUG(c) { return new String(c); }

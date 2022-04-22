@@ -1,6 +1,6 @@
 /*
 
-import Gren.Kernel.Utils exposing (chr, Tuple2)
+import Gren.Kernel.Utils exposing (chr)
 import Maybe exposing (Just, Nothing)
 
 */
@@ -17,8 +17,8 @@ function _String_uncons(string)
 	return !isNaN(word)
 		? __Maybe_Just(
 			0xD800 <= word && word <= 0xDBFF
-				? __Utils_Tuple2(__Utils_chr(string[0] + string[1]), string.slice(2))
-				: __Utils_Tuple2(__Utils_chr(string[0]), string.slice(1))
+				? { first = __Utils_chr(string[0] + string[1]), rest = string.slice(2) }
+				: { first = __Utils_chr(string[0]), rest = string.slice(1) }
 		)
 		: __Maybe_Nothing;
 }

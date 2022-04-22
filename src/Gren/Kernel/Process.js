@@ -1,7 +1,7 @@
 /*
 
 import Gren.Kernel.Scheduler exposing (binding, succeed)
-import Gren.Kernel.Utils exposing (Tuple0)
+import Basics exposing (Unit)
 
 */
 
@@ -10,7 +10,7 @@ function _Process_sleep(time)
 {
 	return __Scheduler_binding(function(callback) {
 		var id = setTimeout(function() {
-			callback(__Scheduler_succeed(__Utils_Tuple0));
+			callback(__Scheduler_succeed(__Basics_Unit));
 		}, time);
 
 		return function() { clearTimeout(id); };
