@@ -1,11 +1,13 @@
 /*
 
+import Elm.Kernel.Utils exposing (cmp)
+import Basics exposing (EQ, LT)
 import Maybe exposing (Just, Nothing)
 
 */
 
 
-function _Array_length(array)
+var _Array_length = function(array)
 {
     return array.length;
 }
@@ -119,7 +121,91 @@ var _Array_slice = F3(function(from, to, array)
     return array.slice(from, to);
 });
 
-var _Array_append = F3(function(left, right)
+var _Array_append = F2(function(left, right)
 {
     return left.concat(right);
 });
+
+var _Array_reverse = function(array)
+{
+    return array.slice().reverse;
+};
+
+var _Array_findFirst = F2(function(pred, array)
+{
+    var length = array.length;
+
+    for (var i = 0; i < length; i++)
+    {
+        var element = array[i];
+
+        if (pred(element))
+        {
+            return __Maybe_Just(element);
+        }
+    }
+
+    return __Maybe_Nothing;
+});
+
+var _Array_findLast = F2(function(pred, array)
+{
+    for (var i = array.length - 1; i >= 0; i--)
+    {
+        var element = array[i];
+
+        if (pred(element))
+        {
+            return __Maybe_Just(element);
+        }
+    }
+
+    return __Maybe_Nothing;
+});
+
+var _Array_map2 = F3(function(fn, as, bs)
+{
+    var result = [];
+    var lowestLength = [ as.length, bs.length ].sort()[0];
+
+    for (var i = 0; i < lowestLength; i++)
+    {
+        result.push(A2(fn, as[i], bs[i]));
+    }
+
+    return result;
+});
+
+var _Array_map3 = F3(function(fn, as, bs, cs)
+{
+    var result = [];
+    var lowestLength = [ as.length, bs.length, cs.length ].sort()[0];
+
+    for (var i = 0; i < lowestLength; i++)
+    {
+        result.push(A3(fn, as[i], bs[i], cs[i]));
+    }
+
+    return result;
+});
+
+var _Array_sort = function(array)
+{
+    return array.slice().sort();
+};
+
+var _Array_sortBy = F2(function(fn, array)
+{
+	return array.slice().sort(function(a, b) {
+		return __Utils_cmp(fn(a), fn(b));
+	});
+});
+
+var _Array_sortWith = F2(function(fn, array)
+{
+	return array.slice().sort(function(a, b) {
+		var ord = A2(fn, a, b);
+		return ord === __Basics_EQ ? 0 : ord === __Basics_LT ? -1 : 1;
+	});
+});
+
