@@ -277,11 +277,14 @@ takeRight n array =
 
 {-| TODO
 -}
-popFirst : Array a -> Maybe ( a, Array a )
+popFirst : Array a -> Maybe { first : a, rest : Array a }
 popFirst array =
     case get 0 array of
         Just value ->
-            Just ( value, dropLeft 1 array )
+            Just
+                { first = value
+                , rest = dropLeft 1 array
+                }
 
         Nothing ->
             Nothing
@@ -289,11 +292,14 @@ popFirst array =
 
 {-| TODO
 -}
-popLast : Array a -> Maybe ( a, Array a )
+popLast : Array a -> Maybe { first : a, rest : Array a }
 popLast array =
     case get (length array - 1) array of
         Just value ->
-            Just ( value, dropRight 1 array )
+            Just
+                { first = value
+                , rest = dropRight 1 array
+                }
 
         Nothing ->
             Nothing
@@ -315,12 +321,12 @@ intersperse sep xs =
         Nothing ->
             []
 
-        Just ( hd, tl ) ->
+        Just { first = head, rest = tail } ->
             let
                 step x rest =
                     pushFront sep (pushFront x rest)
 
                 spersed =
-                    foldr step [] tl
+                    foldr step [] tail
             in
-            pushFront hd spersed
+            pushFront head spersed

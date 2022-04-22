@@ -32,7 +32,7 @@ curious? Public discussions of your explorations should be framed accordingly.
 
 -}
 
-import Basics exposing (Never)
+import Basics exposing (Never, Unit(..))
 import Gren.Kernel.Platform
 import Gren.Kernel.Scheduler
 import Platform.Cmd exposing (Cmd)
@@ -72,8 +72,8 @@ module has a few ways to create that kind of `Program` instead!
 
 -}
 worker :
-    { init : flags -> ( model, Cmd msg )
-    , update : msg -> model -> ( model, Cmd msg )
+    { init : flags -> { model : model, cmd : Cmd msg }
+    , update : msg -> model -> { model : model, cmd : Cmd msg }
     , subscriptions : model -> Sub msg
     }
     -> Program flags model msg
@@ -115,7 +115,7 @@ type Router appMsg selfMsg
 {-| Send the router a message for the main loop of your app. This message will
 be handled by the overall `update` function, just like events from `Html`.
 -}
-sendToApp : Router msg a -> msg -> Task x ()
+sendToApp : Router msg a -> msg -> Task x Unit
 sendToApp =
     Gren.Kernel.Platform.sendToApp
 
@@ -127,6 +127,6 @@ effect manager as necessary.
 As an example, the effect manager for web sockets
 
 -}
-sendToSelf : Router a msg -> msg -> Task x ()
+sendToSelf : Router a msg -> msg -> Task x Unit
 sendToSelf =
     Gren.Kernel.Platform.sendToSelf

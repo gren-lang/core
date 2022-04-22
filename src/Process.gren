@@ -22,9 +22,9 @@ think the API will be extended to be more like this:
 
     spawn : Task exit a -> Task x (Id exit Never)
 
-    kill : Id exit msg -> Task x ()
+    kill : Id exit msg -> Task x Unit
 
-    send : Id exit msg -> msg -> Task x ()
+    send : Id exit msg -> msg -> Task x Unit
 
 A process `Id` will have two type variables to make sure all communication is
 valid. The `exit` type describes the messages that are produced if the process
@@ -43,7 +43,7 @@ longer. That’s kind of what Gren is all about.
 
 -}
 
-import Basics exposing (Float, Never)
+import Basics exposing (Float, Never, Unit(..))
 import Gren.Kernel.Process
 import Gren.Kernel.Scheduler
 import Platform
@@ -92,7 +92,7 @@ delay work until later.
 [setTimeout]: https://developer.mozilla.org/en-US/docs/Web/API/WindowTimers/setTimeout
 
 -}
-sleep : Float -> Task x ()
+sleep : Float -> Task x Unit
 sleep =
     Gren.Kernel.Process.sleep
 
@@ -102,6 +102,6 @@ have it keep running and doing stuff. The `kill` function will force a process
 to bail on whatever task it is running. So if there is an HTTP request in
 flight, it will also abort the request.
 -}
-kill : Id -> Task x ()
+kill : Id -> Task x Unit
 kill =
     Gren.Kernel.Scheduler.kill

@@ -558,17 +558,21 @@ filter isGood dict =
 contains all key-value pairs which passed the test, and the second contains
 the pairs that did not.
 -}
-partition : (comparable -> v -> Bool) -> Dict comparable v -> ( Dict comparable v, Dict comparable v )
+partition : (comparable -> v -> Bool) -> Dict comparable v -> { trues : Dict comparable v, falses : Dict comparable v }
 partition isGood dict =
     let
-        add key value ( t1, t2 ) =
+        add key value { trues, falses } =
             if isGood key value then
-                ( insert key value t1, t2 )
+                { trues = insert key value trues
+                , falses = falses
+                }
 
             else
-                ( t1, insert key value t2 )
+                { trues = trues
+                , falses = insert key value falses
+                }
     in
-    foldl add ( empty, empty ) dict
+    foldl add { trues = empty, falses = empty } dict
 
 
 
@@ -597,16 +601,16 @@ values dict =
 
 {-| Convert a dictionary into an association list of key-value pairs, sorted by keys.
 -}
-toArray : Dict k v -> Array ( k, v )
+toArray : Dict k v -> Array { key : k, value : v }
 toArray dict =
-    foldl (\key value array -> Array.pushBack ( key, value ) array) [] dict
+    foldl (\key value array -> Array.pushBack { key = key, value = value } array) [] dict
 
 
 {-| Convert an association list into a dictionary.
 -}
-fromArray : Array ( comparable, v ) -> Dict comparable v
+fromArray : Array { key : comparable, value : v } -> Dict comparable v
 fromArray assocs =
-    Array.foldl (\( key, value ) dict -> insert key value dict) empty assocs
+    Array.foldl (\{ key, value } dict -> insert key value dict) empty assocs
 
 
 {-| The most general way of combining two dictionaries. You provide three
@@ -629,22 +633,31 @@ merge :
     -> result
 merge leftStep bothStep rightStep leftDict rightDict initialResult =
     let
-        stepState rKey rValue ( list, result ) =
+        stepState rKey rValue { list, result } =
             case Array.popFirst list of
                 Nothing ->
-                    ( list, rightStep rKey rValue result )
+                    { list = list
+                    , result = rightStep rKey rValue result
+                    }
 
-                Just ( ( lKey, lValue ), rest ) ->
+                Just { first = { key = lKey, value = lValue }, rest } ->
                     if lKey < rKey then
-                        stepState rKey rValue ( rest, leftStep lKey lValue result )
+                        stepState rKey rValue 
+                            { list = rest
+                            , result = leftStep lKey lValue result
+                            }
 
                     else if lKey > rKey then
-                        ( list, rightStep rKey rValue result )
+                        { list = list
+                        , result = rightStep rKey rValue result
+                        }
 
                     else
-                        ( rest, bothStep lKey lValue rValue result )
+                        { list = rest
+                        , result = bothStep lKey lValue rValue result
+                        }
 
-        ( leftovers, intermediateResult ) =
-            foldl stepState ( toArray leftDict, initialResult ) rightDict
+        { list = leftovers, result = intermediateResult } =
+            foldl stepState { list = toArray leftDict, result = initialResult } rightDict
     in
-    Array.foldl (\( k, v ) result -> leftStep k v result) intermediateResult leftovers
+    Array.foldl (\{ key, value } result -> leftStep key value result) intermediateResult leftovers

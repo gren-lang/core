@@ -31,7 +31,7 @@ HTTP requests or writing to a database.
 -}
 
 import Array exposing (Array)
-import Basics exposing ((<<), (|>), Never)
+import Basics exposing ((<<), (|>), Never, Unit(..))
 import Gren.Kernel.Scheduler
 import Maybe exposing (Maybe(..))
 import Platform
@@ -42,8 +42,8 @@ import Result exposing (Result(..))
 {-| Here are some common tasks:
 
   - [`now : Task x Posix`][now]
-  - [`focus : String -> Task Error ()`][focus]
-  - [`sleep : Float -> Task x ()`][sleep]
+  - [`focus : String -> Task Error Unit`][focus]
+  - [`sleep : Float -> Task x Unit`][sleep]
 
 [now]: /packages/gren/time/latest/Time#now
 [focus]: /packages/gren/browser/latest/Browser-Dom#focus
@@ -351,7 +351,7 @@ So we could _attempt_ to focus on a certain DOM node like this:
     type Msg
         = Click
         | Search String
-        | Focus (Result Browser.DomError ())
+        | Focus (Result Browser.DomError Unit)
 
     focus : Cmd Msg
     focus =
@@ -387,24 +387,24 @@ cmdMap tagger (Perform task) =
 -- MANAGER
 
 
-init : Task Never ()
+init : Task Never Unit
 init =
-    succeed ()
+    succeed Unit
 
 
-onEffects : Platform.Router msg Never -> Array (MyCmd msg) -> () -> Task Never ()
+onEffects : Platform.Router msg Never -> Array (MyCmd msg) -> Unit -> Task Never Unit
 onEffects router commands state =
     map
-        (\_ -> ())
+        (\_ -> Unit)
         (sequence (Array.map (spawnCmd router) commands))
 
 
-onSelfMsg : Platform.Router msg Never -> Never -> () -> Task Never ()
+onSelfMsg : Platform.Router msg Never -> Never -> Unit -> Task Never Unit
 onSelfMsg _ _ _ =
-    succeed ()
+    succeed Unit
 
 
-spawnCmd : Platform.Router msg Never -> MyCmd msg -> Task x ()
+spawnCmd : Platform.Router msg Never -> MyCmd msg -> Task x Unit
 spawnCmd router (Perform task) =
     Gren.Kernel.Scheduler.spawn
         (task

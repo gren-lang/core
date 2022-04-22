@@ -646,7 +646,7 @@ pattern match on strings exactly as you would with lists.
     uncons "" == Nothing
 
 -}
-uncons : String -> Maybe ( Char, String )
+uncons : String -> Maybe { first : Char, rest : String }
 uncons =
     Gren.Kernel.String.uncons
 

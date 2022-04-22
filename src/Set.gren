@@ -46,7 +46,7 @@ Insert, remove, and query operations all take _O(log n)_ time.
 -}
 
 import Array exposing (Array)
-import Basics exposing (Bool, Int)
+import Basics exposing (Bool, Int, Unit(..))
 import Dict
 import Maybe exposing (Maybe(..))
 
@@ -55,7 +55,7 @@ import Maybe exposing (Maybe(..))
 `(Set String)` is a set of strings.
 -}
 type Set t
-    = Set_gren_builtin (Dict.Dict t ())
+    = Set_gren_builtin (Dict.Dict t Unit)
 
 
 {-| Create an empty set.
@@ -69,14 +69,14 @@ empty =
 -}
 singleton : comparable -> Set comparable
 singleton key =
-    Set_gren_builtin (Dict.singleton key ())
+    Set_gren_builtin (Dict.singleton key Unit)
 
 
 {-| Insert a value into a set.
 -}
 insert : comparable -> Set comparable -> Set comparable
 insert key (Set_gren_builtin dict) =
-    Set_gren_builtin (Dict.insert key () dict)
+    Set_gren_builtin (Dict.insert key Unit dict)
 
 
 {-| Remove a value from a set. If the value is not found, no changes are made.
@@ -187,10 +187,12 @@ filter isGood (Set_gren_builtin dict) =
 {-| Create two new sets. The first contains all the elements that passed the
 given test, and the second contains all the elements that did not.
 -}
-partition : (comparable -> Bool) -> Set comparable -> ( Set comparable, Set comparable )
+partition : (comparable -> Bool) -> Set comparable -> { trues : Set comparable, falses : Set comparable }
 partition isGood (Set_gren_builtin dict) =
     let
-        ( dict1, dict2 ) =
+        { trues, falses } =
             Dict.partition (\key _ -> isGood key) dict
     in
-    ( Set_gren_builtin dict1, Set_gren_builtin dict2 )
+    { trues = Set_gren_builtin trues
+    , falses = Set_gren_builtin falses
+    }
