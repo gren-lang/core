@@ -227,7 +227,7 @@ sequence fails.
 -}
 sequence : Array (Task x a) -> Task x (Array a)
 sequence tasks =
-    Array.foldl (map2 Array.pushBack) (succeed []) tasks
+    Array.foldl (map2 Array.pushLast) (succeed []) tasks
 
 
 

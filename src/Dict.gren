@@ -586,7 +586,7 @@ partition isGood dict =
 -}
 keys : Dict k v -> Array k
 keys dict =
-    foldl (\key value keyArray -> Array.pushBack key keyArray) [] dict
+    foldl (\key value keyArray -> Array.pushLast key keyArray) [] dict
 
 
 {-| Get all of the values in a dictionary, in the order of their keys.
@@ -596,14 +596,14 @@ keys dict =
 -}
 values : Dict k v -> Array v
 values dict =
-    foldl (\key value valueArray -> Array.pushBack value valueArray) [] dict
+    foldl (\key value valueArray -> Array.pushLast value valueArray) [] dict
 
 
 {-| Convert a dictionary into an association list of key-value pairs, sorted by keys.
 -}
 toArray : Dict k v -> Array { key : k, value : v }
 toArray dict =
-    foldl (\key value array -> Array.pushBack { key = key, value = value } array) [] dict
+    foldl (\key value array -> Array.pushLast { key = key, value = value } array) [] dict
 
 
 {-| Convert an association list into a dictionary.

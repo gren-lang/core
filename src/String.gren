@@ -598,7 +598,7 @@ fromFloat =
 -}
 toArray : String -> Array Char
 toArray string =
-    foldl Array.pushBack [] string
+    foldl Array.pushLast [] string
 
 
 {-| Convert a list of characters into a String. Can be useful if you

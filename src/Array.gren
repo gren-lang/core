@@ -1,132 +1,124 @@
 module Array exposing
     ( Array
-    , empty, singleton, initialize
-    , isEmpty, length, get, set, pushFront, pushBack
-    , foldl, foldr, map, indexedMap, filter, filterMap, prefix, postfix, reverse, intersperse
-    , slice, dropLeft, dropRight, takeLeft, takeRight, popFirst, popLast
-    , flatMap, flatten
+    , empty, singleton, initialize, repeat
+    , map, indexedMap, foldl, foldr, filter, filterMap, reverse
+    , isEmpty, length, get, findFirst, findLast, member, any, all, minimum, maximum
+    , set, pushFirst, pushLast
+    , prefix, postfix, flatten, flatMap, intersperse, map2, map3
+    , first, last, slice, dropFirst, dropLast, takeFirst, takeLast, popFirst, popLast, partition
+    , sort, sortBy, sortWith
     )
 
-{-| This library provides an immutable version of native JavaScript arrays.
-
-NOTE: All manipulations causes a copy of the entire Array, this can be slow.
-
-
-# Arrays
+{-| You can create an `Array` using the `[1, 2, 3]` syntax. This module has a bunch of
+functions to help you work with them.
 
 @docs Array
 
 
-# Creation
+# Create
 
-@docs empty, singleton, initialize
-
-
-# Basics
-
-@docs isEmpty, length, get, set, pushFront, pushBack
+@docs empty, singleton, initialize, repeat
 
 
-# Transformation
+# Transform
 
-@docs foldl, foldr, map, indexedMap, filter, filterMap, concat, concatMap, prefix, postfix, reverse, intersperse
+@docs map, indexedMap, foldl, foldr, filter, filterMap, reverse
 
 
-# Sub-arrays
+# Query
 
-@docs slice, dropLeft, dropRight, takeLeft, takeRight, popFirst, popLast
+@docs isEmpty, length, get, findFirst, findLast, member, any, all, minimum, maximum
+
+
+# Modify
+
+@docs set, pushFirst, pushLast
+
+
+# Combine
+
+@docs prefix, postfix, flatten, flatMap, intersperse, map2, map3
+
+
+# Deconstruct
+
+@docs slice, dropFirst, dropLast, takeFirst, takeLast, popFirst, popLast, first, last, partition
+
+
+# Sort
+
+@docs sort, sortBy, sortWith
+
 
 -}
 
-import Basics exposing ((-), (==), Bool, Int)
-import Gren.Kernel.Array
+import Basics exposing (..)
 import Maybe exposing (Maybe(..))
+import Gren.Kernel.Array
 
 
-{-| Representation of a javascript array.
+{-| An Array is an ordered collection of elements.
 -}
 type Array a
     = Array a
 
 
-{-| The empty array.
+-- CREATE
+
+
+{-| An empty array.
 -}
 empty : Array a
 empty =
     []
 
 
-{-| Return an array containing a single value.
+{-| Create an array containing a single value.
 -}
 singleton : a -> Array a
 singleton a =
     [ a ]
 
 
-{-| Return the length of the array.
--}
-length : Array a -> Int
-length =
-    Gren.Kernel.Array.length
-
-
-{-| Check if an array is empty.
--}
-isEmpty : Array a -> Bool
-isEmpty array =
-    length array == 0
-
-
-{-| Initialize an array. `initalize n offset fn` creates an array of length `n`
-with the element at index `i` initialized to the result of `(f (i + offset))`.
-
-The offset parameter is there so one can avoid creating a closure for this use
-case. This is an optimization that has proved useful in the `Array` module.
+{-| Create an array of `n` elements, containing the elements
+resulting from calling `fn` with `offset + index`.
 
     initialize 3 5 identity == [ 5, 6, 7 ]
 
+In the above example, we create an array containing 3 integers
+starting at 5.
 -}
 initialize : Int -> Int -> (Int -> a) -> Array a
 initialize =
     Gren.Kernel.Array.initialize
 
 
-{-| Returns the element at the given index, or `Nothing` if index is out of bounds.
+{-| Create an array with `n` copies of a value:
+
+    repeat 5 3 == [ 3, 3, 3, 3, 3 ]
+
 -}
-get : Int -> Array a -> Maybe a
-get =
-    Gren.Kernel.Array.get
+repeat : Int -> a -> Array a
+repeat n val =
+    initialize n 0 (\_ -> val)
 
 
-{-| Sets the element at the given index, or returns unmodified `Array` if index is out of bounds.
--}
-set : Int -> a -> Array a -> Array a
-set =
-    Gren.Kernel.Array.set
-
-
-{-| Reduce the array from the left.
--}
-foldl : (a -> b -> b) -> b -> Array a -> b
-foldl =
-    Gren.Kernel.Array.foldl
-
-
-{-| Reduce the array from the right.
--}
-foldr : (a -> b -> b) -> b -> Array a -> b
-foldr =
-    Gren.Kernel.Array.foldr
+-- TRANSFORM
 
 
 {-| Apply a function on every element in an array.
+
+    map negate [ 1, 4, 9 ] == [ -1, -4, -9 ]
+
+So `map func [ a, b, c ]` is the same as `[ func a, func b, func c ]`
+
 -}
 map : (a -> b) -> Array a -> Array b
 map =
     Gren.Kernel.Array.map
 
 
-{-| Apply a function on every element and its index in an array.
+{-| Same as `map` but the function is also applied to the index of each element.
 
     indexedMap (,) [ 3, 3, 3 ] == [ ( 0, 3 ), ( 1, 3 ), ( 2, 3 ) ]
 
@@ -136,7 +128,31 @@ indexedMap =
     Gren.Kernel.Array.indexedMap
 
 
-{-| Keep the values which passes the predicate
+{-| Reduce the array from the left.
+
+    foldl (+) 0 [ 1, 2, 3 ] == 6
+
+So `foldl step state [ 1, 2, 3 ] is like saying:
+
+    state
+        |> step 1
+        |> step 2
+        |> step 3
+-}
+foldl : (a -> b -> b) -> b -> Array a -> b
+foldl =
+    Gren.Kernel.Array.foldl
+
+
+{-| Reduce the array from the right. Same as `foldl` but
+the execution order is reversed.
+-}
+foldr : (a -> b -> b) -> b -> Array a -> b
+foldr =
+    Gren.Kernel.Array.foldr
+
+
+{-| Keep values that pass the test.
 
     filter (\n -> n < 3) [ 1, 2, 3, 4 ] == [ 1, 2 ]
 
@@ -146,7 +162,7 @@ filter pred array =
     foldl
         (\v acc ->
             if pred v then
-                pushFront v acc
+                pushLast v acc
 
             else
                 acc
@@ -155,7 +171,11 @@ filter pred array =
         array
 
 
-{-| TODO
+{-| Filter out unwanted results of a map operation.
+
+    filterMap String.toInt [ "3", "not a number", "-5" ] == [ 3, -5 ]
+    filterMap identity [ Just 1, Nothing ] == [ 1 ]
+
 -}
 filterMap : (a -> Maybe b) -> Array a -> Array b
 filterMap mapper array =
@@ -163,7 +183,7 @@ filterMap mapper array =
         (\v acc ->
             case mapper v of
                 Just newValue ->
-                    pushFront newValue acc
+                    pushLast newValue acc
 
                 Nothing ->
                     acc
@@ -172,148 +192,261 @@ filterMap mapper array =
         array
 
 
-{-| TODO
+{-| Reverse an array.
+
+    reverse [ 1, 2, 3 ] == [ 3, 2, 1 ]
+
 -}
-flatten : Array (Array a) -> Array a
-flatten array =
-    foldl postfix [] array
+reverse : Array a -> Array a
+reverse =
+    Gren.Kernel.Array.reverse
 
 
-{-| TODO
+-- QUERY
+
+
+{-| Check if an array is empty.
+
+    isEmpty [] == True
+    isEmpty [ 1, 2, 3 ] == False
+
 -}
-flatMap : (a -> Array b) -> Array a -> Array b
-flatMap mapper array =
-    foldl (\v acc -> prefix acc (mapper v)) [] array
+isEmpty : Array a -> Bool
+isEmpty array =
+    length array == 0
 
 
-{-| TODO
+{-| Return the length of an array.
+
+    length [ 1, 2, 3 ] == 3
+
 -}
-pushFront : a -> Array a -> Array a
-pushFront value array =
+length : Array a -> Int
+length =
+    Gren.Kernel.Array.length
+
+
+{-| Retrieve the element at a given index, or `Nothing` if the index is out of bounds.
+
+    get 1 [ 1, 2, 3 ] == Just 2
+    get 10 [ 1, 2, 3 ] == Nothing
+
+-}
+get : Int -> Array a -> Maybe a
+get =
+    Gren.Kernel.Array.get
+
+
+{-| Find the first value that passes the test.
+
+    find (\n -> n > 0) [ -1, 0, 1, 2 ] == Just 1
+
+-}
+findFirst : (a -> Bool) -> Array a -> Maybe a
+findFirst =
+    Gren.Kernel.Array.findFirst
+
+
+{-| Find the last value that passes the test.
+
+    find (\n -> n > 0) [ -1, 0, 1, 2 ] == Just 2
+
+-}
+findLast : (a -> Bool) -> Array a -> Maybe a
+findLast =
+    Gren.Kernel.Array.findLast
+
+
+{-| Figure out whether an array contains a value.
+
+    member 9 [1,2,3,4] == False
+    member 4 [1,2,3,4] == True
+
+-}
+member : a -> Array a -> Bool
+member value array =
+    case findFirst (\v -> v == value) array of
+        Just _ ->
+            True
+
+        Nothing ->
+            False
+
+
+{-| Determine if any elements pass the test.
+
+    any isEven [2,3] == True
+    any isEven [1,3] == False
+    any isEven [] == False
+
+-}
+any : (a -> Bool) -> Array a -> Bool
+any fn array =
+    case findFirst fn array of
+        Just _ ->
+            True
+
+        Nothing ->
+            False
+
+
+{-| Determine if all elements pass the test.
+
+    all isEven [2,4] == True
+    all isEven [2,3] == False
+    all isEven [] == True
+
+-}
+all : (a -> Bool) -> Array a -> Bool
+all fn array =
+    case findFirst (not << fn) array of
+        Just _ ->
+            False
+
+        Nothing ->
+            True
+
+
+{-| Find the minimum element in a non-empty list.
+
+    minimum [3,2,1] == Just 1
+    minimum []      == Nothing
+
+-}
+minimum : Array comparable -> Maybe comparable
+minimum array =
+    case first array of
+        Nothing ->
+            Nothing
+
+        Just val ->
+            Just <|
+                foldl
+                    (\current lowest ->
+                        if current < lowest then
+                            current
+
+                        else
+                            lowest
+                    )
+                    val
+                    array
+
+
+{-| Find the maximum element in a non-empty list.
+
+    maximum [3,2,1] == Just 3
+    maximum []      == Nothing
+
+-}
+maximum : Array comparable -> Maybe comparable
+maximum array =
+    case first array of
+        Nothing ->
+            Nothing
+
+        Just val ->
+            Just <|
+                foldl
+                    (\current highest ->
+                        if current > highest then
+                            current
+
+                        else
+                            highest
+                    )
+                    val
+                    array
+
+
+-- MODIFY
+
+
+{-| Replaces the element at the given index, or returns the array unmodified if the index is out of bounds.
+
+    set 1 10 [ 1, 2, 3 ] == [ 1, 10, 3 ]
+    set 10 10 [ 1, 2, 3 ] == [ 1, 2, 3 ]
+
+-}
+set : Int -> a -> Array a -> Array a
+set =
+    Gren.Kernel.Array.set
+
+
+{-| Add a value to the start of the array.
+
+    pushFirst 1 []          == [ 1 ]
+    pushFirst 5 [ 1, 4, 9 ] == [ 5, 1, 4, 9 ]
+
+-}
+pushFirst : a -> Array a -> Array a
+pushFirst value array =
     prefix [ value ] array
 
 
-{-| TODO
+{-| Add a value to the end of the array.
+
+    pushLast 1 []          == [ 1 ]
+    pushLast 5 [ 1, 4, 9 ] == [ 1, 4, 9, 5 ]
+
 -}
-pushBack : a -> Array a -> Array a
-pushBack =
+pushLast : a -> Array a -> Array a
+pushLast =
     Gren.Kernel.Array.push
 
 
-{-| TODO
+-- COMBINE
+
+
+{-| Combine two arrays so that the first array becomes the prefix,
+and the second array becomes the postfix of the resulting array.
+
+    prefix [ 1, 2, 3 ] [ 4, 5, 6 ] == [ 1, 2, 3, 4, 5, 6 ] 
+
+You can also use the `++` operator for this purpose.
+
+    [ 1, 2, 3 ] ++ [ 4, 5, 6 ] == [ 1, 2, 3, 4, 5, 6 ]
 -}
 prefix : Array a -> Array a -> Array a
 prefix =
     Gren.Kernel.Array.append
 
 
-{-| TODO
+{-| Combine two arrays so that the first array becomes the postfix,
+and the second array becomes the prefix of the resulting array.
+
+    postfix [ 1, 2, 3 ] [ 4, 5, 6 ] == [ 4, 5, 6, 1, 2, 3 ]
+    
 -}
 postfix : Array a -> Array a -> Array a
-postfix first second =
-    prefix second first
+postfix fst second =
+    prefix second fst
 
 
-{-| Get a sub section of an array: `(slice start end array)`.
-The `start` is a zero-based index where we will start our slice.
-The `end` is a zero-based index that indicates the end of the slice.
-The slice extracts up to, but no including, the `end`.
+{-| Combine a bunch of arrays into a single array.
 
-Both `start` and `end` can be negative, indicating an offset from the end
-of the array. Popping the last element of the array is therefore:
-`slice 0 -1 arr`.
-
-In the case of an impossible slice, the empty array is returned.
+    flatten [ [ 1 ], [ 2 ], [ 4, 5 ] ] == [ 1, 2, 4, 5 ]
 
 -}
-slice : Int -> Int -> Array a -> Array a
-slice =
-    Gren.Kernel.Array.slice
+flatten : Array (Array a) -> Array a
+flatten array =
+    foldl postfix [] array
 
 
-{-| Remove `n` elements from the left side of the Array.
+{-| Map a given function onto an array, then flatten the resulting array.
 
-    dropLeft 1 [ 1, 2, 3 ] == [ 2, 3 ]
-
--}
-dropLeft : Int -> Array a -> Array a
-dropLeft n array =
-    slice n (length array) array
-
-
-{-| Remove `n` elements from the right side of the Array.
-
-    dropRight 1 [ 1, 2, 3 ] == [ 1, 2 ]
+    flatMap f xs == flatten (map f xs)
 
 -}
-dropRight : Int -> Array a -> Array a
-dropRight n array =
-    slice 0 (length array - n) array
-
-
-{-| Take `n` elements from the left side of the Array.
-
-    takeLeft 1 [ 1, 2, 3 ] == [ 1 ]
-
--}
-takeLeft : Int -> Array a -> Array a
-takeLeft n array =
-    slice 0 n array
-
-
-{-| Take `n` elements from the right side of the Array.
-
-    takeRight 1 [ 1, 2, 3 ] == [ 3 ]
-
--}
-takeRight : Int -> Array a -> Array a
-takeRight n array =
-    let
-        len =
-            length array
-    in
-    slice (len - n) len array
-
-
-{-| TODO
--}
-popFirst : Array a -> Maybe { first : a, rest : Array a }
-popFirst array =
-    case get 0 array of
-        Just value ->
-            Just
-                { first = value
-                , rest = dropLeft 1 array
-                }
-
-        Nothing ->
-            Nothing
-
-
-{-| TODO
--}
-popLast : Array a -> Maybe { first : a, rest : Array a }
-popLast array =
-    case get (length array - 1) array of
-        Just value ->
-            Just
-                { first = value
-                , rest = dropRight 1 array
-                }
-
-        Nothing ->
-            Nothing
-
-
-{-| TODO
--}
-reverse : Array a -> Array a
-reverse array =
-    foldr pushBack empty array
+flatMap : (a -> Array b) -> Array a -> Array b
+flatMap mapper array =
+    foldl (\v acc -> prefix acc (mapper v)) [] array
 
 
 {-| Places the given value between all members of the given list.
-intersperse "on" ["turtles","turtles","turtles"] == ["turtles","on","turtles","on","turtles"]
+
+    intersperse "on" [ "turtles", "turtles", "turtles"] == [ "turtles", "on", "turtles", "on", "turtles"]
+
 -}
 intersperse : a -> Array a -> Array a
 intersperse sep xs =
@@ -324,9 +457,217 @@ intersperse sep xs =
         Just { first = head, rest = tail } ->
             let
                 step x rest =
-                    pushFront sep (pushFront x rest)
+                    pushFirst sep (pushFirst x rest)
 
                 spersed =
                     foldr step [] tail
             in
-            pushFront head spersed
+            pushFirst head spersed
+
+{-| Combine two arrays, combining them with the given function.
+If one array is longer, the extra elements are dropped.
+
+    map2 (\x y -> { x = x, y = y }) [ 1 ] [ 2 ] == [ { x = 1, y = 2 } ]
+-}
+map2 : (a -> b -> result) -> Array a -> Array b -> Array result
+map2 =
+    Gren.Kernel.Array.map2
+
+
+{-| Combine three arrays, combining them with the given function.
+If one array is longer, the extra elements are dropped.
+
+    map3 (\x y z -> { x = x, y = y, z = z }) [ 1 ] [ 2 ] [ 3 ] == [ { x = 1, y = 2, z = 3 } ]
+-}
+map3 : (a -> b -> c -> result) -> Array a -> Array b -> Array c -> Array result
+map3 mapper array =
+    Gren.Kernel.Array.map2
+
+
+-- DECONSTRUCT
+
+
+{-| Retrieve the first element of the array, if it exists.
+
+    first [ 1, 2, 3 ] == Just 1
+
+-}
+first : Array a -> Maybe a
+first array =
+    get 0 array
+
+
+{-| Retrieve the last element of the array, if it exists.
+
+    last [ 1, 2, 3 ] == Just 3
+
+-}
+last : Array a -> Maybe a
+last array =
+    get (length array - 1) array
+
+
+{-| Get a sub section of an array: `(slice start end array)`.
+
+The `start` is a zero-based index where we will start our slice.
+The `end` is a zero-based index that indicates the end of the slice.
+The slice extracts up to, but no including, the `end`.
+
+Both `start` and `end` can be negative, indicating an offset from the end
+of the array. Removing the last element of the array can be expressed as:
+
+    `slice 0 -1 arr`.
+
+In the case of an impossible slice, the empty array is returned.
+
+-}
+slice : Int -> Int -> Array a -> Array a
+slice =
+    Gren.Kernel.Array.slice
+
+
+{-| Remove the first `n` elements of the array.
+
+    dropFirst 5 [ 1 ] == []
+    dropFirst 1 [ 1, 2, 3 ] == [ 2, 3 ]
+
+-}
+dropFirst : Int -> Array a -> Array a
+dropFirst n array =
+    slice n (length array) array
+
+
+{-| Remove the last `n` elements of the array.
+
+    dropLast 1 [ 1, 2, 3 ] == [ 1, 2 ]
+
+-}
+dropLast : Int -> Array a -> Array a
+dropLast n array =
+    slice 0 (length array - n) array
+
+
+{-| Take the first `n` elements from the array.
+
+    takeFirst 2 [ 1, 2, 3 ] == [ 1, 2 ]
+
+-}
+takeFirst : Int -> Array a -> Array a
+takeFirst n array =
+    slice 0 n array
+
+
+{-| Take the last `n` elements from the array.
+
+    takeLast 2 [ 1, 2, 3 ] == [ 2, 3 ]
+
+-}
+takeLast : Int -> Array a -> Array a
+takeLast n array =
+    let
+        len =
+            length array
+    in
+    slice (len - n) len array
+
+
+{-| Split an array into its first element, and its remaining elements, if possible.
+
+    popFirst [ 1, 2, 3 ] == Just { first = 1, rest = [ 2, 3 ] }
+
+-}
+popFirst : Array a -> Maybe { first : a, rest : Array a }
+popFirst array =
+    case first array of
+        Just value ->
+            Just
+                { first = value
+                , rest = dropFirst 1 array
+                }
+
+        Nothing ->
+            Nothing
+
+
+{-| Split an array into its last element, and its remaining elements, if possible.
+
+    popFirst [ 1, 2, 3 ] == Just { last = 3, initial = [ 1, 2 ] }
+
+-}
+popLast : Array a -> Maybe { last : a, initial : Array a }
+popLast array =
+    case last array of
+        Just value ->
+            Just
+                { last = value
+                , initial = dropLast 1 array
+                }
+
+        Nothing ->
+            Nothing
+
+
+{-| Divide elements into two arrays based on the result of a boolean test.
+
+    partition (\x -> x < 3) [ 0, 1, 2, 3, 4, 5 ] == { trues = [ 0, 1, 2 ], falses = [ 3, 4, 5 ] }
+
+-}
+partition : (a -> Bool) -> Array a -> { trues : Array a, falses : Array a }
+partition fn array =
+    foldl
+        (\val { trues, falses } ->
+            if fn val then
+                { trues = pushLast val trues
+                , falses = falses
+                }
+
+            else
+                { trues = trues
+                , falses = pushLast val falses
+                }
+        )
+        { trues = empty, falses = empty }
+        array
+
+
+-- SORT
+
+
+{-| Sort values from lowest to highest
+
+    sort [ 3, 1, 5 ] == [ 1, 3, 5 ]
+
+-}
+sort : Array comparable -> Array comparable
+sort =
+    Gren.Kernel.Array.sort
+
+
+{-| Sort values by a derived property.
+
+    sortBy String.length [ "mouse", "cat" ] == [ "cat", "mouse" ]
+
+-}
+sortBy : (a -> comparable) -> Array comparable -> Array comparable
+sortBy =
+    Gren.Kernel.Array.sortBy
+
+
+{-| Sort values with a custom comparison function.
+
+    sortWith flippedComparison [1,2,3,4,5] == [5,4,3,2,1]
+
+    flippedComparison a b =
+        case compare a b of
+          LT -> GT
+          EQ -> EQ
+          GT -> LT
+
+This is also the most general sort function, allowing you to define any other: `sort == sortWith compare`
+
+-}
+sortWith : (a -> a -> Order) -> Array comparable -> Array comparable
+sortWith =
+    Gren.Kernel.Array.sortWith
+
+
