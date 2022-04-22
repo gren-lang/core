@@ -1,6 +1,6 @@
 /*
 
-import Elm.Kernel.Utils exposing (cmp)
+import Gren.Kernel.Utils exposing (cmp)
 import Basics exposing (EQ, LT)
 import Maybe exposing (Just, Nothing)
 
