@@ -9,7 +9,7 @@ module Basics exposing
     , degrees, radians, turns
     , pi, cos, sin, tan, acos, asin, atan, atan2
     , isNaN, isInfinite
-    , identity, always, (<|), (|>), (<<), (>>), Unit, Never, never
+    , identity, always, (<|), (|>), (<<), (>>), Unit(..), Never, never
     )
 
 {-| Tons of useful functions that get imported by default.
