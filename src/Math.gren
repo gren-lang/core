@@ -1,0 +1,377 @@
+module Math exposing
+    ( round, floor, ceiling, truncate
+    , modBy, remainderBy, abs, sqrt, logBase, e
+    , degrees, radians, turns
+    , pi, cos, sin, tan, acos, asin, atan, atan2
+    )
+
+{-| Functions for doing math
+
+
+# Math
+
+@docs round, floor, ceiling, truncate, modBy, remainderBy, abs, sqrt, logBase, e
+
+
+# Angles
+
+@docs degrees, radians, turns
+
+
+# Trigonometry
+
+@docs pi, cos, sin, tan, acos, asin, atan, atan2
+
+
+-}
+
+import Basics exposing (Int, Float, (/), (*), (<))
+import Gren.Kernel.Math
+
+
+{-| Round a number to the nearest integer.
+
+    round 1.0 == 1
+
+    round 1.2 == 1
+
+    round 1.5 == 2
+
+    round 1.8 == 2
+
+    round -1.2 == -1
+
+    round -1.5 == -1
+
+    round -1.8 == -2
+
+-}
+round : Float -> Int
+round =
+    Gren.Kernel.Math.round
+
+
+{-| Floor function, rounding down.
+
+    floor 1.0 == 1
+
+    floor 1.2 == 1
+
+    floor 1.5 == 1
+
+    floor 1.8 == 1
+
+    floor -1.2 == -2
+
+    floor -1.5 == -2
+
+    floor -1.8 == -2
+
+-}
+floor : Float -> Int
+floor =
+    Gren.Kernel.Math.floor
+
+
+{-| Ceiling function, rounding up.
+
+    ceiling 1.0 == 1
+
+    ceiling 1.2 == 2
+
+    ceiling 1.5 == 2
+
+    ceiling 1.8 == 2
+
+    ceiling -1.2 == -1
+
+    ceiling -1.5 == -1
+
+    ceiling -1.8 == -1
+
+-}
+ceiling : Float -> Int
+ceiling =
+    Gren.Kernel.Math.ceiling
+
+
+{-| Truncate a number, rounding towards zero.
+
+    truncate 1.0 == 1
+
+    truncate 1.2 == 1
+
+    truncate 1.5 == 1
+
+    truncate 1.8 == 1
+
+    truncate -1.2 == -1
+
+    truncate -1.5 == -1
+
+    truncate -1.8 == -1
+
+-}
+truncate : Float -> Int
+truncate =
+    Gren.Kernel.Math.truncate
+
+
+{-| Perform [modular arithmetic](https://en.wikipedia.org/wiki/Modular_arithmetic).
+A common trick is to use (n mod 2) to detect even and odd numbers:
+
+    modBy 2 0 == 0
+
+    modBy 2 1 == 1
+
+    modBy 2 2 == 0
+
+    modBy 2 3 == 1
+
+Our `modBy` function works in the typical mathematical way when you run into
+negative numbers:
+
+    List.map (modBy 4) [ -5, -4, -3, -2, -1,  0,  1,  2,  3,  4,  5 ]
+    --                 [  3,  0,  1,  2,  3,  0,  1,  2,  3,  0,  1 ]
+
+Use [`remainderBy`](#remainderBy) for a different treatment of negative numbers,
+or read Daan Leijen’s [Division and Modulus for Computer Scientists][dm] for more
+information.
+
+[dm]: https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/divmodnote-letter.pdf
+
+-}
+modBy : Int -> Int -> Int
+modBy =
+    Gren.Kernel.Math.modBy
+
+
+{-| Get the remainder after division. Here are bunch of examples of dividing by four:
+
+    List.map (remainderBy 4) [ -5, -4, -3, -2, -1,  0,  1,  2,  3,  4,  5 ]
+    --                       [ -1,  0, -3, -2, -1,  0,  1,  2,  3,  0,  1 ]
+
+Use [`modBy`](#modBy) for a different treatment of negative numbers,
+or read Daan Leijen’s [Division and Modulus for Computer Scientists][dm] for more
+information.
+
+[dm]: https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/divmodnote-letter.pdf
+
+-}
+remainderBy : Int -> Int -> Int
+remainderBy =
+    Gren.Kernel.Math.remainderBy
+
+
+{-| Get the [absolute value][abs] of a number.
+
+    abs 16 == 16
+
+    abs -4 == 4
+
+    abs -8.5 == 8.5
+
+    abs 3.14 == 3.14
+
+[abs]: https://en.wikipedia.org/wiki/Absolute_value
+
+-}
+abs : number -> number
+abs n =
+    if n < 0 then
+        -n
+
+    else
+        n
+
+{-| Take the square root of a number.
+
+    sqrt 4 == 2
+
+    sqrt 9 == 3
+
+    sqrt 16 == 4
+
+    sqrt 25 == 5
+
+-}
+sqrt : Float -> Float
+sqrt =
+    Gren.Kernel.Math.sqrt
+
+
+{-| Calculate the logarithm of a number with a given base.
+
+    logBase 10 100 == 2
+
+    logBase 2 256 == 8
+
+-}
+logBase : Float -> Float -> Float
+logBase base number =
+    (Gren.Kernel.Math.log number) / (Gren.Kernel.Math.log base)
+
+
+{-| An approximation of e.
+-}
+e : Float
+e =
+    Gren.Kernel.Math.e
+
+
+
+-- ANGLES
+
+
+{-| Convert radians to standard Gren angles (radians).
+
+    radians pi == 3.141592653589793
+
+-}
+radians : Float -> Float
+radians angleInRadians =
+    angleInRadians
+
+
+{-| Convert degrees to standard Gren angles (radians).
+
+    degrees 180 == 3.141592653589793
+
+-}
+degrees : Float -> Float
+degrees angleInDegrees =
+    (angleInDegrees * pi) / 180
+
+
+{-| Convert turns to standard Gren angles (radians). One turn is equal to 360°.
+
+    turns (1 / 2) == 3.141592653589793
+
+-}
+turns : Float -> Float
+turns angleInTurns =
+    (2 * pi) * angleInTurns
+
+
+
+-- TRIGONOMETRY
+
+
+{-| An approximation of pi.
+-}
+pi : Float
+pi =
+    Gren.Kernel.Math.pi
+
+
+{-| Figure out the cosine given an angle in radians.
+
+    cos (degrees 60) == 0.5000000000000001
+
+    cos (turns (1 / 6)) == 0.5000000000000001
+
+    cos (radians (pi / 3)) == 0.5000000000000001
+
+    cos (pi / 3) == 0.5000000000000001
+
+-}
+cos : Float -> Float
+cos =
+    Gren.Kernel.Math.cos
+
+
+{-| Figure out the sine given an angle in radians.
+
+    sin (degrees 30) == 0.49999999999999994
+
+    sin (turns (1 / 12)) == 0.49999999999999994
+
+    sin (radians (pi / 6)) == 0.49999999999999994
+
+    sin (pi / 6) == 0.49999999999999994
+
+-}
+sin : Float -> Float
+sin =
+    Gren.Kernel.Math.sin
+
+
+{-| Figure out the tangent given an angle in radians.
+
+    tan (degrees 45) == 0.9999999999999999
+
+    tan (turns (1 / 8)) == 0.9999999999999999
+
+    tan (radians (pi / 4)) == 0.9999999999999999
+
+    tan (pi / 4) == 0.9999999999999999
+
+-}
+tan : Float -> Float
+tan =
+    Gren.Kernel.Math.tan
+
+
+{-| Figure out the arccosine for `adjacent / hypotenuse` in radians:
+
+    acos (1 / 2) == 1.0471975511965979 -- 60° or pi/3 radians
+
+-}
+acos : Float -> Float
+acos =
+    Gren.Kernel.Math.acos
+
+
+{-| Figure out the arcsine for `opposite / hypotenuse` in radians:
+
+    asin (1 / 2) == 0.5235987755982989 -- 30° or pi/6 radians
+
+-}
+asin : Float -> Float
+asin =
+    Gren.Kernel.Math.asin
+
+
+{-| This helps you find the angle (in radians) to an `(x,y)` coordinate, but
+in a way that is rarely useful in programming. **You probably want
+[`atan2`](#atan2) instead!**
+
+This version takes `y/x` as its argument, so there is no way to know whether
+the negative signs comes from the `y` or `x` value. So as we go counter-clockwise
+around the origin from point `(1,1)` to `(1,-1)` to `(-1,-1)` to `(-1,1)` we do
+not get angles that go in the full circle:
+
+    atan (1 / 1) == 0.7853981633974483 --  45° or   pi/4 radians
+
+    atan (1 / -1) == -0.7853981633974483 -- 315° or 7*pi/4 radians
+
+    atan (-1 / -1) == 0.7853981633974483 --  45° or   pi/4 radians
+
+    atan (-1 / 1) == -0.7853981633974483 -- 315° or 7*pi/4 radians
+
+Notice that everything is between `pi/2` and `-pi/2`. That is pretty useless
+for figuring out angles in any sort of visualization, so again, check out
+[`atan2`](#atan2) instead!
+
+-}
+atan : Float -> Float
+atan =
+    Gren.Kernel.Math.atan
+
+
+{-| This helps you find the angle (in radians) to an `(x,y)` coordinate.
+So rather than saying `atan (y/x)` you say `atan2 y x` and you can get a full
+range of angles:
+
+    atan2 1 1 == 0.7853981633974483 --  45° or   pi/4 radians
+
+    atan2 1 -1 == 2.356194490192345 -- 135° or 3*pi/4 radians
+
+    atan2 -1 -1 == -2.356194490192345 -- 225° or 5*pi/4 radians
+
+    atan2 -1 1 == -0.7853981633974483 -- 315° or 7*pi/4 radians
+
+-}
+atan2 : Float -> Float -> Float
+atan2 =
+    Gren.Kernel.Math.atan2

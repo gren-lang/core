@@ -70,6 +70,7 @@ Cosmetic operations such as padding with extra characters or trimming whitespace
 
 import Array exposing (Array)
 import Basics exposing (..)
+import Math exposing (floor, ceiling)
 import Bitwise
 import Char exposing (Char)
 import Gren.Kernel.String

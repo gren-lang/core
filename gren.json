@@ -9,7 +9,8 @@
             "Basics",
             "String",
             "Char",
-            "Bitwise"
+            "Bitwise",
+            "Math"
         ],
         "Collections": [
             "Array",
