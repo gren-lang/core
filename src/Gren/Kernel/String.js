@@ -17,8 +17,8 @@ function _String_uncons(string)
 	return !isNaN(word)
 		? __Maybe_Just(
 			0xD800 <= word && word <= 0xDBFF
-				? { first = __Utils_chr(string[0] + string[1]), rest = string.slice(2) }
-				: { first = __Utils_chr(string[0]), rest = string.slice(1) }
+				? { first: __Utils_chr(string[0] + string[1]), rest: string.slice(2) }
+				: { first: __Utils_chr(string[0]), rest: string.slice(1) }
 		)
 		: __Maybe_Nothing;
 }
