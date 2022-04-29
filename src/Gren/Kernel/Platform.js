@@ -5,7 +5,7 @@ import Gren.Kernel.Json exposing (run, wrap, unwrap, errorToString)
 import Gren.Kernel.Process exposing (sleep)
 import Gren.Kernel.Scheduler exposing (andThen, binding, rawSend, rawSpawn, receive, send, succeed)
 import Basics exposing (Unit)
-import Array exposing (pushBack)
+import Array exposing (pushLast)
 import Result exposing (isOk)
 
 */
@@ -38,18 +38,18 @@ function _Platform_initialize(flagDecoder, args, init, update, subscriptions, st
 	__Result_isOk(result) || __Debug_crash(2 /**__DEBUG/, __Json_errorToString(result.a) /**/);
 	var managers = {};
 	var initPair = init(result.a);
-	var model = initPair.a;
+	var model = initPair.model;
 	var stepper = stepperBuilder(sendToApp, model);
 	var ports = _Platform_setupEffects(managers, sendToApp);
 
 	function sendToApp(msg, viewMetadata)
 	{
 		var pair = A2(update, msg, model);
-		stepper(model = pair.a, viewMetadata);
-		_Platform_enqueueEffects(managers, pair.b, subscriptions(model));
+		stepper(model = pair.model, viewMetadata);
+		_Platform_enqueueEffects(managers, pair.command, subscriptions(model));
 	}
 
-	_Platform_enqueueEffects(managers, initPair.b, subscriptions(model));
+	_Platform_enqueueEffects(managers, initPair.command, subscriptions(model));
 
 	return ports ? { ports: ports } : {};
 }
@@ -322,8 +322,8 @@ function _Platform_insert(isCmd, newEffect, effects)
 	effects = effects || { __cmds: [], __subs: [] };
 
 	isCmd
-		? (effects.__cmds = A2(__Array_pushBack, newEffect, effects.__cmds))
-		: (effects.__subs = A2(__Array_pushBack, newEffect, effects.__subs));
+		? (effects.__cmds = A2(__Array_pushLast, newEffect, effects.__cmds))
+		: (effects.__subs = A2(__Array_pushLast, newEffect, effects.__subs));
 
 	return effects;
 }
