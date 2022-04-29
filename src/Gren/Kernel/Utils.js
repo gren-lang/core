@@ -37,7 +37,7 @@ function _Utils_eqHelp(x, y, depth, stack)
 
 	if (depth > 100)
 	{
-		stack.push({ a = x, b = y });
+		stack.push({ a: x, b: y });
 		return true;
 	}
 
