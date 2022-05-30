@@ -2,7 +2,7 @@
 
 Every Gren project needs this package!
 
-It provides **basic functionality** like addition and subtraction as well as **data structures** like lists, dictionaries, and sets.
+It provides **basic functionality** like addition and subtraction as well as **data structures** like arrays, dictionaries, and sets.
 
 > **New to Gren?** Go to [gren-lang.org](https://gren-lang.org) for an overview.
 
@@ -13,12 +13,11 @@ The modules in this package are so common, that some of them are imported by def
 
 ```gren
 import Basics exposing (..)
-import List exposing (List, (::))
+import Array exposing (Array)
 import Maybe exposing (Maybe(..))
 import Result exposing (Result(..))
 import String exposing (String)
 import Char exposing (Char)
-import Tuple
 
 import Debug
 
