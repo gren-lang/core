@@ -38,18 +38,18 @@ function _Platform_initialize(flagDecoder, args, init, update, subscriptions, st
 	__Result_isOk(result) || __Debug_crash(2 /**__DEBUG/, __Json_errorToString(result.a) /**/);
 	var managers = {};
 	var initPair = init(result.a);
-	var model = initPair.model;
+	var model = initPair.__$model;
 	var stepper = stepperBuilder(sendToApp, model);
 	var ports = _Platform_setupEffects(managers, sendToApp);
 
 	function sendToApp(msg, viewMetadata)
 	{
 		var pair = A2(update, msg, model);
-		stepper(model = pair.model, viewMetadata);
-		_Platform_enqueueEffects(managers, pair.command, subscriptions(model));
+		stepper(model = pair.__$model, viewMetadata);
+		_Platform_enqueueEffects(managers, pair.__$command, subscriptions(model));
 	}
 
-	_Platform_enqueueEffects(managers, initPair.command, subscriptions(model));
+	_Platform_enqueueEffects(managers, initPair.__$command, subscriptions(model));
 
 	return ports ? { ports: ports } : {};
 }
