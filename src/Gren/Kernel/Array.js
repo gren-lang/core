@@ -26,8 +26,7 @@ var _Array_initialize = F3(function(size, offset, func)
 
 var _Array_get = F2(function(index, array)
 {
-    var length = array.length;
-    if (index < 0 || index >= length) {
+    if (index < 0 || index >= array.length) {
         return __Maybe_Nothing;
     }
         
@@ -37,18 +36,11 @@ var _Array_get = F2(function(index, array)
 
 var _Array_set = F3(function(index, value, array)
 {
-    var length = array.length;
-    if (index < 0 || index >= length) {
+    if (index < 0 || index >= array.length) {
         return array;
     }
     
-    var result = new Array(length);
-
-    for (var i = 0; i < length; i++)
-    {
-        result[i] = array[i];
-    }
-
+    var result = array.slice();
     result[index] = value;
     
     return result;
@@ -56,23 +48,12 @@ var _Array_set = F3(function(index, value, array)
 
 var _Array_push = F2(function(value, array)
 {
-    var length = array.length;
-    var result = new Array(length + 1);
-
-    for (var i = 0; i < length; i++)
-    {
-        result[i] = array[i];
-    }
-
-    result[length] = value;
-    return result;
+    return array.concat([value]);
 });
 
 var _Array_foldl = F3(function(func, acc, array)
 {
-    var length = array.length;
-
-    for (var i = 0; i < length; i++)
+    for (var i = 0; i < array.length; i++)
     {
         acc = A2(func, array[i], acc);
     }
@@ -92,28 +73,14 @@ var _Array_foldr = F3(function(func, acc, array)
 
 var _Array_map = F2(function(func, array)
 {
-    var length = array.length;
-    var result = new Array(length);
-
-    for (var i = 0; i < length; i++)
-    {
-        result[i] = func(array[i]);
-    }
-
-    return result;
+    return array.map(func);
 });
 
 var _Array_indexedMap = F2(function(func, array)
 {
-    var length = array.length;
-    var result = new Array(length);
-
-    for (var i = 0; i < length; i++)
-    {
-        result[i] = A2(func, i, array[i]);
-    }
-
-    return result;
+    return array.map(function(value, index) {
+        return A2(func, i, value);
+    });
 });
 
 var _Array_slice = F3(function(from, to, array)
@@ -128,14 +95,12 @@ var _Array_append = F2(function(left, right)
 
 var _Array_reverse = function(array)
 {
-    return array.slice().reverse;
+    return array.slice().reverse();
 };
 
 var _Array_findFirst = F2(function(pred, array)
 {
-    var length = array.length;
-
-    for (var i = 0; i < length; i++)
+    for (var i = 0; i < array.length; i++)
     {
         var element = array[i];
 
@@ -166,7 +131,7 @@ var _Array_findLast = F2(function(pred, array)
 var _Array_map2 = F3(function(fn, as, bs)
 {
     var result = [];
-    var lowestLength = [ as.length, bs.length ].sort()[0];
+    var lowestLength = as.length < bs.length ? as.length : bs.length;
 
     for (var i = 0; i < lowestLength; i++)
     {
@@ -191,7 +156,9 @@ var _Array_map3 = F3(function(fn, as, bs, cs)
 
 var _Array_sort = function(array)
 {
-    return array.slice().sort();
+	return array.slice().sort(function(a, b) {
+		return __Utils_cmp(a, b);
+	});
 };
 
 var _Array_sortBy = F2(function(fn, array)

@@ -648,7 +648,7 @@ sort =
     sortBy String.length [ "mouse", "cat" ] == [ "cat", "mouse" ]
 
 -}
-sortBy : (a -> comparable) -> Array comparable -> Array comparable
+sortBy : (a -> comparable) -> Array a -> Array a
 sortBy =
     Gren.Kernel.Array.sortBy
 
@@ -666,8 +666,7 @@ sortBy =
 This is also the most general sort function, allowing you to define any other: `sort == sortWith compare`
 
 -}
-sortWith : (a -> a -> Order) -> Array comparable -> Array comparable
+sortWith : (a -> a -> Order) -> Array a -> Array a
 sortWith =
     Gren.Kernel.Array.sortWith
-
 
