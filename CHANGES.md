@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.3
+
+* Fix runtime error caused by bad reference in kernel code of `Array.indexedMap`.
+
 ## 1.0.2
 
 * Fix bad type annotation for `Array.sortBy` and `Array.sortWith`.
