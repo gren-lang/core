@@ -79,7 +79,7 @@ var _Array_map = F2(function(func, array)
 var _Array_indexedMap = F2(function(func, array)
 {
     return array.map(function(value, index) {
-        return A2(func, i, value);
+        return A2(func, index, value);
     });
 });
 
