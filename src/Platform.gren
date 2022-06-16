@@ -72,8 +72,8 @@ module has a few ways to create that kind of `Program` instead!
 
 -}
 worker :
-    { init : flags -> { model : model, cmd : Cmd msg }
-    , update : msg -> model -> { model : model, cmd : Cmd msg }
+    { init : flags -> { model : model, command : Cmd msg }
+    , update : msg -> model -> { model : model, command : Cmd msg }
     , subscriptions : model -> Sub msg
     }
     -> Program flags model msg
