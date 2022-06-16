@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.0
+
+* Fix runtime error caused by bad type annotation.
+
 ## 1.0.3
 
 * Fix runtime error caused by bad reference in kernel code of `Array.indexedMap`.
