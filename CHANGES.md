@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.1
+
+* Fix runtime error when comparing arrays.
+
 ## 2.0.0
 
 * Fix runtime error caused by bad type annotation.
