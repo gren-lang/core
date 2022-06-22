@@ -100,17 +100,6 @@ function _Debug_toAnsiString(ansi, value)
 			return _Debug_internalColor(ansi, '<internals>');
 		}
 
-		if (tag[0] === '#')
-		{
-			var output = [];
-			for (var k in value)
-			{
-				if (k === '$') continue;
-				output.push(_Debug_toAnsiString(ansi, value[k]));
-			}
-			return '(' + output.join(',') + ')';
-		}
-
 		if (tag === 'Set_gren_builtin')
 		{
 			return _Debug_ctorColor(ansi, 'Set')
