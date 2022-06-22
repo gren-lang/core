@@ -101,20 +101,6 @@ function _Utils_cmp(x, y, ord)
 	}
 	//*/
 
-	/**__PROD/
-	if (typeof x.$ === 'undefined')
-	//*/
-	/**__DEBUG/
-	if (x.$[0] === '#')
-	//*/
-	{
-		return (ord = _Utils_cmp(x.a, y.a))
-			? ord
-			: (ord = _Utils_cmp(x.b, y.b))
-				? ord
-				: _Utils_cmp(x.c, y.c);
-	}
-
 	// traverse conses until end of a list or a mismatch
 	for (; x.b && y.b && !(ord = _Utils_cmp(x.a, y.a)); x = x.b, y = y.b) {} // WHILE_CONSES
 	return ord || (x.b ? /*GT*/ 1 : y.b ? /*LT*/ -1 : /*EQ*/ 0);
