@@ -85,7 +85,7 @@ var _Utils_notEqual = F2(function(a, b) { return !_Utils_eq(a,b); });
 // Code in Generate/JavaScript.hs, Basics.js, and depends on
 // the particular integer values assigned to LT, EQ, and GT.
 
-function _Utils_cmp(x, y, ord)
+function _Utils_cmp(x, y)
 {
 	if (typeof x !== 'object')
 	{
@@ -101,9 +101,13 @@ function _Utils_cmp(x, y, ord)
 	}
 	//*/
 
-	// traverse conses until end of a list or a mismatch
-	for (; x.b && y.b && !(ord = _Utils_cmp(x.a, y.a)); x = x.b, y = y.b) {} // WHILE_CONSES
-	return ord || (x.b ? /*GT*/ 1 : y.b ? /*LT*/ -1 : /*EQ*/ 0);
+	// At this point, we can only be comparing arrays
+    for (var idx = 0; idx < x.length; idx++) {
+        var ord = _Utils_cmp(x[idx], y[idx]);
+        if (ord !== 0) return ord;
+    }
+
+    return x.length - y.length;
 }
 
 var _Utils_lt = F2(function(a, b) { return _Utils_cmp(a, b) < 0; });
