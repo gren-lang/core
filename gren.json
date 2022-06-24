@@ -12,6 +12,11 @@
             "Bitwise",
             "Math"
         ],
+        "Bytes": [
+            "Bytes",
+            "Bytes.Encode",
+            "Bytes.Decode"
+        ],
         "Collections": [
             "Array",
             "Dict",
@@ -24,16 +29,16 @@
         "Debug": [
             "Debug"
         ],
-        "Json": [
-            "Json.Decode",
-            "Json.Encode"
-        ],
         "Effects": [
             "Platform.Cmd",
             "Platform.Sub",
             "Platform",
             "Process",
             "Task"
+        ],
+        "Json": [
+            "Json.Decode",
+            "Json.Encode"
         ]
     },
     "gren-version": "0.1.0 <= v < 0.2.0",
