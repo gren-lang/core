@@ -40,8 +40,11 @@
             "Json.Decode",
             "Json.Encode"
         ],
-        "Advanced strings": [
+        "Strings": [
             "String.Regex"
+        ],
+        "Time": [
+            "Time"
         ]
     },
     "gren-version": "0.1.0 <= v < 0.2.0",
