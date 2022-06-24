@@ -39,6 +39,9 @@
         "Json": [
             "Json.Decode",
             "Json.Encode"
+        ],
+        "Advanced strings": [
+            "String.Regex"
         ]
     },
     "gren-version": "0.1.0 <= v < 0.2.0",

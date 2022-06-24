@@ -32,6 +32,10 @@ library from JavaScript.
 -}
 
 
+import Array exposing (Array)
+import Basics exposing (..)
+import Maybe exposing (Maybe(..))
+import String exposing (String)
 import Gren.Kernel.Regex
 
 
