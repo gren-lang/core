@@ -50,8 +50,13 @@ JSON decoders][guide] to get a feel for how this library works!
 
 -}
 
+import Basics exposing (..)
 import Array exposing (Array)
 import Dict exposing (Dict)
+import Char
+import String exposing (String)
+import Maybe exposing (Maybe(..))
+import Result exposing (Result(..))
 import Gren.Kernel.Json
 import Json.Encode
 
