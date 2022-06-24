@@ -40,6 +40,9 @@
             "Json.Decode",
             "Json.Encode"
         ],
+        "Random": [
+            "Random"
+        ],
         "Strings": [
             "String.Regex"
         ],
