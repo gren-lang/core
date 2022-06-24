@@ -24,6 +24,10 @@
         "Debug": [
             "Debug"
         ],
+        "Json": [
+            "Json.Decode",
+            "Json.Encode"
+        ],
         "Effects": [
             "Platform.Cmd",
             "Platform.Sub",

@@ -1,7 +1,8 @@
 .gren
+tests/.gren
 tests/test.js
 node_modules/
 *.dat
 doc*.json
-tests/.elm
 *~
+.DS_Store
