@@ -1,5 +1,6 @@
 {
     "type": "package",
+    "platform": "common",
     "name": "gren-lang/core",
     "summary": "Gren's core modules",
     "license": "BSD-3-Clause",
