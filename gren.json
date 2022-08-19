@@ -1,56 +1,22 @@
 {
-    "type": "package",
-    "platform": "common",
-    "name": "gren-lang/core",
-    "summary": "Gren's core modules",
-    "license": "BSD-3-Clause",
-    "version": "3.0.0",
-    "exposed-modules": {
-        "Primitives": [
-            "Basics",
-            "String",
-            "Char",
-            "Bitwise",
-            "Math"
-        ],
-        "Bytes": [
-            "Bytes",
-            "Bytes.Encode",
-            "Bytes.Decode"
-        ],
-        "Collections": [
-            "Array",
-            "Dict",
-            "Set"
-        ],
-        "Error Handling": [
-            "Maybe",
-            "Result"
-        ],
-        "Debug": [
-            "Debug"
-        ],
-        "Effects": [
-            "Platform.Cmd",
-            "Platform.Sub",
-            "Platform",
-            "Process",
-            "Task"
-        ],
-        "Json": [
-            "Json.Decode",
-            "Json.Encode"
-        ],
-        "Random": [
-            "Random"
-        ],
-        "Strings": [
-            "String.Regex"
-        ],
-        "Time": [
-            "Time"
-        ]
-    },
-    "gren-version": "0.2.0 <= v < 0.3.0",
-    "dependencies": {}
+  "type": "package",
+  "platform": "common",
+  "name": "gren-lang/core",
+  "summary": "Gren's core modules",
+  "license": "BSD-3-Clause",
+  "version": "3.0.0",
+  "exposed-modules": {
+    "Primitives": ["Basics", "String", "Char", "Bitwise", "Math"],
+    "Bytes": ["Bytes", "Bytes.Encode", "Bytes.Decode"],
+    "Collections": ["Array", "Dict", "Set"],
+    "Error Handling": ["Maybe", "Result"],
+    "Debug": ["Debug"],
+    "Effects": ["Platform.Cmd", "Platform.Sub", "Platform", "Process", "Task"],
+    "Json": ["Json.Decode", "Json.Encode"],
+    "Random": ["Random"],
+    "Strings": ["String.Regex"],
+    "Time": ["Time"]
+  },
+  "gren-version": "0.2.0 <= v < 0.3.0",
+  "dependencies": {}
 }

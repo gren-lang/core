@@ -6,7 +6,6 @@ It provides **basic functionality** like addition and subtraction as well as **d
 
 > **New to Gren?** Go to [gren-lang.org](https://gren-lang.org) for an overview.
 
-
 ## Default Imports
 
 The modules in this package are so common, that some of them are imported by default in all Gren files. So it is as if every Gren file starts with these imports:
