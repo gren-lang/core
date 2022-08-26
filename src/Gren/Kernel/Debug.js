@@ -279,7 +279,7 @@ function _Debug_crash__DEBUG(identifier, fact1, fact2, fact3, fact4) {
       );
 
     case 10:
-      throw new Error("Bug in https://github.com/gren-lang/virtual-dom/issues");
+      throw new Error("Bug in https://github.com/gren-lang/core/issues");
 
     case 11:
       throw new Error("Cannot perform mod 0. Division by zero error.");
