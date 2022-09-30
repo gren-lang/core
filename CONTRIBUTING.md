@@ -13,4 +13,3 @@ suggesting new features. Also, we're a friendly bunch, so don't be afraid to say
 
 All PRs will be considered, but by going through the above process you increase
 your chances for a merge significantly.
-
