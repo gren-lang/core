@@ -41,6 +41,10 @@ function _Debug_toString__DEBUG(value) {
 }
 
 function _Debug_toAnsiString(ansi, value) {
+  if (value == null) {
+    return _Debug_internalColor(ansi, "<null>");
+  }
+
   if (typeof value === "function") {
     return _Debug_internalColor(ansi, "<function>");
   }
