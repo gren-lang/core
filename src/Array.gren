@@ -111,8 +111,15 @@ repeat n val =
 
 -}
 range : Int -> Int -> Array Int
-range =
-    Gren.Kernel.Array.range
+range from to =
+    if from > to then
+        []
+
+    else if from == to then
+        [from]
+
+    else 
+        initialize (to - from + 1) from identity
 
 
 -- TRANSFORM

@@ -145,16 +145,3 @@ var _Array_sortWith = F2(function (fn, array) {
     return ord === __Basics_EQ ? 0 : ord === __Basics_LT ? -1 : 1;
   });
 });
-
-var _Array_range = F2(function(from, to) {
-  if (from > to) { return []; }
-  if (from === to) { return [from]; }
-
-  var result = [];
-
-  for (var i = from; i <= to; i++) {
-      result.push(i);
-  }
-
-  return result;
-});
