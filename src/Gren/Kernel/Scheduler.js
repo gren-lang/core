@@ -90,7 +90,7 @@ var _Scheduler_send = F2(function (proc, msg) {
 function _Scheduler_kill(proc) {
   return _Scheduler_binding(function (callback) {
     var task = proc.__root;
-    if (task.$ === __1_BINDING && task.__kill) {
+    if (task && task.$ === __1_BINDING && task.__kill) {
       task.__kill();
     }
 
