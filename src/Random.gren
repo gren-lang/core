@@ -624,11 +624,11 @@ This is a pretty subtle issue, so I recommend reading more about it
 **Note:** You can delay evaluation with `andThen` too. The thing that matters
 is that you have a function call that delays the creation of the generator!
 -}
-lazy : (Unit -> Generator a) -> Generator a
+lazy : ({} -> Generator a) -> Generator a
 lazy callback =
   Generator (\seed ->
     let
-      (Generator gen) = callback Unit
+      (Generator gen) = callback {}
     in
       gen seed
   )

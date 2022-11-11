@@ -46,7 +46,7 @@ Insert, remove, and query operations all take _O(log n)_ time.
 -}
 
 import Array exposing (Array)
-import Basics exposing (Bool, Int, Unit(..))
+import Basics exposing (Bool, Int)
 import Dict
 import Maybe exposing (Maybe(..))
 
@@ -55,7 +55,7 @@ import Maybe exposing (Maybe(..))
 `(Set String)` is a set of strings.
 -}
 type Set t
-    = Set_gren_builtin (Dict.Dict t Unit)
+    = Set_gren_builtin (Dict.Dict t {})
 
 
 {-| Create an empty set.
@@ -69,14 +69,14 @@ empty =
 -}
 singleton : comparable -> Set comparable
 singleton key =
-    Set_gren_builtin (Dict.singleton key Unit)
+    Set_gren_builtin (Dict.singleton key {})
 
 
 {-| Insert a value into a set.
 -}
 insert : comparable -> Set comparable -> Set comparable
 insert key (Set_gren_builtin dict) =
-    Set_gren_builtin (Dict.insert key Unit dict)
+    Set_gren_builtin (Dict.insert key {} dict)
 
 
 {-| Remove a value from a set. If the value is not found, no changes are made.

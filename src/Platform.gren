@@ -32,7 +32,7 @@ curious? Public discussions of your explorations should be framed accordingly.
 
 -}
 
-import Basics exposing (Never, Unit(..))
+import Basics exposing (Never)
 import Gren.Kernel.Platform
 import Gren.Kernel.Scheduler
 import Platform.Cmd exposing (Cmd)
@@ -115,7 +115,7 @@ type Router appMsg selfMsg
 {-| Send the router a message for the main loop of your app. This message will
 be handled by the overall `update` function, just like events from `Html`.
 -}
-sendToApp : Router msg a -> msg -> Task x Unit
+sendToApp : Router msg a -> msg -> Task x {}
 sendToApp =
     Gren.Kernel.Platform.sendToApp
 
@@ -127,6 +127,6 @@ effect manager as necessary.
 As an example, the effect manager for web sockets
 
 -}
-sendToSelf : Router a msg -> msg -> Task x Unit
+sendToSelf : Router a msg -> msg -> Task x {}
 sendToSelf =
     Gren.Kernel.Platform.sendToSelf

@@ -5,7 +5,7 @@ module Basics exposing
     , (<), (>), (<=), (>=), max, min, clamp, compare, Order(..)
     , Bool(..), not, (&&), (||), xor
     , (++)
-    , identity, always, (<|), (|>), (<<), (>>), Unit(..), Never, never
+    , identity, always, (<|), (|>), (<<), (>>), Never, never
     )
 
 {-| Tons of useful functions that get imported by default.
@@ -46,7 +46,7 @@ characters, strings and arrays of comparable things.
 
 # Function Helpers
 
-@docs identity, always, (<|), (|>), (<<), (>>), Unit, Never, never
+@docs identity, always, (<|), (|>), (<<), (>>), Never, never
 
 -}
 
@@ -686,23 +686,6 @@ functions like `map`:
 always : a -> b -> a
 always a _ =
     a
-
-
-{-| A `Unit` is a type which has exactly one value. It might seem strange that
-someone would ever use such a type, but it comes in handy as a placeholder when
-you need a value, but don't really care what it is.
-
-    delayed =
-        Process.sleep 500
-            |> Task.andThen (\Unit -> Time.now)
-
-In the code above, we wait for 500 milliseconds before getting the current time.
-Since there's no reasonable value to pass on to the callback after waiting, and
-since passing on a value is required by the Task API, we pass the `Unit` value.
-
--}
-type Unit
-    = Unit
 
 
 {-| A value that can never happen! For context:

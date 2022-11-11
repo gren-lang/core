@@ -175,7 +175,7 @@ cannot do it myself unfortunately.
 -}
 here : Task x Zone
 here =
-  Gren.Kernel.Time.here Unit
+  Gren.Kernel.Time.here {}
 
 
 
@@ -471,7 +471,7 @@ onEffects router subs {processes} =
     killTask =
         Dict.diff processes newTaggers
             |> Dict.values
-            |> Array.foldl (\id -> Task.andThen (\_ -> Process.kill id)) (Task.succeed Unit)
+            |> Array.foldl (\id -> Task.andThen (\_ -> Process.kill id)) (Task.succeed {})
   in
     killTask
       |> Task.andThen (\_ -> spawnHelp router spawnArray existingDict)
@@ -525,7 +525,7 @@ onSelfMsg router interval state =
           |> Task.andThen (\_ -> Task.succeed state)
 
 
-setInterval : Float -> Task Never Unit -> Task x Never
+setInterval : Float -> Task Never {} -> Task x Never
 setInterval =
   Gren.Kernel.Time.setInterval
 
@@ -569,7 +569,7 @@ IANA data you loaded yourself.
 -}
 getZoneName : Task x ZoneName
 getZoneName =
-  Gren.Kernel.Time.getZoneName Unit
+  Gren.Kernel.Time.getZoneName {}
 
 
 {-| **Intended for package authors.**

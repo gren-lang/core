@@ -4,7 +4,6 @@ import Gren.Kernel.Debug exposing (crash)
 import Gren.Kernel.Json exposing (run, wrap, unwrap, errorToString)
 import Gren.Kernel.Process exposing (sleep)
 import Gren.Kernel.Scheduler exposing (andThen, binding, rawSend, rawSpawn, receive, send, succeed)
-import Basics exposing (Unit)
 import Array exposing (pushLast)
 import Result exposing (isOk)
 
@@ -142,7 +141,7 @@ function _Platform_instantiateManager(info, sendToApp) {
 var _Platform_sendToApp = F2(function (router, msg) {
   return __Scheduler_binding(function (callback) {
     router.__sendToApp(msg);
-    callback(__Scheduler_succeed(__Basics_Unit));
+    callback(__Scheduler_succeed({}));
   });
 });
 

@@ -720,9 +720,9 @@ structures [here].
 [here]: https://github.com/elm/compiler/blob/master/hints/recursive-alias.md
 
 -}
-lazy : (Unit -> Decoder a) -> Decoder a
+lazy : ({} -> Decoder a) -> Decoder a
 lazy thunk =
-    andThen thunk (succeed Unit)
+    andThen thunk (succeed {})
 
 
 {-| Do not do anything with a JSON value, just bring it into Gren as a `Value`.

@@ -184,7 +184,7 @@ null =
 array : (a -> Value) -> Array a -> Value
 array func entries =
     Gren.Kernel.Json.wrap
-        (Array.foldl (Gren.Kernel.Json.addEntry func) (Gren.Kernel.Json.emptyArray Unit) entries)
+        (Array.foldl (Gren.Kernel.Json.addEntry func) (Gren.Kernel.Json.emptyArray {}) entries)
 
 
 {-| Turn an `Set` into a JSON array.
@@ -192,7 +192,7 @@ array func entries =
 set : (a -> Value) -> Set a -> Value
 set func entries =
     Gren.Kernel.Json.wrap
-        (Set.foldl (Gren.Kernel.Json.addEntry func) (Gren.Kernel.Json.emptyArray Unit) entries)
+        (Set.foldl (Gren.Kernel.Json.addEntry func) (Gren.Kernel.Json.emptyArray {}) entries)
 
 
 
@@ -218,7 +218,7 @@ object pairs =
     Gren.Kernel.Json.wrap
         (Array.foldl
             (\{ key, value } obj -> Gren.Kernel.Json.addField key value obj)
-            (Gren.Kernel.Json.emptyObject Unit)
+            (Gren.Kernel.Json.emptyObject {})
             pairs
         )
 
@@ -241,6 +241,6 @@ dict toKey toValue dictionary =
     Gren.Kernel.Json.wrap
         (Dict.foldl
             (\key value obj -> Gren.Kernel.Json.addField (toKey key) (toValue value) obj)
-            (Gren.Kernel.Json.emptyObject Unit)
+            (Gren.Kernel.Json.emptyObject {})
             dictionary
         )

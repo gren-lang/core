@@ -1,7 +1,5 @@
 /*
 
-import Basics exposing (Unit)
-
 */
 
 // TASKS
@@ -83,7 +81,7 @@ function _Scheduler_rawSend(proc, msg) {
 var _Scheduler_send = F2(function (proc, msg) {
   return _Scheduler_binding(function (callback) {
     _Scheduler_rawSend(proc, msg);
-    callback(_Scheduler_succeed(__Basics_Unit));
+    callback(_Scheduler_succeed({}));
   });
 });
 
@@ -96,7 +94,7 @@ function _Scheduler_kill(proc) {
 
     proc.__root = null;
 
-    callback(_Scheduler_succeed(__Basics_Unit));
+    callback(_Scheduler_succeed({}));
   });
 }
 
