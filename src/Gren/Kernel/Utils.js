@@ -55,6 +55,10 @@ function _Utils_eqHelp(x, y, depth, stack) {
 	}
 	//*/
 
+  if (Array.isArray(x) && x.length !== y.length) {
+    return false;
+  }
+
   var nextDepth = depth + 1;
 
   for (var key in x) {
