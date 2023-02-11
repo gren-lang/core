@@ -116,7 +116,7 @@ var _Array_map2 = F3(function (fn, as, bs) {
   return result;
 });
 
-var _Array_map3 = F3(function (fn, as, bs, cs) {
+var _Array_map3 = F4(function (fn, as, bs, cs) {
   var result = [];
   var lowestLength = [as.length, bs.length, cs.length].sort()[0];
 

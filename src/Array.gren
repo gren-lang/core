@@ -499,7 +499,7 @@ If one array is longer, the extra elements are dropped.
     map3 (\x y z -> { x = x, y = y, z = z }) [ 1 ] [ 2 ] [ 3 ] == [ { x = 1, y = 2, z = 3 } ]
 -}
 map3 : (a -> b -> c -> result) -> Array a -> Array b -> Array c -> Array result
-map3 mapper array =
+map3 =
     Gren.Kernel.Array.map3
 
 
