@@ -500,7 +500,7 @@ If one array is longer, the extra elements are dropped.
 -}
 map3 : (a -> b -> c -> result) -> Array a -> Array b -> Array c -> Array result
 map3 mapper array =
-    Gren.Kernel.Array.map2
+    Gren.Kernel.Array.map3
 
 
 -- DECONSTRUCT
