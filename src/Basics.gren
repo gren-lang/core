@@ -590,9 +590,9 @@ isInfinite =
 
 
 {-| Function composition, passing results along in the suggested direction. For
-example, the following code checks if the square root of a number is odd:
+example, the following code checks if the result of rounding a float is odd:
 
-    not << isEven << sqrt
+    not << isEven << round
 
 You can think of this operator as equivalent to the following:
 
@@ -600,7 +600,7 @@ You can think of this operator as equivalent to the following:
 
 So our example expands out to something like this:
 
-    \n -> not (isEven (sqrt n))
+    \n -> not (isEven (round n))
 
 -}
 composeL : (b -> c) -> (a -> b) -> (a -> c)
@@ -609,9 +609,9 @@ composeL g f x =
 
 
 {-| Function composition, passing results along in the suggested direction. For
-example, the following code checks if the square root of a number is odd:
+example, the following code checks if the result of rounding a float is odd:
 
-    sqrt >> isEven >> not
+    round >> isEven >> not
 
 -}
 composeR : (a -> b) -> (b -> c) -> (a -> c)
