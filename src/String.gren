@@ -713,6 +713,8 @@ foldr =
 
     any isDigit "heart" == False
 
+    any isDigit "" == False
+
 -}
 any : (Char -> Bool) -> String -> Bool
 any =
@@ -726,6 +728,8 @@ any =
     all isDigit "R2-D2" == False
 
     all isDigit "heart" == False
+
+    all isDigit "" = True
 
 -}
 all : (Char -> Bool) -> String -> Bool
