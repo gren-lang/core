@@ -1,0 +1,163 @@
+module Test.Array exposing (tests)
+
+import Basics exposing (..)
+import Math
+import Expect
+import Array exposing (..)
+import Maybe exposing (Maybe(..))
+import Test exposing (..)
+
+
+tests : Test
+tests =
+    describe "Array Tests"
+        [ testArrayOfN 0
+        , testArrayOfN 1
+        , testArrayOfN 2
+        , testArrayOfN 5000
+        ]
+
+
+testArrayOfN : Int -> Test
+testArrayOfN n =
+    let
+        xs =
+            Array.range 1 n
+
+        xsOpp =
+            Array.range -n -1
+
+        xsNeg =
+            foldl (Array.pushFirst) [] xsOpp
+
+        -- assume foldl and (Array.pushFirst) work
+        zs =
+            Array.range 0 n
+
+        sumSeq k =
+            k * (k + 1) // 2
+
+        xsSum =
+            sumSeq n
+
+        mid =
+            n // 2
+    in
+    describe (String.fromInt n ++ " elements")
+        [ describe "foldl"
+            [ test "order" <| \{} -> Expect.equal n (foldl (\x acc -> x) 0 xs)
+            , test "total" <| \{} -> Expect.equal xsSum (foldl (+) 0 xs)
+            ]
+        , describe "foldr"
+            [ test "order" <| \{} -> Expect.equal (min 1 n) (foldr (\x acc -> x) 0 xs)
+            , test "total" <| \{} -> Expect.equal xsSum (foldl (+) 0 xs)
+            ]
+        , describe "map"
+            [ test "identity" <| \{} -> Expect.equal xs (map identity xs)
+            , test "linear" <| \{} -> Expect.equal (Array.range 2 (n + 1)) (map ((+) 1) xs)
+            ]
+        , test "isEmpty" <| \{} -> Expect.equal (n == 0) (isEmpty xs)
+        , test "length" <| \{} -> Expect.equal n (length xs)
+        , test "reverse" <| \{} -> Expect.equal xsOpp (reverse xsNeg)
+        , describe "member"
+            [ test "positive" <| \{} -> Expect.equal True (member n zs)
+            , test "negative" <| \{} -> Expect.equal False (member (n + 1) xs)
+            ]
+        , test "first" <|
+            \{} ->
+                if n == 0 then
+                    Expect.equal Nothing (first xs)
+
+                else
+                    Expect.equal (Just 1) (first xs)
+        , describe "Array.filter"
+            [ test "none" <| \{} -> Expect.equal [] (Array.filter (\x -> x > n) xs)
+            , test "one" <| \{} -> Expect.equal [ n ] (Array.filter (\z -> z == n) zs)
+            , test "all" <| \{} -> Expect.equal xs (Array.filter (\x -> x <= n) xs)
+            ]
+        , describe "take"
+            [ test "none" <| \{} -> Expect.equal [] (takeFirst 0 xs)
+            , test "some" <| \{} -> Expect.equal (Array.range 0 (n - 1)) (takeFirst n zs)
+            , test "all" <| \{} -> Expect.equal xs (takeFirst n xs)
+            , test "all+" <| \{} -> Expect.equal xs (takeFirst (n + 1) xs)
+            ]
+        , describe "dropFirst"
+            [ test "none" <| \{} -> Expect.equal xs (dropFirst 0 xs)
+            , test "some" <| \{} -> Expect.equal [ n ] (dropFirst n zs)
+            , test "all" <| \{} -> Expect.equal [] (dropFirst n xs)
+            , test "all+" <| \{} -> Expect.equal [] (dropFirst (n + 1) xs)
+            ]
+        , test "repeat" <| \{} -> Expect.equal (map (\x -> -1) xs) (repeat n -1)
+        , test "append" <| \{} -> Expect.equal (xsSum * 2) (prefix xs xs |> foldl (+) 0)
+        , test "pushFirst" <| \{} -> Expect.equal (prefix [ -1 ] xs) (Array.pushFirst -1 xs)
+        , test "Array.flatten" <| \{} -> Expect.equal (prefix xs (prefix zs xs)) (Array.flatten [ xs, zs, xs ])
+        , test "intersperse" <|
+            \{} ->
+                Expect.equal
+                    { fst = min -(n - 1) 0, snd = xsSum }
+                    (intersperse -1 xs |> foldl (\x { fst, snd } -> { fst = snd, snd = fst + x }) { fst = 0, snd = 0 })
+        , describe "partition"
+            [ test "left" <| \{} -> Expect.equal { trues = xs, falses = [] } (partition (\x -> x > 0) xs)
+            , test "right" <| \{} -> Expect.equal { trues = [], falses = xs } (partition (\x -> x < 0) xs)
+            , test "split" <| \{} -> Expect.equal { trues = Array.range (mid + 1) n, falses = Array.range 1 mid } (partition (\x -> x > mid) xs)
+            ]
+        , describe "map2"
+            [ test "same length" <| \{} -> Expect.equal (map ((*) 2) xs) (map2 (+) xs xs)
+            , test "long first" <| \{} -> Expect.equal (map (\x -> x * 2 - 1) xs) (map2 (+) zs xs)
+            , test "short first" <| \{} -> Expect.equal (map (\x -> x * 2 - 1) xs) (map2 (+) xs zs)
+            ]
+        , describe "filterMap"
+            [ test "none" <| \{} -> Expect.equal [] (filterMap (\x -> Nothing) xs)
+            , test "all" <| \{} -> Expect.equal xsNeg (filterMap (\x -> Just -x) xs)
+            , let
+                halve x =
+                    if Math.modBy 2 x == 0 then
+                        Just (x // 2)
+
+                    else
+                        Nothing
+              in
+              test "some" <| \{} -> Expect.equal (Array.range 1 mid) (filterMap halve xs)
+            ]
+        , describe "flatMap"
+            [ test "none" <| \{} -> Expect.equal [] (flatMap (\x -> []) xs)
+            , test "all" <| \{} -> Expect.equal xsNeg (flatMap (\x -> [ -x ]) xs)
+            ]
+        , test "indexedMap" <| \{} -> Expect.equal (map2 (\i x -> { i = i, x = x }) zs xsNeg) (indexedMap (\i x -> { i = i, x = -x }) xs)
+        , test "sum" <| \{} -> Expect.equal xsSum (Array.foldl (+) 0 xs)
+        , test "product" <| \{} -> Expect.equal 0 (Array.foldl (*) 1 zs)
+        , test "maximum" <|
+            \{} ->
+                if n == 0 then
+                    Expect.equal Nothing (maximum xs)
+
+                else
+                    Expect.equal (Just n) (maximum xs)
+        , test "minimum" <|
+            \{} ->
+                if n == 0 then
+                    Expect.equal Nothing (minimum xs)
+
+                else
+                    Expect.equal (Just 1) (minimum xs)
+        , describe "all"
+            [ test "false" <| \{} -> Expect.equal False (all (\z -> z < n) zs)
+            , test "true" <| \{} -> Expect.equal True (all (\x -> x <= n) xs)
+            ]
+        , describe "any"
+            [ test "false" <| \{} -> Expect.equal False (any (\x -> x > n) xs)
+            , test "true" <| \{} -> Expect.equal True (any (\z -> z >= n) zs)
+            ]
+        , describe "sort"
+            [ test "sorted" <| \{} -> Expect.equal xs (sort xs)
+            , test "unsorted" <| \{} -> Expect.equal xsOpp (sort xsNeg)
+            ]
+        , describe "sortBy"
+            [ test "sorted" <| \{} -> Expect.equal xsNeg (sortBy negate xsNeg)
+            , test "unsorted" <| \{} -> Expect.equal xsNeg (sortBy negate xsOpp)
+            ]
+        , describe "sortWith"
+            [ test "sorted" <| \{} -> Expect.equal xsNeg (sortWith (\x -> \y -> compare y x) xsNeg)
+            , test "unsorted" <| \{} -> Expect.equal xsNeg (sortWith (\x -> \y -> compare y x) xsOpp)
+            ]
+        ]

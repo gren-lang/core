@@ -13,13 +13,12 @@ import Test.CodeGen as CodeGen
 import Test.Dict as Dict
 import Test.Equality as Equality
 import Test.Json as Json
-import Test.List as List
+import Test.Math as Math
 import Test.Maybe as Maybe
 import Test.Result as Result
 import Test.Runner.Node exposing (TestProgram, run)
 import Test.Set as Set
 import Test.String as String
-import Test.Tuple as Tuple
 
 
 tests : Test
@@ -33,10 +32,9 @@ tests =
         , Dict.tests
         , Equality.tests
         , Json.tests
-        , List.tests
         , Result.tests
         , Set.tests
         , String.tests
         , Maybe.tests
-        , Tuple.tests
+        , Math.tests
         ]
