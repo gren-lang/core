@@ -1,4 +1,4 @@
-module Main exposing (..)
+module Main exposing (main)
 
 import Basics exposing (..)
 import Json.Decode exposing (Value)
@@ -23,22 +23,19 @@ import Test.String as String
 
 main : Program
 main =
-    run tests
-
-tests : Test
-tests =
-    describe "Gren Core Library Tests"
-        [ Array.tests
-        , Basics.tests
-        , Bitwise.tests
-        , Char.tests
-        , CodeGen.tests
-        , Dict.tests
-        , Equality.tests
-        , Json.tests
-        , Result.tests
-        , Set.tests
-        , String.tests
-        , Maybe.tests
-        , Math.tests
-        ]
+    run <|
+        describe "Gren Core Library Tests"
+            [ Array.tests
+            , Basics.tests
+            , Bitwise.tests
+            , Char.tests
+            , CodeGen.tests
+            , Dict.tests
+            , Equality.tests
+            , Json.tests
+            , Result.tests
+            , Set.tests
+            , String.tests
+            , Maybe.tests
+            , Math.tests
+            ]
