@@ -1,0 +1,116 @@
+module Test.Basics exposing (tests)
+
+import Array
+import Basics exposing (..)
+import Debug exposing (toString)
+import Dict
+import Math
+import Expect exposing (FloatingPointTolerance(..))
+import Array
+import Set
+import String
+import Test exposing (..)
+
+
+tests : Test
+tests =
+    let
+        comparison =
+            describe "Comparison"
+                [ test "max" <| \{} -> Expect.equal 42 (max 32 42)
+                , test "min" <| \{} -> Expect.equal 42 (min 91 42)
+                , test "clamp low" <| \{} -> Expect.equal 10 (clamp 10 20 5)
+                , test "clamp mid" <| \{} -> Expect.equal 15 (clamp 10 20 15)
+                , test "clamp high" <| \{} -> Expect.equal 20 (clamp 10 20 25)
+                , test "5 < 6" <| \{} -> Expect.equal True (5 < 6)
+                , test "6 < 5" <| \{} -> Expect.equal False (6 < 5)
+                , test "6 < 6" <| \{} -> Expect.equal False (6 < 6)
+                , test "5 > 6" <| \{} -> Expect.equal False (5 > 6)
+                , test "6 > 5" <| \{} -> Expect.equal True (6 > 5)
+                , test "6 > 6" <| \{} -> Expect.equal False (6 > 6)
+                , test "5 <= 6" <| \{} -> Expect.equal True (5 <= 6)
+                , test "6 <= 5" <| \{} -> Expect.equal False (6 <= 5)
+                , test "6 <= 6" <| \{} -> Expect.equal True (6 <= 6)
+                , test "compare \"A\" \"B\"" <| \{} -> Expect.equal LT (compare "A" "B")
+                , test "compare 'f' 'f'" <| \{} -> Expect.equal EQ (compare 'f' 'f')
+                , test "compare ['a'] ['b']" <| \{} -> Expect.equal LT (compare [ 'a' ] [ 'b' ])
+                , test "set equality" <| \{} -> Expect.equal (Set.fromArray [ 1, 2 ]) (Set.fromArray [ 2, 1 ])
+                , test "dict equality" <| \{} -> Expect.equal (Dict.fromArray [ { key = 1, value = 1 }, { key = 2, value = 2 } ]) (Dict.fromArray [ { key = 2, value = 2 }, { key = 1, value = 1 } ])
+                , test "char equality" <| \{} -> Expect.notEqual '0' '饑'
+                ]
+
+        toStringTests =
+            describe "toString Tests"
+                [ test "toString Int" <| \{} -> Expect.equal "42" (toString 42)
+                , test "toString Float" <| \{} -> Expect.equal "42.52" (toString 42.52)
+                , test "toString Char" <| \{} -> Expect.equal "'c'" (toString 'c')
+                , test "toString Char single quote" <| \{} -> Expect.equal "'\\''" (toString '\'')
+                , test "toString Char double quote" <| \{} -> Expect.equal "'\"'" (toString '"')
+                , test "toString String single quote" <| \{} -> Expect.equal "\"not 'escaped'\"" (toString "not 'escaped'")
+                , test "toString String double quote" <| \{} -> Expect.equal "\"are \\\"escaped\\\"\"" (toString "are \"escaped\"")
+                , test "toString record" <| \{} -> Expect.equal "{ field = [0] }" (toString { field = [ 0 ] })
+
+                -- TODO
+                --, test "toString record, special case" <| \{} -> Expect.equal "{ ctor = [0] }" (toString { ctor = [ 0 ] })
+                ]
+        
+        booleanTests =
+            describe "Boolean Tests"
+                [ test "False && False" <| \{} -> Expect.equal False (False && False)
+                , test "False && True" <| \{} -> Expect.equal False (False && True)
+                , test "True && False" <| \{} -> Expect.equal False (True && False)
+                , test "True && True" <| \{} -> Expect.equal True (True && True)
+                , test "False || False" <| \{} -> Expect.equal False (False || False)
+                , test "False || True" <| \{} -> Expect.equal True (False || True)
+                , test "True || False" <| \{} -> Expect.equal True (True || False)
+                , test "True || True" <| \{} -> Expect.equal True (True || True)
+                , test "xor False False" <| \{} -> Expect.equal False (xor False False)
+                , test "xor False True" <| \{} -> Expect.equal True (xor False True)
+                , test "xor True False" <| \{} -> Expect.equal True (xor True False)
+                , test "xor True True" <| \{} -> Expect.equal False (xor True True)
+                , test "not True" <| \{} -> Expect.equal False (not True)
+                , test "not False" <| \{} -> Expect.equal True (not False)
+                ]
+
+
+        miscTests =
+            describe "Miscellaneous Tests"
+                [ test "isNaN (0/0)" <| \{} -> Expect.equal True (isNaN (0 / 0))
+                , test "isNaN (sqrt -1)" <| \{} -> Expect.equal True (isNaN (Math.sqrt -1))
+                , test "isNaN (1/0)" <| \{} -> Expect.equal False (isNaN (1 / 0))
+                , test "isNaN 1" <| \{} -> Expect.equal False (isNaN 1)
+                , test "isInfinite (0/0)" <| \{} -> Expect.equal False (isInfinite (0 / 0))
+                , test "isInfinite (sqrt -1)" <| \{} -> Expect.equal False (isInfinite (Math.sqrt -1))
+                , test "isInfinite (1/0)" <| \{} -> Expect.equal True (isInfinite (1 / 0))
+                , test "isInfinite 1" <| \{} -> Expect.equal False (isInfinite 1)
+                , test "\"hello\" ++ \"world\"" <| \{} -> Expect.equal "helloworld" ("hello" ++ "world")
+                , test "[1, 1, 2] ++ [3, 5, 8]" <| \{} -> Expect.equal [ 1, 1, 2, 3, 5, 8 ] ([ 1, 1, 2 ] ++ [ 3, 5, 8 ])
+                ]
+
+        higherOrderTests =
+            describe "Higher Order Helpers"
+                [ test "identity 'c'" <| \{} -> Expect.equal 'c' (identity 'c')
+                , test "always 42 {}" <| \{} -> Expect.equal 42 (always 42 {})
+                , test "<|" <| \{} -> Expect.equal 9 (identity <| 3 + 6)
+                , test "|>" <| \{} -> Expect.equal 9 (3 + 6 |> identity)
+                , test "<<" <| \{} -> Expect.equal True (not << xor True <| True)
+                , describe ">>"
+                    [ test "with xor" <|
+                        \{} ->
+                            (True |> xor True >> not)
+                                |> Expect.equal True
+                    , test "with a record accessor" <|
+                        \{} ->
+                            [ { foo = "NaS", bar = "baz" } ]
+                                |> Array.map (.foo >> String.reverse)
+                                |> Expect.equal [ "SaN" ]
+                    ]
+                ]
+    in
+    describe "Basics"
+        [ comparison
+        , toStringTests
+        , booleanTests
+        , miscTests
+        , higherOrderTests
+        ]

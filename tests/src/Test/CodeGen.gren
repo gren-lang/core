@@ -58,30 +58,30 @@ tests =
         underscores : Test
         underscores =
             describe "Underscores"
-                [ test "case" <| \() -> Expect.equal 42 (caseUnderscore (Just 42))
-                , test "pattern" <| \() -> Expect.equal 42 patternUnderscore
+                [ test "case" <| \{} -> Expect.equal 42 (caseUnderscore (Just 42))
+                , test "pattern" <| \{} -> Expect.equal 42 patternUnderscore
                 ]
 
         qualifiedPatterns : Test
         qualifiedPatterns =
             describe "Qualified Patterns"
-                [ test "let" <| \() -> Expect.equal 42 letQualified
-                , test "case" <| \() -> Expect.equal 42 caseQualified
+                [ test "let" <| \{} -> Expect.equal 42 letQualified
+                , test "case" <| \{} -> Expect.equal 42 caseQualified
                 ]
 
         hex : Test
         hex =
             describe "Hex"
                 [ test "0xFFFFFFFF" <|
-                    \() ->
+                    \{} ->
                         0xFFFFFFFF
                             |> Expect.equal 4294967295
                 , test "0xD066F00D" <|
-                    \() ->
+                    \{} ->
                         0xD066F00D
                             |> Expect.equal 3496407053
                 , test "0x00" <|
-                    \() ->
+                    \{} ->
                         0x00
                             |> Expect.equal 0
                 ]

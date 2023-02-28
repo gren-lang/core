@@ -1,0 +1,122 @@
+module Test.Dict exposing (tests)
+
+import Basics exposing (..)
+import Dict
+import Expect
+import Array
+import Maybe exposing (..)
+import Test exposing (..)
+
+
+animals : Dict.Dict String String
+animals =
+    Dict.fromArray [ { key = "Tom", value = "cat" }, { key = "Jerry", value = "mouse" } ]
+
+
+tests : Test
+tests =
+    let
+        buildTests =
+            describe "build Tests"
+                [ test "empty" <| \{} -> Expect.equal (Dict.fromArray []) Dict.empty
+                , test "singleton" <| \{} -> Expect.equal (Dict.fromArray [ { key = "k", value = "v" } ]) (Dict.singleton "k" "v")
+                , test "insert" <| \{} -> Expect.equal (Dict.fromArray [ { key = "k", value = "v" } ]) (Dict.insert "k" "v" Dict.empty)
+                , test "insert replace" <| \{} -> Expect.equal (Dict.fromArray [ { key = "k", value = "vv" } ]) (Dict.insert "k" "vv" (Dict.singleton "k" "v"))
+                , test "update" <| \{} -> Expect.equal (Dict.fromArray [ { key = "k", value = "vv" } ]) (Dict.update "k" (\v -> Just "vv") (Dict.singleton "k" "v"))
+                , test "update Nothing" <| \{} -> Expect.equal Dict.empty (Dict.update "k" (\v -> Nothing) (Dict.singleton "k" "v"))
+                , test "remove" <| \{} -> Expect.equal Dict.empty (Dict.remove "k" (Dict.singleton "k" "v"))
+                , test "remove not found" <| \{} -> Expect.equal (Dict.singleton "k" "v") (Dict.remove "kk" (Dict.singleton "k" "v"))
+                ]
+
+        queryTests =
+            describe "query Tests"
+                [ test "member 1" <| \{} -> Expect.equal True (Dict.member "Tom" animals)
+                , test "member 2" <| \{} -> Expect.equal False (Dict.member "Spike" animals)
+                , test "get 1" <| \{} -> Expect.equal (Just "cat") (Dict.get "Tom" animals)
+                , test "get 2" <| \{} -> Expect.equal Nothing (Dict.get "Spike" animals)
+                , test "size of empty dictionary" <| \{} -> Expect.equal 0 (Dict.size Dict.empty)
+                , test "size of example dictionary" <| \{} -> Expect.equal 2 (Dict.size animals)
+                ]
+
+        combineTests =
+            describe "combine Tests"
+                [ test "union" <| \{} -> Expect.equal animals (Dict.union (Dict.singleton "Jerry" "mouse") (Dict.singleton "Tom" "cat"))
+                , test "union collison" <| \{} -> Expect.equal (Dict.singleton "Tom" "cat") (Dict.union (Dict.singleton "Tom" "cat") (Dict.singleton "Tom" "mouse"))
+                , test "intersect" <| \{} -> Expect.equal (Dict.singleton "Tom" "cat") (Dict.intersect animals (Dict.singleton "Tom" "cat"))
+                , test "diff" <| \{} -> Expect.equal (Dict.singleton "Jerry" "mouse") (Dict.diff animals (Dict.singleton "Tom" "cat"))
+                ]
+
+        transformTests =
+            describe "transform Tests"
+                [ test "filter" <| \{} -> Expect.equal (Dict.singleton "Tom" "cat") (Dict.filter (\k v -> k == "Tom") animals)
+                , test "partition" <| \{} -> Expect.equal { trues = Dict.singleton "Tom" "cat", falses = Dict.singleton "Jerry" "mouse" } (Dict.partition (\k v -> k == "Tom") animals)
+                ]
+
+        mergeTests =
+            let
+                insertBoth key leftVal rightVal dict =
+                    Dict.insert key (leftVal ++ rightVal) dict
+
+                s1 =
+                    Dict.empty |> Dict.insert "u1" [ 1 ]
+
+                s2 =
+                    Dict.empty |> Dict.insert "u2" [ 2 ]
+
+                s23 =
+                    Dict.empty |> Dict.insert "u2" [ 3 ]
+
+                b1 =
+                    Array.map (\i -> { key = i, value = [ i ] }) (Array.range 1 10) |> Dict.fromArray
+
+                b2 =
+                    Array.map (\i -> { key = i, value = [ i ] }) (Array.range 5 15) |> Dict.fromArray
+
+                bExpected =
+                    Dict.empty
+                        |> Dict.insert 1 [1]
+                        |> Dict.insert 2 [2]
+                        |> Dict.insert 3 [3]
+                        |> Dict.insert 4 [4]
+                        |> Dict.insert 5 [5,5]
+                        |> Dict.insert 6 [6,6]
+                        |> Dict.insert 7 [7,7]
+                        |> Dict.insert 8 [8,8]
+                        |> Dict.insert 9 [9,9]
+                        |> Dict.insert 10 [10,10]
+                        |> Dict.insert 11 [11]
+                        |> Dict.insert 12 [12]
+                        |> Dict.insert 13 [13]
+                        |> Dict.insert 14 [14]
+                        |> Dict.insert 15 [15]
+            in
+            describe "merge Tests"
+                [ test "merge empties" <|
+                    \{} ->
+                        Expect.equal Dict.empty
+                            (Dict.merge Dict.insert insertBoth Dict.insert Dict.empty Dict.empty Dict.empty)
+                , test "merge singletons in order" <|
+                    \{} ->
+                        Expect.equal [ { key = "u1", value = [ 1 ] }, { key ="u2", value = [ 2 ] } ]
+                            (Dict.merge Dict.insert insertBoth Dict.insert s1 s2 Dict.empty |> Dict.toArray)
+                , test "merge singletons out of order" <|
+                    \{} ->
+                        Expect.equal [ { key = "u1", value = [ 1 ] }, { key = "u2", value = [ 2 ] } ]
+                            (Dict.merge Dict.insert insertBoth Dict.insert s2 s1 Dict.empty |> Dict.toArray)
+                , test "merge with duplicate key" <|
+                    \{} ->
+                        Expect.equal [ { key = "u2", value = [ 2, 3 ] } ]
+                            (Dict.merge Dict.insert insertBoth Dict.insert s2 s23 Dict.empty |> Dict.toArray)
+                , test "partially overlapping" <|
+                    \{} ->
+                        Expect.equal bExpected
+                            (Dict.merge Dict.insert insertBoth Dict.insert b1 b2 Dict.empty)
+                ]
+    in
+    describe "Dict Tests"
+        [ buildTests
+        , queryTests
+        , combineTests
+        , transformTests
+        , mergeTests
+        ]
