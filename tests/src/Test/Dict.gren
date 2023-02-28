@@ -73,7 +73,22 @@ tests =
                     Array.map (\i -> { key = i, value = [ i ] }) (Array.range 5 15) |> Dict.fromArray
 
                 bExpected =
-                    Array.map (\i -> { key = i, value = [ i ] }) (Array.range 1 15)
+                    Dict.empty
+                        |> Dict.insert 1 [1]
+                        |> Dict.insert 2 [2]
+                        |> Dict.insert 3 [3]
+                        |> Dict.insert 4 [4]
+                        |> Dict.insert 5 [5,5]
+                        |> Dict.insert 6 [6,6]
+                        |> Dict.insert 7 [7,7]
+                        |> Dict.insert 8 [8,8]
+                        |> Dict.insert 9 [9,9]
+                        |> Dict.insert 10 [10,10]
+                        |> Dict.insert 11 [11]
+                        |> Dict.insert 12 [12]
+                        |> Dict.insert 13 [13]
+                        |> Dict.insert 14 [14]
+                        |> Dict.insert 15 [15]
             in
             describe "merge Tests"
                 [ test "merge empties" <|
@@ -95,7 +110,7 @@ tests =
                 , test "partially overlapping" <|
                     \{} ->
                         Expect.equal bExpected
-                            (Dict.merge Dict.insert insertBoth Dict.insert b1 b2 Dict.empty |> Dict.toArray)
+                            (Dict.merge Dict.insert insertBoth Dict.insert b1 b2 Dict.empty)
                 ]
     in
     describe "Dict Tests"
