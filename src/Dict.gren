@@ -64,14 +64,20 @@ type NColor
 that lets you look up a `String` (such as user names) and find the associated
 `User`.
 
-    import Dict exposing (Dict)
+    import Dict exposing ( Dict )
 
     users : Dict String User
     users =
         Dict.fromArray
-            [ ( "Alice", User "Alice" 28 1.65 )
-            , ( "Bob", User "Bob" 19 1.82 )
-            , ( "Chuck", User "Chuck" 33 1.75 )
+            [ { key = "Alice"
+              , value = makeUser "Alice" 28 1.65
+              }
+            , { key = "Bob"
+              , value = makeUser "Bob" 19 1.82
+              }
+            , { key = "Chuck"
+              , value = makeUser "Chuck" 33 1.75
+              }
             ]
 
     type alias User =
@@ -80,6 +86,12 @@ that lets you look up a `String` (such as user names) and find the associated
         , height : Float
         }
 
+    makeUser : String -> Int -> Float -> User
+    makeUser name age height =
+        { name = name
+        , age = age
+        , height = height
+        }
 -}
 type Dict k v
     = RBNode_gren_builtin NColor k v (Dict k v) (Dict k v)
