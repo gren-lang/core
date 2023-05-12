@@ -173,7 +173,7 @@ If you need the keys (like `"alice"` and `"bob"`) available in the `Dict`
 values as well, I recommend using a (private) intermediate data structure like
 `Info` in this example:
 
-    module User exposing (User, decoder)
+    module User exposing ( User, decoder )
 
     import Dict
     import Json.Decode exposing (..)
@@ -182,6 +182,13 @@ values as well, I recommend using a (private) intermediate data structure like
         { name : String
         , height : Float
         , age : Int
+        }
+
+    makeUser : String -> Float -> Int -> User
+    makeUser name height age =
+        { name = name
+        , height = height
+        , age = age
         }
 
     decoder : Decoder (Dict.Dict String User)
@@ -193,15 +200,21 @@ values as well, I recommend using a (private) intermediate data structure like
         , age : Int
         }
 
+    makeInfo : Float -> Int -> Info
+    makeInfo height age =
+        { height = height
+        , age = age
+        }
+
     infoDecoder : Decoder Info
     infoDecoder =
-        map2 Info
+        map2 makeInfo
             (field "height" float)
             (field "age" int)
 
     infoToUser : String -> Info -> User
     infoToUser name { height, age } =
-        User name height age
+        makeUser name height age
 
 So now JSON like `{ "alice": { height: 1.6, age: 33 }}` are turned into
 dictionary values like `Dict.singleton "alice" (User "alice" 1.6 33)` if
@@ -407,13 +420,19 @@ objects with many fields:
 
 
     type alias Point =
-        { x : Float, y : Float }
+        { x : Float
+        , y : Float
+        }
+
+    makePoint : Float -> Float -> Point
+    makePoint x y =
+        { x = x
+        , y = y
+        }
 
     point : Decoder Point
     point =
-        map2 Point
-            (field "x" float)
-            (field "y" float)
+        map2 makePoint (field "x" float) (field "y" float)
 
     -- decodeString point """{ "x": 3, "y": 4 }""" == Ok { x = 3, y = 4 }
 
@@ -433,9 +452,16 @@ objects with many fields:
     type alias Person =
         { name : String, age : Int, height : Float }
 
+    makePerson : String -> Int -> Float -> Person
+    makePerson name age height =
+        { name = name
+        , age = age
+        , height = height
+        }
+
     person : Decoder Person
     person =
-        map3 Person
+        map3 makePerson
             (at [ "name" ] string)
             (at [ "info", "age" ] int)
             (at [ "info", "height" ] float)
@@ -700,12 +726,18 @@ You can use `lazy` to make sure your decoder unrolls lazily.
         , responses : Responses
         }
 
+    makeComment : String -> Responses -> Comment
+    makeComment message responses =
+        { message = message
+        , responses = responses
+        }
+
     type Responses
         = Responses (Array Comment)
 
     comment : Decoder Comment
     comment =
-        map2 Comment
+        map2 makeComment
             (field "message" string)
             (field "responses" (map Responses (array (lazy (\_ -> comment)))))
 

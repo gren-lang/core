@@ -208,16 +208,23 @@ map func (Decoder decodeA) =
 
 {-| Combine two decoders.
 
-    import Bytes exposing (Endiannness(..))
+    import Bytes exposing ( Endianness(..) )
     import Bytes.Decode as Decode
 
-    type alias Point = { x : Float, y : Float }
+    type alias Point =
+        { x : Float
+        , y : Float
+        }
+
+    makePoint : Float -> Float -> Point
+    makePoint x y =
+        { x = x
+        , y = y
+        }
 
     decoder : Decode.Decoder Point
     decoder =
-      Decode.map2 Point
-        (Decode.float32 BE)
-        (Decode.float32 BE)
+        Decode.map2 makePoint (Decode.float32 BE) (Decode.float32 BE)
 -}
 map2 : (a -> b -> result) -> Decoder a -> Decoder b -> Decoder result
 map2 func (Decoder decodeA) (Decoder decodeB) =
