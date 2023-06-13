@@ -70,7 +70,7 @@ testArrayOfN n =
 
                 else
                     Expect.equal (Just 1) (first xs)
-        , describe "Array.filter"
+        , describe "filter"
             [ test "none" <| \{} -> Expect.equal [] (Array.filter (\x -> x > n) xs)
             , test "one" <| \{} -> Expect.equal [ n ] (Array.filter (\z -> z == n) zs)
             , test "all" <| \{} -> Expect.equal xs (Array.filter (\x -> x <= n) xs)
@@ -89,8 +89,12 @@ testArrayOfN n =
             ]
         , test "repeat" <| \{} -> Expect.equal (map (\x -> -1) xs) (repeat n -1)
         , test "append" <| \{} -> Expect.equal (xsSum * 2) (prefix xs xs |> foldl (+) 0)
+        , describe "update"
+            [ test "in-bounds" <| \{} -> Expect.equal (update 1 inc [1, 2, 3]) [1, 3, 3]
+            , test "out-of-bounds" <| \{} -> Expect.equal (update 10 inc [1, 2, 3]) [1, 2, 3]
+            ]
         , test "pushFirst" <| \{} -> Expect.equal (prefix [ -1 ] xs) (Array.pushFirst -1 xs)
-        , test "Array.flatten" <| \{} -> Expect.equal (prefix xs (prefix zs xs)) (Array.flatten [ xs, zs, xs ])
+        , test "flatten" <| \{} -> Expect.equal (prefix xs (prefix zs xs)) (Array.flatten [ xs, zs, xs ])
         , test "intersperse" <|
             \{} ->
                 Expect.equal
