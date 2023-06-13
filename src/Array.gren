@@ -394,8 +394,8 @@ set =
 
 {-| Update a value at the given index using a function. If the index is out of bounds, nothing happens.
 
-    update 1 inc [ 1, 2, 3 ] == [ 1, 3, 3 ]
-    update 10 inc [ 1, 2, 3 ] == [ 1, 2, 3 ]
+    update 1 (\n -> n + 1) [ 1, 2, 3 ] == [ 1, 3, 3 ]
+    update 10 (\n -> n + 1) [ 1, 2, 3 ] == [ 1, 2, 3 ]
 
 -}
 update : Int -> (a -> a) -> Array a -> Array a
