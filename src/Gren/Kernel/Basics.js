@@ -17,7 +17,7 @@ var _Basics_fdiv = F2(function (a, b) {
   return a / b;
 });
 var _Basics_idiv = F2(function (a, b) {
-  return (a / b) | 0;
+  return Math.trunc(a / b);
 });
 var _Basics_pow = F2(Math.pow);
 

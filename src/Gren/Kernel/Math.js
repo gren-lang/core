@@ -34,10 +34,7 @@ var _Math_atan2 = F2(Math.atan2);
 
 // MORE MATH
 
-function _Math_truncate(n) {
-  return n | 0;
-}
-
+var _Math_truncate = Math.trunc;
 var _Math_ceiling = Math.ceil;
 var _Math_floor = Math.floor;
 var _Math_round = Math.round;
