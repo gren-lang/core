@@ -47,7 +47,7 @@ Insert, remove, and query operations all take _O(log n)_ time.
 
 import Array exposing (Array)
 import Basics exposing (Bool, Int)
-import Dict
+import Dict(Key)
 import Maybe exposing (Maybe(..))
 
 
