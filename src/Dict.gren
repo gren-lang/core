@@ -1,4 +1,4 @@
-module Dict exposing
+module Dict(Key : Comparable) exposing
     ( Dict
     , empty, singleton, insert, update, remove
     , isEmpty, member, get, size
@@ -116,14 +116,14 @@ dictionary.
     get "Spike" animals == Nothing
 
 -}
-get : comparable -> Dict comparable v -> Maybe v
+get : Key.T -> Dict Key.T v -> Maybe v
 get targetKey dict =
     case dict of
         RBEmpty_gren_builtin ->
             Nothing
 
         RBNode_gren_builtin _ key value left right ->
-            case compare targetKey key of
+            case Key.compare targetKey key of
                 LT ->
                     get targetKey left
 
@@ -136,7 +136,7 @@ get targetKey dict =
 
 {-| Determine if a key is in a dictionary.
 -}
-member : comparable -> Dict comparable v -> Bool
+member : Key.T -> Dict Key.T v -> Bool
 member key dict =
     case get key dict of
         Just _ ->
@@ -181,7 +181,7 @@ isEmpty dict =
 {-| Insert a key-value pair into a dictionary. Replaces value when there is
 a collision.
 -}
-insert : comparable -> v -> Dict comparable v -> Dict comparable v
+insert : Key.T -> v -> Dict Key.T v -> Dict Key.T v
 insert key value dict =
     -- Root node is always Black
     case insertHelp key value dict of
@@ -192,7 +192,7 @@ insert key value dict =
             x
 
 
-insertHelp : comparable -> v -> Dict comparable v -> Dict comparable v
+insertHelp : Key.T -> v -> Dict Key.T v -> Dict Key.T v
 insertHelp key value dict =
     case dict of
         RBEmpty_gren_builtin ->
@@ -201,7 +201,7 @@ insertHelp key value dict =
             RBNode_gren_builtin Red key value RBEmpty_gren_builtin RBEmpty_gren_builtin
 
         RBNode_gren_builtin nColor nKey nValue nLeft nRight ->
-            case compare key nKey of
+            case Key.compare key nKey of
                 LT ->
                     balance nColor nKey nValue (insertHelp key value nLeft) nRight
 
@@ -245,7 +245,7 @@ balance color key value left right =
 {-| Remove a key-value pair from a dictionary. If the key is not found,
 no changes are made.
 -}
-remove : comparable -> Dict comparable v -> Dict comparable v
+remove : Key.T -> Dict Key.T v -> Dict Key.T v
 remove key dict =
     -- Root node is always Black
     case removeHelp key dict of
@@ -262,14 +262,14 @@ makes sure that the bottom node is red by moving red colors down the tree throug
 and color flips. Any violations this will cause, can easily be fixed by balancing on the way
 up again.
 -}
-removeHelp : comparable -> Dict comparable v -> Dict comparable v
+removeHelp : Key.T -> Dict Key.T v -> Dict Key.T v
 removeHelp targetKey dict =
     case dict of
         RBEmpty_gren_builtin ->
             RBEmpty_gren_builtin
 
         RBNode_gren_builtin color key value left right ->
-            if targetKey < key then
+            if Key.compare targetKey key == LT then
                 case left of
                     RBNode_gren_builtin Black _ _ lLeft _ ->
                         case lLeft of
@@ -291,7 +291,7 @@ removeHelp targetKey dict =
                 removeHelpEQGT targetKey (removeHelpPrepEQGT targetKey dict color key value left right)
 
 
-removeHelpPrepEQGT : comparable -> Dict comparable v -> NColor -> comparable -> v -> Dict comparable v -> Dict comparable v -> Dict comparable v
+removeHelpPrepEQGT : Key.T -> Dict Key.T v -> NColor -> Key.T -> v -> Dict Key.T v -> Dict Key.T v -> Dict Key.T v
 removeHelpPrepEQGT targetKey dict color key value left right =
     case left of
         RBNode_gren_builtin Red lK lV lLeft lRight ->
@@ -317,7 +317,7 @@ removeHelpPrepEQGT targetKey dict color key value left right =
 {-| When we find the node we are looking for, we can remove by replacing the key-value
 pair with the key-value pair of the left-most node on the right side (the closest pair).
 -}
-removeHelpEQGT : comparable -> Dict comparable v -> Dict comparable v
+removeHelpEQGT : Key.T -> Dict Key.T v -> Dict Key.T v
 removeHelpEQGT targetKey dict =
     case dict of
         RBNode_gren_builtin color key value left right ->
@@ -439,7 +439,7 @@ moveRedRight dict =
 
 {-| Update the value of a dictionary for a specific key with a given function.
 -}
-update : comparable -> (Maybe v -> Maybe v) -> Dict comparable v -> Dict comparable v
+update : Key.T -> (Maybe v -> Maybe v) -> Dict Key.T v -> Dict Key.T v
 update targetKey alter dictionary =
     case alter (get targetKey dictionary) of
         Just value ->
@@ -451,7 +451,7 @@ update targetKey alter dictionary =
 
 {-| Create a dictionary with one key-value pair.
 -}
-singleton : comparable -> v -> Dict comparable v
+singleton : Key.T -> v -> Dict Key.T v
 singleton key value =
     -- Root node is always Black
     RBNode_gren_builtin Black key value RBEmpty_gren_builtin RBEmpty_gren_builtin
@@ -464,7 +464,7 @@ singleton key value =
 {-| Combine two dictionaries. If there is a collision, preference is given
 to the first dictionary.
 -}
-union : Dict comparable v -> Dict comparable v -> Dict comparable v
+union : Dict Key.T v -> Dict Key.T v -> Dict Key.T v
 union t1 t2 =
     foldl insert t2 t1
 
@@ -472,14 +472,14 @@ union t1 t2 =
 {-| Keep a key-value pair when its key appears in the second dictionary.
 Preference is given to values in the first dictionary.
 -}
-intersect : Dict comparable v -> Dict comparable v -> Dict comparable v
+intersect : Dict Key.T v -> Dict Key.T v -> Dict Key.T v
 intersect t1 t2 =
     filter (\k _ -> member k t2) t1
 
 
 {-| Keep a key-value pair when its key does not appear in the second dictionary.
 -}
-diff : Dict comparable a -> Dict comparable b -> Dict comparable a
+diff : Dict Key.T a -> Dict Key.T b -> Dict Key.T a
 diff t1 t2 =
     foldl (\k v t -> remove k t) t1 t2
 
@@ -552,7 +552,7 @@ foldr func acc t =
 
 {-| Keep only the key-value pairs that pass the given test.
 -}
-filter : (comparable -> v -> Bool) -> Dict comparable v -> Dict comparable v
+filter : (Key.T -> v -> Bool) -> Dict Key.T v -> Dict Key.T v
 filter isGood dict =
     foldl
         (\k v d ->
@@ -570,7 +570,7 @@ filter isGood dict =
 contains all key-value pairs which passed the test, and the second contains
 the pairs that did not.
 -}
-partition : (comparable -> v -> Bool) -> Dict comparable v -> { trues : Dict comparable v, falses : Dict comparable v }
+partition : (Key.T -> v -> Bool) -> Dict Key.T v -> { trues : Dict Key.T v, falses : Dict Key.T v }
 partition isGood dict =
     let
         add key value { trues, falses } =
@@ -620,7 +620,7 @@ toArray dict =
 
 {-| Convert an association list into a dictionary.
 -}
-fromArray : Array { key : comparable, value : v } -> Dict comparable v
+fromArray : Array { key : Key.T, value : v } -> Dict Key.T v
 fromArray assocs =
     Array.foldl (\{ key, value } dict -> insert key value dict) empty assocs
 
@@ -636,11 +636,11 @@ accumulators for when a given key appears:
 
 -}
 merge :
-    (comparable -> a -> result -> result)
-    -> (comparable -> a -> b -> result -> result)
-    -> (comparable -> b -> result -> result)
-    -> Dict comparable a
-    -> Dict comparable b
+    (Key.T -> a -> result -> result)
+    -> (Key.T -> a -> b -> result -> result)
+    -> (Key.T -> b -> result -> result)
+    -> Dict Key.T a
+    -> Dict Key.T b
     -> result
     -> result
 merge leftStep bothStep rightStep leftDict rightDict initialResult =

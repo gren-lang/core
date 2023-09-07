@@ -1,0 +1,5 @@
+signature module Comparable
+
+type alias T
+
+compare : T -> T -> Order
