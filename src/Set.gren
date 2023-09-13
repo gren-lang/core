@@ -67,21 +67,21 @@ empty =
 
 {-| Create a set with one value.
 -}
-singleton : Key.comparable -> Set Key.comparable
+singleton : Key.T -> Set Key.T
 singleton key =
     Set_gren_builtin (Dict.singleton key {})
 
 
 {-| Insert a value into a set.
 -}
-insert : Key.comparable -> Set Key.comparable -> Set Key.comparable
+insert : Key.T -> Set Key.T -> Set Key.T
 insert key (Set_gren_builtin dict) =
     Set_gren_builtin (Dict.insert key {} dict)
 
 
 {-| Remove a value from a set. If the value is not found, no changes are made.
 -}
-remove : Key.comparable -> Set Key.comparable -> Set Key.comparable
+remove : Key.T -> Set Key.T -> Set Key.T
 remove key (Set_gren_builtin dict) =
     Set_gren_builtin (Dict.remove key dict)
 
@@ -95,7 +95,7 @@ isEmpty (Set_gren_builtin dict) =
 
 {-| Determine if a value is in a set.
 -}
-member : Key.comparable -> Set Key.comparable -> Bool
+member : Key.T -> Set Key.T -> Bool
 member key (Set_gren_builtin dict) =
     Dict.member key dict
 
@@ -109,14 +109,14 @@ size (Set_gren_builtin dict) =
 
 {-| Get the union of two sets. Keep all values.
 -}
-union : Set Key.comparable -> Set Key.comparable -> Set Key.comparable
+union : Set Key.T -> Set Key.T -> Set Key.T
 union (Set_gren_builtin dict1) (Set_gren_builtin dict2) =
     Set_gren_builtin (Dict.union dict1 dict2)
 
 
 {-| Get the intersection of two sets. Keeps values that appear in both sets.
 -}
-intersect : Set Key.comparable -> Set Key.comparable -> Set Key.comparable
+intersect : Set Key.T -> Set Key.T -> Set Key.T
 intersect (Set_gren_builtin dict1) (Set_gren_builtin dict2) =
     Set_gren_builtin (Dict.intersect dict1 dict2)
 
@@ -124,7 +124,7 @@ intersect (Set_gren_builtin dict1) (Set_gren_builtin dict2) =
 {-| Get the difference between the first set and the second. Keeps values
 that do not appear in the second set.
 -}
-diff : Set Key.comparable -> Set Key.comparable -> Set Key.comparable
+diff : Set Key.T -> Set Key.T -> Set Key.T
 diff (Set_gren_builtin dict1) (Set_gren_builtin dict2) =
     Set_gren_builtin (Dict.diff dict1 dict2)
 
@@ -138,7 +138,7 @@ toArray (Set_gren_builtin dict) =
 
 {-| Convert a list into a set, removing any duplicates.
 -}
-fromArray : Array Key.comparable -> Set Key.comparable
+fromArray : Array Key.T -> Set Key.T
 fromArray list =
     Array.foldl insert empty list
 
@@ -172,7 +172,7 @@ foldr func initialState (Set_gren_builtin dict) =
     -- positives == Set.fromArray [1,2]
 
 -}
-filter : (Key.comparable -> Bool) -> Set Key.comparable -> Set Key.comparable
+filter : (Key.T -> Bool) -> Set Key.T -> Set Key.T
 filter isGood (Set_gren_builtin dict) =
     Set_gren_builtin (Dict.filter (\key _ -> isGood key) dict)
 
@@ -180,7 +180,7 @@ filter isGood (Set_gren_builtin dict) =
 {-| Create two new sets. The first contains all the elements that passed the
 given test, and the second contains all the elements that did not.
 -}
-partition : (Key.comparable -> Bool) -> Set Key.comparable -> { trues : Set Key.comparable, falses : Set Key.comparable }
+partition : (Key.T -> Bool) -> Set Key.T -> { trues : Set Key.T, falses : Set Key.T }
 partition isGood (Set_gren_builtin dict) =
     let
         { trues, falses } =
