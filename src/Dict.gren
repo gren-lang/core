@@ -653,21 +653,22 @@ merge leftStep bothStep rightStep leftDict rightDict initialResult =
                     }
 
                 Just { first = { key = lKey, value = lValue }, rest } ->
-                    if lKey < rKey then
-                        stepState rKey rValue 
-                            { list = rest
-                            , result = leftStep lKey lValue result
+                    case Key.compare lKey rKey of
+                        LT ->
+                            stepState rKey rValue 
+                                { list = rest
+                                , result = leftStep lKey lValue result
+                                }
+
+                        GT ->
+                            { list = list
+                            , result = rightStep rKey rValue result
                             }
 
-                    else if lKey > rKey then
-                        { list = list
-                        , result = rightStep rKey rValue result
-                        }
-
-                    else
-                        { list = rest
-                        , result = bothStep lKey lValue rValue result
-                        }
+                        EQ ->
+                            { list = rest
+                            , result = bothStep lKey lValue rValue result
+                            }
 
         { list = leftovers, result = intermediateResult } =
             foldl stepState { list = toArray leftDict, result = initialResult } rightDict

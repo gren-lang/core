@@ -4,7 +4,7 @@ module Set(Key : Comparable) exposing
     , isEmpty, member, size
     , union, intersect, diff
     , toArray, fromArray
-    , map, foldl, foldr, filter, partition
+    , foldl, foldr, filter, partition
     )
 
 {-| A set of unique values. The values can be any comparable type. This
