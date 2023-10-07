@@ -31,8 +31,8 @@ module Json.Encode exposing
 
 import Basics exposing (..)
 import Array exposing (Array)
-import Dict exposing (Dict)
-import Set exposing (Set)
+import Dict(String) exposing (Dict)
+import Set(String) exposing (Set)
 import String exposing (String)
 import Gren.Kernel.Json
 

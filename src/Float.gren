@@ -1,0 +1,16 @@
+module Float exposing (Float, compare)
+
+
+import Basics exposing (Order)
+
+
+type alias T = Float
+
+
+-- Implementation in kernel code
+type Float = Float
+
+
+compare : Float -> Float -> Order
+compare left right =
+    Basics.compare 1.0 2.0

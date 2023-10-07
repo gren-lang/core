@@ -45,7 +45,9 @@ effect module Time where { subscription = MySub } exposing
 
 import Array exposing (Array)
 import Basics exposing (..)
-import Dict
+-- TODO: the below line is required for this module to run (used in Dict import), this is a bug
+import Float
+import Dict(Float)
 import Math
 import Maybe exposing (Maybe(..))
 import Platform
