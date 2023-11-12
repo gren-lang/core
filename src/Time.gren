@@ -47,7 +47,7 @@ import Array exposing (Array)
 import Basics exposing (..)
 -- TODO: the below line is required for this module to run (used in Dict import), this is a bug
 import Float
-import Dict(Float)
+import Dict(Float) as Dict exposing (Dict)
 import Math
 import Maybe exposing (Maybe(..))
 import Platform
@@ -445,11 +445,11 @@ type alias State msg =
 
 
 type alias Processes =
-  Dict.Dict Float Platform.ProcessId
+  Dict Platform.ProcessId
 
 
 type alias Taggers msg =
-  Dict.Dict Float (Array (Posix -> msg))
+  Dict (Array (Posix -> msg))
 
 
 init : Task Never (State msg)

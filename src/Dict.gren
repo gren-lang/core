@@ -64,9 +64,9 @@ type NColor
 that lets you look up a `String` (such as user names) and find the associated
 `User`.
 
-    import Dict exposing ( Dict )
+    import Dict(String) as Dict exposing ( Dict )
 
-    users : Dict String User
+    users : Dict User
     users =
         Dict.fromArray
             [ { key = "Alice"
@@ -93,14 +93,14 @@ that lets you look up a `String` (such as user names) and find the associated
         , height = height
         }
 -}
-type Dict k v
-    = RBNode_gren_builtin NColor k v (Dict k v) (Dict k v)
+type Dict v
+    = RBNode_gren_builtin NColor Key.T v (Dict v) (Dict v)
     | RBEmpty_gren_builtin
 
 
 {-| Create an empty dictionary.
 -}
-empty : Dict k v
+empty : Dict v
 empty =
     RBEmpty_gren_builtin
 
@@ -116,7 +116,7 @@ dictionary.
     get "Spike" animals == Nothing
 
 -}
-get : Key.T -> Dict Key.T v -> Maybe v
+get : Key.T -> Dict v -> Maybe v
 get targetKey dict =
     case dict of
         RBEmpty_gren_builtin ->
@@ -136,7 +136,7 @@ get targetKey dict =
 
 {-| Determine if a key is in a dictionary.
 -}
-member : Key.T -> Dict Key.T v -> Bool
+member : Key.T -> Dict v -> Bool
 member key dict =
     case get key dict of
         Just _ ->
@@ -148,12 +148,12 @@ member key dict =
 
 {-| Determine the number of key-value pairs in the dictionary.
 -}
-size : Dict k v -> Int
+size : Dict v -> Int
 size dict =
     sizeHelp 0 dict
 
 
-sizeHelp : Int -> Dict k v -> Int
+sizeHelp : Int -> Dict v -> Int
 sizeHelp n dict =
     case dict of
         RBEmpty_gren_builtin ->
@@ -168,7 +168,7 @@ sizeHelp n dict =
     isEmpty empty == True
 
 -}
-isEmpty : Dict k v -> Bool
+isEmpty : Dict v -> Bool
 isEmpty dict =
     case dict of
         RBEmpty_gren_builtin ->
@@ -181,7 +181,7 @@ isEmpty dict =
 {-| Insert a key-value pair into a dictionary. Replaces value when there is
 a collision.
 -}
-insert : Key.T -> v -> Dict Key.T v -> Dict Key.T v
+insert : Key.T -> v -> Dict v -> Dict v
 insert key value dict =
     -- Root node is always Black
     case insertHelp key value dict of
@@ -192,7 +192,7 @@ insert key value dict =
             x
 
 
-insertHelp : Key.T -> v -> Dict Key.T v -> Dict Key.T v
+insertHelp : Key.T -> v -> Dict v -> Dict v
 insertHelp key value dict =
     case dict of
         RBEmpty_gren_builtin ->
@@ -212,7 +212,7 @@ insertHelp key value dict =
                     balance nColor nKey nValue nLeft (insertHelp key value nRight)
 
 
-balance : NColor -> k -> v -> Dict k v -> Dict k v -> Dict k v
+balance : NColor -> Key.T -> v -> Dict v -> Dict v -> Dict v
 balance color key value left right =
     case right of
         RBNode_gren_builtin Red rK rV rLeft rRight ->
@@ -245,7 +245,7 @@ balance color key value left right =
 {-| Remove a key-value pair from a dictionary. If the key is not found,
 no changes are made.
 -}
-remove : Key.T -> Dict Key.T v -> Dict Key.T v
+remove : Key.T -> Dict v -> Dict v
 remove key dict =
     -- Root node is always Black
     case removeHelp key dict of
@@ -262,7 +262,7 @@ makes sure that the bottom node is red by moving red colors down the tree throug
 and color flips. Any violations this will cause, can easily be fixed by balancing on the way
 up again.
 -}
-removeHelp : Key.T -> Dict Key.T v -> Dict Key.T v
+removeHelp : Key.T -> Dict v -> Dict v
 removeHelp targetKey dict =
     case dict of
         RBEmpty_gren_builtin ->
@@ -291,7 +291,7 @@ removeHelp targetKey dict =
                 removeHelpEQGT targetKey (removeHelpPrepEQGT targetKey dict color key value left right)
 
 
-removeHelpPrepEQGT : Key.T -> Dict Key.T v -> NColor -> Key.T -> v -> Dict Key.T v -> Dict Key.T v -> Dict Key.T v
+removeHelpPrepEQGT : Key.T -> Dict v -> NColor -> Key.T -> v -> Dict v -> Dict v -> Dict v
 removeHelpPrepEQGT targetKey dict color key value left right =
     case left of
         RBNode_gren_builtin Red lK lV lLeft lRight ->
@@ -317,7 +317,7 @@ removeHelpPrepEQGT targetKey dict color key value left right =
 {-| When we find the node we are looking for, we can remove by replacing the key-value
 pair with the key-value pair of the left-most node on the right side (the closest pair).
 -}
-removeHelpEQGT : Key.T -> Dict Key.T v -> Dict Key.T v
+removeHelpEQGT : Key.T -> Dict v -> Dict v
 removeHelpEQGT targetKey dict =
     case dict of
         RBNode_gren_builtin color key value left right ->
@@ -336,7 +336,7 @@ removeHelpEQGT targetKey dict =
             RBEmpty_gren_builtin
 
 
-getMin : Dict k v -> Dict k v
+getMin : Dict v -> Dict v
 getMin dict =
     case dict of
         RBNode_gren_builtin _ _ _ ((RBNode_gren_builtin _ _ _ _ _) as left) _ ->
@@ -346,7 +346,7 @@ getMin dict =
             dict
 
 
-removeMin : Dict k v -> Dict k v
+removeMin : Dict v -> Dict v
 removeMin dict =
     case dict of
         RBNode_gren_builtin color key value ((RBNode_gren_builtin lColor _ _ lLeft _) as left) right ->
@@ -371,7 +371,7 @@ removeMin dict =
             RBEmpty_gren_builtin
 
 
-moveRedLeft : Dict k v -> Dict k v
+moveRedLeft : Dict v -> Dict v
 moveRedLeft dict =
     case dict of
         RBNode_gren_builtin clr k v (RBNode_gren_builtin lClr lK lV lLeft lRight) (RBNode_gren_builtin rClr rK rV ((RBNode_gren_builtin Red rlK rlV rlL rlR) as rLeft) rRight) ->
@@ -404,7 +404,7 @@ moveRedLeft dict =
             dict
 
 
-moveRedRight : Dict k v -> Dict k v
+moveRedRight : Dict v -> Dict v
 moveRedRight dict =
     case dict of
         RBNode_gren_builtin clr k v (RBNode_gren_builtin lClr lK lV (RBNode_gren_builtin Red llK llV llLeft llRight) lRight) (RBNode_gren_builtin rClr rK rV rLeft rRight) ->
@@ -416,30 +416,20 @@ moveRedRight dict =
                 (RBNode_gren_builtin Black k v lRight (RBNode_gren_builtin Red rK rV rLeft rRight))
 
         RBNode_gren_builtin clr k v (RBNode_gren_builtin lClr lK lV lLeft lRight) (RBNode_gren_builtin rClr rK rV rLeft rRight) ->
-            case clr of
-                Black ->
-                    RBNode_gren_builtin
-                        Black
-                        k
-                        v
-                        (RBNode_gren_builtin Red lK lV lLeft lRight)
-                        (RBNode_gren_builtin Red rK rV rLeft rRight)
-
-                Red ->
-                    RBNode_gren_builtin
-                        Black
-                        k
-                        v
-                        (RBNode_gren_builtin Red lK lV lLeft lRight)
-                        (RBNode_gren_builtin Red rK rV rLeft rRight)
-
+            RBNode_gren_builtin
+                Black
+                k
+                v
+                (RBNode_gren_builtin Red lK lV lLeft lRight)
+                (RBNode_gren_builtin Red rK rV rLeft rRight)
+        
         _ ->
             dict
 
 
 {-| Update the value of a dictionary for a specific key with a given function.
 -}
-update : Key.T -> (Maybe v -> Maybe v) -> Dict Key.T v -> Dict Key.T v
+update : Key.T -> (Maybe v -> Maybe v) -> Dict v -> Dict v
 update targetKey alter dictionary =
     case alter (get targetKey dictionary) of
         Just value ->
@@ -451,7 +441,7 @@ update targetKey alter dictionary =
 
 {-| Create a dictionary with one key-value pair.
 -}
-singleton : Key.T -> v -> Dict Key.T v
+singleton : Key.T -> v -> Dict v
 singleton key value =
     -- Root node is always Black
     RBNode_gren_builtin Black key value RBEmpty_gren_builtin RBEmpty_gren_builtin
@@ -464,7 +454,7 @@ singleton key value =
 {-| Combine two dictionaries. If there is a collision, preference is given
 to the first dictionary.
 -}
-union : Dict Key.T v -> Dict Key.T v -> Dict Key.T v
+union : Dict v -> Dict v -> Dict v
 union t1 t2 =
     foldl insert t2 t1
 
@@ -472,14 +462,14 @@ union t1 t2 =
 {-| Keep a key-value pair when its key appears in the second dictionary.
 Preference is given to values in the first dictionary.
 -}
-intersect : Dict Key.T v -> Dict Key.T v -> Dict Key.T v
+intersect : Dict v -> Dict v -> Dict v
 intersect t1 t2 =
     filter (\k _ -> member k t2) t1
 
 
 {-| Keep a key-value pair when its key does not appear in the second dictionary.
 -}
-diff : Dict Key.T a -> Dict Key.T b -> Dict Key.T a
+diff : Dict a -> Dict b -> Dict a
 diff t1 t2 =
     foldl (\k v t -> remove k t) t1 t2
 
@@ -490,7 +480,7 @@ diff t1 t2 =
 
 {-| Apply a function to all values in a dictionary.
 -}
-map : (k -> a -> b) -> Dict k a -> Dict k b
+map : (Key.T -> a -> b) -> Dict a -> Dict b
 map func dict =
     case dict of
         RBEmpty_gren_builtin ->
@@ -515,7 +505,7 @@ map func dict =
     -- getAges users == [33,19,28]
 
 -}
-foldl : (k -> v -> b -> b) -> b -> Dict k v -> b
+foldl : (Key.T -> v -> b -> b) -> b -> Dict v -> b
 foldl func acc dict =
     case dict of
         RBEmpty_gren_builtin ->
@@ -540,7 +530,7 @@ foldl func acc dict =
     -- getAges users == [28,19,33]
 
 -}
-foldr : (k -> v -> b -> b) -> b -> Dict k v -> b
+foldr : (Key.T -> v -> b -> b) -> b -> Dict v -> b
 foldr func acc t =
     case t of
         RBEmpty_gren_builtin ->
@@ -552,7 +542,7 @@ foldr func acc t =
 
 {-| Keep only the key-value pairs that pass the given test.
 -}
-filter : (Key.T -> v -> Bool) -> Dict Key.T v -> Dict Key.T v
+filter : (Key.T -> v -> Bool) -> Dict v -> Dict v
 filter isGood dict =
     foldl
         (\k v d ->
@@ -570,7 +560,7 @@ filter isGood dict =
 contains all key-value pairs which passed the test, and the second contains
 the pairs that did not.
 -}
-partition : (Key.T -> v -> Bool) -> Dict Key.T v -> { trues : Dict Key.T v, falses : Dict Key.T v }
+partition : (Key.T -> v -> Bool) -> Dict v -> { trues : Dict v, falses : Dict v }
 partition isGood dict =
     let
         add key value { trues, falses } =
@@ -596,7 +586,7 @@ partition isGood dict =
     keys (fromArray [ ( 0, "Alice" ), ( 1, "Bob" ) ]) == [ 0, 1 ]
 
 -}
-keys : Dict k v -> Array k
+keys : Dict v -> Array Key.T
 keys dict =
     foldl (\key value keyArray -> Array.pushLast key keyArray) [] dict
 
@@ -606,21 +596,21 @@ keys dict =
     values (fromArray [ ( 0, "Alice" ), ( 1, "Bob" ) ]) == [ "Alice", "Bob" ]
 
 -}
-values : Dict k v -> Array v
+values : Dict v -> Array v
 values dict =
     foldl (\key value valueArray -> Array.pushLast value valueArray) [] dict
 
 
 {-| Convert a dictionary into an association list of key-value pairs, sorted by keys.
 -}
-toArray : Dict k v -> Array { key : k, value : v }
+toArray : Dict v -> Array { key : Key.T, value : v }
 toArray dict =
     foldl (\key value array -> Array.pushLast { key = key, value = value } array) [] dict
 
 
 {-| Convert an association list into a dictionary.
 -}
-fromArray : Array { key : Key.T, value : v } -> Dict Key.T v
+fromArray : Array { key : Key.T, value : v } -> Dict v
 fromArray assocs =
     Array.foldl (\{ key, value } dict -> insert key value dict) empty assocs
 
@@ -639,8 +629,8 @@ merge :
     (Key.T -> a -> result -> result)
     -> (Key.T -> a -> b -> result -> result)
     -> (Key.T -> b -> result -> result)
-    -> Dict Key.T a
-    -> Dict Key.T b
+    -> Dict a
+    -> Dict b
     -> result
     -> result
 merge leftStep bothStep rightStep leftDict rightDict initialResult =
