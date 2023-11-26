@@ -4,7 +4,7 @@ module Dict(Key : Comparable) exposing
     , isEmpty, member, get, size
     , keys, values, toArray, fromArray
     , map, foldl, foldr, filter, partition
-    , union, intersect, diff, merge
+    , union, intersect, diff
     )
 
 {-| A dictionary mapping unique keys to values. The keys can be any comparable
@@ -615,16 +615,18 @@ fromArray assocs =
     Array.foldl (\{ key, value } dict -> insert key value dict) empty assocs
 
 
-{-| The most general way of combining two dictionaries. You provide three
+{- TODO: Broke after typesystem changes in Gren compiler
+
+The most general way of combining two dictionaries. You provide three
 accumulators for when a given key appears:
 
 1.  Only in the left dictionary.
 2.  In both dictionaries.
 3.  Only in the right dictionary.
-    You then traverse all the keys from lowest to highest, building up whatever
-    you want.
 
--}
+You then traverse all the keys from lowest to highest, building up whatever
+you want.
+
 merge :
     (Key.T -> a -> result -> result)
     -> (Key.T -> a -> b -> result -> result)
@@ -664,3 +666,4 @@ merge leftStep bothStep rightStep leftDict rightDict initialResult =
             foldl stepState { list = toArray leftDict, result = initialResult } rightDict
     in
     Array.foldl (\{ key, value } result -> leftStep key value result) intermediateResult leftovers
+-}
