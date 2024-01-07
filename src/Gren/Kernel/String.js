@@ -10,14 +10,11 @@ var _String_cons = F2(function (chr, str) {
 });
 
 function _String_uncons(string) {
-  var word = string.charCodeAt(0);
-  return !isNaN(word)
-    ? __Maybe_Just(
-        0xd800 <= word && word <= 0xdbff
-          ? { first: __Utils_chr(string[0] + string[1]), rest: string.slice(2) }
-          : { first: __Utils_chr(string[0]), rest: string.slice(1) }
-      )
-    : __Maybe_Nothing;
+  if (string.length <= 0) {
+    return __Maybe_Nothing;
+  }
+
+  return __Maybe_Just({ first: __Utils_chr(string[0]), rest: string.slice(1) });
 }
 
 var _String_append = F2(function (a, b) {
@@ -33,12 +30,6 @@ var _String_map = F2(function (func, string) {
   var array = new Array(len);
   var i = 0;
   while (i < len) {
-    var word = string.charCodeAt(i);
-    if (0xd800 <= word && word <= 0xdbff) {
-      array[i] = func(__Utils_chr(string[i] + string[i + 1]));
-      i += 2;
-      continue;
-    }
     array[i] = func(__Utils_chr(string[i]));
     i++;
   }
@@ -51,12 +42,7 @@ var _String_filter = F2(function (isGood, str) {
   var i = 0;
   while (i < len) {
     var char = str[i];
-    var word = str.charCodeAt(i);
     i++;
-    if (0xd800 <= word && word <= 0xdbff) {
-      char += str[i];
-      i++;
-    }
 
     if (isGood(__Utils_chr(char))) {
       arr.push(char);
@@ -70,16 +56,8 @@ function _String_reverse(str) {
   var arr = new Array(len);
   var i = 0;
   while (i < len) {
-    var word = str.charCodeAt(i);
-    if (0xd800 <= word && word <= 0xdbff) {
-      arr[len - i] = str[i + 1];
-      i++;
-      arr[len - i] = str[i - 1];
-      i++;
-    } else {
-      arr[len - i] = str[i];
-      i++;
-    }
+    arr[len - i] = str[i];
+    i++;
   }
   return arr.join("");
 }
@@ -89,13 +67,8 @@ var _String_foldl = F3(function (func, state, string) {
   var i = 0;
   while (i < len) {
     var char = string[i];
-    var word = string.charCodeAt(i);
-    i++;
-    if (0xd800 <= word && word <= 0xdbff) {
-      char += string[i];
-      i++;
-    }
     state = A2(func, __Utils_chr(char), state);
+    i++;
   }
   return state;
 });
@@ -104,11 +77,6 @@ var _String_foldr = F3(function (func, state, string) {
   var i = string.length;
   while (i--) {
     var char = string[i];
-    var word = string.charCodeAt(i);
-    if (0xdc00 <= word && word <= 0xdfff) {
-      i--;
-      char = string[i] + char;
-    }
     state = A2(func, __Utils_chr(char), state);
   }
   return state;
@@ -158,11 +126,6 @@ var _String_any = F2(function (isGood, string) {
   var i = string.length;
   while (i--) {
     var char = string[i];
-    var word = string.charCodeAt(i);
-    if (0xdc00 <= word && word <= 0xdfff) {
-      i--;
-      char = string[i] + char;
-    }
     if (isGood(__Utils_chr(char))) {
       return true;
     }
@@ -174,11 +137,6 @@ var _String_all = F2(function (isGood, string) {
   var i = string.length;
   while (i--) {
     var char = string[i];
-    var word = string.charCodeAt(i);
-    if (0xdc00 <= word && word <= 0xdfff) {
-      i--;
-      char = string[i] + char;
-    }
     if (!isGood(__Utils_chr(char))) {
       return false;
     }
