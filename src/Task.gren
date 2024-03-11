@@ -45,9 +45,9 @@ import Result exposing (Result(..))
   - [`focus : String -> Task Error {}`][focus]
   - [`sleep : Float -> Task x {}`][sleep]
 
-[now]: /packages/gren/time/latest/Time#now
-[focus]: /packages/gren/browser/latest/Browser-Dom#focus
-[sleep]: /packages/gren/core/latest/Process#sleep
+[now]: Time#now
+[focus]: /package/gren-lang/browser/latest/module/Browser.Dom#focus
+[sleep]: Process#sleep
 
 In each case we have a `Task` that will resolve successfully with an `a` value
 or unsuccessfully with an `x` value. So `Browser.Dom.focus` we may fail with an
@@ -75,7 +75,6 @@ type alias Task x a =
     import Time
 
 
-    -- gren install gren/time
     timeInMillis : Task x Int
     timeInMillis =
         Time.now
@@ -107,14 +106,13 @@ fail =
 -- MAPPING
 
 
-{-| Transform a task. Maybe you want to use [`gren/time`][time] to figure
+{-| Transform a task. Maybe you want to use [`Time`][time] to figure
 out what time it will be in one hour:
 
     import Task exposing (Task)
     import Time
 
 
-    -- gren install gren/time
     timeInOneHour : Task x Time.Posix
     timeInOneHour =
         Task.map addAnHour Time.now
@@ -123,7 +121,7 @@ out what time it will be in one hour:
     addAnHour time =
         Time.millisToPosix (Time.posixToMillis time + 60 * 60 * 1000)
 
-[time]: /packages/gren/time/latest/
+[time]: Time
 
 -}
 map : (a -> b) -> Task x a -> Task x b
@@ -133,13 +131,12 @@ map func taskA =
 
 
 {-| Put the results of two tasks together. For example, if we wanted to know
-the current month, we could use [`gren/time`][time] to ask:
+the current month, we could use [`Time`][time] to ask:
 
     import Task exposing (Task)
     import Time
 
 
-    -- gren install gren/time
     getMonth : Task x Int
     getMonth =
         Task.map2 Time.toMonth Time.here Time.now
@@ -148,7 +145,7 @@ the current month, we could use [`gren/time`][time] to ask:
 order, so it would try the first request and only continue after it succeeds.
 If it fails, the whole thing fails!
 
-[time]: /packages/gren/time/latest/
+[time]: Time
 
 -}
 map2 : (a -> b -> result) -> Task x a -> Task x b -> Task x result
@@ -239,8 +236,6 @@ successful, you give the result to the callback resulting in another task. This
 task then gets run. We could use this to make a task that resolves an hour from
 now:
 
-    -- gren install gren/time
-
 
     import Process
     import Time
@@ -311,7 +306,6 @@ type MyCmd msg
 {-| Like I was saying in the [`Task`](#Task) documentation, just having a
 `Task` does not mean it is done. We must command Gren to `perform` the task:
 
-    -- gren install gren/time
 
 
     import Task
@@ -342,7 +336,7 @@ perform toMessage task =
 {-| This is very similar to [`perform`](#perform) except it can handle failures!
 So we could _attempt_ to focus on a certain DOM node like this:
 
-    -- gren install gren/browser
+    -- gren install gren-lang/browser
 
 
     import Browser.Dom
