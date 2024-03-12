@@ -68,7 +68,7 @@ If you _do_ want to control the user interface in Gren, the [`Browser`][browser]
 module has a few ways to create that kind of `Program` instead!
 
 [headless]: https://en.wikipedia.org/wiki/Headless_software
-[browser]: /packages/gren/browser/latest/Browser
+[browser]: /package/gren-lang/browser/latest/module/Browser
 
 -}
 worker :

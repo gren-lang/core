@@ -79,7 +79,7 @@ batch =
 
 
 {-| Transform the messages produced by a subscription.
-Very similar to [`Html.map`](/packages/gren/html/latest/Html#map).
+Very similar to [`Html.map`](/package/gren-lang/browser/latest/module/Html#map).
 
 This is very rarely useful in well-structured Gren code, so definitely read the
 section on [structure] in the guide before reaching for this!

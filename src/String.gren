@@ -183,10 +183,10 @@ repeatHelp n chunk result =
     replace "," "/" "a,b,c,d,e" == "a/b/c/d/e"
 
 **Note:** If you need more advanced replacements, check out the
-[`gren/parser`][parser] or [`gren/regex`][regex] package.
+[`gren-lang/parser`][parser] or [`String.Regex`][regex] package.
 
-[parser]: /packages/gren/parser/latest
-[regex]: /packages/gren/regex/latest
+[parser]: /package/gren-lang/parser
+[regex]: String.Regex
 
 -}
 replace : String -> String -> String -> String
