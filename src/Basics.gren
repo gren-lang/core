@@ -11,22 +11,22 @@ module Basics exposing
 {-| Tons of useful functions that get imported by default.
 
 
-# Math
+## Numbers
 
 @docs Int, (+), (-), (*), (/), (//), (^), negate
 
 
-# Float
+## Float
 
 @docs Float, toFloat, isNaN, isInfinite
 
 
-# Equality
+## Equality
 
 @docs (==), (/=)
 
 
-# Comparison
+## Comparison
 
 These functions only work on `comparable` types. This includes numbers,
 characters, strings and arrays of comparable things.
@@ -34,17 +34,17 @@ characters, strings and arrays of comparable things.
 @docs Order, (<), (>), (<=), (>=), max, min, clamp, compare
 
 
-# Booleans
+## Booleans
 
 @docs Bool, not, (&&), (||), xor
 
 
-# Append Strings and Lists
+## Append Strings and Lists
 
 @docs (++)
 
 
-# Function Helpers
+## Function Helpers
 
 @docs identity, always, (<|), (|>), (<<), (>>), Never, never
 

@@ -6,12 +6,11 @@ module Bytes exposing
   )
 
 
-{-|
+{-| Functions for working with sequences of bytes.
 
-# Bytes
 @docs Bytes, width
 
-# Endianness
+## Endianness
 @docs Endianness, getHostEndianness
 
 -}

@@ -11,32 +11,31 @@ module Bytes.Decode exposing
   )
 
 
-{-|
+{-| Functions for creating things from a sequence of bytes.
 
-# Decoders
 @docs Decoder, decode
 
-# Integers
-@docs signedInt8, signedInt16, signedInt32,
-  unsignedInt8, unsignedInt16, unsignedInt32
+## Integers
+@docs signedInt8, signedInt16, signedInt32, unsignedInt8, unsignedInt16, unsignedInt32
 
-# Floats
+## Floats
 @docs float32, float64
 
-# Bytes
+## Bytes
 @docs bytes
 
-# Strings
+## Strings
 @docs string
 
-# Map
+## Map
 @docs map, map2, map3, map4, map5
 
-# And Then
+## And Then
 @docs andThen, succeed, fail
 
-# Loop
+## Loop
 @docs Step, loop
+
 -}
 
 

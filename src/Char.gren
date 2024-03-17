@@ -10,27 +10,25 @@ module Char exposing
 `'a'` pair of single quotes.
 
 
-# Characters
-
 @docs Char
 
 
-# ASCII Letters
+## ASCII Letters
 
 @docs isUpper, isLower, isAlpha, isAlphaNum
 
 
-# Digits
+## Digits
 
 @docs isDigit, isOctDigit, isHexDigit
 
 
-# Conversion
+## Conversion
 
 @docs toUpper, toLower, toLocaleUpper, toLocaleLower
 
 
-# Unicode Code Points
+## Unicode Code Points
 
 @docs toCode, fromCode
 

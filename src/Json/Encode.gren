@@ -5,25 +5,23 @@ module Json.Encode exposing
     , object, dict
     )
 
-{-| Library for turning Gren values into Json values.
+{-| Functions for turning Gren values into Json values.
 
-
-# Encoding
 
 @docs encode, Value
 
 
-# Primitives
+## Primitives
 
 @docs string, int, float, bool, null
 
 
-# Arrays
+## Arrays
 
 @docs array, set
 
 
-# Objects
+## Objects
 
 @docs object, dict
 

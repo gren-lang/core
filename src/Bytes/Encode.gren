@@ -10,22 +10,20 @@ module Bytes.Encode exposing
   )
 
 
-{-|
+{-| Functions for turning things into bytes.
 
-# Encoders
-@docs encode, Encoder, sequence
+@docs Encoder, encode, sequence
 
-# Integers
-@docs signedInt8, signedInt16, signedInt32,
-  unsignedInt8, unsignedInt16, unsignedInt32
+## Integers
+@docs signedInt8, signedInt16, signedInt32, unsignedInt8, unsignedInt16, unsignedInt32
 
-# Floats
+## Floats
 @docs float32, float64
 
-# Bytes
+## Bytes
 @docs bytes
 
-# Strings
+## Strings
 @docs string, getStringWidth
 
 -}

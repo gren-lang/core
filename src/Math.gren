@@ -8,17 +8,15 @@ module Math exposing
 {-| Functions for doing math
 
 
-# Math
-
 @docs round, floor, ceiling, truncate, modBy, remainderBy, abs, sqrt, logBase, e
 
 
-# Angles
+## Angles
 
 @docs degrees, radians, turns
 
 
-# Trigonometry
+## Trigonometry
 
 @docs pi, cos, sin, tan, acos, asin, atan, atan2
 

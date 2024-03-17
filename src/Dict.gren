@@ -14,36 +14,33 @@ lists of comparable types.
 Insert, remove, and query operations all take _O(log n)_ time.
 
 
-# Dictionaries
-
 @docs Dict
 
-
-# Build
 
 @docs empty, singleton, insert, update, remove
 
 
-# Query
+## Query
 
 @docs isEmpty, member, get, size
 
 
-# Arrays
+## Arrays
 
 @docs keys, values, toArray, fromArray
 
 
-# Transform
+## Transform
 
 @docs map, foldl, foldr, filter, partition
 
 
-# Combine
+## Combine
 
 @docs union, intersect, diff, merge
 
 -}
+
 
 import Array exposing (Array)
 import Basics exposing (..)

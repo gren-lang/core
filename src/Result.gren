@@ -9,22 +9,20 @@ module Result exposing
 way to manage errors in Gren.
 
 
-# Type and Constructors
-
 @docs Result
 
 
-# Mapping
+## Mapping
 
 @docs map, map2, map3, map4, map5
 
 
-# Chaining
+## Chaining
 
 @docs andThen
 
 
-# Handling Errors
+## Handling Errors
 
 @docs withDefault, toMaybe, fromMaybe, mapError
 

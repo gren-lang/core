@@ -3,15 +3,13 @@ module Bitwise exposing
     , shiftLeftBy, shiftRightBy, shiftRightZfBy
     )
 
-{-| Library for [bitwise operations](https://en.wikipedia.org/wiki/Bitwise_operation).
+{-| Functions for doing [bitwise operations](https://en.wikipedia.org/wiki/Bitwise_operation).
 
-
-# Basic Operations
 
 @docs and, or, xor, complement
 
 
-# Bit Shifts
+## Bit Shifts
 
 @docs shiftLeftBy, shiftRightBy, shiftRightZfBy
 

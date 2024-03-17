@@ -15,18 +15,17 @@ module String.Regex exposing
   )
 
 
-{-| A library for working with regex. The syntax matches the [`RegExp`][js]
+{-| An API for working with regex. The syntax matches the [`RegExp`][js]
 library from JavaScript.
 
 [js]: https://developer.mozilla.org/en/docs/Web/JavaScript/Guide/Regular_Expressions
 
-# Create
 @docs Regex, fromString, fromStringWith, Options, never
 
-# Use
+## Use
 @docs contains, split, find, replace, Match
 
-# Fancier Uses
+## Fancier Uses
 @docs splitAtMost, findAtMost, replaceAtMost
 
 -}

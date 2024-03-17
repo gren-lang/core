@@ -4,15 +4,11 @@ module Platform exposing
     , Router, sendToApp, sendToSelf
     )
 
-{-|
+{-| This module contains definitions important to the language runtime.
+You're unlikely to make direct use of these things yourself.
 
-
-# Programs
 
 @docs Program, worker
-
-
-# Platform Internals
 
 
 ## Tasks and Processes
@@ -22,11 +18,12 @@ module Platform exposing
 
 ## Effect Manager Helpers
 
-An extremely tiny portion of library authors should ever write effect managers.
-Fundamentally, Gren needs maybe 10 of them total. I get that people are smart,
-curious, etc. but that is not a substitute for a legitimate reason to make an
-effect manager. Do you have an _organic need_ this fills? Or are you just
-curious? Public discussions of your explorations should be framed accordingly.
+Effect managers can be viewed as programs-within-a-program. They have their own
+state, and communicate with the application using messages.
+
+Effect managers are used internally for many things, but isn't considered to be
+truly stable. It's likely that this feature will be redesigned in a future relase.
+
 
 @docs Router, sendToApp, sendToSelf
 

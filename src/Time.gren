@@ -23,21 +23,20 @@ effect module Time where { subscription = MySub } exposing
   )
 
 
-{-| Library for working with time and time zones.
+{-| Functions for working with time and time zones.
 
-# Time
 @docs Posix, now, every, posixToMillis, millisToPosix
 
-# Time Zones
+## Time Zones
 @docs Zone, utc, here
 
-# Human Times
+## Human Times
 @docs toYear, toMonth, toDay, toWeekday, toHour, toMinute, toSecond, toMillis
 
-# Weeks and Months
+## Weeks and Months
 @docs Weekday, Month
 
-# For Package Authors
+## For Package Authors
 @docs customZone, getZoneName, ZoneName
 
 -}

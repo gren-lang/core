@@ -9,34 +9,32 @@ effect module Random where { command = MyCmd } exposing
   , step, initialSeed, independentSeed
   )
 
-{-| This library helps you generate pseudo-random values.
+{-| This API helps you generate pseudo-random values.
 
 It is an implementation of [Permuted Congruential Generators][pcg]
 by M. E. O'Neil. It is not cryptographically secure.
 
-[extra]: /packages/elm-community/random-extra/latest
 [pcg]: http://www.pcg-random.org/
 
 
-# Generators
 @docs Generator, generate
 
-# Primitives
+## Primitives
 @docs int, float, uniform, weighted, constant
 
-# Data Structures
+## Data Structures
 @docs pair, array
 
-# Mapping
+## Mapping
 @docs map, map2, map3, map4, map5
 
-# Fancy Stuff
+## Fancy Stuff
 @docs andThen, lazy
 
-# Constants
+## Constants
 @docs maxInt, minInt
 
-# Generate Values Manually
+## Generate Values Manually
 @docs Seed, step, initialSeed, independentSeed
 
 -}
@@ -727,19 +725,10 @@ command with the [`generate`](#generate) function:
 Each time you run this command, it runs the `oneToTen` generator and produces
 random integers between one and ten.
 
-**Note 1:** If you are not familiar with commands yet, start working through
-[guide.elm-lang.org][guide]. It builds up to an example that generates
-random numbers. Commands are one of the core concepts in Gren, and it will
-be faster overall to invest in understanding them _now_ rather than copy/pasting
-your way to frustration! And if you feel stuck on something, definitely ask
-about it in [the Gren slack][slack]. Folks are happy to help!
-
-**Note 2:** The random `Generator` API is quite similar to the JSON `Decoder` API.
+**Note 1:** The random `Generator` API is quite similar to the JSON `Decoder` API, which we've inherited from Elm.
 Both are building blocks that snap together with `map`, `map2`, etc. You can read
 more about JSON decoders [here][json] to see the similarity.
 
-[guide]: https://guide.elm-lang.org/
-[slack]: https://elmlang.herokuapp.com/
 [json]: https://guide.elm-lang.org/interop/json.html
 -}
 type Generator a =

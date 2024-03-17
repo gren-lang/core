@@ -1,9 +1,7 @@
 module Process exposing (Id, spawn, sleep, kill)
 
-{-|
+{-| A process is essentially a function running concurrently to your application.
 
-
-# Processes
 
 @docs Id, spawn, sleep, kill
 

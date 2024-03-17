@@ -3,9 +3,6 @@ module Debug exposing (toString, log, todo)
 {-| This module can be useful while _developing_ an application. It is not
 available for use in packages or production.
 
-
-# Debugging
-
 @docs toString, log, todo
 
 -}

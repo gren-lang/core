@@ -15,12 +15,12 @@ module Platform.Sub exposing
 > Gren has two kinds of managed effects: commands and subscriptions.
 
 
-# Subscriptions
+## Subscriptions
 
 @docs Sub, none, batch
 
 
-# Fancy Stuff
+## Fancy Stuff
 
 @docs map
 

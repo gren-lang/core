@@ -31,9 +31,9 @@
             "Debug"
         ],
         "Effects": [
+            "Platform",
             "Platform.Cmd",
             "Platform.Sub",
-            "Platform",
             "Process",
             "Task"
         ],

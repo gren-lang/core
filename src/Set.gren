@@ -14,32 +14,28 @@ of comparable types.
 Insert, remove, and query operations all take _O(log n)_ time.
 
 
-# Sets
-
 @docs Set
 
-
-# Build
 
 @docs empty, singleton, insert, remove
 
 
-# Query
+## Query
 
 @docs isEmpty, member, size
 
 
-# Combine
+## Combine
 
 @docs union, intersect, diff
 
 
-# Arrays
+## Arrays
 
 @docs toArray, fromArray
 
 
-# Transform
+## Transform
 
 @docs map, foldl, foldr, filter, partition
 

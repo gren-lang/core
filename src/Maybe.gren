@@ -8,17 +8,15 @@ module Maybe exposing
 you with optional arguments, error handling, and records with optional fields.
 
 
-# Definition
-
 @docs Maybe
 
 
-# Common Helpers
+## Common Helpers
 
 @docs withDefault, map, map2, map3, map4, map5
 
 
-# Chaining Maybes
+## Chaining Maybes
 
 @docs andThen
 

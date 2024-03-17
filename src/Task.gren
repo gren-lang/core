@@ -9,22 +9,20 @@ effect module Task where { command = MyCmd } exposing
 HTTP requests or writing to a database.
 
 
-# Tasks
-
 @docs Task, perform, attempt
 
 
-# Chains
+## Chains
 
 @docs andThen, succeed, fail, sequence
 
 
-# Maps
+## Maps
 
 @docs map, map2, map3, map4, map5
 
 
-# Errors
+## Errors
 
 @docs onError, mapError
 
@@ -41,13 +39,11 @@ import Result exposing (Result(..))
 
 {-| Here are some common tasks:
 
-  - [`now : Task x Posix`][now]
+  - [`now : Task x Posix`](Time#now)
   - [`focus : String -> Task Error {}`][focus]
-  - [`sleep : Float -> Task x {}`][sleep]
+  - [`sleep : Float -> Task x {}`](Process#sleep)
 
-[now]: Time#now
 [focus]: /package/gren-lang/browser/latest/module/Browser.Dom#focus
-[sleep]: Process#sleep
 
 In each case we have a `Task` that will resolve successfully with an `a` value
 or unsuccessfully with an `x` value. So `Browser.Dom.focus` we may fail with an

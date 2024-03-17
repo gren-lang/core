@@ -12,57 +12,53 @@ module String exposing
     )
 
 {-| A built-in representation for efficient string manipulation. String literals
-are enclosed in `"double quotes"`. Strings are _not_ lists of characters.
-
-
-# Strings
+are enclosed in `"double quotes"`.
 
 @docs String, isEmpty, length, reverse, repeat, replace
 
 
-# Building and Splitting
+## Building and Splitting
 
 @docs append, concat, split, join, words, lines
 
 
-# Get Substrings
+## Get Substrings
 
 @docs slice, left, right, dropLeft, dropRight
 
 
-# Check for Substrings
+## Check for Substrings
 
 @docs contains, startsWith, endsWith, indices
 
 
-# Int Conversions
+## Int Conversions
 
 @docs toInt, fromInt
 
 
-# Float Conversions
+## Float Conversions
 
 @docs toFloat, fromFloat
 
 
-# Char Conversions
+## Char Conversions
 
 @docs fromChar, cons, uncons
 
 
-# Array Conversions
+## Array Conversions
 
 @docs toArray, fromArray
 
 
-# Formatting
+## Formatting
 
 Cosmetic operations such as padding with extra characters or trimming whitespace.
 
 @docs toUpper, toLower, pad, padLeft, padRight, trim, trimLeft, trimRight
 
-
-# Higher-Order Functions
+## Higher-Order Functions
 
 @docs map, filter, foldl, foldr, any, all
 

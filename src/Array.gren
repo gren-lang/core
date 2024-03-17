@@ -15,37 +15,35 @@ functions to help you work with them.
 @docs Array
 
 
-# Create
-
 @docs empty, singleton, initialize, repeat, range
 
 
-# Transform
+## Transform
 
 @docs map, indexedMap, foldl, foldr, filter, filterMap, reverse
 
 
-# Query
+## Query
 
 @docs isEmpty, length, get, findFirst, findLast, member, any, all, minimum, maximum
 
 
-# Modify
+## Modify
 
 @docs set, update, pushFirst, pushLast
 
 
-# Combine
+## Combine
 
 @docs prefix, postfix, flatten, flatMap, intersperse, map2, map3
 
 
-# Deconstruct
+## Deconstruct
 
 @docs slice, dropFirst, dropLast, takeFirst, takeLast, popFirst, popLast, first, last, partition
 
 
-# Sort
+## Sort
 
 @docs sort, sortBy, sortWith
 
