@@ -55,6 +55,20 @@ function _Utils_eqHelp(x, y, depth, stack) {
 	}
 	//*/
 
+  if (typeof DataView === "function" && x instanceof DataView) {
+    var length = x.byteLength;
+
+    if (y.byteLength !== length) {
+      return false;
+    }
+
+    for (var i = 0; i < length; ++i) {
+      if (x.getUint8(i) !== y.getUint8(i)) {
+        return false;
+      }
+    }
+  }
+
   if (Array.isArray(x) && x.length !== y.length) {
     return false;
   }
