@@ -166,12 +166,19 @@ float a b =
             n1 =
                 peel seed1
 
+            { nHi, nLo } =
+                if n0 > n1 then
+                    { nHi = n0, nLo = n1 }
+
+                else
+                    { nHi = n1, nLo = n0 }
+
             -- Get a uniformly distributed IEEE-754 double between 0.0 and 1.0
             hi =
-                toFloat (Bitwise.and 0x03FFFFFF n0) * 1.0
+                toFloat (Bitwise.and 0x03FFFFFF nHi) * 1.0
 
             lo =
-                toFloat (Bitwise.and 0x07FFFFFF n1) * 1.0
+                toFloat (Bitwise.and 0x07FFFFFF nLo) * 1.0
 
             val =
                 -- These magic constants are 2^27 and 2^53
