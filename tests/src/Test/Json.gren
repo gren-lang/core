@@ -58,7 +58,9 @@ customTests : Test
 customTests =
     let
         jsonString =
-            """{ "foo": "bar" }"""
+            """
+            { "foo": "bar" }
+            """
 
         customErrorMessage =
             "I want to see this message!"

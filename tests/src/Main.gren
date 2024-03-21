@@ -8,6 +8,7 @@ import Test exposing (..)
 import Test.Array as Array
 import Test.Basics as Basics
 import Test.Bitwise as Bitwise
+import Test.Bytes as Bytes
 import Test.Char as Char
 import Test.CodeGen as CodeGen
 import Test.Dict as Dict
@@ -28,6 +29,7 @@ main =
             [ Array.tests
             , Basics.tests
             , Bitwise.tests
+            , Bytes.tests
             , Char.tests
             , CodeGen.tests
             , Dict.tests
