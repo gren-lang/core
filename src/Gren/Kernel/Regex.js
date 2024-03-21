@@ -9,6 +9,10 @@ import Maybe exposing (Just, Nothing)
 var _Regex_never = /.^/;
 
 var _Regex_fromStringWith = F2(function (options, string) {
+  if (string.trim().length === 0) {
+    return __Maybe_Nothing;
+  }
+
   var flags = "g";
   if (options.__$multiline) {
     flags += "m";
