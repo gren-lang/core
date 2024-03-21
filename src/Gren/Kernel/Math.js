@@ -40,3 +40,4 @@ var _Math_floor = Math.floor;
 var _Math_round = Math.round;
 var _Math_sqrt = Math.sqrt;
 var _Math_log = Math.log;
+var _Math_log10 = Math.log10;

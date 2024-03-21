@@ -23,7 +23,7 @@ module Math exposing
 
 -}
 
-import Basics exposing (Int, Float, (/), (*), (<))
+import Basics exposing (Int, Float, (==), (/), (*), (<))
 import Gren.Kernel.Math
 
 
@@ -207,7 +207,11 @@ sqrt =
 -}
 logBase : Float -> Float -> Float
 logBase base number =
-    (Gren.Kernel.Math.log number) / (Gren.Kernel.Math.log base)
+    if base == 10 then
+        Gren.Kernel.Math.log10 number
+
+    else
+        (Gren.Kernel.Math.log number) / (Gren.Kernel.Math.log base)
 
 
 {-| An approximation of e.
