@@ -1,0 +1,12 @@
+module Float exposing (T, compare)
+
+
+import Basics exposing (Order, Float)
+
+
+type alias T = Float
+
+
+compare : T -> T -> Order
+compare left right =
+    Basics.compare 1.0 2.0

@@ -1,0 +1,7 @@
+signature module Comparable
+
+import Basics exposing (Order)
+
+type alias T
+
+compare : T -> T -> Order 

@@ -1,10 +1,10 @@
-module Set exposing
+module Set(Key : Comparable) exposing
     ( Set
     , empty, singleton, insert, remove
     , isEmpty, member, size
     , union, intersect, diff
     , toArray, fromArray
-    , map, foldl, foldr, filter, partition
+    , foldl, foldr, filter, partition
     )
 
 {-| A set of unique values. The values can be any comparable type. This
@@ -43,76 +43,76 @@ Insert, remove, and query operations all take _O(log n)_ time.
 
 import Array exposing (Array)
 import Basics exposing (Bool, Int)
-import Dict
+import Dict(Key) as Dict exposing (Dict)
 import Maybe exposing (Maybe(..))
 
 
 {-| Represents a set of unique values. So `(Set Int)` is a set of integers and
 `(Set String)` is a set of strings.
 -}
-type Set t
-    = Set_gren_builtin (Dict.Dict t {})
+type Set
+    = Set_gren_builtin (Dict {})
 
 
 {-| Create an empty set.
 -}
-empty : Set a
+empty : Set
 empty =
     Set_gren_builtin Dict.empty
 
 
 {-| Create a set with one value.
 -}
-singleton : comparable -> Set comparable
+singleton : Key.T -> Set
 singleton key =
     Set_gren_builtin (Dict.singleton key {})
 
 
 {-| Insert a value into a set.
 -}
-insert : comparable -> Set comparable -> Set comparable
+insert : Key.T -> Set -> Set
 insert key (Set_gren_builtin dict) =
     Set_gren_builtin (Dict.insert key {} dict)
 
 
 {-| Remove a value from a set. If the value is not found, no changes are made.
 -}
-remove : comparable -> Set comparable -> Set comparable
+remove : Key.T -> Set -> Set
 remove key (Set_gren_builtin dict) =
     Set_gren_builtin (Dict.remove key dict)
 
 
 {-| Determine if a set is empty.
 -}
-isEmpty : Set a -> Bool
+isEmpty : Set -> Bool
 isEmpty (Set_gren_builtin dict) =
     Dict.isEmpty dict
 
 
 {-| Determine if a value is in a set.
 -}
-member : comparable -> Set comparable -> Bool
+member : Key.T -> Set -> Bool
 member key (Set_gren_builtin dict) =
     Dict.member key dict
 
 
 {-| Determine the number of elements in a set.
 -}
-size : Set a -> Int
+size : Set -> Int
 size (Set_gren_builtin dict) =
     Dict.size dict
 
 
 {-| Get the union of two sets. Keep all values.
 -}
-union : Set comparable -> Set comparable -> Set comparable
+union : Set -> Set -> Set
 union (Set_gren_builtin dict1) (Set_gren_builtin dict2) =
     Set_gren_builtin (Dict.union dict1 dict2)
 
 
 {-| Get the intersection of two sets. Keeps values that appear in both sets.
 -}
-intersect : Set comparable -> Set comparable -> Set comparable
+intersect : Set -> Set -> Set
 intersect (Set_gren_builtin dict1) (Set_gren_builtin dict2) =
     Set_gren_builtin (Dict.intersect dict1 dict2)
 
@@ -120,44 +120,37 @@ intersect (Set_gren_builtin dict1) (Set_gren_builtin dict2) =
 {-| Get the difference between the first set and the second. Keeps values
 that do not appear in the second set.
 -}
-diff : Set comparable -> Set comparable -> Set comparable
+diff : Set -> Set -> Set
 diff (Set_gren_builtin dict1) (Set_gren_builtin dict2) =
     Set_gren_builtin (Dict.diff dict1 dict2)
 
 
 {-| Convert a set into a list, sorted from lowest to highest.
 -}
-toArray : Set a -> Array a
+toArray : Set -> Array Key.T
 toArray (Set_gren_builtin dict) =
     Dict.keys dict
 
 
 {-| Convert a list into a set, removing any duplicates.
 -}
-fromArray : Array comparable -> Set comparable
+fromArray : Array Key.T -> Set
 fromArray list =
     Array.foldl insert empty list
 
 
 {-| Fold over the values in a set, in order from lowest to highest.
 -}
-foldl : (a -> b -> b) -> b -> Set a -> b
+foldl : (Key.T -> b -> b) -> b -> Set -> b
 foldl func initialState (Set_gren_builtin dict) =
     Dict.foldl (\key _ state -> func key state) initialState dict
 
 
 {-| Fold over the values in a set, in order from highest to lowest.
 -}
-foldr : (a -> b -> b) -> b -> Set a -> b
+foldr : (Key.T -> b -> b) -> b -> Set -> b
 foldr func initialState (Set_gren_builtin dict) =
     Dict.foldr (\key _ state -> func key state) initialState dict
-
-
-{-| Map a function onto a set, creating a new set with no duplicates.
--}
-map : (comparable -> comparable2) -> Set comparable -> Set comparable2
-map func set =
-    foldl (\x xs -> insert (func x) xs) empty set
 
 
 {-| Only keep elements that pass the given test.
@@ -175,7 +168,7 @@ map func set =
     -- positives == Set.fromArray [1,2]
 
 -}
-filter : (comparable -> Bool) -> Set comparable -> Set comparable
+filter : (Key.T -> Bool) -> Set -> Set
 filter isGood (Set_gren_builtin dict) =
     Set_gren_builtin (Dict.filter (\key _ -> isGood key) dict)
 
@@ -183,7 +176,7 @@ filter isGood (Set_gren_builtin dict) =
 {-| Create two new sets. The first contains all the elements that passed the
 given test, and the second contains all the elements that did not.
 -}
-partition : (comparable -> Bool) -> Set comparable -> { trues : Set comparable, falses : Set comparable }
+partition : (Key.T -> Bool) -> Set -> { trues : Set, falses : Set }
 partition isGood (Set_gren_builtin dict) =
     let
         { trues, falses } =
