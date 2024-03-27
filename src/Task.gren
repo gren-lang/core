@@ -1,5 +1,5 @@
 effect module Task where { command = MyCmd } exposing
-    ( Task, perform, attempt
+    ( Task, perform, attempt, execute
     , andThen, succeed, fail, sequence
     , map, map2, map3, map4, map5
     , onError, mapError
@@ -9,7 +9,7 @@ effect module Task where { command = MyCmd } exposing
 HTTP requests or writing to a database.
 
 
-@docs Task, perform, attempt
+@docs Task, perform, attempt, execute
 
 
 ## Chains
@@ -297,6 +297,7 @@ mapError convert task =
 
 type MyCmd msg
     = Perform (Task Never msg)
+    | Execute (Task Never {})
 
 
 {-| Like I was saying in the [`Task`](#Task) documentation, just having a
@@ -316,12 +317,9 @@ type MyCmd msg
     getNewTime =
         Task.perform NewTime Time.now
 
-If you have worked through [`guide.gren-lang.org`][guide] (highly recommended!)
-you will recognize `Cmd` from the section on The Gren Architecture. So we have
-changed a task like "make delicious lasagna" into a command like "Hey Gren, make
-delicious lasagna and give it to my `update` function as a `Msg` value."
-
-[guide]: https://guide.gren-lang.org/
+So we have changed a task like "make delicious lasagna" into a command like
+"Hey Gren, make delicious lasagna and give it to my `update` function as a
+`Msg` value."
 
 -}
 perform : (a -> msg) -> Task Never a -> Cmd msg
@@ -351,11 +349,6 @@ So the task is "focus on this DOM node" and we are turning it into the command
 "Hey Gren, attempt to focus on this DOM node and give me a `Msg` about whether
 you succeeded or failed."
 
-**Note:** Definitely work through [`guide.gren-lang.org`][guide] to get a
-feeling for how commands fit into The Gren Architecture.
-
-[guide]: https://guide.gren-lang.org/
-
 -}
 attempt : (Result x a -> msg) -> Task x a -> Cmd msg
 attempt resultToMessage task =
@@ -368,10 +361,24 @@ attempt resultToMessage task =
         )
 
 
-cmdMap : (a -> b) -> MyCmd a -> MyCmd b
-cmdMap tagger (Perform task) =
-    Perform (map tagger task)
+{-| Sometimes we want to give a command without being told how it went. Maybe we
+are logging something to the screen, or changing the scroll position of the window.
+In either case, there's really nothing for us to do afterwards. In those cases
+we can use `execute`.
+-}
+execute : Task Never a -> Cmd msg
+execute task =
+    command (Execute (map (\_ -> {}) task))
 
+
+cmdMap : (a -> b) -> MyCmd a -> MyCmd b
+cmdMap tagger cmd =
+    case cmd of
+        Perform task ->
+            Perform (map tagger task)
+
+        Execute task ->
+            Execute task
 
 
 -- MANAGER
@@ -395,8 +402,13 @@ onSelfMsg _ _ _ =
 
 
 spawnCmd : Platform.Router msg Never -> MyCmd msg -> Task x {}
-spawnCmd router (Perform task) =
-    Gren.Kernel.Scheduler.spawn
-        (task
-            |> andThen (Platform.sendToApp router)
-        )
+spawnCmd router cmd =
+    case cmd of
+        Perform task ->
+            Gren.Kernel.Scheduler.spawn
+                (task
+                    |> andThen (Platform.sendToApp router)
+                )
+
+        Execute task ->
+            Gren.Kernel.Scheduler.spawn task
