@@ -1,0 +1,22 @@
+module Crypto exposing (randomUuid)
+
+{-| 
+
+@docs randomUuid
+
+-}
+
+import String exposing (String)
+import Task exposing (Task)
+import Gren.Kernel.Crypto
+
+
+{-|-}
+type alias Options =
+    {}
+
+{-| Get a random UUID
+-}
+randomUuid : Options -> Task x String
+randomUuid =
+    Gren.Kernel.Crypto.randomUUID
