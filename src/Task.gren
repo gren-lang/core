@@ -220,7 +220,7 @@ sequence fails.
 -}
 sequence : Array (Task x a) -> Task x (Array a)
 sequence tasks =
-    Array.foldl (map2 Array.pushLast) (succeed []) tasks
+    Array.foldr (map2 Array.pushFirst) (succeed []) tasks
 
 
 
