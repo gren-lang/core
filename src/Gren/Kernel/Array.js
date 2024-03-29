@@ -40,7 +40,7 @@ var _Array_set = F3(function (index, value, array) {
 });
 
 var _Array_push = F2(function (value, array) {
-  return array.concat([value]);
+  return array.concat(value);
 });
 
 var _Array_foldl = F3(function (func, acc, array) {
