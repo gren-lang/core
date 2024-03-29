@@ -11,12 +11,10 @@ var crypto = function () {
     return window.crypto;
 }
 
-var _Crypto_randomUUID = function (_) {
-    return __Scheduler_binding(function (callback) {
-        var randomUUID = crypto().randomUUID();
-        return callback(__Scheduler_succeed(randomUUID));
-    });
-}
+var _Crypto_randomUUID = __Scheduler_binding(function (callback) {
+    var randomUUID = crypto().randomUUID();
+    return callback(__Scheduler_succeed(randomUUID));
+});
 
 var _Crypto_getRandomValues = function (arrayLength) {
     return __Scheduler_binding(function (callback) {

@@ -6,19 +6,16 @@ module Crypto exposing ( randomUuid, getRandomValues )
 
 -}
 
-import Basics exposing ( Int )
+import Basics exposing ( Int, (<) )
 import Gren.Kernel.Crypto
 import Task exposing ( Task )
+import String exposing ( String )
+import Array exposing ( Array )
 
 
-{-|-}
-type alias Options =
-    {}
-
-
-{-| Get a random UUID
+{-| Get a random UUID.
 -}
-randomUuid : Options -> Task x String
+randomUuid : Task x String
 randomUuid =
     Gren.Kernel.Crypto.randomUUID
 
@@ -31,4 +28,4 @@ getRandomValues int =
     if int < 0 then
         Gren.Kernel.Crypto.getRandomValues 0
     else
-        Gren.Kernal.Crypto.getRandomValues int
+        Gren.Kernel.Crypto.getRandomValues int
