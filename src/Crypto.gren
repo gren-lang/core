@@ -1,16 +1,24 @@
-module Crypto exposing ( randomUuid, getRandomValues )
+module Crypto exposing ( Context(..), randomUuid, getRandomValues, getContext )
 
 {-| 
 
-@docs randomUuid
+@docs Context
+
+@docs randomUuid, getRandomValues, getContext
 
 -}
 
+import Array exposing ( Array )
 import Basics exposing ( Int, (<=) )
 import Gren.Kernel.Crypto
-import Task exposing ( Task )
 import String exposing ( String )
-import Array exposing ( Array )
+import Task exposing ( Task )
+
+
+{-|-}
+type Context
+    = SecureContext
+    | InsecureContext
 
 
 {-| Get a random UUID.
@@ -30,3 +38,9 @@ getRandomValues int =
         Task.succeed []
     else
         Gren.Kernel.Crypto.getRandomValues int
+
+
+{-|-}
+getContext : Task x Context
+getContext =
+    Gren.Kernel.Crypto.getContext
