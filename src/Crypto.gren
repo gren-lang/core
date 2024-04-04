@@ -1,27 +1,90 @@
-module Crypto exposing ( Context(..), randomUuid, getRandomValues, getContext )
+module Crypto exposing 
+    ( SecureContext
+    , DigestAlgorithm(..)
+    , Extractable(..)
+    , randomUuid, getRandomValues, isSecureContext
+    , generateRsaOaepKey, encryptWithRsaOaep, decryptWithRsaOaep
+    )
+
 
 {-| 
 
-@docs Context
+## About this module
 
-@docs randomUuid, getRandomValues, getContext
+This module gives access to various cryptograhic functions provided by the Web 
+Crypto API on both `browser` and `node` platforms.
+
+## Types
+
+@docs SecureContext, DigestAlgorithm, Extractable
+
+## Insecure Contexts
+
+The following functions can be used in any context, including an insecure
+context. It is, however, recommended to only ever use them in a secure context.
+
+@docs randomUuid, getRandomValues
+
+## Get Context
+
+@docs isSecureContext
+
+## RSA-OAEP algorithm
+
+Functions to generate keys, encrypt, and decrypt with the RSA-OAEP algorithm.
+
+@docs generateRsaOaepKey, encryptWithRsaOaep, decryptWithRsaOaep
 
 -}
 
+
 import Array exposing ( Array )
-import Basics exposing ( Int, (<=) )
+import Basics exposing ( Bool(..), Int, (<), (<=) )
 import Gren.Kernel.Crypto
 import String exposing ( String )
 import Task exposing ( Task )
+import Debug
+import Bytes exposing ( Bytes )
+import Maybe exposing ( Maybe(..) )
+import Result exposing ( Result(..) )
+import Set exposing ( Set )
+
+
+-- TYPES
 
 
 {-|-}
-type Context
+type Key algorithm
+    = Key algorithm
+
+
+{-| Represents the platform running the code being considered secure. This type
+can be generated using the `isSecureContext` function and is required for some
+functions to be run in this package.
+-}
+type SecureContext
     = SecureContext
-    | InsecureContext
 
 
-{-| Get a random UUID.
+{-| Represesnts the RSA-OAEP algorithm used for encryption, decryption, wrapping
+and unwrapping keys
+-}
+type RsaOaep
+    = RsaOaep
+
+
+{-| Supported algorithms suitable for digesting data.
+
+Note: The algorithm `SHA1` is supported by the WebCrypto API, but not available 
+in this package due to known security vunerabilities.
+-}
+type DigestAlgorithm
+    = Sha256
+    | Sha384
+    | Sha512
+
+
+{-| Generate a random UUID using the UUID v4 algorithm.
 -}
 randomUuid : Task x String
 randomUuid =
@@ -40,7 +103,176 @@ getRandomValues int =
         Gren.Kernel.Crypto.getRandomValues int
 
 
-{-|-}
-getContext : Task x Context
-getContext =
+{-| A `Task` that succeeds with `SecureContext` if the code is being run in a 
+secure context. This value is a required parameter for some functions given they
+will only run properly in a secure context.
+
+It's recommended that you run this function as part of `init` and save
+the resulting `SecureContext` in your model for use later.
+
+When running this in `node`, it should always succeed as node is always considered 
+a secure context. If that's not the case, please file a bug!
+-}
+isSecureContext : Task {} SecureContext
+isSecureContext =
     Gren.Kernel.Crypto.getContext
+
+
+-- KEYS
+
+
+{-|-}
+type Extractable
+    = CanBeExtracted
+    | CannotBeExtracted
+
+
+{-|-}
+type KeyPair a =
+    KeyPair
+        { publicKey : Key a
+        , privateKey : Key a
+        }
+
+
+-- RSA-OAEP ALGORITHM
+
+
+{-| Parameters required to generate a `KeyPair` with the `RSA-OAEP` algorithm.
+
+`modulusLength` must be at least 2048. If a lower number, it will be set to 
+`2048` automatically.
+-}
+type alias RsaOaepKeyParams =
+    { modulusLength : Int
+    , hash : DigestAlgorithm
+    }
+
+
+{-| Generate a new key using the `RSA-OAEP` algorithm.
+
+This function does not currently allow editing the public exponent value. It's
+instead always set to `655371`, a recommended value.
+
+Produces a `KeyPair` of a private and public key. This `KeyPair` can be used to
+encrypt, decrypt, wrap keys and unwrap keys with relevant functions.
+-}
+generateRsaOaepKey : SecureContext -> RsaOaepKeyParams -> Extractable -> Task x (KeyPair RsaOaep)
+generateRsaOaepKey _context { modulusLength, hash } extractable =
+    Gren.Kernel.Crypto.generateKey 
+        { name = "RSA-OAEP"
+        , modulusLength = if modulusLength < 2048 then 2048 else modulusLength
+        , publicExponent = [ 1, 0, 1 ]
+        , hash = digestAlgorithmToString hash
+        }
+        (extractableToBool extractable)
+        [ "encrypt", "decrypt", "wrapKey", "unwrapKey" ]
+
+
+{-| Required parameters to use the `RSA-OAEP` to encrypt or wrap keys.
+-}
+type alias RsaOaepParms =
+    { label : Maybe (Array Bytes)
+    }
+
+
+{-| Encrypt some data with a key generated with the `generateRsaOaepKey` function.
+
+This uses the public key of the generated `KeyPair`,
+-}
+encryptWithRsaOaep : SecureContext -> KeyPair RsaOaep -> RsaOaepParms -> Bytes -> Task x Bytes
+encryptWithRsaOaep _context (KeyPair { publicKey }) { label } data =
+    -- Todo: Actually handle error values with a proper type
+    case label of
+        Just labelValue ->
+            Gren.Kernel.Crypto.encrypt
+                publicKey
+                { name = "RSA-OAEP"
+                , label = labelValue
+                }
+                data
+
+        Nothing ->
+            Gren.Kernel.Crypto.encrypt
+                publicKey
+                { name = "RSA-OAEP"
+                }
+                data
+
+
+{-|-}
+decryptWithRsaOaep : SecureContext -> KeyPair RsaOaep -> RsaOaepParms -> Bytes -> Task x Bytes
+decryptWithRsaOaep _context (KeyPair { privateKey }) { label } data =
+    -- Todo: Actually handle error values with a proper type
+    case label of
+        Just labelValue ->
+            Gren.Kernel.Crypto.decrypt
+                privateKey
+                { name = "RSA-OAEP"
+                , label = labelValue
+                }
+                data
+
+        Nothing ->
+            Gren.Kernel.Crypto.decrypt
+                privateKey
+                { name = "RSA-OAEP"
+                }
+                data
+
+
+
+{-|-}
+wrapKeyWithRsaOaep : SecureContext -> KeyPair RsaOaep -> RsaOaepParms -> Key a -> Task x Bytes
+wrapKeyWithRsaOaep _context key { label } data =
+    Debug.todo ""
+
+
+{-|-}
+unwrapKeyWithRsaOaep : SecureContext -> KeyPair RsaOaep -> RsaOaepParms -> Key a -> Task x Bytes
+unwrapKeyWithRsaOaep _context key { label } data =
+    Debug.todo ""
+
+
+{-| Separate and export a `KeyPair` using the `RSA-OAEP` algorithm into public
+and private keys.
+
+The public key can always be exported, but the private key can only be exported
+the key is made extractable when generated using the `generateRsaOaepKey` function.
+-}
+exportRsaOaepKey : SecureContext -> KeyPair RsaOaep -> Task x { publicKey : Bytes, privateKey : Maybe Bytes }
+exportRsaOaepKey _context (KeyPair { publicKey, privateKey }) =
+    Debug.todo ""
+
+
+{-|-}
+importRsaOaepKey =
+    Debug.todo ""
+
+
+-- UTILITIES
+
+
+{-|-}
+extractableToBool : Extractable -> Bool
+extractableToBool extractable =
+    case extractable of
+        CanBeExtracted ->
+            True
+            
+        CannotBeExtracted ->
+            False
+
+
+{-|-}
+digestAlgorithmToString : DigestAlgorithm -> String
+digestAlgorithmToString digestAlgorithm =
+    case digestAlgorithm of
+        Sha256 ->
+            "SHA-256"
+
+        Sha384 ->
+            "SHA-384"
+
+        Sha512 ->
+            "SHA-512"
