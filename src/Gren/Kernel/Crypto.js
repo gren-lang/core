@@ -2,7 +2,7 @@
 
 import Gren.Kernel.Scheduler exposing (binding, succeed, fail)
 import Gren.Kernel.Bytes exposing (writeBytes)
-import Crypto exposing (KeyPair, Key, SecureContext, InsecureContext)
+import Crypto exposing (KeyPair, Key, SecureContext, InsecureContext, DecryptionError)
 import Maybe exposing (Just, Nothing)
 import Bytes exposing (Bytes)
 
@@ -80,7 +80,8 @@ var _Crypto_decrypt = F3(function (key, params, data) {
                 return callback(__Scheduler_succeed(new DataView(res)));
             })
             .catch(function (err) {
-                return callback(__Scheduler_fail(err));
+                console.log("err", err);
+                return callback(__Scheduler_fail(__Crypto_DecryptionError));
             })
     });
 });

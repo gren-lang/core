@@ -58,6 +58,12 @@ type Key algorithm
     = Key algorithm
 
 
+{-| Represents an error that can happen when decrypting values.
+-}
+type DecryptionError
+    = DecryptionError
+
+
 {-| Represents the platform running the code being considered secure. This type
 can be generated using the `isSecureContext` function and is required for some
 functions to be run in this package.
@@ -172,7 +178,7 @@ generateRsaOaepKey _context { modulusLength, hash } extractable =
 {-| Required parameters to use the `RSA-OAEP` to encrypt or wrap keys.
 -}
 type alias RsaOaepParms =
-    { label : Maybe (Array Bytes)
+    { label : Maybe Bytes
     }
 
 
@@ -201,7 +207,7 @@ encryptWithRsaOaep _context (KeyPair { publicKey }) { label } data =
 
 
 {-|-}
-decryptWithRsaOaep : SecureContext -> KeyPair RsaOaep -> RsaOaepParms -> Bytes -> Task x Bytes
+decryptWithRsaOaep : SecureContext -> KeyPair RsaOaep -> RsaOaepParms -> Bytes -> Task DecryptionError Bytes
 decryptWithRsaOaep _context (KeyPair { privateKey }) { label } data =
     -- Todo: Actually handle error values with a proper type
     case label of
