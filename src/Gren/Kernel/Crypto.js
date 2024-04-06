@@ -99,7 +99,7 @@ var _Crypto_exportKey = F2(function (format, key) {
         crypto.subtle.exportKey(format, key)
             .then(function (res) {
                 console.log("res", res);
-                return callback(__Scheduler_succeed(res));
+                return callback(__Scheduler_succeed(new DataView(res)));
             })
             .catch(function (err) {
                 console.log("err", err)
