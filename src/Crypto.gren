@@ -2,8 +2,9 @@ module Crypto exposing
     ( SecureContext
     , DigestAlgorithm(..)
     , Extractable(..)
+    , Key, KeyPair, RsaOaep
     , randomUuid, getRandomValues, isSecureContext
-    , generateRsaOaepKey, encryptWithRsaOaep, decryptWithRsaOaep
+    , generateRsaOaepKey, encryptWithRsaOaep, decryptWithRsaOaep, exportRsaOaepKey
     )
 
 
@@ -16,7 +17,7 @@ Crypto API on both `browser` and `node` platforms.
 
 ## Types
 
-@docs SecureContext, DigestAlgorithm, Extractable
+@docs SecureContext, DigestAlgorithm, Extractable, Key, KeyPair
 
 ## Insecure Contexts
 
@@ -55,13 +56,23 @@ import Set exposing ( Set )
 
 {-|-}
 type Key algorithm
-    = Key algorithm
+    = Key 
+        { key : algorithm
+        , keyType : String
+        , extractable : Bool
+        , usages : Array String 
+        }
 
 
-{-| Represents an error that can happen when decrypting values.
+{-| Represents an error that can happen when running certain functions.
 -}
-type DecryptionError
-    = DecryptionError
+type Error
+    = Error
+
+
+{-|-}
+type ExportError
+    = KeyIsNotExtractable
 
 
 {-| Represents the platform running the code being considered secure. This type
@@ -207,7 +218,7 @@ encryptWithRsaOaep _context (KeyPair { publicKey }) { label } data =
 
 
 {-|-}
-decryptWithRsaOaep : SecureContext -> KeyPair RsaOaep -> RsaOaepParms -> Bytes -> Task DecryptionError Bytes
+decryptWithRsaOaep : SecureContext -> KeyPair RsaOaep -> RsaOaepParms -> Bytes -> Task Error Bytes
 decryptWithRsaOaep _context (KeyPair { privateKey }) { label } data =
     -- Todo: Actually handle error values with a proper type
     case label of
@@ -225,30 +236,18 @@ decryptWithRsaOaep _context (KeyPair { privateKey }) { label } data =
                 { name = "RSA-OAEP"
                 }
                 data
-
-
-
-{-|-}
-wrapKeyWithRsaOaep : SecureContext -> KeyPair RsaOaep -> RsaOaepParms -> Key a -> Task x Bytes
-wrapKeyWithRsaOaep _context key { label } data =
-    Debug.todo ""
-
+    
 
 {-|-}
-unwrapKeyWithRsaOaep : SecureContext -> KeyPair RsaOaep -> RsaOaepParms -> Key a -> Task x Bytes
-unwrapKeyWithRsaOaep _context key { label } data =
-    Debug.todo ""
-
-
-{-| Separate and export a `KeyPair` using the `RSA-OAEP` algorithm into public
-and private keys.
-
-The public key can always be exported, but the private key can only be exported
-the key is made extractable when generated using the `generateRsaOaepKey` function.
--}
-exportRsaOaepKey : SecureContext -> KeyPair RsaOaep -> Task x { publicKey : Bytes, privateKey : Maybe Bytes }
-exportRsaOaepKey _context (KeyPair { publicKey, privateKey }) =
-    Debug.todo ""
+exportRsaOaepKey : SecureContext -> KeyPair RsaOaep -> Task x { publicKey : Bytes, privateKey : Bytes }
+exportRsaOaepKey context (KeyPair { publicKey, privateKey }) =
+    Task.map2 (\exportedPublicKey exportedPrivateKey ->
+            { publicKey = exportedPublicKey
+            , privateKey = exportedPrivateKey
+            }
+        )
+        (exportKey context "spki" publicKey)
+        (exportKey context "pkcs8" privateKey)
 
 
 {-|-}
@@ -257,6 +256,12 @@ importRsaOaepKey =
 
 
 -- UTILITIES
+
+
+{-|-}
+exportKey : SecureContext -> String -> Key a -> Task x Bytes
+exportKey _context format (Key { key }) =
+    Gren.Kernel.Crypto.exportKey format key
 
 
 {-|-}

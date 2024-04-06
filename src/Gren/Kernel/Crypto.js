@@ -2,7 +2,7 @@
 
 import Gren.Kernel.Scheduler exposing (binding, succeed, fail)
 import Gren.Kernel.Bytes exposing (writeBytes)
-import Crypto exposing (KeyPair, Key, SecureContext, InsecureContext, DecryptionError)
+import Crypto exposing (KeyPair, Key, SecureContext, InsecureContext, Error, KeyIsNotExtractable)
 import Maybe exposing (Just, Nothing)
 import Bytes exposing (Bytes)
 
@@ -14,6 +14,15 @@ var crypto = function () {
     }
     return window.crypto;
 }();
+
+var _Crypto_constructKey = function (key) {
+    return __Crypto_Key({
+        __$key: key,
+        __$keyType: key.__$type,
+        __$extractable: key.__$extractable,
+        __$usages: key.__$usages
+    });
+};
 
 var _Crypto_randomUUID = __Scheduler_binding(function (callback) {
     var randomUUID = crypto.randomUUID();
@@ -49,13 +58,13 @@ var _Crypto_generateKey = F3(function (algorithm, extractable, permissions) {
                     return callback(__Scheduler_succeed(
                         __Crypto_KeyPair(
                             {
-                                publicKey: __Crypto_Key(key.__$publicKey),
-                                privateKey: __Crypto_Key(key.__$privateKey)
+                                publicKey: _Crypto_constructKey(key.__$publicKey),
+                                privateKey: _Crypto_constructKey(key.__$privateKey)
                             }
                         )
                     ));
                 } else {
-                    return callback(__Scheduler_succeed(__Crypto_Key(key)));
+                    return callback(__Scheduler_succeed(_Crypto_constructKey(key)));
                 };
             });
     });
@@ -63,7 +72,7 @@ var _Crypto_generateKey = F3(function (algorithm, extractable, permissions) {
 
 var _Crypto_encrypt = F3(function (key, params, data) {
     return __Scheduler_binding(function (callback) {
-        crypto.subtle.encrypt(params, key.__$a, data)
+        crypto.subtle.encrypt(params, key.__$a.key, data)
             .then(function (res) {
                 return callback(__Scheduler_succeed(new DataView(res)));
             })
@@ -75,13 +84,36 @@ var _Crypto_encrypt = F3(function (key, params, data) {
 
 var _Crypto_decrypt = F3(function (key, params, data) {
     return __Scheduler_binding(function (callback) {
-        crypto.subtle.decrypt(params, key.__$a, data)
+        crypto.subtle.decrypt(params, key.__$a.key, data)
             .then(function (res) {
                 return callback(__Scheduler_succeed(new DataView(res)));
             })
             .catch(function (err) {
-                console.log("err", err);
-                return callback(__Scheduler_fail(__Crypto_DecryptionError));
+                return callback(__Scheduler_fail(__Crypto_Error));
             })
     });
 });
+
+var _Crypto_exportKey = F2(function (format, key) {
+    return __Scheduler_binding(function (callback) {
+        crypto.subtle.exportKey(format, key)
+            .then(function (res) {
+                console.log("res", res);
+                return callback(__Scheduler_succeed(res));
+            })
+            .catch(function (err) {
+                console.log("err", err)
+                return callback(__Scheduler_fail(__Crypto_KeyIsNotExtractable));
+            });
+    });
+});
+
+var _Crypto_importKey = function (key) {
+    var format = "raw";
+    return __Scheduler_binding(function (callback) {
+        crypto.subtle.importKey(format, key, { name: "RSA-OAEP" }, true, ["encrypt", "decrypt", "wrapKey", "unwrapKey"])
+            .then(function (res) {
+                return callback(__Scheduler_succeed())
+            })
+    });
+};
