@@ -2,39 +2,21 @@ module Crypto exposing
     ( SecureContext
     , DigestAlgorithm(..)
     , Extractable(..)
-    , Key, KeyPair, RsaOaep
+    , Key, KeyPair, RsaOaepKey
+    , encrypt, decrypt
     , randomUuid, getRandomValues, isSecureContext
-    , generateRsaOaepKey, encryptWithRsaOaep, decryptWithRsaOaep, exportRsaOaepKey
+    , generateRsaOaepKey
     )
 
 
 {-| 
 
-## About this module
+## Crypto
 
 This module gives access to various cryptograhic functions provided by the Web 
 Crypto API on both `browser` and `node` platforms.
 
-## Types
-
-@docs SecureContext, DigestAlgorithm, Extractable, Key, KeyPair
-
-## Insecure Contexts
-
-The following functions can be used in any context, including an insecure
-context. It is, however, recommended to only ever use them in a secure context.
-
-@docs randomUuid, getRandomValues
-
-## Get Context
-
-@docs isSecureContext
-
-## RSA-OAEP algorithm
-
-Functions to generate keys, encrypt, and decrypt with the RSA-OAEP algorithm.
-
-@docs generateRsaOaepKey, encryptWithRsaOaep, decryptWithRsaOaep
+-- todo: write docs!
 
 -}
 
@@ -54,40 +36,33 @@ import Set exposing ( Set )
 -- TYPES
 
 
-{-|-}
+{-| Represents the platform being considered secure. This type can be generated 
+using the `isSecureContext` function and is required for some functions to be 
+run in this package.
+-}
+type SecureContext
+    = SecureContext
+
+
+{-| A generated key.
+-}
 type Key algorithm
     = Key 
         { key : algorithm
+        , algorithm : String
         , keyType : String
         , extractable : Bool
         , usages : Array String 
         }
 
 
-{-| Represents an error that can happen when running certain functions.
+{-| A pair (public and private) of keys.
 -}
-type Error
-    = Error
-
-
-{-|-}
-type ExportError
-    = KeyIsNotExtractable
-
-
-{-| Represents the platform running the code being considered secure. This type
-can be generated using the `isSecureContext` function and is required for some
-functions to be run in this package.
--}
-type SecureContext
-    = SecureContext
-
-
-{-| Represesnts the RSA-OAEP algorithm used for encryption, decryption, wrapping
-and unwrapping keys
--}
-type RsaOaep
-    = RsaOaep
+type KeyPair a =
+    KeyPair
+        { publicKey : Key a
+        , privateKey : Key a
+        }
 
 
 {-| Supported algorithms suitable for digesting data.
@@ -99,6 +74,9 @@ type DigestAlgorithm
     = Sha256
     | Sha384
     | Sha512
+
+
+-- BASE FUNCTIONS
 
 
 {-| Generate a random UUID using the UUID v4 algorithm.
@@ -120,12 +98,12 @@ getRandomValues int =
         Gren.Kernel.Crypto.getRandomValues int
 
 
+-- ENVIRONMENT
+
+
 {-| A `Task` that succeeds with `SecureContext` if the code is being run in a 
 secure context. This value is a required parameter for some functions given they
 will only run properly in a secure context.
-
-It's recommended that you run this function as part of `init` and save
-the resulting `SecureContext` in your model for use later.
 
 When running this in `node`, it should always succeed as node is always considered 
 a secure context. If that's not the case, please file a bug!
@@ -138,43 +116,59 @@ isSecureContext =
 -- KEYS
 
 
-{-|-}
+{-| Denotes if a key can be exported using the `exportKey` or `exportKeyPair`
+functions. If a key is not marked as exportable when it is created, any attempts
+to export the key will fail.
+-}
 type Extractable
     = CanBeExtracted
     | CannotBeExtracted
 
 
-{-|-}
-type KeyPair a =
-    KeyPair
-        { publicKey : Key a
-        , privateKey : Key a
-        }
+-- RSA KEYS
 
 
--- RSA-OAEP ALGORITHM
+{-| Represents a key generated and for use with the RSA-OAEP algorithm used to 
+encrypt and decrypt values.
+-}
+type RsaOaepKey
+    = RsaOaepKey
 
 
-{-| Parameters required to generate a `KeyPair` with the `RSA-OAEP` algorithm.
+{-| Represents a key generated and for use with the RSA-PSS algorithm used to 
+sign and verify values.
+-}
+type RsaPssKey =
+    RsaPssKey
+
+
+{-| A key generated for and for use with the RSASSA-PKCS1-v1_5 algorithm. Used
+to sign and verify values.
+-}
+type RsassaPkcs1V1_5Key
+    = RsassaPkcs1V1_5Key
+
+
+{-| Parameters required to generate a key with any RSA algorithm.
 
 `modulusLength` must be at least 2048. If a lower number, it will be set to 
 `2048` automatically.
 -}
-type alias RsaOaepKeyParams =
+type alias RsaKeyParams =
     { modulusLength : Int
     , hash : DigestAlgorithm
     }
 
 
-{-| Generate a new key using the `RSA-OAEP` algorithm.
+{-| Generate a new key pair using the RSA-OAEP algorithm.
 
 This function does not currently allow editing the public exponent value. It's
 instead always set to `655371`, a recommended value.
 
-Produces a `KeyPair` of a private and public key. This `KeyPair` can be used to
-encrypt, decrypt, wrap keys and unwrap keys with relevant functions.
+Produces a `KeyPair` consisting of a private and public key. This `KeyPair` can 
+be used to encrypt and decrypt `Bytes`.
 -}
-generateRsaOaepKey : SecureContext -> RsaOaepKeyParams -> Extractable -> Task x (KeyPair RsaOaep)
+generateRsaOaepKey : SecureContext -> RsaKeyParams -> Extractable -> Task x (KeyPair RsaOaepKey)
 generateRsaOaepKey _context { modulusLength, hash } extractable =
     Gren.Kernel.Crypto.generateKey 
         { name = "RSA-OAEP"
@@ -186,72 +180,288 @@ generateRsaOaepKey _context { modulusLength, hash } extractable =
         [ "encrypt", "decrypt", "wrapKey", "unwrapKey" ]
 
 
-{-| Required parameters to use the `RSA-OAEP` to encrypt or wrap keys.
--}
-type alias RsaOaepParms =
-    { label : Maybe Bytes
-    }
-
-
-{-| Encrypt some data with a key generated with the `generateRsaOaepKey` function.
-
-This uses the public key of the generated `KeyPair`,
--}
-encryptWithRsaOaep : SecureContext -> KeyPair RsaOaep -> RsaOaepParms -> Bytes -> Task x Bytes
-encryptWithRsaOaep _context (KeyPair { publicKey }) { label } data =
-    -- Todo: Actually handle error values with a proper type
-    case label of
-        Just labelValue ->
-            Gren.Kernel.Crypto.encrypt
-                publicKey
-                { name = "RSA-OAEP"
-                , label = labelValue
-                }
-                data
-
-        Nothing ->
-            Gren.Kernel.Crypto.encrypt
-                publicKey
-                { name = "RSA-OAEP"
-                }
-                data
+{-|-}
+generateRsaPssKey : SecureContext -> RsaKeyParams -> Extractable -> Task x (Key RsaPssKey)
+generateRsaPssKey _context =
+    Debug.todo ""
 
 
 {-|-}
-decryptWithRsaOaep : SecureContext -> KeyPair RsaOaep -> RsaOaepParms -> Bytes -> Task Error Bytes
-decryptWithRsaOaep _context (KeyPair { privateKey }) { label } data =
-    -- Todo: Actually handle error values with a proper type
-    case label of
-        Just labelValue ->
-            Gren.Kernel.Crypto.decrypt
-                privateKey
-                { name = "RSA-OAEP"
-                , label = labelValue
-                }
-                data
+generateRsassaPkcs1V1_5Key : SecureContext -> RsaKeyParams -> Extractable -> Task x (Key RsassaPkcs1V1_5Key)
+generateRsassaPkcs1V1_5Key _context =
+    Debug.todo ""
 
-        Nothing ->
-            Gren.Kernel.Crypto.decrypt
-                privateKey
-                { name = "RSA-OAEP"
-                }
-                data
-    
+
+-- AES KEYS
+
+
+{-| Represents a key generated and for use with the AES-CTR algorithm used to
+encrypt and decrypt values.
+-}
+type AesCtrKey
+    = AesCtrKey
+
+
+{-| Represents a key generated and for use with the AES-CBC algorithm used to
+encrypt and decrypt values.
+-}
+type AesCbcKey
+    = AesCbcKey
+
+
+{-| Represents a key generated and for use with the AES-GCM algorithm used to
+encrypt and decrypt values.
+-}
+type AesGcmKey
+    = AesGcmKey
+
+
+{-| The length of bits of the key that is being generated using the AES 
+algorithm. These are the only values that can be chosen.
+-}
+type AesLength
+    = AesLength128
+    | AesLength192
+    | AesLength256
+
+
+{-| Generate a new key using the AES-CTR algorithm.
+-}
+generateAesCtrKey : SecureContext -> AesLength -> Extractable -> Task x (Key AesCtrKey)
+generateAesCtrKey =
+    Debug.todo ""
+
+
+{-| Generate a new key using the AES-CTR algorithm.
+-}
+generateAesCbcKey : SecureContext -> AesLength -> Extractable -> Task x (Key AesCbcKey)
+generateAesCbcKey =
+    Debug.todo ""
+
+
+{-| Generate a new key using the AES-GCM algorithm.
+-}
+generateAesGcmKey : SecureContext -> AesLength -> Extractable -> Task x (Key AesGcmKey)
+generateAesGcmKey =
+    Debug.todo ""
+
+
+-- EC KEYS
+
 
 {-|-}
-exportRsaOaepKey : SecureContext -> KeyPair RsaOaep -> Task x { publicKey : Bytes, privateKey : Bytes }
-exportRsaOaepKey context (KeyPair { publicKey, privateKey }) =
+type EcNamedCurve
+    = P256
+    | P384
+    | P521
+
+
+{-|-}
+type EcdsaKey
+    = EcdsaKey
+
+
+{-|-}
+type EcdhKey
+    = EcdhKey
+
+
+{-|-}
+generateEcdsaKey : SecureContext -> EcNamedCurve -> Extractable -> Task x (Key EcdsaKey)
+generateEcdsaKey _context =
+    Debug.todo ""
+
+
+{-|-}
+generateEcdhKey : SecureContext -> EcNamedCurve -> Extractable -> Task x (Key EcdhKey)
+generateEcdhKey _context =
+    Debug.todo ""
+
+
+-- HMAC KEYS
+
+
+{-|-}
+type HmacKey =
+    HmacKey
+
+
+{-|-}
+generateHmacKey =
+    Debug.todo ""
+
+
+-- ENCRYPT / DECRYPT DATA
+
+
+{-|-}
+type EncryptionAlgorithm
+    = RsaOaep (KeyPair RsaOaepKey)
+        { label : Maybe Bytes
+        }
+    | AesCtr (Key AesCtrKey)
+        { counter : Bytes
+        , length : Int
+        }
+
+
+{-|-}
+type alias DecryptionAlgorithm =
+    EncryptionAlgorithm
+
+
+{-| Encrypt some `Bytes` with a provided algorithm.
+-}
+encrypt : SecureContext -> EncryptionAlgorithm -> Bytes -> Task {} Bytes
+encrypt _context algorithm data =
+    case algorithm of
+        RsaOaep (KeyPair { publicKey = Key unwrappedPublicKey }) { label = Nothing } ->
+            Gren.Kernel.Crypto.encrypt
+                unwrappedPublicKey.key
+                { name = unwrappedPublicKey.algorithm
+                }
+                data
+
+        RsaOaep (KeyPair { publicKey = Key unwrappedPublicKey }) { label = Just label } ->
+            Gren.Kernel.Crypto.encrypt
+                unwrappedPublicKey.key
+                { name = unwrappedPublicKey.algorithm
+                , label = label
+                }
+                data
+
+        AesCtr key { counter, length } ->
+            Task.fail {}
+
+
+{-|-}
+decrypt : SecureContext -> DecryptionAlgorithm -> Bytes -> Task {} Bytes
+decrypt _context algorithm data =
+    case algorithm of
+        RsaOaep (KeyPair { publicKey = Key unwrappedPublicKey }) { label = Nothing } ->
+            Gren.Kernel.Crypto.decrypt
+                unwrappedPublicKey.key
+                { name = unwrappedPublicKey.algorithm
+                }
+                data
+
+        RsaOaep (KeyPair { publicKey = Key unwrappedPublicKey }) { label = Just label } ->
+            Gren.Kernel.Crypto.decrypt
+                unwrappedPublicKey.key
+                { name = unwrappedPublicKey.algorithm
+                , label = label
+                }
+                data
+
+        AesCtr key { counter, length } ->
+            Task.fail {}
+
+
+-- SIGN / VERIFY DATA
+
+
+{-|-}
+sign =
+    Debug.todo ""
+
+
+{-|-}
+verify =
+    Debug.todo ""
+
+
+-- DIGEST
+
+
+{-|-}
+digest =
+    Debug.todo ""
+
+
+-- DERIVE
+
+
+{-|-}
+deriveBits =
+    Debug.todo ""
+
+
+{-|-}
+deriveKey =
+    Debug.todo ""
+
+
+-- EXPORT / IMPORT KEYS
+
+
+{-|-}
+exportKeyPair : SecureContext -> KeyPair a -> Task x { publicKey : Bytes, privateKey : Bytes }
+exportKeyPair context (KeyPair { privateKey, publicKey }) =
     Task.map2 (\exportedPublicKey exportedPrivateKey ->
             { publicKey = exportedPublicKey
             , privateKey = exportedPrivateKey
             }
         )
-        (exportKey context "spki" publicKey)
-        (exportKey context "pkcs8" privateKey)
+        (exportKeyHelper context "spki" publicKey)
+        (exportKeyHelper context "pkcs8" privateKey)
 
 
 {-|-}
-importRsaOaepKey =
+exportKey : SecureContext -> Key a -> Task x Bytes
+exportKey _context key =
+    Debug.todo ""
+
+
+{-|-}
+importRsaOaepKeyPair : SecureContext -> { publicKey : Bytes, privateKey : Bytes } -> Task x (KeyPair RsaOaepKey)
+importRsaOaepKeyPair _context =
+    Debug.todo ""
+
+
+{-|-}
+importRsaPssKey : SecureContext -> RsaKeyParams -> Extractable -> Task x (Key RsaPssKey)
+importRsaPssKey _context =
+    Debug.todo ""
+
+
+{-|-}
+importRsassaPkcs1V1_5Key : SecureContext -> RsaKeyParams -> Extractable -> Task x (Key RsassaPkcs1V1_5Key)
+importRsassaPkcs1V1_5Key _context =
+    Debug.todo ""
+
+
+{-|-}
+importAesCtrKey : SecureContext -> AesLength -> Extractable -> Task x (Key AesCtrKey)
+importAesCtrKey =
+    Debug.todo ""
+
+
+{-|-}
+importAesCbcKey : SecureContext -> AesLength -> Extractable -> Task x (Key AesCbcKey)
+importAesCbcKey =
+    Debug.todo ""
+
+
+{-|-}
+importAesGcmKey : SecureContext -> AesLength -> Extractable -> Task x (Key AesGcmKey)
+importAesGcmKey =
+    Debug.todo ""
+
+
+{-|-}
+importEcdsaKey : SecureContext -> EcNamedCurve -> Extractable -> Task x (Key EcdsaKey)
+importEcdsaKey _context =
+    Debug.todo ""
+
+
+{-|-}
+importEcdhKey : SecureContext -> EcNamedCurve -> Extractable -> Task x (Key EcdhKey)
+importEcdhKey _context =
+    Debug.todo ""
+
+
+{-|-}
+importHmacKey =
     Debug.todo ""
 
 
@@ -259,8 +469,8 @@ importRsaOaepKey =
 
 
 {-|-}
-exportKey : SecureContext -> String -> Key a -> Task x Bytes
-exportKey _context format (Key { key }) =
+exportKeyHelper : SecureContext -> String -> Key a -> Task x Bytes
+exportKeyHelper _context format (Key { key }) =
     Gren.Kernel.Crypto.exportKey format key
 
 
