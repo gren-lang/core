@@ -182,14 +182,28 @@ generateRsaOaepKey _context { modulusLength, hash } extractable =
 
 {-|-}
 generateRsaPssKey : SecureContext -> RsaKeyParams -> Extractable -> Task x (Key RsaPssKey)
-generateRsaPssKey _context =
-    Debug.todo ""
+generateRsaPssKey _context { modulusLength, hash } extractable =
+    Gren.Kernel.Crypto.generateKey
+        { name = "RSA-PSS"
+        , modulusLength = if modulusLength < 2048 then 2048 else modulusLength
+        , publicExponent = [ 1, 0, 1 ]
+        , hash = digestAlgorithmToString hash
+        }
+        (extractableToBool extractable)
+        [ "sign", "verify" ]
 
 
 {-|-}
 generateRsassaPkcs1V1_5Key : SecureContext -> RsaKeyParams -> Extractable -> Task x (Key RsassaPkcs1V1_5Key)
-generateRsassaPkcs1V1_5Key _context =
-    Debug.todo ""
+generateRsassaPkcs1V1_5Key _context { modulusLength, hash } extractable =
+    Gren.Kernel.Crypto.generateKey
+        { name = "RSASSA-PKCS1-v1_5"
+        , modulusLength = if modulusLength < 2048 then 2048 else modulusLength
+        , publicExponent = [ 1, 0, 1 ]
+        , hash = digestAlgorithmToString hash
+        }
+        (extractableToBool extractable)
+        [ "sign", "verify" ]
 
 
 -- AES KEYS
@@ -228,22 +242,37 @@ type AesLength
 {-| Generate a new key using the AES-CTR algorithm.
 -}
 generateAesCtrKey : SecureContext -> AesLength -> Extractable -> Task x (Key AesCtrKey)
-generateAesCtrKey =
-    Debug.todo ""
+generateAesCtrKey _context length extractable =
+    Gren.Kernel.Crypto.generateKey
+        { name = "AES-CTR"
+        , length = aesLengthToInt length
+        }
+        (extractableToBool extractable)
+        [ "encrypt", "decrypt" ]
 
 
 {-| Generate a new key using the AES-CTR algorithm.
 -}
 generateAesCbcKey : SecureContext -> AesLength -> Extractable -> Task x (Key AesCbcKey)
-generateAesCbcKey =
-    Debug.todo ""
+generateAesCbcKey _context length extractable =
+    Gren.Kernel.Crypto.generateKey
+        { name = "AES-CBC"
+        , length = aesLengthToInt length
+        }
+        (extractableToBool extractable)
+        [ "encrypt", "decrypt" ]
 
 
 {-| Generate a new key using the AES-GCM algorithm.
 -}
 generateAesGcmKey : SecureContext -> AesLength -> Extractable -> Task x (Key AesGcmKey)
-generateAesGcmKey =
-    Debug.todo ""
+generateAesGcmKey _context length extractable =
+    Gren.Kernel.Crypto.generateKey
+        { name = "AES-GCM"
+        , length = aesLengthToInt length
+        }
+        (extractableToBool extractable)
+        [ "encrypt", "decrypt" ]
 
 
 -- EC KEYS
@@ -268,14 +297,24 @@ type EcdhKey
 
 {-|-}
 generateEcdsaKey : SecureContext -> EcNamedCurve -> Extractable -> Task x (Key EcdsaKey)
-generateEcdsaKey _context =
-    Debug.todo ""
+generateEcdsaKey _context namedCurve extractable =
+    Gren.Kernel.Crypto.generateKey
+        { name = "ECDSA"
+        , namedCurve = ecNamedCurveToString namedCurve
+        }
+        (extractableToBool extractable)
+        [ "sign", "verify" ]
 
 
 {-|-}
 generateEcdhKey : SecureContext -> EcNamedCurve -> Extractable -> Task x (Key EcdhKey)
-generateEcdhKey _context =
-    Debug.todo ""
+generateEcdhKey _context namedCurve extractable =
+    Gren.Kernel.Crypto.generateKey
+        { name = "ECDH"
+        , namedCurve = ecNamedCurveToString namedCurve
+        }
+        (extractableToBool extractable)
+        [ "deriveKey", "deriveBytes" ]
 
 
 -- HMAC KEYS
@@ -287,8 +326,25 @@ type HmacKey =
 
 
 {-|-}
-generateHmacKey =
-    Debug.todo ""
+generateHmacKey : SecureContext -> DigestAlgorithm -> Maybe Int -> Extractable -> Task x (Key HmacKey)
+generateHmacKey _context hash passedLength extractable =
+    case passedLength of
+        Just length ->
+            Gren.Kernel.Crypto.generateKey
+                { name = "HMAC"
+                , hash = digestAlgorithmToString hash
+                , length = length
+                }
+                (extractableToBool extractable)
+                [ "deriveKey", "deriveBytes" ]
+
+        Nothing ->
+            Gren.Kernel.Crypto.generateKey
+                { name = "HMAC"
+                , hash = digestAlgorithmToString hash
+                }
+                (extractableToBool extractable)
+                [ "deriveKey", "deriveBytes" ]
 
 
 -- ENCRYPT / DECRYPT DATA
@@ -466,6 +522,34 @@ importHmacKey =
 
 
 -- UTILITIES
+
+
+{-|-}
+ecNamedCurveToString : EcNamedCurve -> String
+ecNamedCurveToString namedCurve =
+    case namedCurve of
+        P256 ->
+            "P-256"
+
+        P384 ->
+            "P-384"
+
+        P521 ->
+            "P-521"
+
+
+{-|-}
+aesLengthToInt : AesLength -> Int
+aesLengthToInt length =
+    case length of
+        AesLength128 ->
+            128
+
+        AesLength192 ->
+            192
+
+        AesLength256 ->
+            256
 
 
 {-|-}
