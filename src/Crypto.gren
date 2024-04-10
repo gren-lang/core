@@ -65,17 +65,6 @@ type KeyPair a =
         }
 
 
-{-| Supported algorithms suitable for digesting data.
-
-Note: The algorithm `SHA1` is supported by the WebCrypto API, but not available 
-in this package due to known security vunerabilities.
--}
-type DigestAlgorithm
-    = Sha256
-    | Sha384
-    | Sha512
-
-
 -- BASE FUNCTIONS
 
 
@@ -359,6 +348,15 @@ type EncryptionAlgorithm
         { counter : Bytes
         , length : Int
         }
+    -- The `iv` value _must_ be unique for each encryption operation with the same key
+    | AesCbc (Key AesCbcKey)
+        { iv : Bytes
+        }
+    | AesGcm (Key AesGcmKey) -- https://developer.mozilla.org/en-US/docs/Web/API/AesGcmParams
+        { iv : Bytes
+        , additionalData : Maybe Bytes -- The bit length of additionalData must be smaller than 2^64 - 1
+        , tagLength : Maybe Int -- Must be one of: 96, 104, 112, 120 or 128 - fill in with type later
+        }
 
 
 {-|-}
@@ -388,6 +386,21 @@ encrypt _context algorithm data =
 
         AesCtr key { counter, length } ->
             Task.fail {}
+        
+        AesCbc key { iv } ->
+            Task.fail {}
+
+        AesGcm key { iv, additionalData = Just unwrappedAdditionalData, tagLength = Just unwrappedTagLength } ->
+            Task.fail {}
+
+        AesGcm key { iv, additionalData = Nothing, tagLength = Just unwrappedTagLength } ->
+            Task.fail {}
+
+        AesGcm key { iv, additionalData = Just unwrappedAdditionalData, tagLength = Nothing } ->
+            Task.fail {}
+
+        AesGcm key { iv, additionalData = Nothing, tagLength = Nothing } ->
+            Task.fail {}
 
 
 {-|-}
@@ -412,29 +425,106 @@ decrypt _context algorithm data =
         AesCtr key { counter, length } ->
             Task.fail {}
 
+        AesCbc key { iv } ->
+            Task.fail {}
+
+        AesGcm key { iv, additionalData = Just unwrappedAdditionalData, tagLength = Just unwrappedTagLength } ->
+            Task.fail {}
+
+        AesGcm key { iv, additionalData = Nothing, tagLength = Just unwrappedTagLength } ->
+            Task.fail {}
+
+        AesGcm key { iv, additionalData = Just unwrappedAdditionalData, tagLength = Nothing } ->
+            Task.fail {}
+
+        AesGcm key { iv, additionalData = Nothing, tagLength = Nothing } ->
+            Task.fail {}
+
 
 -- SIGN / VERIFY DATA
 
 
 {-|-}
-sign =
-    Debug.todo ""
+type SigningAlgorithm
+    = RsassaPkcs1V1_5 (Key RsassaPkcs1V1_5Key)
+    | RsaPss (Key RsaPssKey)
+        { saltLength : Int -- longinteger
+        }
+    | Ecdsa (Key Ecdsa)
+        { hash : DigestAlgorithm
+        }
+    | Hmac (Key Hmac)
 
 
 {-|-}
-verify =
-    Debug.todo ""
+type alias VerifyingAlgorithm
+    = SigningAlgorithm
+
+
+{-|-}
+sign : SecureContext -> SigningAlgorithm -> Bytes -> Task {} Bytes
+sign _context algorithm data =
+    case algorithm of
+        RsassaPkcs1V1_5 key ->
+            Task.fail {}
+        
+        RsaPss key { saltLength } ->
+            Task.fail {}
+        
+        Ecdsa key { hash } ->
+            Task.fail {}
+
+        Hmac key ->
+            Task.fail {}
+
+
+{-|-}
+verify : SecureContext -> VerifyingAlgorithm -> Bytes -> Task {} Bytes
+verify _context algorithm data =
+    case algorithm of
+        RsassaPkcs1V1_5 key ->
+            Task.fail {}
+        
+        RsaPss key { saltLength } ->
+            Task.fail {}
+        
+        Ecdsa key { hash } ->
+            Task.fail {}
+
+        Hmac key ->
+            Task.fail {}
 
 
 -- DIGEST
 
 
+{-| Supported algorithms suitable for digesting data.
+
+Note: The algorithm `SHA1` is supported by the WebCrypto API, but not available 
+in this package due to known security vunerabilities.
+-}
+type DigestAlgorithm
+    = Sha256
+    | Sha384
+    | Sha512
+
+
 {-|-}
-digest =
-    Debug.todo ""
+digest : SecureContext -> DigestAlgorithm -> Bytes -> Task {} Bytes
+digest _context algorithm data =
+    Gren.Kernel.Crypto.digest
+        (digestAlgorithmToString algorithm)
+        data
 
 
 -- DERIVE
+
+
+{-|-}
+type DeriveAlgorithm
+    = Ecdh (Key EcdhKey)
+    | Hkdf
+    | Pbkdf2
 
 
 {-|-}
