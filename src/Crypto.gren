@@ -166,7 +166,7 @@ generateRsaOaepKey _context { modulusLength, hash } extractable =
         , hash = digestAlgorithmToString hash
         }
         (extractableToBool extractable)
-        [ "encrypt", "decrypt", "wrapKey", "unwrapKey" ]
+        [ "encrypt", "decrypt" ]
 
 
 {-|-}
