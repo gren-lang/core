@@ -620,19 +620,80 @@ digest _context algorithm data =
 
 
 {-|-}
-type DeriveAlgorithm
-    = Ecdh (Key EcdhKey)
+type DeriveAlgorithm a
+    = Ecdh 
+        { publicKey : Key a
+        }
     | Hkdf
+        { hash : DigestAlgorithm
+        , salt : Bytes
+        , info : Bytes
+        }
     | Pbkdf2
+        { hash : DigestAlgorithm
+        , salt : Bytes
+        , iterations : Int
+        }
 
 
 {-|-}
-deriveBits =
+deriveBits : SecureContext -> DeriveAlgorithm a -> Int -> Task x Bytes
+deriveBits _context algorithm length =
+    -- Note: length should be divisible by 8
+    Debug.todo ""
+
+
+{-| Derive a `Key HmacKey` from an existing key value.
+-}
+deriveHmacKey : SecureContext -> DeriveAlgorithm a -> Key a -> DigestAlgorithm -> Maybe Int -> Extractable -> Task String (Key HmacKey)
+deriveHmacKey _context algorithm key digestAlgorithm length extractable =
+    case algorithm of
+        Ecdh { publicKey } ->
+            Gren.Kernel.Crypto.deriveKey
+                algorithmParams
+                key
+                { name = "HMAC"
+                , hash = digestAlgorithmToString digestAlgorithm
+                , length = length -- todo
+                }
+                extractable
+                [ "deriveKey", "deriveBytes" ]
+        
+        Hkdf { hash, salt, info } ->
+            Gren.Kernel.Crypto.deriveKey
+                {}
+        
+        Pbkdf2 { hash, salt, iterations } ->
+            Gren.Kernel.Crypto.deriveKey
+                {}
+
+
+{-|-}
+deriveAesCtrKey =
     Debug.todo ""
 
 
 {-|-}
-deriveKey =
+deriveAesCbcKey =
+    Debug.todo ""
+
+
+{-|-}
+deriveAesGcmKey =
+    Debug.todo ""
+
+
+{-|-}
+deriveHkdfKey =
+    Debug.todo ""
+
+
+{-| Generate a key for [...]
+
+The only use for this key is to derive other keys using the `deriveKey` 
+function.
+-}
+derivePbkdf2Key =
     Debug.todo ""
 
 
