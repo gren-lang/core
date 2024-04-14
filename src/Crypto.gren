@@ -424,7 +424,7 @@ generateHmacKey _context hash passedLength extractable =
                 , length = length
                 }
                 (extractableToBool extractable)
-                [ "deriveKey", "deriveBytes" ]
+                [ "sign", "verify" ]
 
         Nothing ->
             Gren.Kernel.Crypto.generateKey
@@ -432,7 +432,7 @@ generateHmacKey _context hash passedLength extractable =
                 , hash = digestAlgorithmToString hash
                 }
                 (extractableToBool extractable)
-                [ "deriveKey", "deriveBytes" ]
+                [ "sign", "verify" ]
 
 
 -- ENCRYPT / DECRYPT DATA
@@ -549,10 +549,10 @@ type SigningAlgorithm
     | RsaPss (Key RsaPssKey)
         { saltLength : Int -- longinteger
         }
-    | Ecdsa (Key Ecdsa)
+    | Ecdsa (Key EcdsaKey)
         { hash : DigestAlgorithm
         }
-    | Hmac (Key Hmac)
+    | Hmac (Key HmacKey)
 
 
 {-|-}
@@ -573,7 +573,7 @@ sign _context algorithm data =
         Ecdsa key { hash } ->
             Task.fail {}
 
-        Hmac key ->
+        HmacKey key ->
             Task.fail {}
 
 
@@ -590,7 +590,7 @@ verify _context algorithm data =
         Ecdsa key { hash } ->
             Task.fail {}
 
-        Hmac key ->
+        HmacKey key ->
             Task.fail {}
 
 
