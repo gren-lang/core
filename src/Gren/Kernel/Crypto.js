@@ -117,7 +117,7 @@ var _Crypto_decrypt = F3(function (key, params, data) {
                 return callback(__Scheduler_succeed(new DataView(res)));
             })
             .catch(function (err) {
-                return callback(__Scheduler_fail(__Crypto_Error));
+                return callback(__Scheduler_fail());
             })
     });
 });
@@ -131,7 +131,7 @@ var _Crypto_exportKey = F2(function (format, key) {
             })
             .catch(function (err) {
                 console.log("err", err)
-                return callback(__Scheduler_fail(__Crypto_KeyIsNotExtractable));
+                return callback(__Scheduler_fail());
             });
     });
 });
