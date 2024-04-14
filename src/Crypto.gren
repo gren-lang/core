@@ -573,7 +573,7 @@ sign _context algorithm data =
         Ecdsa key { hash } ->
             Task.fail {}
 
-        HmacKey key ->
+        Hmac key ->
             Task.fail {}
 
 
@@ -590,7 +590,7 @@ verify _context algorithm data =
         Ecdsa key { hash } ->
             Task.fail {}
 
-        HmacKey key ->
+        Hmac key ->
             Task.fail {}
 
 
