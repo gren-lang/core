@@ -30,13 +30,40 @@ var _Crypto_randomUUID = __Scheduler_binding(function (callback) {
     return callback(__Scheduler_succeed(randomUUID));
 });
 
-var _Crypto_getRandomValues = function (arrayLength) {
-    return __Scheduler_binding(function (callback) {
-        var array = new Int8Array(arrayLength);
+var _Crypto_getRandomValues = F2(function (arrayLength, valueType) {
+    var array;
+    switch (valueType) {
+        case "int8":
+            array = new Int8Array(arrayLength);
+            break;
+        case "uint8":
+            array = new Uint8Array(arrayLength);
+            break;
+        case "int16":
+            array = new Int16Array(arrayLength);
+            break;
+        case "uint16":
+            array = new Uint16Array(arrayLength);
+            break;
+        case "int32":
+            array = new Int32Array(arrayLength);
+            break;
+        case "uint32":
+            array = new Uint32Array(arrayLength);
+            break;
+        default:
+            array = new Int8Array(0);
+            break;
+    }
+    try {
         var randomValues = crypto.getRandomValues(array);
+    } catch (err) {
+        console.log("err", err);
+    }
+    return __Scheduler_binding(function (callback) {
         return callback(__Scheduler_succeed(randomValues));
     })
-};
+});
 
 var _Crypto_getContext = __Scheduler_binding(function (callback) {
     if (crypto.subtle) {
