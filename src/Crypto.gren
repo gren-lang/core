@@ -650,7 +650,7 @@ deriveHmacKey _context algorithm key digestAlgorithm length extractable =
     case algorithm of
         Ecdh { publicKey } ->
             Gren.Kernel.Crypto.deriveKey
-                algorithmParams
+                publicKey
                 key
                 { name = "HMAC"
                 , hash = digestAlgorithmToString digestAlgorithm
