@@ -1,9 +1,9 @@
 module Crypto exposing 
-    ( SecureContext, isSecureContext
-    , randomUuid
-    , getRandomInt8Values, getRandomUInt8Values
+    ( getRandomInt8Values, getRandomUInt8Values
     , getRandomInt16Values, getRandomUInt16Values
     , getRandomInt32Values, getRandomUInt32Values
+    , SecureContext, isSecureContext
+    , randomUuid
     )
 
 
@@ -90,38 +90,6 @@ import Result exposing ( Result(..) )
 import Set exposing ( Set )
 
 
--- TYPES
-
-
-{-| Represents the platform being considered secure. This type can be generated 
-using the `isSecureContext` function and is required for some functions to be 
-run in this package.
--}
-type SecureContext
-    = SecureContext
-
-
-{-| A generated key.
--}
-type Key algorithm
-    = Key 
-        { key : algorithm
-        , algorithm : String
-        , keyType : String
-        , extractable : Bool
-        , usages : Array String 
-        }
-
-
-{-| A pair (public and private) of keys.
--}
-type KeyPair a =
-    KeyPair
-        { publicKey : Key a
-        , privateKey : Key a
-        }
-
-
 -- RANDOM UUID
 
 
@@ -187,6 +155,14 @@ getRandomUInt32Values int =
 -- ENVIRONMENT
 
 
+{-| Represents the platform being considered secure. This type can be generated 
+using the `isSecureContext` function and is required for some functions to be 
+run in this package.
+-}
+type SecureContext
+    = SecureContext
+
+
 {-| A `Task` that succeeds with `SecureContext` if the code is being run in a 
 secure context. If this `Task` fails, most of the functions within this module
 will not be able to run.
@@ -211,6 +187,27 @@ to export the key will fail.
 type Extractable
     = CanBeExtracted
     | CannotBeExtracted
+
+
+{-| A generated key.
+-}
+type Key algorithm
+    = Key 
+        { key : algorithm
+        , algorithm : String
+        , keyType : String
+        , extractable : Bool
+        , usages : Array String 
+        }
+
+
+{-| A pair (public and private) of keys.
+-}
+type KeyPair a =
+    KeyPair
+        { publicKey : Key a
+        , privateKey : Key a
+        }
 
 
 -- RSA KEYS
