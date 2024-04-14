@@ -1,11 +1,9 @@
 module Crypto exposing 
-    ( SecureContext
-    , DigestAlgorithm(..)
-    , Extractable(..)
-    , Key, KeyPair, RsaOaepKey
-    , encrypt, decrypt
-    , randomUuid, getRandomValues, isSecureContext
-    , generateRsaOaepKey
+    ( SecureContext, isSecureContext
+    , randomUuid, insecureRandomUuid
+    , getRandomInt8Values, getRandomUInt8Values
+    , getRandomInt16Values, getRandomUInt16Values
+    , getRandomInt32Values, getRandomUInt32Values
     )
 
 
@@ -124,19 +122,21 @@ type KeyPair a =
         }
 
 
--- BASE FUNCTIONS
+-- RANDOM UUID
 
 
-{-| Generate a random UUID using the UUID v4 algorithm.
+{-| Generate a random UUID using the UUID v4 algorithm. This function must be run
+in a secure context. See `isSecureContext` [...]
 -}
-randomUuid : Task x String
-randomUuid =
+randomUuid : SecureContext -> Task x String
+randomUuid _context =
     Gren.Kernel.Crypto.randomUUID
 
 
-{-| Get an `Array` of random values equal in length to the passed `Int`.
+{-| Generate a random UUID using the UUID v4 algorithm. 
 
-If the passed `Int` is `0` or less, the task will resolve into an empty `Array`. 
+This function can be run in an unsafe context, but it's not recommended! Instead, use 
+`getRandomUuid` after checking for a secure context with `isSecureContext`!
 -}
 insecureRandomUuid : Task x String
 insecureRandomUuid =
@@ -198,11 +198,13 @@ getRandomUInt32Values int =
 
 
 {-| A `Task` that succeeds with `SecureContext` if the code is being run in a 
-secure context. This value is a required parameter for some functions given they
-will only run properly in a secure context.
+secure context. If this `Task` fails, most of the functions within this module
+will not be able to run.
 
-When running this in `node`, it should always succeed as node is always considered 
-a secure context. If that's not the case, please file a bug!
+While running this function on the `node` platform, it should always succeed.
+
+While running this function on the `browser` platform, it will succeed if the
+application is being run with HTTPS.
 -}
 isSecureContext : Task {} SecureContext
 isSecureContext =
