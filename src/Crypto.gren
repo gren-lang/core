@@ -34,7 +34,7 @@ This value is clamped to a minimum of `0` and a maximum of however many values c
 be generated.
 
 The maximum number of values that can be generated depends on the amount of bytes
-the value you're generating is. 65536 is the maximum number of bytes that can be
+the values you're generating are. 65536 is the maximum number of bytes that can be
 generated. For example, when using `getRandomInt16Values`, each value is 16 bits 
 (or 2 bytes), so the maximum number of values that `getRandomInt16Values` can generate
 is 32768 values.
@@ -126,7 +126,7 @@ type KeyPair a =
 
 
 {-| Generate a random UUID using the UUID v4 algorithm. This function must be run
-in a secure context. See `isSecureContext` [...]
+in a secure context.
 -}
 randomUuid : SecureContext -> Task x String
 randomUuid _context =
