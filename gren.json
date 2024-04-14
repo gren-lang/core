@@ -49,6 +49,9 @@
         ],
         "Time": [
             "Time"
+        ],
+        "Crypto": [
+            "Crypto"
         ]
     },
     "gren-version": "0.3.0 <= v < 0.4.0",
