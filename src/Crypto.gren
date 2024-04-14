@@ -1,6 +1,6 @@
 module Crypto exposing 
     ( SecureContext, isSecureContext
-    , randomUuid, insecureRandomUuid
+    , randomUuid
     , getRandomInt8Values, getRandomUInt8Values
     , getRandomInt16Values, getRandomUInt16Values
     , getRandomInt32Values, getRandomUInt32Values
@@ -23,7 +23,7 @@ the successfull completion of a `Task` returned by the `isSecureContext` functio
 
 ### Generate Random UUIDs
 
-@docs randomUuid, insecureRandomUuid
+@docs randomUuid
 
 ### Generate Random Values
 
@@ -131,16 +131,6 @@ in a secure context.
 randomUuid : SecureContext -> Task x String
 randomUuid _context =
     Gren.Kernel.Crypto.randomUUID
-
-
-{-| Generate a random UUID using the UUID v4 algorithm. 
-
-This function can be run in an unsafe context, but it's not recommended! Instead, use 
-`getRandomUuid` after checking for a secure context with `isSecureContext`!
--}
-insecureRandomUuid : Task x String
-insecureRandomUuid =
-    randomUuid SecureContext
 
 
 -- RANDOM VALUES
