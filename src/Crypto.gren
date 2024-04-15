@@ -382,7 +382,7 @@ type AesLength
 
 {-| Generate a new key using the AES-CTR algorithm.
 -}
-generateAesCtrKey : SecureContext -> AesLength -> Extractable -> Task x (Key AesCtrKey)
+generateAesCtrKey : SecureContext -> AesLength -> Extractable -> Task Never (Key AesCtrKey)
 generateAesCtrKey _context length extractable =
     Gren.Kernel.Crypto.generateKey
         { name = "AES-CTR"
@@ -394,7 +394,7 @@ generateAesCtrKey _context length extractable =
 
 {-| Generate a new key using the AES-CTR algorithm.
 -}
-generateAesCbcKey : SecureContext -> AesLength -> Extractable -> Task x (Key AesCbcKey)
+generateAesCbcKey : SecureContext -> AesLength -> Extractable -> Task Never (Key AesCbcKey)
 generateAesCbcKey _context length extractable =
     Gren.Kernel.Crypto.generateKey
         { name = "AES-CBC"
@@ -406,7 +406,7 @@ generateAesCbcKey _context length extractable =
 
 {-| Generate a new key using the AES-GCM algorithm.
 -}
-generateAesGcmKey : SecureContext -> AesLength -> Extractable -> Task x (Key AesGcmKey)
+generateAesGcmKey : SecureContext -> AesLength -> Extractable -> Task Never (Key AesGcmKey)
 generateAesGcmKey _context length extractable =
     Gren.Kernel.Crypto.generateKey
         { name = "AES-GCM"
