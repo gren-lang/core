@@ -7,7 +7,7 @@ module Crypto exposing
     , Key, KeyPair
     , Extractable(..)
     , RsaKeyParams, PublicExponent(..), RsaKeyGenerationError(..)
-    , generateRsaOaepKey
+    , generateRsaOaepKey, generateRsaPssKey, generateRsassaPkcs1V1_5Key
     , DigestAlgorithm(..)
     )
 
@@ -64,7 +64,7 @@ Generate keys for completing cryptographic operations.
 
 @docs RsaKeyParams, PublicExponent, RsaKeyGenerationError
 
-@docs generateRsaOaepKey
+@docs generateRsaOaepKey, generateRsaPssKey, generateRsassaPkcs1V1_5Key
 
 #### Derive Keys
 
@@ -94,7 +94,7 @@ Generate keys for completing cryptographic operations.
 
 
 import Array exposing ( Array )
-import Basics exposing ( Never, Bool(..), Int, (>), (<), (<=) )
+import Basics exposing ( Never, Bool(..), Int, (>), (<), (<=), (==) )
 import Gren.Kernel.Crypto
 import String exposing ( String )
 import Task exposing ( Task )
@@ -284,63 +284,61 @@ type RsaKeyGenerationError
 
 {-| Generate a new key pair using the RSA-OAEP algorithm.
 
-This function does not currently allow editing the public exponent value. It's
-instead always set to `655371`, a recommended value.
-
 Produces a `KeyPair` consisting of a private and public key. This `KeyPair` can 
 be used to encrypt and decrypt `Bytes`.
 -}
 generateRsaOaepKey : SecureContext -> RsaKeyParams -> Extractable -> Task RsaKeyGenerationError (KeyPair RsaOaepKey)
-generateRsaOaepKey _context { modulusLength, hash, publicExponent } extractable =
+generateRsaOaepKey _context =
+    generateRsaKeyHelper 
+        "RSA-OAEP" 
+        [ "encrypt", "decrypt" ]
+
+
+{-| Generate a new key using the RSA-PSS algorithm.
+
+Produces a `Key` that can be used to sign and verify `Bytes`.
+-}
+generateRsaPssKey : SecureContext -> RsaKeyParams -> Extractable -> Task RsaKeyGenerationError (Key RsaPssKey)
+generateRsaPssKey _context =
+    generateRsaKeyHelper 
+        "RSA-PSS"
+        [ "sign", "verify" ]
+
+
+{-| Generate a new key using the RSASSA-PKCS1-v1_5 algorithm.
+
+Produces a `Key` that can be used to sign and verify `Bytes`.
+-}
+generateRsassaPkcs1V1_5Key : SecureContext -> RsaKeyParams -> Extractable -> Task RsaKeyGenerationError (Key RsassaPkcs1V1_5Key)
+generateRsassaPkcs1V1_5Key _context =
+    generateRsaKeyHelper 
+        "RSASSA-PKCS1-v1_5"
+        [ "sign", "verify" ]
+
+
+{-|-}
+generateRsaKeyHelper : String -> Array String -> RsaKeyParams -> Extractable -> Task RsaKeyGenerationError a
+generateRsaKeyHelper name permissions { modulusLength, hash, publicExponent } extractable =
     let
         clampedModulusLength = 
             clamp 2048 16384 modulusLength
     in
-    case Math.remainderBy 8 clampedModulusLength of
-        0 ->
-            Gren.Kernel.Crypto.generateKey 
-                { name = "RSA-OAEP"
-                , modulusLength = clampedModulusLength
-                , publicExponent = 
-                    case publicExponent of
-                        PublicExponent3 ->
-                            [ 3 ]
-
-                        PublicExponent65537 ->
-                            [ 1, 0, 1 ]
-                , hash = digestAlgorithmToString hash
-                }
-                (extractableToBool extractable)
-                [ "encrypt", "decrypt" ]
-
-        _ ->
-            Task.fail ModulusLengthNotDivisibleByEight
-
-
-{-|-}
-generateRsaPssKey : SecureContext -> RsaKeyParams -> Extractable -> Task x (Key RsaPssKey)
-generateRsaPssKey _context { modulusLength, hash } extractable =
-    Gren.Kernel.Crypto.generateKey
-        { name = "RSA-PSS"
-        , modulusLength = if modulusLength < 2048 then 2048 else modulusLength
-        , publicExponent = [ 1, 0, 1 ]
-        , hash = digestAlgorithmToString hash
-        }
-        (extractableToBool extractable)
-        [ "sign", "verify" ]
-
-
-{-|-}
-generateRsassaPkcs1V1_5Key : SecureContext -> RsaKeyParams -> Extractable -> Task x (Key RsassaPkcs1V1_5Key)
-generateRsassaPkcs1V1_5Key _context { modulusLength, hash } extractable =
-    Gren.Kernel.Crypto.generateKey
-        { name = "RSASSA-PKCS1-v1_5"
-        , modulusLength = if modulusLength < 2048 then 2048 else modulusLength
-        , publicExponent = [ 1, 0, 1 ]
-        , hash = digestAlgorithmToString hash
-        }
-        (extractableToBool extractable)
-        [ "sign", "verify" ]
+    if Math.remainderBy 8 clampedModulusLength == 0 then
+        Gren.Kernel.Crypto.generateKey 
+            { name = name
+            , modulusLength = clampedModulusLength
+            , publicExponent = 
+                case publicExponent of
+                    PublicExponent3 ->
+                        [ 3 ]
+                    PublicExponent65537 ->
+                        [ 1, 0, 1 ]
+            , hash = digestAlgorithmToString hash
+            }
+            (extractableToBool extractable)
+            permissions
+    else
+        Task.fail ModulusLengthNotDivisibleByEight
 
 
 -- AES KEYS
