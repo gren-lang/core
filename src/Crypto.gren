@@ -8,6 +8,8 @@ module Crypto exposing
     , Extractable(..)
     , RsaKeyParams, PublicExponent(..), RsaKeyGenerationError(..)
     , generateRsaOaepKey, generateRsaPssKey, generateRsassaPkcs1V1_5Key
+    , AesLength
+    , generateAesCtrKey, generateAesCbcKey, generateAesGcmKey
     , DigestAlgorithm(..)
     )
 
@@ -65,6 +67,10 @@ Generate keys for completing cryptographic operations.
 @docs RsaKeyParams, PublicExponent, RsaKeyGenerationError
 
 @docs generateRsaOaepKey, generateRsaPssKey, generateRsassaPkcs1V1_5Key
+
+@docs AesLength
+
+@docs generateAesCtrKey, generateAesCbcKey, generateAesGcmKey
 
 #### Derive Keys
 
