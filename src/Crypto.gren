@@ -4,6 +4,11 @@ module Crypto exposing
     , getRandomInt32Values, getRandomUInt32Values
     , SecureContext, isSecureContext
     , randomUuid
+    , Key, KeyPair
+    , Extractable(..)
+    , RsaKeyParams, PublicExponent(..), RsaKeyGenerationError(..)
+    , generateRsaOaepKey
+    , DigestAlgorithm(..)
     )
 
 
@@ -49,9 +54,17 @@ the successfull completion of a `Task` returned by the `isSecureContext` functio
 
 Functions for managing keys used to complete cryptographic operations.
 
+@docs Key, KeyPair
+
+@docs Extractable
+
 #### Generate Keys
 
 Generate keys for completing cryptographic operations.
+
+@docs RsaKeyParams, PublicExponent, RsaKeyGenerationError
+
+@docs generateRsaOaepKey
 
 #### Derive Keys
 
@@ -75,6 +88,8 @@ Generate keys for completing cryptographic operations.
 
 ### Digest
 
+@docs DigestAlgorithm
+
 -}
 
 
@@ -88,6 +103,8 @@ import Bytes exposing ( Bytes )
 import Maybe exposing ( Maybe(..) )
 import Result exposing ( Result(..) )
 import Set exposing ( Set )
+import Bitwise
+import Math
 
 
 -- RANDOM UUID
@@ -189,7 +206,7 @@ type Extractable
     | CannotBeExtracted
 
 
-{-| A generated key.
+{-| A generated key. Can only be created by running a key generation function.
 -}
 type Key algorithm
     = Key 
@@ -236,13 +253,33 @@ type RsassaPkcs1V1_5Key
 
 {-| Parameters required to generate a key with any RSA algorithm.
 
-`modulusLength` must be at least 2048. If a lower number, it will be set to 
-`2048` automatically.
+`modulusLength` is clamped be at least 2048 and no greater than 16384. If the
+`Int` used is outside of that range, it will be corrected.
 -}
 type alias RsaKeyParams =
     { modulusLength : Int
     , hash : DigestAlgorithm
+    , publicExponent : PublicExponent
     }
+
+
+{-| The public exponent allowed for RSA algorithms in the Web Crypto API. The
+only two values allowed are `3` and `65537`.
+-}
+type PublicExponent
+    = PublicExponent3
+    | PublicExponent65537
+
+
+{-| Errors that can happen when generating a key with an RSA algorithm.
+
+The possible errors and their descriptions are below:
+
+- `ModulusLengthNotDivisibleByEight` happens when the passed `modulusLength` is
+not divisible by 8, as is required by the algorithm.
+-}
+type RsaKeyGenerationError
+    = ModulusLengthNotDivisibleByEight
 
 
 {-| Generate a new key pair using the RSA-OAEP algorithm.
@@ -253,16 +290,31 @@ instead always set to `655371`, a recommended value.
 Produces a `KeyPair` consisting of a private and public key. This `KeyPair` can 
 be used to encrypt and decrypt `Bytes`.
 -}
-generateRsaOaepKey : SecureContext -> RsaKeyParams -> Extractable -> Task x (KeyPair RsaOaepKey)
-generateRsaOaepKey _context { modulusLength, hash } extractable =
-    Gren.Kernel.Crypto.generateKey 
-        { name = "RSA-OAEP"
-        , modulusLength = if modulusLength < 2048 then 2048 else modulusLength
-        , publicExponent = [ 1, 0, 1 ]
-        , hash = digestAlgorithmToString hash
-        }
-        (extractableToBool extractable)
-        [ "encrypt", "decrypt" ]
+generateRsaOaepKey : SecureContext -> RsaKeyParams -> Extractable -> Task RsaKeyGenerationError (KeyPair RsaOaepKey)
+generateRsaOaepKey _context { modulusLength, hash, publicExponent } extractable =
+    let
+        clampedModulusLength = 
+            clamp 2048 16384 modulusLength
+    in
+    case Math.remainderBy 8 clampedModulusLength of
+        0 ->
+            Gren.Kernel.Crypto.generateKey 
+                { name = "RSA-OAEP"
+                , modulusLength = clampedModulusLength
+                , publicExponent = 
+                    case publicExponent of
+                        PublicExponent3 ->
+                            [ 3 ]
+
+                        PublicExponent65537 ->
+                            [ 1, 0, 1 ]
+                , hash = digestAlgorithmToString hash
+                }
+                (extractableToBool extractable)
+                [ "encrypt", "decrypt" ]
+
+        _ ->
+            Task.fail ModulusLengthNotDivisibleByEight
 
 
 {-|-}
