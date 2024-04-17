@@ -10,6 +10,8 @@ module Crypto exposing
     , generateRsaOaepKey, generateRsaPssKey, generateRsassaPkcs1V1_5Key
     , AesLength(..)
     , generateAesCtrKey, generateAesCbcKey, generateAesGcmKey
+    , EcNamedCurve(..)
+    , generateEcdsaKeyPair, generateEcdhKeyPair
     , DigestAlgorithm(..)
     )
 
@@ -71,6 +73,10 @@ Generate keys for completing cryptographic operations.
 @docs AesLength
 
 @docs generateAesCtrKey, generateAesCbcKey, generateAesGcmKey
+
+@docs EcNamedCurve
+
+@docs generateEcdsaKeyPair, generateEcdhKeyPair
 
 #### Derive Keys
 
@@ -416,29 +422,35 @@ generateAesGcmKey _context length extractable =
         [ "encrypt", "decrypt" ]
 
 
--- EC KEYS
+-- ECD KEYS
 
 
-{-|-}
+{-| Represents a key generated and for use with the ECDSA algorithm used to
+sign and verify values.
+-}
+type EcdsaKey
+    = EcdsaKey
+
+
+{-| Represents a key generated and for use with the ECDH algorithm used to
+derive keys and bits.
+-}
+type EcdhKey
+    = EcdhKey
+
+
+{-| The name of the elliptic curve to use for the generated key.
+-}
 type EcNamedCurve
     = P256
     | P384
     | P521
 
 
-{-|-}
-type EcdsaKey
-    = EcdsaKey
-
-
-{-|-}
-type EcdhKey
-    = EcdhKey
-
-
-{-|-}
-generateEcdsaKey : SecureContext -> EcNamedCurve -> Extractable -> Task x (Key EcdsaKey)
-generateEcdsaKey _context namedCurve extractable =
+{-| Generate a new key using the ECDSA algorithm.
+-}
+generateEcdsaKeyPair : SecureContext -> EcNamedCurve -> Extractable -> Task x (KeyPair EcdsaKey)
+generateEcdsaKeyPair _context namedCurve extractable =
     Gren.Kernel.Crypto.generateKey
         { name = "ECDSA"
         , namedCurve = ecNamedCurveToString namedCurve
@@ -447,15 +459,16 @@ generateEcdsaKey _context namedCurve extractable =
         [ "sign", "verify" ]
 
 
-{-|-}
-generateEcdhKey : SecureContext -> EcNamedCurve -> Extractable -> Task x (Key EcdhKey)
-generateEcdhKey _context namedCurve extractable =
+{-| Generate a new key using the ECDH algorithm.
+-}
+generateEcdhKeyPair : SecureContext -> EcNamedCurve -> Extractable -> Task x (KeyPair EcdhKey)
+generateEcdhKeyPair _context namedCurve extractable =
     Gren.Kernel.Crypto.generateKey
         { name = "ECDH"
         , namedCurve = ecNamedCurveToString namedCurve
         }
         (extractableToBool extractable)
-        [ "deriveKey", "deriveBytes" ]
+        [ "deriveKey", "deriveBits" ]
 
 
 -- HMAC KEYS
