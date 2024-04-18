@@ -7,11 +7,13 @@ module Crypto exposing
     , Key, KeyPair
     , Extractable(..)
     , RsaKeyParams, PublicExponent(..), RsaKeyGenerationError(..)
-    , generateRsaOaepKey, generateRsaPssKey, generateRsassaPkcs1V1_5Key
+    , generateRsaOaepKey, generateRsaPssKey, generateRsaSsaPkcs1V1_5Key
     , AesLength(..)
     , generateAesCtrKey, generateAesCbcKey, generateAesGcmKey
     , EcNamedCurve(..)
     , generateEcdsaKeyPair, generateEcdhKeyPair
+    , HmacKeyParams
+    , generateHmacKey
     , DigestAlgorithm(..)
     )
 
@@ -62,21 +64,37 @@ Functions for managing keys used to complete cryptographic operations.
 
 @docs Extractable
 
-#### Generate Keys
+### Generate Keys
 
-Generate keys for completing cryptographic operations.
+Generate keys for completing cryptographic operations. Each section covers a different
+sets of keys that use the same underlying algorithm. Each key can be only be used for 
+specific cryptographic operations.
+
+#### RSA Keys
+
+Generate keys to use with RSA (Rivest-Shamir-Adleman) algorithms.
 
 @docs RsaKeyParams, PublicExponent, RsaKeyGenerationError
 
-@docs generateRsaOaepKey, generateRsaPssKey, generateRsassaPkcs1V1_5Key
+@docs generateRsaOaepKey, generateRsaPssKey, generateRsaSsaPkcs1V1_5Key
+
+#### AES Keys
 
 @docs AesLength
 
 @docs generateAesCtrKey, generateAesCbcKey, generateAesGcmKey
 
+#### ECD Keys
+
 @docs EcNamedCurve
 
 @docs generateEcdsaKeyPair, generateEcdhKeyPair
+
+#### HMAC Keys 
+
+@docs HmacKeyParams
+
+@docs generateHmacKey
 
 #### Derive Keys
 
@@ -248,21 +266,21 @@ type RsaOaepKey
     = RsaOaepKey
 
 
-{-| Represents a key generated and for use with the RSA-PSS algorithm used to 
-sign and verify values.
+{-| A key generated for use with the RSA-PSS algorithm. Used to sign and verify 
+values.
 -}
 type RsaPssKey =
     RsaPssKey
 
 
-{-| A key generated for and for use with the RSASSA-PKCS1-v1_5 algorithm. Used
-to sign and verify values.
+{-| A key generated for use with the RSASSA-PKCS1-v1_5 algorithm. Used to sign 
+and verify values.
 -}
 type RsassaPkcs1V1_5Key
     = RsassaPkcs1V1_5Key
 
 
-{-| Parameters required to generate a key with any RSA algorithm.
+{-| Parameters required to generate a key for use with an RSA algorithm.
 
 `modulusLength` is clamped be at least 2048 and no greater than 16384. If the
 `Int` used is outside of that range, it will be corrected.
@@ -293,10 +311,11 @@ type RsaKeyGenerationError
     = ModulusLengthNotDivisibleByEight
 
 
-{-| Generate a new key pair using the RSA-OAEP algorithm.
+{-| Generate a new key pair using the RSA-OAEP (Optimal Asymmetric Encryption 
+Padding) algorithm.
 
 Produces a `KeyPair` consisting of a private and public key. This `KeyPair` can 
-be used to encrypt and decrypt `Bytes`.
+be used to encrypt and decrypt data.
 -}
 generateRsaOaepKey : SecureContext -> RsaKeyParams -> Extractable -> Task RsaKeyGenerationError (KeyPair RsaOaepKey)
 generateRsaOaepKey _context =
@@ -320,8 +339,8 @@ generateRsaPssKey _context =
 
 Produces a `Key` that can be used to sign and verify `Bytes`.
 -}
-generateRsassaPkcs1V1_5Key : SecureContext -> RsaKeyParams -> Extractable -> Task RsaKeyGenerationError (Key RsassaPkcs1V1_5Key)
-generateRsassaPkcs1V1_5Key _context =
+generateRsaSsaPkcs1V1_5Key : SecureContext -> RsaKeyParams -> Extractable -> Task RsaKeyGenerationError (Key RsassaPkcs1V1_5Key)
+generateRsaSsaPkcs1V1_5Key _context =
     generateRsaKeyHelper 
         "RSASSA-PKCS1-v1_5"
         [ "sign", "verify" ]
@@ -473,20 +492,34 @@ generateEcdhKeyPair _context namedCurve extractable =
 -- HMAC KEYS
 
 
-{-|-}
+{-| Represents a key generated and for use with the HMAC algorithm used to
+sign and verify values.
+-}
 type HmacKey =
     HmacKey
 
 
-{-|-}
-generateHmacKey : SecureContext -> DigestAlgorithm -> Maybe Int -> Extractable -> Task x (Key HmacKey)
-generateHmacKey _context hash passedLength extractable =
-    case passedLength of
-        Just length ->
+{-| The passed `length` will be the length of the resulting key in bits. If
+`Nothing`, the key will be equal in bits to the passed `DigestAlgorithm`. 
+It's recommended to pass `Nothing` and let the length of the key be equal 
+to the hash function (`DigestAlgorithm`).
+-}
+type alias HmacKeyParams =
+    { length : Maybe Int
+    , hash : DigestAlgorithm
+    }
+
+
+{-|Generate a new key using the HMAC algorithm.
+-}
+generateHmacKey : SecureContext -> HmacKeyParams -> Extractable -> Task x (Key HmacKey)
+generateHmacKey _context { hash, length } extractable =
+    case length of
+        Just passedLength ->
             Gren.Kernel.Crypto.generateKey
                 { name = "HMAC"
                 , hash = digestAlgorithmToString hash
-                , length = length
+                , length = passedLength
                 }
                 (extractableToBool extractable)
                 [ "sign", "verify" ]
