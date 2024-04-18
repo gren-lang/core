@@ -230,13 +230,12 @@ type Key algorithm
         }
 
 
-{-| A pair (public and private) of keys.
+{-| A pair of keys.
 -}
-type KeyPair a =
-    KeyPair
-        { publicKey : Key a
-        , privateKey : Key a
-        }
+type alias KeyPair a =
+    { publicKey : Key a
+    , privateKey : Key a
+    }
 
 
 -- RSA KEYS
@@ -534,14 +533,14 @@ type alias DecryptionAlgorithm =
 encrypt : SecureContext -> EncryptionAlgorithm -> Bytes -> Task {} Bytes
 encrypt _context algorithm data =
     case algorithm of
-        RsaOaep (KeyPair { publicKey = Key unwrappedPublicKey }) { label = Nothing } ->
+        RsaOaep { publicKey = Key unwrappedPublicKey } { label = Nothing } ->
             Gren.Kernel.Crypto.encrypt
                 unwrappedPublicKey.key
                 { name = unwrappedPublicKey.algorithm
                 }
                 data
 
-        RsaOaep (KeyPair { publicKey = Key unwrappedPublicKey }) { label = Just label } ->
+        RsaOaep { publicKey = Key unwrappedPublicKey } { label = Just label } ->
             Gren.Kernel.Crypto.encrypt
                 unwrappedPublicKey.key
                 { name = unwrappedPublicKey.algorithm
@@ -572,14 +571,14 @@ encrypt _context algorithm data =
 decrypt : SecureContext -> DecryptionAlgorithm -> Bytes -> Task {} Bytes
 decrypt _context algorithm data =
     case algorithm of
-        RsaOaep (KeyPair { publicKey = Key unwrappedPublicKey }) { label = Nothing } ->
+        RsaOaep { publicKey = Key unwrappedPublicKey } { label = Nothing } ->
             Gren.Kernel.Crypto.decrypt
                 unwrappedPublicKey.key
                 { name = unwrappedPublicKey.algorithm
                 }
                 data
 
-        RsaOaep (KeyPair { publicKey = Key unwrappedPublicKey }) { label = Just label } ->
+        RsaOaep { publicKey = Key unwrappedPublicKey } { label = Just label } ->
             Gren.Kernel.Crypto.decrypt
                 unwrappedPublicKey.key
                 { name = unwrappedPublicKey.algorithm
@@ -768,7 +767,7 @@ derivePbkdf2Key =
 
 {-|-}
 exportKeyPair : SecureContext -> KeyPair a -> Task x { publicKey : Bytes, privateKey : Bytes }
-exportKeyPair context (KeyPair { privateKey, publicKey }) =
+exportKeyPair context { privateKey, publicKey } =
     Task.map2 (\exportedPublicKey exportedPrivateKey ->
             { publicKey = exportedPublicKey
             , privateKey = exportedPrivateKey
