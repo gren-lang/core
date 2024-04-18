@@ -531,7 +531,11 @@ generateHmacKey _context { hash, length } extractable =
 -- ENCRYPT / DECRYPT DATA
 
 
-{-|-}
+{-| The available algorithms that can be used to encrypt values. 
+
+Each algorithm requires a cooresponding key that must be generated using a 
+key generation function available in this module.
+-}
 type EncryptionAlgorithm
     = RsaOaep (KeyPair RsaOaepKey)
         { label : Maybe Bytes
