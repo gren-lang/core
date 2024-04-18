@@ -56,23 +56,19 @@ the successfull completion of a `Task` returned by the `isSecureContext` functio
 
 @docs randomUuid
 
-### Key Management
-
-Functions for managing keys used to complete cryptographic operations.
-
-@docs Key, KeyPair
-
-@docs Extractable
-
 ### Generate Keys
 
 Generate keys for completing cryptographic operations. Each section covers a different
 sets of keys that use the same underlying algorithm. Each key can be only be used for 
 specific cryptographic operations.
 
+@docs Key, KeyPair
+
+@docs Extractable
+
 #### RSA Keys
 
-Generate keys to use with RSA (Rivest-Shamir-Adleman) algorithms.
+Generate keys to use with RSA (Rivest-Shamir-Adleman) algorithm.
 
 @docs RsaKeyParams, PublicExponent, RsaKeyGenerationError
 
@@ -140,8 +136,7 @@ import Math
 -- RANDOM UUID
 
 
-{-| Generate a random UUID using the UUID v4 algorithm. This function must be run
-in a secure context.
+{-| Generate a random UUID using the UUID v4 algorithm.
 -}
 randomUuid : SecureContext -> Task x String
 randomUuid _context =
@@ -217,7 +212,7 @@ will not be able to run.
 While running this function on the `node` platform, it should always succeed.
 
 While running this function on the `browser` platform, it will succeed if the
-application is being run with HTTPS.
+application being run is [considered as being in a secure context](https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts).
 -}
 isSecureContext : Task {} SecureContext
 isSecureContext =
@@ -280,7 +275,7 @@ type RsassaPkcs1V1_5Key
     = RsassaPkcs1V1_5Key
 
 
-{-| Parameters required to generate a key for use with an RSA algorithm.
+{-| Parameters required to generate a key for uses with the RSA algorithm.
 
 `modulusLength` is clamped be at least 2048 and no greater than 16384. If the
 `Int` used is outside of that range, it will be corrected.
@@ -292,7 +287,7 @@ type alias RsaKeyParams =
     }
 
 
-{-| The public exponent allowed for RSA algorithms in the Web Crypto API. The
+{-| The public exponent allowed for the RSA algorithm in the Web Crypto API. The
 only two values allowed are `3` and `65537`.
 -}
 type PublicExponent
@@ -300,7 +295,7 @@ type PublicExponent
     | PublicExponent65537
 
 
-{-| Errors that can happen when generating a key with an RSA algorithm.
+{-| Errors that can happen when generating a key for use with the RSA algorithm.
 
 The possible errors and their descriptions are below:
 
