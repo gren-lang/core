@@ -366,6 +366,7 @@ generateRsaKeyHelper name permissions { modulusLength, hash, publicExponent } ex
                 case publicExponent of
                     PublicExponent3 ->
                         [ 3 ]
+                        
                     PublicExponent65537 ->
                         [ 1, 0, 1 ]
             , hash = digestAlgorithmToString hash
