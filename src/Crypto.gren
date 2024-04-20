@@ -799,19 +799,13 @@ derivePbkdf2Key =
 {-|-}
 exportKeyPair : SecureContext -> KeyPair a -> Task x { publicKey : Bytes, privateKey : Bytes }
 exportKeyPair context { privateKey, publicKey } =
-    Task.map2 (\exportedPublicKey exportedPrivateKey ->
-            { publicKey = exportedPublicKey
-            , privateKey = exportedPrivateKey
-            }
-        )
-        (exportKeyHelper context "spki" publicKey)
-        (exportKeyHelper context "pkcs8" privateKey)
+    Debug.todo ""
 
 
 {-|-}
 exportKey : SecureContext -> Key a -> Task x Bytes
 exportKey context key =
-    exportKeyHelper context "spki" key
+    Debug.todo ""
 
 
 -- IMPORT KEYS
@@ -958,12 +952,6 @@ aesLengthToInt length =
 
         AesLength256 ->
             256
-
-
-{-|-}
-exportKeyHelper : SecureContext -> String -> Key a -> Task x Bytes
-exportKeyHelper _context format (Key { key }) =
-    Gren.Kernel.Crypto.exportKey format key
 
 
 {-|-}
