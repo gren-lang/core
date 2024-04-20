@@ -366,7 +366,7 @@ generateRsaKeyHelper name permissions { modulusLength, hash, publicExponent } ex
                 case publicExponent of
                     PublicExponent3 ->
                         [ 3 ]
-                        
+
                     PublicExponent65537 ->
                         [ 1, 0, 1 ]
             , hash = digestAlgorithmToString hash
@@ -548,18 +548,18 @@ Each algorithm requires a cooresponding key that must be generated using a
 key generation function available in this module.
 -}
 type EncryptionAlgorithm
-    = RsaOaep (PublicKey RsaOaepKey)
+    = EncryptWithRsaOaep (PublicKey RsaOaepKey)
         { label : Maybe Bytes
         }
-    | AesCtr (Key AesCtrKey)
+    | EncryptWithAesCtr (Key AesCtrKey)
         { counter : Bytes
         , length : Int
         }
     -- The `iv` value _must_ be unique for each encryption operation with the same key
-    | AesCbc (Key AesCbcKey)
+    | EncryptWithAesCbc (Key AesCbcKey)
         { iv : Bytes
         }
-    | AesGcm (Key AesGcmKey) -- https://developer.mozilla.org/en-US/docs/Web/API/AesGcmParams
+    | EncryptWithAesGcm (Key AesGcmKey) -- https://developer.mozilla.org/en-US/docs/Web/API/AesGcmParams
         { iv : Bytes
         , additionalData : Maybe Bytes -- The bit length of additionalData must be smaller than 2^64 - 1
         , tagLength : Maybe Int -- Must be one of: 96, 104, 112, 120 or 128 - fill in with type later
@@ -567,8 +567,23 @@ type EncryptionAlgorithm
 
 
 {-|-}
-type alias DecryptionAlgorithm =
-    EncryptionAlgorithm
+type DecryptionAlgorithm
+    = DecryptWithRsaOaep (PrivateKey RsaOaepKey)
+        { label : Maybe Bytes
+        }
+    | DecryptWithAesCtr (Key AesCtrKey)
+        { counter : Bytes
+        , length : Int
+        }
+    -- The `iv` value _must_ be unique for each encryption operation with the same key
+    | DecryptWithAesCbc (Key AesCbcKey)
+        { iv : Bytes
+        }
+    | DecryptWithAesGcm (Key AesGcmKey) -- https://developer.mozilla.org/en-US/docs/Web/API/AesGcmParams
+        { iv : Bytes
+        , additionalData : Maybe Bytes -- The bit length of additionalData must be smaller than 2^64 - 1
+        , tagLength : Maybe Int -- Must be one of: 96, 104, 112, 120 or 128 - fill in with type later
+        }
 
 
 {-| Encrypt some `Bytes` with a provided algorithm.
@@ -576,14 +591,14 @@ type alias DecryptionAlgorithm =
 encrypt : SecureContext -> EncryptionAlgorithm -> Bytes -> Task {} Bytes
 encrypt _context algorithm data =
     case algorithm of
-        RsaOaep (PublicKey (Key unwrappedPublicKey)) { label = Nothing } ->
+        EncryptWithRsaOaep (PublicKey (Key unwrappedPublicKey)) { label = Nothing } ->
             Gren.Kernel.Crypto.encrypt
                 unwrappedPublicKey.key
                 { name = unwrappedPublicKey.algorithm
                 }
                 data
 
-        RsaOaep (PublicKey (Key unwrappedPublicKey)) { label = Just label } ->
+        EncryptWithRsaOaep (PublicKey (Key unwrappedPublicKey)) { label = Just label } ->
             Gren.Kernel.Crypto.encrypt
                 unwrappedPublicKey.key
                 { name = unwrappedPublicKey.algorithm
@@ -591,22 +606,22 @@ encrypt _context algorithm data =
                 }
                 data
 
-        AesCtr key { counter, length } ->
+        EncryptWithAesCtr key { counter, length } ->
             Task.fail {}
         
-        AesCbc key { iv } ->
+        EncryptWithAesCbc key { iv } ->
             Task.fail {}
 
-        AesGcm key { iv, additionalData = Just unwrappedAdditionalData, tagLength = Just unwrappedTagLength } ->
+        EncryptWithAesGcm key { iv, additionalData = Just unwrappedAdditionalData, tagLength = Just unwrappedTagLength } ->
             Task.fail {}
 
-        AesGcm key { iv, additionalData = Nothing, tagLength = Just unwrappedTagLength } ->
+        EncryptWithAesGcm key { iv, additionalData = Nothing, tagLength = Just unwrappedTagLength } ->
             Task.fail {}
 
-        AesGcm key { iv, additionalData = Just unwrappedAdditionalData, tagLength = Nothing } ->
+        EncryptWithAesGcm key { iv, additionalData = Just unwrappedAdditionalData, tagLength = Nothing } ->
             Task.fail {}
 
-        AesGcm key { iv, additionalData = Nothing, tagLength = Nothing } ->
+        EncryptWithAesGcm key { iv, additionalData = Nothing, tagLength = Nothing } ->
             Task.fail {}
 
 
@@ -614,14 +629,14 @@ encrypt _context algorithm data =
 decrypt : SecureContext -> DecryptionAlgorithm -> Bytes -> Task {} Bytes
 decrypt _context algorithm data =
     case algorithm of
-        RsaOaep (PublicKey (Key unwrappedPublicKey)) { label = Nothing } ->
+        DecryptWithRsaOaep (PrivateKey (Key unwrappedPublicKey)) { label = Nothing } ->
             Gren.Kernel.Crypto.decrypt
                 unwrappedPublicKey.key
                 { name = unwrappedPublicKey.algorithm
                 }
                 data
 
-        RsaOaep (PublicKey (Key unwrappedPublicKey)) { label = Just label } ->
+        DecryptWithRsaOaep (PrivateKey (Key unwrappedPublicKey)) { label = Just label } ->
             Gren.Kernel.Crypto.decrypt
                 unwrappedPublicKey.key
                 { name = unwrappedPublicKey.algorithm
@@ -629,22 +644,22 @@ decrypt _context algorithm data =
                 }
                 data
 
-        AesCtr key { counter, length } ->
+        DecryptWithAesCtr key { counter, length } ->
             Task.fail {}
 
-        AesCbc key { iv } ->
+        DecryptWithAesCbc key { iv } ->
             Task.fail {}
 
-        AesGcm key { iv, additionalData = Just unwrappedAdditionalData, tagLength = Just unwrappedTagLength } ->
+        DecryptWithAesGcm key { iv, additionalData = Just unwrappedAdditionalData, tagLength = Just unwrappedTagLength } ->
             Task.fail {}
 
-        AesGcm key { iv, additionalData = Nothing, tagLength = Just unwrappedTagLength } ->
+        DecryptWithAesGcm key { iv, additionalData = Nothing, tagLength = Just unwrappedTagLength } ->
             Task.fail {}
 
-        AesGcm key { iv, additionalData = Just unwrappedAdditionalData, tagLength = Nothing } ->
+        DecryptWithAesGcm key { iv, additionalData = Just unwrappedAdditionalData, tagLength = Nothing } ->
             Task.fail {}
 
-        AesGcm key { iv, additionalData = Nothing, tagLength = Nothing } ->
+        DecryptWithAesGcm key { iv, additionalData = Nothing, tagLength = Nothing } ->
             Task.fail {}
 
 
@@ -653,35 +668,42 @@ decrypt _context algorithm data =
 
 {-|-}
 type SigningAlgorithm
-    = RsassaPkcs1V1_5 (Key RsassaPkcs1V1_5Key)
-    | RsaPss (Key RsaPssKey)
+    = SignWithRsassaPkcs1V1_5 (PrivateKey RsassaPkcs1V1_5Key)
+    | SignWithRsaPss (PrivateKey RsaPssKey)
         { saltLength : Int -- longinteger
         }
-    | Ecdsa (Key EcdsaKey)
+    | SignWithEcdsa (PrivateKey EcdsaKey)
         { hash : DigestAlgorithm
         }
-    | Hmac (Key HmacKey)
+    | SignWithHmac (Key HmacKey)
 
 
 {-|-}
-type alias VerifyingAlgorithm
-    = SigningAlgorithm
+type VerifyingAlgorithm
+    = VerifyWithRsassaPkcs1V1_5 (PublicKey RsassaPkcs1V1_5Key)
+    | VerifyWithRsaPss (PublicKey RsaPssKey)
+        { saltLength : Int -- longinteger
+        }
+    | VerifyWithEcdsa (PublicKey EcdsaKey)
+        { hash : DigestAlgorithm
+        }
+    | VerifyWithHmac (Key HmacKey)
 
 
 {-|-}
 sign : SecureContext -> SigningAlgorithm -> Bytes -> Task {} Bytes
 sign _context algorithm data =
     case algorithm of
-        RsassaPkcs1V1_5 key ->
+        SignWithRsassaPkcs1V1_5 key ->
             Task.fail {}
         
-        RsaPss key { saltLength } ->
+        SignWithRsaPss key { saltLength } ->
             Task.fail {}
         
-        Ecdsa key { hash } ->
+        SignWithEcdsa key { hash } ->
             Task.fail {}
 
-        Hmac key ->
+        SignWithHmac key ->
             Task.fail {}
 
 
@@ -689,16 +711,16 @@ sign _context algorithm data =
 verify : SecureContext -> VerifyingAlgorithm -> Bytes -> Task {} Bytes
 verify _context algorithm data =
     case algorithm of
-        RsassaPkcs1V1_5 key ->
+        VerifyWithRsassaPkcs1V1_5 key ->
             Task.fail {}
         
-        RsaPss key { saltLength } ->
+        VerifyWithRsaPss key { saltLength } ->
             Task.fail {}
         
-        Ecdsa key { hash } ->
+        VerifyWithEcdsa key { hash } ->
             Task.fail {}
 
-        Hmac key ->
+        VerifyWithHmac key ->
             Task.fail {}
 
 
