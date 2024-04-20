@@ -7,7 +7,7 @@ module Crypto exposing
     , Key, KeyPair
     , Extractable(..)
     , RsaKeyParams, PublicExponent(..), RsaKeyGenerationError(..)
-    , generateRsaOaepKey, generateRsaPssKey, generateRsaSsaPkcs1V1_5Key
+    , generateRsaOaepKeyPair, generateRsaPssKeyPair, generateRsaSsaPkcs1V1_5KeyPair
     , AesLength(..)
     , generateAesCtrKey, generateAesCbcKey, generateAesGcmKey
     , EcNamedCurve(..)
@@ -72,7 +72,7 @@ Generate keys to use with RSA (Rivest-Shamir-Adleman) algorithm.
 
 @docs RsaKeyParams, PublicExponent, RsaKeyGenerationError
 
-@docs generateRsaOaepKey, generateRsaPssKey, generateRsaSsaPkcs1V1_5Key
+@docs generateRsaOaepKeyPair, generateRsaPssKeyPair, generateRsaSsaPkcs1V1_5KeyPair
 
 #### AES Keys
 
@@ -320,11 +320,10 @@ type RsaKeyGenerationError
 {-| Generate a new key pair using the RSA-OAEP (Optimal Asymmetric Encryption 
 Padding) algorithm.
 
-Produces a `KeyPair` consisting of a private and public key. This `KeyPair` can 
-be used to encrypt and decrypt data.
+Produces a `KeyPair` that can be used to encrypt and decrypt data.
 -}
-generateRsaOaepKey : SecureContext -> RsaKeyParams -> Extractable -> Task RsaKeyGenerationError (KeyPair RsaOaepKey)
-generateRsaOaepKey _context =
+generateRsaOaepKeyPair : SecureContext -> RsaKeyParams -> Extractable -> Task RsaKeyGenerationError (KeyPair RsaOaepKey)
+generateRsaOaepKeyPair _context =
     generateRsaKeyHelper 
         "RSA-OAEP" 
         [ "encrypt", "decrypt" ]
@@ -332,10 +331,10 @@ generateRsaOaepKey _context =
 
 {-| Generate a new key using the RSA-PSS algorithm.
 
-Produces a `Key` that can be used to sign and verify `Bytes`.
+Produces a `KeyPair` that can be used to sign and verify data.
 -}
-generateRsaPssKey : SecureContext -> RsaKeyParams -> Extractable -> Task RsaKeyGenerationError (Key RsaPssKey)
-generateRsaPssKey _context =
+generateRsaPssKeyPair : SecureContext -> RsaKeyParams -> Extractable -> Task RsaKeyGenerationError (KeyPair RsaPssKey)
+generateRsaPssKeyPair _context =
     generateRsaKeyHelper 
         "RSA-PSS"
         [ "sign", "verify" ]
@@ -343,10 +342,10 @@ generateRsaPssKey _context =
 
 {-| Generate a new key using the RSASSA-PKCS1-v1_5 algorithm.
 
-Produces a `Key` that can be used to sign and verify `Bytes`.
+Produces a `KeyPair` that can be used to sign and verify data.
 -}
-generateRsaSsaPkcs1V1_5Key : SecureContext -> RsaKeyParams -> Extractable -> Task RsaKeyGenerationError (Key RsassaPkcs1V1_5Key)
-generateRsaSsaPkcs1V1_5Key _context =
+generateRsaSsaPkcs1V1_5KeyPair : SecureContext -> RsaKeyParams -> Extractable -> Task RsaKeyGenerationError (KeyPair RsassaPkcs1V1_5Key)
+generateRsaSsaPkcs1V1_5KeyPair _context =
     generateRsaKeyHelper 
         "RSASSA-PKCS1-v1_5"
         [ "sign", "verify" ]
@@ -825,27 +824,51 @@ exportKey context key =
 
 {-| Available options for importing keys for RAS algorithms.
 -}
-type ImportRsaFormat
-    = ImportRsaUsingPkcs8 Bytes
-    | ImportRsaUsingSubjectPublicKeyInfo Bytes
-    | ImportRsaUsingJsonWebKey Json.Encode.Value
+type ImportRsaPublicKeyFormat
+    = ImportRsaPublicKeyUsingSubjectPublicKeyInfo Bytes
+    | ImportRsaPublicKeyUsingJsonWebKey Json.Encode.Value
 
 
 {-|-}
-importRsaOaepKeyPair : SecureContext -> { publicKey : Bytes, privateKey : Bytes } -> Task x (KeyPair RsaOaepKey)
-importRsaOaepKeyPair _context =
+importRsaOaepPublicKey : SecureContext -> ImportRsaPublicKeyFormat -> Extractable -> Task x (PublicKey RsaOaepKey)
+importRsaOaepPublicKey _context =
     Debug.todo ""
 
 
 {-|-}
-importRsaPssKey : SecureContext -> RsaKeyParams -> Extractable -> Task x (Key RsaPssKey)
-importRsaPssKey _context =
+importRsaPssPublicKey : SecureContext -> ImportRsaPublicKeyFormat -> Extractable -> Task x (PublicKey RsaPssKey)
+importRsaPssPublicKey _context =
     Debug.todo ""
 
 
 {-|-}
-importRsassaPkcs1V1_5Key : SecureContext -> RsaKeyParams -> Extractable -> Task x (Key RsassaPkcs1V1_5Key)
-importRsassaPkcs1V1_5Key _context =
+importRsassaPkcs1V1_5PublicKey : SecureContext -> ImportRsaPublicKeyFormat -> Extractable -> Task x (PublicKey RsassaPkcs1V1_5Key)
+importRsassaPkcs1V1_5PublicKey _context =
+    Debug.todo ""
+
+
+{-| Available options for importing keys for RAS algorithms.
+-}
+type ImportRsaPrivateKeyFormat
+    = ImportRsaPrivateKeyUsingPkcs8 Bytes
+    | ImportRsaPrivateKeyUsingJsonWebKey Json.Encode.Value
+
+
+{-|-}
+importRsaOaepPrivateKey : SecureContext -> ImportRsaPrivateKeyFormat -> Extractable -> Task x (PrivateKey RsaOaepKey)
+importRsaOaepPrivateKey _context =
+    Debug.todo ""
+
+
+{-|-}
+importRsaPssPrivateKey : SecureContext -> ImportRsaPrivateKeyFormat -> Extractable -> Task x (PrivateKey RsaPssKey)
+importRsaPssPrivateKey _context =
+    Debug.todo ""
+
+
+{-|-}
+importRsassaPkcs1V1_5PrivateKey : SecureContext -> ImportRsaPrivateKeyFormat -> Extractable -> Task x (PrivateKey RsassaPkcs1V1_5Key)
+importRsassaPkcs1V1_5PrivateKey _context =
     Debug.todo ""
 
 
