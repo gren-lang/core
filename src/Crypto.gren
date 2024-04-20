@@ -129,6 +129,7 @@ import Result exposing ( Result(..) )
 import Set exposing ( Set )
 import Bitwise
 import Math
+import Json.Encode
 
 
 -- RANDOM UUID
@@ -792,7 +793,7 @@ derivePbkdf2Key =
     Debug.todo ""
 
 
--- EXPORT / IMPORT KEYS
+-- EXPORT KEYS
 
 
 {-|-}
@@ -809,8 +810,19 @@ exportKeyPair context { privateKey, publicKey } =
 
 {-|-}
 exportKey : SecureContext -> Key a -> Task x Bytes
-exportKey _context key =
-    Debug.todo ""
+exportKey context key =
+    exportKeyHelper context "spki" key
+
+
+-- IMPORT KEYS
+
+
+{-| Available options for importing keys for RAS algorithms.
+-}
+type ImportRsaFormat
+    = ImportRsaUsingPkcs8 Bytes
+    | ImportRsaUsingSubjectPublicKeyInfo Bytes
+    | ImportRsaUsingJsonWebKey Json.Encode.Value
 
 
 {-|-}
@@ -831,10 +843,33 @@ importRsassaPkcs1V1_5Key _context =
     Debug.todo ""
 
 
+{-| Available options for importing keys for AES algorithms.
+-}
+type ImportAesFormat
+    = ImportAesUsingRaw Bytes
+    | ImportAesUsingJsonWebKey Json.Encode.Value
+
+
 {-|-}
-importAesCtrKey : SecureContext -> AesLength -> Extractable -> Task x (Key AesCtrKey)
-importAesCtrKey =
-    Debug.todo ""
+importAesCtrKey : SecureContext -> Extractable -> ImportAesFormat -> Task x (Key AesCtrKey)
+importAesCtrKey _context extractable format =
+    case format of
+        ImportAesUsingRaw bytes ->
+            Gren.Kernel.Crypto.importKey
+                "raw"
+                bytes
+                { name = "AES-CTR" }
+                extractable
+                [ "encrypt", "decrypt" ]
+        
+        ImportAesUsingJsonWebKey json ->
+            Gren.Kernel.Crypto.importKey
+                "jwk"
+                json
+                { name = "AES-CTR" }
+                extractable
+                [ "encrypt", "decrypt" ]
+
 
 
 {-|-}
@@ -849,6 +884,15 @@ importAesGcmKey =
     Debug.todo ""
 
 
+{-| Available options for importing keys for ECDSA algorithms.
+-}
+type ImportEcFormat
+    = ImportEcUsingRaw Bytes
+    | ImportEcUsingPkcs Bytes -- Can only be used to import private keys?
+    | ImportEcUsingSubjectPublicKeyInfo Bytes
+    | ImportEcUsingJsonWebKey Json.Encode.Value
+
+
 {-|-}
 importEcdsaKey : SecureContext -> EcNamedCurve -> Extractable -> Task x (Key EcdsaKey)
 importEcdsaKey _context =
@@ -859,6 +903,12 @@ importEcdsaKey _context =
 importEcdhKey : SecureContext -> EcNamedCurve -> Extractable -> Task x (Key EcdhKey)
 importEcdhKey _context =
     Debug.todo ""
+
+
+{-|-}
+type ImportHmacFormat
+    = ImportHmacUsingRaw Bytes
+    | ImportHmacUsingJsonWebKey Json.Encode.Value
 
 
 {-|-}
