@@ -4,7 +4,7 @@ module Crypto exposing
     , getRandomInt32Values, getRandomUInt32Values
     , SecureContext, isSecureContext
     , randomUuid
-    , Key, KeyPair
+    , Key, PublicKey, PrivateKey, KeyPair
     , Extractable(..)
     , RsaKeyParams, PublicExponent(..), RsaKeyGenerationError(..)
     , generateRsaOaepKeyPair, generateRsaPssKeyPair, generateRsaSsaPkcs1V1_5KeyPair
@@ -62,7 +62,7 @@ Generate keys for completing cryptographic operations. Each section covers a dif
 sets of keys that use the same underlying algorithm. Each key can be only be used for 
 specific cryptographic operations.
 
-@docs Key, KeyPair
+@docs Key, PublicKey, PrivateKey, KeyPair
 
 @docs Extractable
 
