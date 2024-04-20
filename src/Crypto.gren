@@ -242,11 +242,23 @@ type Key algorithm
         }
 
 
-{-| A pair of keys.
+{-| Represents a public key which can only be used for specific actions.
+-}
+type PublicKey a
+    = PublicKey (Key a)
+
+
+{-| Represents a private key which can only be used for specific actions.
+-}
+type PrivateKey a
+    = PrivateKey (Key a)
+
+
+{-| A pair of public and private keys.
 -}
 type alias KeyPair a =
-    { publicKey : Key a
-    , privateKey : Key a
+    { publicKey : PublicKey a
+    , privateKey : PrivateKey a
     }
 
 
@@ -536,7 +548,7 @@ Each algorithm requires a cooresponding key that must be generated using a
 key generation function available in this module.
 -}
 type EncryptionAlgorithm
-    = RsaOaep (KeyPair RsaOaepKey)
+    = RsaOaep (PublicKey RsaOaepKey)
         { label : Maybe Bytes
         }
     | AesCtr (Key AesCtrKey)
@@ -564,14 +576,14 @@ type alias DecryptionAlgorithm =
 encrypt : SecureContext -> EncryptionAlgorithm -> Bytes -> Task {} Bytes
 encrypt _context algorithm data =
     case algorithm of
-        RsaOaep { publicKey = Key unwrappedPublicKey } { label = Nothing } ->
+        RsaOaep (PublicKey (Key unwrappedPublicKey)) { label = Nothing } ->
             Gren.Kernel.Crypto.encrypt
                 unwrappedPublicKey.key
                 { name = unwrappedPublicKey.algorithm
                 }
                 data
 
-        RsaOaep { publicKey = Key unwrappedPublicKey } { label = Just label } ->
+        RsaOaep (PublicKey (Key unwrappedPublicKey)) { label = Just label } ->
             Gren.Kernel.Crypto.encrypt
                 unwrappedPublicKey.key
                 { name = unwrappedPublicKey.algorithm
@@ -602,14 +614,14 @@ encrypt _context algorithm data =
 decrypt : SecureContext -> DecryptionAlgorithm -> Bytes -> Task {} Bytes
 decrypt _context algorithm data =
     case algorithm of
-        RsaOaep { publicKey = Key unwrappedPublicKey } { label = Nothing } ->
+        RsaOaep (PublicKey (Key unwrappedPublicKey)) { label = Nothing } ->
             Gren.Kernel.Crypto.decrypt
                 unwrappedPublicKey.key
                 { name = unwrappedPublicKey.algorithm
                 }
                 data
 
-        RsaOaep { publicKey = Key unwrappedPublicKey } { label = Just label } ->
+        RsaOaep (PublicKey (Key unwrappedPublicKey)) { label = Just label } ->
             Gren.Kernel.Crypto.decrypt
                 unwrappedPublicKey.key
                 { name = unwrappedPublicKey.algorithm
@@ -878,24 +890,43 @@ importAesGcmKey =
     Debug.todo ""
 
 
-{-| Available options for importing keys for ECDSA algorithms.
+{-| Available options for importing public keys for ECDSA algorithms.
 -}
-type ImportEcFormat
-    = ImportEcUsingRaw Bytes
-    | ImportEcUsingPkcs Bytes -- Can only be used to import private keys?
-    | ImportEcUsingSubjectPublicKeyInfo Bytes
-    | ImportEcUsingJsonWebKey Json.Encode.Value
+type ImportEcPublicKeyFormat
+    = ImportEcPublicKeyUsingRaw Bytes
+    | ImportEcPublicKeyUsingSubjectPublicKeyInfo Bytes
+    | ImportEcPublicKeyUsingJsonWebKey Json.Encode.Value
 
 
 {-|-}
-importEcdsaKey : SecureContext -> EcNamedCurve -> Extractable -> Task x (Key EcdsaKey)
-importEcdsaKey _context =
+importEcdsaPublicKey : SecureContext -> EcNamedCurve -> Extractable -> Task x (PublicKey EcdsaKey)
+importEcdsaPublicKey _context =
     Debug.todo ""
 
 
 {-|-}
-importEcdhKey : SecureContext -> EcNamedCurve -> Extractable -> Task x (Key EcdhKey)
-importEcdhKey _context =
+importEcdhPublicKey : SecureContext -> EcNamedCurve -> Extractable -> Task x (PublicKey EcdhKey)
+importEcdhPublicKey _context =
+    Debug.todo ""
+
+
+{-| Available options for importing private keys for ECDSA algorithms.
+-}
+type ImportEcPrivateKeyFormat
+    = ImportEcPrivateKeyUsingPkcs Bytes
+    | ImportEcPrivateKeyUsingSubjectPublicKeyInfo Bytes
+    | ImportEcPrivateKeyUsingJsonWebKey Json.Encode.Value
+
+
+{-|-}
+importEcdsaPrivateKey : SecureContext -> EcNamedCurve -> Extractable -> Task x (PrivateKey EcdsaKey)
+importEcdsaPrivateKey _context =
+    Debug.todo ""
+
+
+{-|-}
+importEcdhPrivateKey : SecureContext -> EcNamedCurve -> Extractable -> Task x (PrivateKey EcdhKey)
+importEcdhPrivateKey _context =
     Debug.todo ""
 
 

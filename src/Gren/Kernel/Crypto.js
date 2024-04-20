@@ -2,7 +2,7 @@
 
 import Gren.Kernel.Scheduler exposing (binding, succeed, fail)
 import Gren.Kernel.Bytes exposing (writeBytes)
-import Crypto exposing (KeyPair, Key, SecureContext, InsecureContext, Error, KeyIsNotExtractable)
+import Crypto exposing (KeyPair, Key, SecureContext, InsecureContext, Error, KeyIsNotExtractable, PublicKey, PrivateKey)
 import Maybe exposing (Just, Nothing)
 import Bytes exposing (Bytes)
 
@@ -85,8 +85,8 @@ var _Crypto_generateKey = F3(function (algorithm, extractable, permissions) {
                 if (key.publicKey && key.privateKey) {
                     return callback(__Scheduler_succeed(
                         {
-                            publicKey: _Crypto_constructKey(key.__$publicKey),
-                            privateKey: _Crypto_constructKey(key.__$privateKey)
+                            publicKey: __Crypto_PublicKey(_Crypto_constructKey(key.__$publicKey)),
+                            privateKey: __Crypto_PrivateKey(_Crypto_constructKey(key.__$privateKey))
                         }
                     )
                     );
@@ -105,8 +105,8 @@ var _Crypto_importKey = F5(function (format, keyData, algorithm, extractable, ke
                 if (key.publicKey && key.privateKey) {
                     return callback(__Scheduler_succeed(
                         {
-                            publicKey: _Crypto_constructKey(key.__$publicKey),
-                            privateKey: _Crypto_constructKey(key.__$privateKey)
+                            publicKey: __Crypto_PublicKey(_Crypto_constructKey(key.__$publicKey)),
+                            privateKey: __Crypto_PrivateKey(_Crypto_constructKey(key.__$privateKey))
                         }
 
                     ));
