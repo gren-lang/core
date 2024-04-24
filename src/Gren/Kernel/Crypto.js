@@ -166,13 +166,3 @@ var _Crypto_exportKey = F2(function (format, key) {
             });
     });
 });
-
-var _Crypto_importKey = function (key) {
-    var format = "raw";
-    return __Scheduler_binding(function (callback) {
-        crypto.subtle.importKey(format, key, { name: "RSA-OAEP" }, true, ["encrypt", "decrypt", "wrapKey", "unwrapKey"])
-            .then(function (res) {
-                return callback(__Scheduler_succeed())
-            })
-    });
-};
