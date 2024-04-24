@@ -152,17 +152,3 @@ var _Crypto_decrypt = F3(function (key, params, data) {
             })
     });
 });
-
-var _Crypto_exportKey = F2(function (format, key) {
-    return __Scheduler_binding(function (callback) {
-        crypto.subtle.exportKey(format, key)
-            .then(function (res) {
-                console.log("res", res);
-                return callback(__Scheduler_succeed(new DataView(res)));
-            })
-            .catch(function (err) {
-                console.log("err", err)
-                return callback(__Scheduler_fail());
-            });
-    });
-});
