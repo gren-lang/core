@@ -72,6 +72,8 @@ var _Crypto_getContext = __Scheduler_binding(function (callback) {
     return callback(__Scheduler_fail);
 });
 
+// Keys
+
 var _Crypto_generateKey = F3(function (algorithm, extractable, permissions) {
     if (algorithm.__$publicExponent) {
         // Creating a new Uint8Array if the passed algorithm contains a publicExponent
