@@ -548,10 +548,7 @@ Each algorithm requires a cooresponding key that must be generated using a
 key generation function available in this module.
 -}
 type EncryptionAlgorithm
-    = EncryptWithRsaOaep (PublicKey RsaOaepKey)
-        { label : Maybe Bytes
-        }
-    | EncryptWithAesCtr (Key AesCtrKey)
+    = EncryptWithAesCtr (Key AesCtrKey)
         { counter : Bytes
         , length : Int
         }
@@ -586,26 +583,39 @@ type DecryptionAlgorithm
         }
 
 
+{-|-}
+type alias EncryptWithRsaOaepParams =
+    { label : Maybe Bytes
+    }
+
+
+{-| Encrypt some passed `Bytes` with the RSA-OAEP algorithm.
+-}
+encryptWithRsaOaep : SecureContext -> EncryptWithRsaOaepParams -> PublicKey RsaOaepKey -> Bytes -> Task {} Bytes
+encryptWithRsaOaep _context params (PublicKey (Key publicKey)) data =
+    case params.label of
+        Just label ->
+            Gren.Kernel.Crypto.encrypt
+                publicKey
+                { name = "RSA-OAEP"
+                , label = label
+                }
+                publicKey
+                data
+
+        Nothing ->
+            Gren.Kernel.Crypto.encrypt
+                publicKey
+                { name = "RSA-OAEP"
+                }
+                publicKey
+                data
+
 {-| Encrypt some `Bytes` with a provided algorithm.
 -}
 encrypt : SecureContext -> EncryptionAlgorithm -> Bytes -> Task {} Bytes
 encrypt _context algorithm data =
     case algorithm of
-        EncryptWithRsaOaep (PublicKey (Key unwrappedPublicKey)) { label = Nothing } ->
-            Gren.Kernel.Crypto.encrypt
-                unwrappedPublicKey.key
-                { name = unwrappedPublicKey.algorithm
-                }
-                data
-
-        EncryptWithRsaOaep (PublicKey (Key unwrappedPublicKey)) { label = Just label } ->
-            Gren.Kernel.Crypto.encrypt
-                unwrappedPublicKey.key
-                { name = unwrappedPublicKey.algorithm
-                , label = label
-                }
-                data
-
         EncryptWithAesCtr key { counter, length } ->
             Task.fail {}
         
