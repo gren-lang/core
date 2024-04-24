@@ -99,6 +99,16 @@ var _Crypto_generateKey = F3(function (algorithm, extractable, permissions) {
     });
 });
 
+var _Crypto_exportKey = F2(function (format, key) {
+    return __Scheduler_binding(function (callback) {
+        crypto.subtle
+            .exportKey(format, key)
+            .then(function (exportedKey) {
+                return callback(__Scheduler_succeed(exportedKey));
+            });
+    });
+});
+
 var _Crypto_importKey = F5(function (format, keyData, algorithm, extractable, keyUsages) {
     return __Scheduler_binding(function (callback) {
         crypto.subtle

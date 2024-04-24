@@ -14,6 +14,9 @@ module Crypto exposing
     , generateEcdsaKeyPair, generateEcdhKeyPair
     , HmacKeyParams
     , generateHmacKey
+    , ExportKeyError(..)
+    , exportRsaOaepPublicKeyAsSpki, exportRsaOaepPublicKeyAsJwk
+    , importRsaOaepPublicKey
     , DigestAlgorithm(..)
     )
 
@@ -98,7 +101,18 @@ Generate keys to use with RSA (Rivest-Shamir-Adleman) algorithm.
 
 #### Export Keys
 
+Export keys in various formats. Available formats depend on the key being exported.
+
+For more information on exporting keys, check out the [MDN web docs](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/exportKey)
+for the Web Crypto API.
+
+@docs ExportKeyError
+
+@docs exportRsaOaepPublicKeyAsSpki, exportRsaOaepPublicKeyAsJwk
+
 #### Import Keys
+
+@docs importRsaOaepPublicKey
 
 ...
 
@@ -841,16 +855,39 @@ derivePbkdf2Key =
 -- EXPORT KEYS
 
 
-{-|-}
-exportKeyPair : SecureContext -> KeyPair a -> Task x { publicKey : Bytes, privateKey : Bytes }
-exportKeyPair context { privateKey, publicKey } =
-    Debug.todo ""
+{-| Errors that can arise when exporting keys.
+
+- `NotExportable` happens when trying to export a key that was not made
+`Extractable` during creation or import.
+-}
+type ExportKeyError
+    = KeyNotExportable
 
 
-{-|-}
-exportKey : SecureContext -> Key a -> Task x Bytes
-exportKey context key =
-    Debug.todo ""
+{-| Export a `RsaOaepKey` as a [SubjectPublicKeyInfo](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/importKey#subjectpublickeyinfo).
+
+The result `Bytes` can be imported again using the `importRsaOaepPublicKey` function.
+-}
+exportRsaOaepPublicKeyAsSpki : SecureContext -> PublicKey RsaOaepKey -> Task ExportKeyError Bytes
+exportRsaOaepPublicKeyAsSpki context (PublicKey (Key key)) =
+    if key.extractable then
+        Gren.Kernel.Crypto.exportKey "spki" key
+    
+    else
+        Task.fail KeyNotExportable
+
+
+{-| Export a `RsaOaepKey` as a [JSON Web Key](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/importKey#json_web_key).
+
+The resulting `Json.Encode.Value` can be imported again using the `importRsaOaepPublicKey` function.
+-}
+exportRsaOaepPublicKeyAsJwk : SecureContext -> PublicKey RsaOaepKey -> Task ExportKeyError Json.Encode.Value
+exportRsaOaepPublicKeyAsJwk context (PublicKey (Key key)) =
+    if key.extractable then
+        Gren.Kernel.Crypto.exportKey "jwk" key
+    
+    else
+        Task.fail KeyNotExportable
 
 
 -- IMPORT KEYS
