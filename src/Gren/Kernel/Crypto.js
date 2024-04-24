@@ -103,8 +103,14 @@ var _Crypto_exportKey = F2(function (format, key) {
     return __Scheduler_binding(function (callback) {
         crypto.subtle
             .exportKey(format, key)
-            .then(function (exportedKey) {
-                return callback(__Scheduler_succeed(exportedKey));
+            .then(function (res) {
+                switch (format) {
+                    case "jwk":
+                        return callback(__Scheduler_succeed(res));
+
+                    default:
+                        return callback(__Scheduler_succeed(new DataView(res)));
+                };
             });
     });
 });
