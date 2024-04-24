@@ -236,8 +236,8 @@ isSecureContext =
 
 
 {-| Denotes if a key can be exported using the `exportKey` or `exportKeyPair`
-functions. If a key is not marked as exportable when it is created, any attempts
-to export the key will fail.
+functions. If a key is not marked as exportable when it is created or imported, 
+any attempts to export the key will fail.
 -}
 type Extractable
     = CanBeExtracted
@@ -321,8 +321,6 @@ type PublicExponent
 
 
 {-| Errors that can happen when generating a key for use with the RSA algorithm.
-
-The possible errors and their descriptions are below:
 
 - `ModulusLengthNotDivisibleByEight` happens when the passed `modulusLength` is
 not divisible by 8, as is required by the algorithm.
@@ -519,7 +517,9 @@ type HmacKey =
     HmacKey
 
 
-{-| The passed `length` will be the length of the resulting key in bits. If
+{-| Parameters required to generate a key for uses with the HMAC algorithm.
+
+The passed `length` will be the length of the resulting key in bits. If
 `Nothing`, the key will be equal in bits to the passed `DigestAlgorithm`. 
 It's recommended to pass `Nothing` and let the length of the key be equal 
 to the hash function (`DigestAlgorithm`).
