@@ -16,7 +16,7 @@ module Crypto exposing
     , generateHmacKey
     , ExportKeyError(..)
     , exportRsaOaepPublicKeyAsSpki, exportRsaOaepPublicKeyAsJwk
-    , importRsaOaepPublicKey
+    , importRsaOaepPublicKeyFromJwk
     , DigestAlgorithm(..)
     )
 
@@ -112,7 +112,7 @@ for the Web Crypto API.
 
 #### Import Keys
 
-@docs importRsaOaepPublicKey
+@docs importRsaOaepPublicKeyFromJwk
 
 ...
 
@@ -901,8 +901,29 @@ type ImportRsaPublicKeyFormat
 
 
 {-|-}
-importRsaOaepPublicKey : SecureContext -> ImportRsaPublicKeyFormat -> Extractable -> Task x (PublicKey RsaOaepKey)
-importRsaOaepPublicKey _context =
+type alias ImportRsaKeyParams =
+    { hash : DigestAlgorithm
+    }
+
+
+{-|-}
+importRsaOaepPublicKeyFromJwk : SecureContext -> Json.Encode.Value -> ImportRsaKeyParams -> Extractable -> Task {} (PublicKey RsaOaepKey)
+importRsaOaepPublicKeyFromJwk _context jwk { hash } extractable =
+    -- Note that there can be an error if you try to import a key with a different hash than the
+    -- exported key... Not sure how to identify in Gren before calling kernel code... todo
+    Gren.Kernel.Crypto.importKey
+        "public"
+        "jwk"
+        jwk
+        { name = "rsa-oaep"
+        , hash = digestAlgorithmToString hash
+        }
+        (extractableToBool extractable)
+        [ "encrypt" ]
+
+
+{-|-}
+importRsaOaepPublicKeyFromSpki =
     Debug.todo ""
 
 

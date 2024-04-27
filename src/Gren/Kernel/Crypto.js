@@ -115,22 +115,19 @@ var _Crypto_exportKey = F2(function (format, key) {
     });
 });
 
-var _Crypto_importKey = F5(function (format, keyData, algorithm, extractable, keyUsages) {
+var _Crypto_importKey = F6(function (wrapper, format, keyData, algorithm, extractable, keyUsages) {
     return __Scheduler_binding(function (callback) {
         crypto.subtle
             .importKey(format, keyData, algorithm, extractable, keyUsages)
             .then(function (key) {
-                if (key.publicKey && key.privateKey) {
-                    return callback(__Scheduler_succeed(
-                        {
-                            publicKey: __Crypto_PublicKey(_Crypto_constructKey(key.__$publicKey)),
-                            privateKey: __Crypto_PrivateKey(_Crypto_constructKey(key.__$privateKey))
-                        }
-
-                    ));
-                } else {
-                    return callback(__Scheduler_succeed(_Crypto_constructKey(key)));
-                };
+                switch (wrapper) {
+                    case "public":
+                        return callback(__Scheduler_succeed(__Crypto_PublicKey(_Crypto_constructKey(key))))
+                    case "private":
+                        return callback(__Scheduler_succeed(__Crypto_PrivateKey(_Crypto_constructKey(key))))
+                    default:
+                        return callback(__Scheduler_succeed(_Crypto_constructKey(key)));
+                }
             });
     });
 });
