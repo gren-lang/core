@@ -871,7 +871,7 @@ The result `Bytes` can be imported again using the `importRsaOaepPublicKey` func
 exportRsaOaepPublicKeyAsSpki : SecureContext -> PublicKey RsaOaepKey -> Task ExportKeyError Bytes
 exportRsaOaepPublicKeyAsSpki context (PublicKey (Key key)) =
     if key.extractable then
-        Gren.Kernel.Crypto.exportKey "spki" key
+        Gren.Kernel.Crypto.exportKey "spki" key.key
     
     else
         Task.fail KeyNotExportable
@@ -884,7 +884,7 @@ The resulting `Json.Encode.Value` can be imported again using the `importRsaOaep
 exportRsaOaepPublicKeyAsJwk : SecureContext -> PublicKey RsaOaepKey -> Task ExportKeyError Json.Encode.Value
 exportRsaOaepPublicKeyAsJwk context (PublicKey (Key key)) =
     if key.extractable then
-        Gren.Kernel.Crypto.exportKey "jwk" key
+        Gren.Kernel.Crypto.exportKey "jwk" key.key
     
     else
         Task.fail KeyNotExportable
