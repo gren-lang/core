@@ -296,8 +296,8 @@ type RsaPssKey =
 {-| A key generated for use with the RSASSA-PKCS1-v1_5 algorithm. Used to sign 
 and verify values.
 -}
-type RsassaPkcs1V1_5Key
-    = RsassaPkcs1V1_5Key
+type RsaSsaPkcs1V1_5Key
+    = RsaSsaPkcs1V1_5Key
 
 
 {-| Parameters required to generate a key for uses with the RSA algorithm.
@@ -356,7 +356,7 @@ generateRsaPssKeyPair _context =
 
 Produces a `KeyPair` that can be used to sign and verify data.
 -}
-generateRsaSsaPkcs1V1_5KeyPair : SecureContext -> RsaKeyParams -> Extractable -> Task RsaKeyGenerationError (KeyPair RsassaPkcs1V1_5Key)
+generateRsaSsaPkcs1V1_5KeyPair : SecureContext -> RsaKeyParams -> Extractable -> Task RsaKeyGenerationError (KeyPair RsaSsaPkcs1V1_5Key)
 generateRsaSsaPkcs1V1_5KeyPair _context =
     generateRsaKeyHelper 
         "RSASSA-PKCS1-v1_5"
@@ -693,7 +693,7 @@ decrypt _context algorithm data =
 
 {-|-}
 type SigningAlgorithm
-    = SignWithRsassaPkcs1V1_5 (PrivateKey RsassaPkcs1V1_5Key)
+    = SignWithRsassaPkcs1V1_5 (PrivateKey RsaSsaPkcs1V1_5Key)
     | SignWithRsaPss (PrivateKey RsaPssKey)
         { saltLength : Int -- longinteger
         }
@@ -705,7 +705,7 @@ type SigningAlgorithm
 
 {-|-}
 type VerifyingAlgorithm
-    = VerifyWithRsassaPkcs1V1_5 (PublicKey RsassaPkcs1V1_5Key)
+    = VerifyWithRsassaPkcs1V1_5 (PublicKey RsaSsaPkcs1V1_5Key)
     | VerifyWithRsaPss (PublicKey RsaPssKey)
         { saltLength : Int -- longinteger
         }
@@ -934,7 +934,7 @@ importRsaPssPublicKey _context =
 
 
 {-|-}
-importRsassaPkcs1V1_5PublicKey : SecureContext -> ImportRsaPublicKeyFormat -> Extractable -> Task x (PublicKey RsassaPkcs1V1_5Key)
+importRsassaPkcs1V1_5PublicKey : SecureContext -> ImportRsaPublicKeyFormat -> Extractable -> Task x (PublicKey RsaSsaPkcs1V1_5Key)
 importRsassaPkcs1V1_5PublicKey _context =
     Debug.todo ""
 
@@ -959,7 +959,7 @@ importRsaPssPrivateKey _context =
 
 
 {-|-}
-importRsassaPkcs1V1_5PrivateKey : SecureContext -> ImportRsaPrivateKeyFormat -> Extractable -> Task x (PrivateKey RsassaPkcs1V1_5Key)
+importRsassaPkcs1V1_5PrivateKey : SecureContext -> ImportRsaPrivateKeyFormat -> Extractable -> Task x (PrivateKey RsaSsaPkcs1V1_5Key)
 importRsassaPkcs1V1_5PrivateKey _context =
     Debug.todo ""
 
