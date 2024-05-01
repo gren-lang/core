@@ -610,7 +610,6 @@ encryptWithRsaOaep _context params (PublicKey (Key publicKey)) data =
     case params.label of
         Just label ->
             Gren.Kernel.Crypto.encrypt
-                publicKey
                 { name = "RSA-OAEP"
                 , label = label
                 }
@@ -619,7 +618,6 @@ encryptWithRsaOaep _context params (PublicKey (Key publicKey)) data =
 
         Nothing ->
             Gren.Kernel.Crypto.encrypt
-                publicKey
                 { name = "RSA-OAEP"
                 }
                 publicKey
