@@ -867,12 +867,8 @@ type ExportKeyError
 The result `Bytes` can be imported again using the `importRsaOaepPublicKey` function.
 -}
 exportRsaOaepPublicKeyAsSpki : SecureContext -> PublicKey RsaOaepKey -> Task ExportKeyError Bytes
-exportRsaOaepPublicKeyAsSpki context (PublicKey (Key key)) =
-    if key.extractable then
-        Gren.Kernel.Crypto.exportKey "spki" key.key
-    
-    else
-        Task.fail KeyNotExportable
+exportRsaOaepPublicKeyAsSpki _context (PublicKey key) =
+    exportKeyAsSpki key
 
 
 {-| Export a `RsaOaepKey` as a [JSON Web Key](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/importKey#json_web_key).
@@ -880,12 +876,212 @@ exportRsaOaepPublicKeyAsSpki context (PublicKey (Key key)) =
 The resulting `Json.Encode.Value` can be imported again using the `importRsaOaepPublicKey` function.
 -}
 exportRsaOaepPublicKeyAsJwk : SecureContext -> PublicKey RsaOaepKey -> Task ExportKeyError Json.Encode.Value
-exportRsaOaepPublicKeyAsJwk context (PublicKey (Key key)) =
-    if key.extractable then
-        Gren.Kernel.Crypto.exportKey "jwk" key.key
-    
+exportRsaOaepPublicKeyAsJwk _context (PublicKey key) =
+    exportKeyAsJwk key
+
+
+{-| Export a `RsaOaepKey` as [PKCS #8](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/importKey#pkcs_8)
+-}
+exportRsaOaepPrivateKeyAsPkcs8 : SecureContext -> PrivateKey RsaOaepKey -> Task ExportKeyError Bytes
+exportRsaOaepPrivateKeyAsPkcs8 _context (PrivateKey key) =
+    exportKeyAsPkcs8 key
+
+
+{-| Export a private `RsaOaepKey` as a [JSON Web Key]() 
+-}
+exportRsaOaepPrivateKeyAsJwk : SecureContext -> PrivateKey RsaOaepKey -> Task ExportKeyError Json.Encode.Value
+exportRsaOaepPrivateKeyAsJwk _context (PrivateKey key) =
+    exportKeyAsJwk key
+
+
+{-|-}
+exportRsaPssPublicKeyAsSpki : SecureContext -> PublicKey RsaOaepKey -> Task ExportKeyError Bytes
+exportRsaPssPublicKeyAsSpki _context (PublicKey key)=
+    exportKeyAsSpki key
+
+
+{-|-}
+exportRsaPssPublicKeyAsJwk : SecureContext -> PublicKey RsaOaepKey -> Task ExportKeyError Json.Encode.Value
+exportRsaPssPublicKeyAsJwk _context (PublicKey key) =
+    exportKeyAsJwk key
+
+
+{-|-}
+exportRsaPssPrivateKeyAsPkcs8 : SecureContext -> PrivateKey RsaOaepKey -> Task ExportKeyError Bytes
+exportRsaPssPrivateKeyAsPkcs8 _context (PrivateKey key) =
+    exportKeyAsPkcs8 key
+
+
+{-|-}
+exportRsaPssPrivateKeyAsJwk : SecureContext -> PrivateKey RsaOaepKey -> Task ExportKeyError Json.Encode.Value
+exportRsaPssPrivateKeyAsJwk _context (PrivateKey key) =
+    exportKeyAsJwk key
+
+
+{-|-}
+exportRsaSsaPkcs1V1_5PublicKeyAsSpki : SecureContext -> PublicKey RsaSsaPkcs1V1_5Key -> Task ExportKeyError Bytes
+exportRsaSsaPkcs1V1_5PublicKeyAsSpki _context (PublicKey key) =
+    exportKeyAsSpki key
+
+
+{-|-}
+exportRsaSsaPkcs1V1_5PublicKeyAsJwk : SecureContext -> PublicKey RsaSsaPkcs1V1_5Key -> Task ExportKeyError Json.Encode.Value
+exportRsaSsaPkcs1V1_5PublicKeyAsJwk _context (PublicKey key) =
+    exportKeyAsJwk key
+
+
+{-|-}
+exportRsaSsaPkcs1V1_5PrivateKeyAsPkcs8 : SecureContext -> PrivateKey RsaSsaPkcs1V1_5Key -> Task ExportKeyError Bytes
+exportRsaSsaPkcs1V1_5PrivateKeyAsPkcs8 _context (PrivateKey key)=
+    exportKeyAsPkcs8 key
+
+
+{-|-}
+exportRsaSsaPkcs1V1_5PrivateKeyAsJwk : SecureContext -> PrivateKey RsaSsaPkcs1V1_5Key -> Task ExportKeyError Json.Encode.Value
+exportRsaSsaPkcs1V1_5PrivateKeyAsJwk _context (PrivateKey key) =
+    exportKeyAsJwk key
+
+
+{-|-}
+exportAesCtrKeyAsRaw : SecureContext -> Key AesCtrKey -> Task ExportKeyError Bytes
+exportAesCtrKeyAsRaw _context =
+    exportKeyAsRaw
+
+
+{-|-}
+exportAesCtrKeyAsJwk : SecureContext -> Key AesCtrKey -> Task ExportKeyError Json.Encode.Value
+exportAesCtrKeyAsJwk _context =
+    exportKeyAsJwk
+
+
+{-|-}
+exportAesCbcKeyAsRaw : SecureContext -> Key AesCbcKey -> Task ExportKeyError Bytes
+exportAesCbcKeyAsRaw _context =
+    exportKeyAsRaw
+
+
+{-|-}
+exportAesCbcKeyAsJwk : SecureContext -> Key AesCbcKey -> Task ExportKeyError Json.Encode.Value
+exportAesCbcKeyAsJwk _context =
+    exportKeyAsJwk
+
+
+{-|-}
+exportAesGcmKeyAsRaw : SecureContext -> Key AesGcmKey -> Task ExportKeyError Bytes
+exportAesGcmKeyAsRaw _context =
+    exportKeyAsRaw
+
+
+{-|-}
+exportAesGcmKeyAsJwk : SecureContext -> Key AesGcmKey -> Task ExportKeyError Json.Encode.Value
+exportAesGcmKeyAsJwk _context =
+    exportKeyAsJwk
+
+
+{-|-}
+exportEcdsaPublicKeyAsRaw : SecureContext -> PublicKey EcdsaKey -> Task ExportKeyError Bytes
+exportEcdsaPublicKeyAsRaw _context (PublicKey key)=
+    exportKeyAsRaw key
+
+
+{-|-}
+exportEcdsaPublicKeyAsSpki : SecureContext -> PublicKey EcdsaKey -> Task ExportKeyError Bytes
+exportEcdsaPublicKeyAsSpki _context (PublicKey key)=
+    exportKeyAsSpki key
+
+
+{-|-}
+exportEcdsaPublicKeyAsJwt : SecureContext -> PublicKey EcdsaKey -> Task ExportKeyError Json.Encode.Value
+exportEcdsaPublicKeyAsJwt _context (PublicKey key)=
+    exportKeyAsJwk key
+
+
+{-|-}
+exportEcdsaPrivateKeyAsPkcs8 : SecureContext -> PrivateKey EcdsaKey -> Task ExportKeyError Bytes
+exportEcdsaPrivateKeyAsPkcs8 _context (PrivateKey key)=
+    exportKeyAsPkcs8 key
+
+
+{-|-}
+exportEcdsaPrivateKeyAsJwt : SecureContext -> PrivateKey EcdsaKey -> Task ExportKeyError Json.Encode.Value
+exportEcdsaPrivateKeyAsJwt _context (PrivateKey key)=
+    exportKeyAsJwk key
+
+
+{-|-}
+exportEcdhPublicKeyAsRaw : SecureContext -> PublicKey EcdhKey -> Task ExportKeyError Bytes
+exportEcdhPublicKeyAsRaw _context (PublicKey key)=
+    exportKeyAsRaw key
+
+
+{-|-}
+exportEcdhPublicKeyAsSpki : SecureContext -> PublicKey EcdhKey -> Task ExportKeyError Bytes
+exportEcdhPublicKeyAsSpki _context (PublicKey key)=
+    exportKeyAsSpki key
+
+
+{-|-}
+exportEcdhPublicKeyAsJwt : SecureContext -> PublicKey EcdhKey -> Task ExportKeyError Json.Encode.Value
+exportEcdhPublicKeyAsJwt _context (PublicKey key)=
+    exportKeyAsJwk key
+
+
+{-|-}
+exportEcdhPrivateKeyAsPkcs8 : SecureContext -> PrivateKey EcdhKey -> Task ExportKeyError Bytes
+exportEcdhPrivateKeyAsPkcs8 _context (PrivateKey key)=
+    exportKeyAsPkcs8 key
+
+
+{-|-}
+exportEcdhPrivateKeyAsJwt : SecureContext -> PrivateKey EcdhKey -> Task ExportKeyError Json.Encode.Value
+exportEcdhPrivateKeyAsJwt _context (PrivateKey key)=
+    exportKeyAsJwk key
+
+
+{-|-}
+exportHmacKeyAsRaw : SecureContext -> Key HmacKey -> Task ExportKeyError Bytes
+exportHmacKeyAsRaw _context =
+    exportKeyAsRaw
+
+
+{-|-}
+exportHmacKeyAsJwk : SecureContext -> Key HmacKey -> Task ExportKeyError Json.Encode.Value
+exportHmacKeyAsJwk _context =
+    exportKeyAsJwk
+
+
+{-|-}
+exportKeyHelper : String -> Key a -> Task ExportKeyError b
+exportKeyHelper keyType (Key { extractable, key }) =
+    if extractable then
+        Gren.Kernel.Crypto.exportKey keyType key
+
     else
         Task.fail KeyNotExportable
+
+
+{-|-}
+exportKeyAsRaw : Key a -> Task ExportKeyError Bytes
+exportKeyAsRaw =
+    exportKeyHelper "raw"
+
+
+{-|-}
+exportKeyAsPkcs8 : Key a -> Task ExportKeyError Bytes
+exportKeyAsPkcs8 =
+    exportKeyHelper "pkcs8"
+
+
+{-|-}
+exportKeyAsSpki : Key a -> Task ExportKeyError Bytes
+exportKeyAsSpki =
+    exportKeyHelper "spki"
+
+
+{-|-}
+exportKeyAsJwk : Key a -> Task ExportKeyError Json.Encode.Value
+exportKeyAsJwk =
+    exportKeyHelper "jwk"
 
 
 -- IMPORT KEYS
