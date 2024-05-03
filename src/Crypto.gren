@@ -16,6 +16,19 @@ module Crypto exposing
     , generateHmacKey
     , ExportKeyError(..)
     , exportRsaOaepPublicKeyAsSpki, exportRsaOaepPublicKeyAsJwk
+    , exportRsaOaepPrivateKeyAsPkcs8, exportRsaOaepPrivateKeyAsJwk
+    , exportRsaPssPublicKeyAsSpki, exportRsaPssPublicKeyAsJwk
+    , exportRsaPssPrivateKeyAsPkcs8, exportRsaPssPrivateKeyAsJwk
+    , exportRsaSsaPkcs1V1_5PublicKeyAsSpki, exportRsaSsaPkcs1V1_5PublicKeyAsJwk
+    , exportRsaSsaPkcs1V1_5PrivateKeyAsPkcs8, exportRsaSsaPkcs1V1_5PrivateKeyAsJwk
+    , exportAesCtrKeyAsRaw, exportAesCtrKeyAsJwk
+    , exportAesCbcKeyAsRaw, exportAesCbcKeyAsJwk
+    , exportAesGcmKeyAsRaw, exportAesGcmKeyAsJwk
+    , exportEcdsaPublicKeyAsRaw, exportEcdsaPublicKeyAsSpki, exportEcdsaPublicKeyAsJwt
+    , exportEcdsaPrivateKeyAsPkcs8, exportEcdsaPrivateKeyAsJwt
+    , exportEcdhPublicKeyAsRaw, exportEcdhPublicKeyAsSpki, exportEcdhPublicKeyAsJwt
+    , exportEcdhPrivateKeyAsPkcs8, exportEcdhPrivateKeyAsJwt
+    , exportHmacKeyAsRaw, exportHmacKeyAsJwk
     , importRsaOaepPublicKeyFromJwk
     , DigestAlgorithm(..)
     )
@@ -26,7 +39,7 @@ module Crypto exposing
 This module gives access to various cryptograhic functions provided by the Web 
 Crypto API on both `browser` and `node` platforms.
 
-### Generate Random Values
+## Generate Random Values
 
 Generate random values of 8, 16, or 32 bits long (signed and unsigned).
 
@@ -46,7 +59,7 @@ is 32768 values.
 
 @docs getRandomInt32Values, getRandomUInt32Values
 
-### Secure Context
+## Secure Context
 
 Most functions in this module must be run in a secure context to operate safely
 and correctly. Before you use any functions, it's likely you'll need to obtain
@@ -55,21 +68,21 @@ the successfull completion of a `Task` returned by the `isSecureContext` functio
 
 @docs SecureContext, isSecureContext
 
-### Generate Random UUIDs
+## Generate Random UUIDs
 
 @docs randomUuid
 
-### Generate Keys
+## Generate Keys
 
-Generate keys for completing cryptographic operations. Each section covers a different
-sets of keys that use the same underlying algorithm. Each key can be only be used for 
-specific cryptographic operations.
+Generate, import, export, and derive keys for completing cryptographic operations. 
+Each section covers a different sets of keys that use the same underlying algorithm. 
+Each key can be only be used for specific cryptographic operations.
 
 @docs Key, PublicKey, PrivateKey, KeyPair
 
 @docs Extractable
 
-#### RSA Keys
+### Generate RSA Keys
 
 Generate keys to use with RSA (Rivest-Shamir-Adleman) algorithm.
 
@@ -77,29 +90,31 @@ Generate keys to use with RSA (Rivest-Shamir-Adleman) algorithm.
 
 @docs generateRsaOaepKeyPair, generateRsaPssKeyPair, generateRsaSsaPkcs1V1_5KeyPair
 
-#### AES Keys
+### Generate AES Keys
 
 @docs AesLength
 
 @docs generateAesCtrKey, generateAesCbcKey, generateAesGcmKey
 
-#### ECD Keys
+### Generate ECD Keys
 
 @docs EcNamedCurve
 
 @docs generateEcdsaKeyPair, generateEcdhKeyPair
 
-#### HMAC Keys 
+### Generate HMAC Keys 
 
 @docs HmacKeyParams
 
 @docs generateHmacKey
 
-#### Derive Keys
+## Derive Keys
+
+Create keys from other keys.
 
 ...
 
-#### Export Keys
+## Export Keys
 
 Export keys in various formats. Available formats depend on the key being exported.
 
@@ -108,23 +123,78 @@ for the Web Crypto API.
 
 @docs ExportKeyError
 
+### Export RSA Keys
+
 @docs exportRsaOaepPublicKeyAsSpki, exportRsaOaepPublicKeyAsJwk
 
-#### Import Keys
+@docs exportRsaOaepPrivateKeyAsPkcs8, exportRsaOaepPrivateKeyAsJwk
+
+@docs exportRsaPssPublicKeyAsSpki, exportRsaPssPublicKeyAsJwk
+
+@docs exportRsaPssPrivateKeyAsPkcs8, exportRsaPssPrivateKeyAsJwk
+
+@docs exportRsaSsaPkcs1V1_5PublicKeyAsSpki, exportRsaSsaPkcs1V1_5PublicKeyAsJwk
+
+@docs exportRsaSsaPkcs1V1_5PrivateKeyAsPkcs8, exportRsaSsaPkcs1V1_5PrivateKeyAsJwk
+
+### Export AES Keys
+
+@docs exportAesCtrKeyAsRaw, exportAesCtrKeyAsJwk
+
+@docs exportAesCbcKeyAsRaw, exportAesCbcKeyAsJwk
+
+@docs exportAesGcmKeyAsRaw, exportAesGcmKeyAsJwk
+
+### Export ECD Keys
+
+@docs exportEcdsaPublicKeyAsRaw, exportEcdsaPublicKeyAsSpki, exportEcdsaPublicKeyAsJwt
+
+@docs exportEcdsaPrivateKeyAsPkcs8, exportEcdsaPrivateKeyAsJwt
+
+@docs exportEcdhPublicKeyAsRaw, exportEcdhPublicKeyAsSpki, exportEcdhPublicKeyAsJwt
+
+@docs exportEcdhPrivateKeyAsPkcs8, exportEcdhPrivateKeyAsJwt
+
+### Export HMAC Keys 
+
+@docs exportHmacKeyAsRaw, exportHmacKeyAsJwk
+
+## Import Keys
+
+Import exported keys.
+
+For more information on exporting keys, check out the [MDN web docs](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/importKey)
+for the Web Crypto API.
+
+### Import RSA Keys
+
+Importing RSA keys can fail in the following ways:
+
+- The `DigestAlgorithm` passed does not match the `DigestAlgorithm` of the passed key.
+- A `PublicKey` is imported as a `PrivateKey` and vice-versa
+- ...
 
 @docs importRsaOaepPublicKeyFromJwk
 
 ...
 
-### Encryption
+## Encryption
 
-### Decryption
+Encrypt some `Bytes`.
 
-### Signing
+## Decryption
 
-### Verifying
+Decrypt some `Bytes`.
 
-### Digest
+## Signing
+
+Sign some `Bytes`.
+
+## Verifying
+
+Verify signed `Bytes`.
+
+## Digest
 
 @docs DigestAlgorithm
 
