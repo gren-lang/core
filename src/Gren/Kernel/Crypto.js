@@ -94,8 +94,8 @@ var _Crypto_generateKey = F3(function (algorithm, extractable, permissions) {
                 if (key.publicKey && key.privateKey) {
                     return callback(__Scheduler_succeed(
                         {
-                            publicKey: __Crypto_PublicKey(_Crypto_constructKey(key.__$publicKey)),
-                            privateKey: __Crypto_PrivateKey(_Crypto_constructKey(key.__$privateKey))
+                            publicKey: __Crypto_PublicKey(_Crypto_constructKey(key.publicKey)),
+                            privateKey: __Crypto_PrivateKey(_Crypto_constructKey(key.privateKey))
                         }
                     )
                     );
