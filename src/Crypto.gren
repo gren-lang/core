@@ -442,20 +442,20 @@ generateRsaKeyHelper name permissions { modulusLength, hash, publicExponent } ex
     let
         clampedModulusLength = 
             clamp 2048 16384 modulusLength
+
+        publicExponentValue =
+            case publicExponent of
+                PublicExponent3 ->
+                    [ 3 ]
+                PublicExponent65537 ->
+                        [ 1, 0, 1 ]
     in
     if Math.remainderBy 8 clampedModulusLength == 0 then
-        Gren.Kernel.Crypto.generateKey 
-            { name = name
-            , modulusLength = clampedModulusLength
-            , publicExponent = 
-                case publicExponent of
-                    PublicExponent3 ->
-                        [ 3 ]
-
-                    PublicExponent65537 ->
-                        [ 1, 0, 1 ]
-            , hash = digestAlgorithmToString hash
-            }
+        Gren.Kernel.Crypto.generateRsaKey 
+            name
+            clampedModulusLength
+            publicExponentValue
+            digestAlgorithmToString hash
             (extractableToBool extractable)
             permissions
     else

@@ -73,13 +73,20 @@ var _Crypto_getContext = __Scheduler_binding(function (callback) {
 });
 
 // Keys
+var _Crypto_generateRsaKey = F6(function (name, modulusLength, publicExponent, hash, extractable, permissions) {
+    return _Crypto_generateKey(
+        {
+            name: name,
+            modulusLength: modulusLength,
+            publicExponent: publicExponent,
+            hash: hash
+        },
+        extractable,
+        permissions
+    );
+});
 
 var _Crypto_generateKey = F3(function (algorithm, extractable, permissions) {
-    if (algorithm.__$publicExponent) {
-        // Creating a new Uint8Array if the passed algorithm contains a publicExponent
-        // Unsure how to pass this value directly from Gren and this is the current workaround
-        algorithm.__$publicExponent = new Uint8Array(algorithm.__$publicExponent);
-    }
     return __Scheduler_binding(function (callback) {
         crypto.subtle
             .generateKey(algorithm, extractable, permissions)
