@@ -74,16 +74,25 @@ var _Crypto_getContext = __Scheduler_binding(function (callback) {
 
 // Keys
 var _Crypto_generateRsaKey = F6(function (name, modulusLength, publicExponent, hash, extractable, permissions) {
-    return _Crypto_generateKey(
-        {
-            name: name,
-            modulusLength: modulusLength,
-            publicExponent: publicExponent,
-            hash: hash
-        },
-        extractable,
-        permissions
-    );
+    var algorithm = {
+        name: name,
+        modulusLength: modulusLength,
+        publicExponent: new Uint8Array(publicExponent),
+        hash: hash
+    }
+    return __Scheduler_binding(function (callback) {
+        crypto.subtle
+            .generateKey(algorithm, extractable, permissions)
+            .then(function (key) {
+                return callback(__Scheduler_succeed(
+                    {
+                        __$publicKey: __Crypto_PublicKey(_Crypto_constructKey(key.publicKey)),
+                        __$privateKey: __Crypto_PrivateKey(_Crypto_constructKey(key.privateKey))
+                    }
+                ))
+            })
+
+    });
 });
 
 var _Crypto_generateKey = F3(function (algorithm, extractable, permissions) {
