@@ -456,7 +456,7 @@ generateRsaKeyHelper name permissions { modulusLength, hash, publicExponent } ex
             name
             clampedModulusLength
             publicExponentValue
-            digestAlgorithmToString hash
+            (digestAlgorithmToString hash)
             (extractableToBool extractable)
             permissions
     else
