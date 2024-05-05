@@ -214,6 +214,7 @@ import Set exposing ( Set )
 import Bitwise
 import Math
 import Json.Encode
+import Gren.Kernel.Json
 
 
 -- RANDOM UUID
@@ -1150,8 +1151,8 @@ exportKeyAsSpki =
 
 {-|-}
 exportKeyAsJwk : Key a -> Task ExportKeyError Json.Encode.Value
-exportKeyAsJwk =
-    exportKeyHelper "jwk"
+exportKeyAsJwk key =
+    Task.map Gren.Kernel.Json.wrap (exportKeyHelper "jwk" key)
 
 
 -- IMPORT KEYS
