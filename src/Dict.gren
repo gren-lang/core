@@ -1,9 +1,9 @@
 module Dict exposing
     ( Dict
-    , empty, singleton, insert, update, remove
-    , isEmpty, member, get, size
-    , keys, values, toArray, fromArray
-    , map, foldl, foldr, filter, partition
+    , empty, singleton, set, update, remove
+    , isEmpty, get, member, size, first, last
+    , keys, values
+    , map, foldl, foldr, filter, filterMap, partition
     , union, intersect, diff, merge
     )
 
@@ -11,28 +11,28 @@ module Dict exposing
 type. This includes `Int`, `Float`, `Time`, `Char`, `String`, and tuples or
 lists of comparable types.
 
-Insert, remove, and query operations all take _O(log n)_ time.
+Set, remove, and query operations all take _O(log n)_ time.
 
 
 @docs Dict
 
 
-@docs empty, singleton, insert, update, remove
+@docs empty, singleton, set, update, remove
 
 
 ## Query
 
-@docs isEmpty, member, get, size
+@docs isEmpty, get, member, size, first, last
 
 
 ## Arrays
 
-@docs keys, values, toArray, fromArray
+@docs keys, values
 
 
 ## Transform
 
-@docs map, foldl, foldr, filter, partition
+@docs map, foldl, foldr, filter, filterMap, partition
 
 
 ## Combine
@@ -160,6 +160,36 @@ sizeHelp n dict =
             sizeHelp (sizeHelp (n + 1) right) left
 
 
+{-| Retrieve the first, or lowest, key-value pair.
+-}
+first : Dict k v -> Maybe { key : k, value : v }
+first dict =
+    case dict of
+        RBEmpty_gren_builtin ->
+            Nothing
+
+        RBNode_gren_builtin _ k v RBEmpty_gren_builtin _ ->
+            Just { key = k, value = v }
+
+        RBNode_gren_builtin _ _ _ left _ ->
+            first left
+
+
+{-| Retrieve the last, or highest, key-value pair.
+-}
+last : Dict k v -> Maybe { key : k, value : v }
+last dict =
+    case dict of
+        RBEmpty_gren_builtin ->
+            Nothing
+
+        RBNode_gren_builtin _ k v _ RBEmpty_gren_builtin ->
+            Just { key = k, value = v }
+
+        RBNode_gren_builtin _ _ _ _ right ->
+            last right
+
+
 {-| Determine if a dictionary is empty.
 
     isEmpty empty == True
@@ -175,13 +205,13 @@ isEmpty dict =
             False
 
 
-{-| Insert a key-value pair into a dictionary. Replaces value when there is
-a collision.
+{-| Sets a value for a given key. Existing values will be replaced.
+If the key isn't already registered, the key-value pair will be inserted.
 -}
-insert : comparable -> v -> Dict comparable v -> Dict comparable v
-insert key value dict =
+set : comparable -> v -> Dict comparable v -> Dict comparable v
+set key value dict =
     -- Root node is always Black
-    case insertHelp key value dict of
+    case setHelp key value dict of
         RBNode_gren_builtin Red k v l r ->
             RBNode_gren_builtin Black k v l r
 
@@ -189,8 +219,8 @@ insert key value dict =
             x
 
 
-insertHelp : comparable -> v -> Dict comparable v -> Dict comparable v
-insertHelp key value dict =
+setHelp : comparable -> v -> Dict comparable v -> Dict comparable v
+setHelp key value dict =
     case dict of
         RBEmpty_gren_builtin ->
             -- New nodes are always red. If it violates the rules, it will be fixed
@@ -200,13 +230,13 @@ insertHelp key value dict =
         RBNode_gren_builtin nColor nKey nValue nLeft nRight ->
             case compare key nKey of
                 LT ->
-                    balance nColor nKey nValue (insertHelp key value nLeft) nRight
+                    balance nColor nKey nValue (setHelp key value nLeft) nRight
 
                 EQ ->
                     RBNode_gren_builtin nColor nKey value nLeft nRight
 
                 GT ->
-                    balance nColor nKey nValue nLeft (insertHelp key value nRight)
+                    balance nColor nKey nValue nLeft (setHelp key value nRight)
 
 
 balance : NColor -> k -> v -> Dict k v -> Dict k v -> Dict k v
@@ -440,7 +470,7 @@ update : comparable -> (Maybe v -> Maybe v) -> Dict comparable v -> Dict compara
 update targetKey alter dictionary =
     case alter (get targetKey dictionary) of
         Just value ->
-            insert targetKey value dictionary
+            set targetKey value dictionary
 
         Nothing ->
             remove targetKey dictionary
@@ -463,7 +493,7 @@ to the first dictionary.
 -}
 union : Dict comparable v -> Dict comparable v -> Dict comparable v
 union t1 t2 =
-    foldl insert t2 t1
+    foldl set t2 t1
 
 
 {-| Keep a key-value pair when its key appears in the second dictionary.
@@ -554,10 +584,27 @@ filter isGood dict =
     foldl
         (\k v d ->
             if isGood k v then
-                insert k v d
+                set k v d
 
             else
                 d
+        )
+        empty
+        dict
+
+
+{-| Keep only the key-value pairs that pass the given test.
+-}
+filterMap : (comparable -> v -> Maybe x) -> Dict comparable v -> Dict comparable x
+filterMap toMaybe dict =
+    foldl
+        (\k v d ->
+            case toMaybe k v of
+                Just newValue ->
+                    set k newValue d
+
+                Nothing ->
+                    d
         )
         empty
         dict
@@ -572,13 +619,13 @@ partition isGood dict =
     let
         add key value { trues, falses } =
             if isGood key value then
-                { trues = insert key value trues
+                { trues = set key value trues
                 , falses = falses
                 }
 
             else
                 { trues = trues
-                , falses = insert key value falses
+                , falses = set key value falses
                 }
     in
     foldl add { trues = empty, falses = empty } dict
@@ -590,7 +637,7 @@ partition isGood dict =
 
 {-| Get all of the keys in a dictionary, sorted from lowest to highest.
 
-    keys (fromArray [ ( 0, "Alice" ), ( 1, "Bob" ) ]) == [ 0, 1 ]
+    keys (Dict.empty |> Dict.set 0 "Alice" |> Dict.set 1 "Bob") == [ 0, 1 ]
 
 -}
 keys : Dict k v -> Array k
@@ -600,26 +647,12 @@ keys dict =
 
 {-| Get all of the values in a dictionary, in the order of their keys.
 
-    values (fromArray [ ( 0, "Alice" ), ( 1, "Bob" ) ]) == [ "Alice", "Bob" ]
+    values (Dict.empty |> Dict.set 0 "Alice" |> Dict.set 1 "Bob") == [ "Alice", "Bob" ]
 
 -}
 values : Dict k v -> Array v
 values dict =
     foldl (\key value valueArray -> Array.pushLast value valueArray) [] dict
-
-
-{-| Convert a dictionary into an association list of key-value pairs, sorted by keys.
--}
-toArray : Dict k v -> Array { key : k, value : v }
-toArray dict =
-    foldl (\key value array -> Array.pushLast { key = key, value = value } array) [] dict
-
-
-{-| Convert an association list into a dictionary.
--}
-fromArray : Array { key : comparable, value : v } -> Dict comparable v
-fromArray assocs =
-    Array.foldl (\{ key, value } dict -> insert key value dict) empty assocs
 
 
 {-| The most general way of combining two dictionaries. You provide three
@@ -667,6 +700,6 @@ merge leftStep bothStep rightStep leftDict rightDict initialResult =
                         }
 
         { list = leftovers, result = intermediateResult } =
-            foldl stepState { list = toArray leftDict, result = initialResult } rightDict
+            foldl stepState { list = foldl (\key value array -> Array.pushLast { key = key, value = value } array) [] leftDict, result = initialResult } rightDict
     in
     Array.foldl (\{ key, value } result -> leftStep key value result) intermediateResult leftovers

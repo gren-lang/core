@@ -10,7 +10,9 @@ import Test exposing (..)
 
 animals : Dict.Dict String String
 animals =
-    Dict.fromArray [ { key = "Tom", value = "cat" }, { key = "Jerry", value = "mouse" } ]
+    Dict.empty
+        |> Dict.set "Tom" "cat"
+        |> Dict.set "Jerry" "mouse"
 
 
 tests : Test
@@ -18,11 +20,9 @@ tests =
     let
         buildTests =
             describe "build Tests"
-                [ test "empty" <| \{} -> Expect.equal (Dict.fromArray []) Dict.empty
-                , test "singleton" <| \{} -> Expect.equal (Dict.fromArray [ { key = "k", value = "v" } ]) (Dict.singleton "k" "v")
-                , test "insert" <| \{} -> Expect.equal (Dict.fromArray [ { key = "k", value = "v" } ]) (Dict.insert "k" "v" Dict.empty)
-                , test "insert replace" <| \{} -> Expect.equal (Dict.fromArray [ { key = "k", value = "vv" } ]) (Dict.insert "k" "vv" (Dict.singleton "k" "v"))
-                , test "update" <| \{} -> Expect.equal (Dict.fromArray [ { key = "k", value = "vv" } ]) (Dict.update "k" (\v -> Just "vv") (Dict.singleton "k" "v"))
+                [ test "singleton" <| \{} -> Expect.equal (Dict.set "k" "v" Dict.empty) (Dict.singleton "k" "v")
+                , test "set replace" <| \{} -> Expect.equal (Dict.set "k" "vv" Dict.empty) (Dict.set "k" "vv" (Dict.singleton "k" "v"))
+                , test "update" <| \{} -> Expect.equal (Dict.set "k" "vv" Dict.empty) (Dict.update "k" (\v -> Just "vv") (Dict.singleton "k" "v"))
                 , test "update Nothing" <| \{} -> Expect.equal Dict.empty (Dict.update "k" (\v -> Nothing) (Dict.singleton "k" "v"))
                 , test "remove" <| \{} -> Expect.equal Dict.empty (Dict.remove "k" (Dict.singleton "k" "v"))
                 , test "remove not found" <| \{} -> Expect.equal (Dict.singleton "k" "v") (Dict.remove "kk" (Dict.singleton "k" "v"))
@@ -36,6 +36,8 @@ tests =
                 , test "get 2" <| \{} -> Expect.equal Nothing (Dict.get "Spike" animals)
                 , test "size of empty dictionary" <| \{} -> Expect.equal 0 (Dict.size Dict.empty)
                 , test "size of example dictionary" <| \{} -> Expect.equal 2 (Dict.size animals)
+                , test "first value of animals is (J)erry" <| \{} -> Expect.equal (Just { key = "Jerry", value = "mouse" }) (Dict.first animals)
+                , test "first value of animals is (T)om" <| \{} -> Expect.equal (Just { key = "Tom", value = "cat" }) (Dict.last animals)
                 ]
 
         combineTests =
@@ -49,68 +51,70 @@ tests =
         transformTests =
             describe "transform Tests"
                 [ test "filter" <| \{} -> Expect.equal (Dict.singleton "Tom" "cat") (Dict.filter (\k v -> k == "Tom") animals)
+                , test "map" <| \{} -> Expect.equal (Dict.empty |> Dict.set "Tom" "tac" |> Dict.set "Jerry" "esuom") (Dict.map (\_ v -> String.reverse v) animals)
+                , test "filterMap" <| \{} -> Expect.equal (Dict.singleton "Tom" "tac") (Dict.filterMap (\k v -> if k == "Tom" then Just (String.reverse v) else Nothing) animals)
                 , test "partition" <| \{} -> Expect.equal { trues = Dict.singleton "Tom" "cat", falses = Dict.singleton "Jerry" "mouse" } (Dict.partition (\k v -> k == "Tom") animals)
                 ]
 
         mergeTests =
             let
-                insertBoth key leftVal rightVal dict =
-                    Dict.insert key (leftVal ++ rightVal) dict
+                setBoth key leftVal rightVal dict =
+                    Dict.set key (leftVal ++ rightVal) dict
 
                 s1 =
-                    Dict.empty |> Dict.insert "u1" [ 1 ]
+                    Dict.singleton "u1" [ 1 ]
 
                 s2 =
-                    Dict.empty |> Dict.insert "u2" [ 2 ]
+                    Dict.singleton "u2" [ 2 ]
 
                 s23 =
-                    Dict.empty |> Dict.insert "u2" [ 3 ]
+                    Dict.singleton "u2" [ 3 ]
 
                 b1 =
-                    Array.map (\i -> { key = i, value = [ i ] }) (Array.range 1 10) |> Dict.fromArray
+                    Array.foldl (\i dict -> Dict.set i [ i ] dict) Dict.empty (Array.range 1 10)
 
                 b2 =
-                    Array.map (\i -> { key = i, value = [ i ] }) (Array.range 5 15) |> Dict.fromArray
+                    Array.foldl (\i dict -> Dict.set i [ i ] dict) Dict.empty (Array.range 5 15)
 
                 bExpected =
                     Dict.empty
-                        |> Dict.insert 1 [1]
-                        |> Dict.insert 2 [2]
-                        |> Dict.insert 3 [3]
-                        |> Dict.insert 4 [4]
-                        |> Dict.insert 5 [5,5]
-                        |> Dict.insert 6 [6,6]
-                        |> Dict.insert 7 [7,7]
-                        |> Dict.insert 8 [8,8]
-                        |> Dict.insert 9 [9,9]
-                        |> Dict.insert 10 [10,10]
-                        |> Dict.insert 11 [11]
-                        |> Dict.insert 12 [12]
-                        |> Dict.insert 13 [13]
-                        |> Dict.insert 14 [14]
-                        |> Dict.insert 15 [15]
+                        |> Dict.set 1 [1]
+                        |> Dict.set 2 [2]
+                        |> Dict.set 3 [3]
+                        |> Dict.set 4 [4]
+                        |> Dict.set 5 [5,5]
+                        |> Dict.set 6 [6,6]
+                        |> Dict.set 7 [7,7]
+                        |> Dict.set 8 [8,8]
+                        |> Dict.set 9 [9,9]
+                        |> Dict.set 10 [10,10]
+                        |> Dict.set 11 [11]
+                        |> Dict.set 12 [12]
+                        |> Dict.set 13 [13]
+                        |> Dict.set 14 [14]
+                        |> Dict.set 15 [15]
             in
             describe "merge Tests"
                 [ test "merge empties" <|
                     \{} ->
                         Expect.equal Dict.empty
-                            (Dict.merge Dict.insert insertBoth Dict.insert Dict.empty Dict.empty Dict.empty)
+                            (Dict.merge Dict.set setBoth Dict.set Dict.empty Dict.empty Dict.empty)
                 , test "merge singletons in order" <|
                     \{} ->
-                        Expect.equal [ { key = "u1", value = [ 1 ] }, { key ="u2", value = [ 2 ] } ]
-                            (Dict.merge Dict.insert insertBoth Dict.insert s1 s2 Dict.empty |> Dict.toArray)
+                        Expect.equal ( Dict.empty |> Dict.set "u1" [ 1 ] |> Dict.set "u2" [ 2 ])
+                            (Dict.merge Dict.set setBoth Dict.set s1 s2 Dict.empty)
                 , test "merge singletons out of order" <|
                     \{} ->
-                        Expect.equal [ { key = "u1", value = [ 1 ] }, { key = "u2", value = [ 2 ] } ]
-                            (Dict.merge Dict.insert insertBoth Dict.insert s2 s1 Dict.empty |> Dict.toArray)
+                        Expect.equal ( Dict.empty |> Dict.set "u1" [ 1 ] |> Dict.set "u2" [ 2 ])
+                            (Dict.merge Dict.set setBoth Dict.set s2 s1 Dict.empty)
                 , test "merge with duplicate key" <|
                     \{} ->
-                        Expect.equal [ { key = "u2", value = [ 2, 3 ] } ]
-                            (Dict.merge Dict.insert insertBoth Dict.insert s2 s23 Dict.empty |> Dict.toArray)
+                        Expect.equal ( Dict.singleton "u2" [ 2, 3 ] )
+                            (Dict.merge Dict.set setBoth Dict.set s2 s23 Dict.empty)
                 , test "partially overlapping" <|
                     \{} ->
                         Expect.equal bExpected
-                            (Dict.merge Dict.insert insertBoth Dict.insert b1 b2 Dict.empty)
+                            (Dict.merge Dict.set setBoth Dict.set b1 b2 Dict.empty)
                 ]
     in
     describe "Dict Tests"

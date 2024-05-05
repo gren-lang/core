@@ -12,7 +12,7 @@ tests =
     describe "Set Tests"
         [ describe "empty" emptyTests
         , describe "singleton" singletonTests
-        , describe "insert" insertTests
+        , describe "set" setTests
         , describe "remove" removeTests
         , describe "isEmpty" isEmptyTests
         , describe "member" memberTests
@@ -84,16 +84,16 @@ singletonTests =
     ]
 
 
-insertTests : Array Test
-insertTests =
+setTests : Array Test
+setTests =
     [ test "adds new element to empty set" <|
-        \{} -> Expect.equal set42 (Set.insert 42 Set.empty)
+        \{} -> Expect.equal set42 (Set.set 42 Set.empty)
     , test "adds new element to a set of 100" <|
-        \{} -> Expect.equal (Set.fromArray (Array.range 1 101)) (Set.insert 101 set1To100)
+        \{} -> Expect.equal (Set.fromArray (Array.range 1 101)) (Set.set 101 set1To100)
     , test "leaves singleton set intact if it contains given element" <|
-        \{} -> Expect.equal set42 (Set.insert 42 set42)
+        \{} -> Expect.equal set42 (Set.set 42 set42)
     , test "leaves set of 100 intact if it contains given element" <|
-        \{} -> Expect.equal set1To100 (Set.insert 42 set1To100)
+        \{} -> Expect.equal set1To100 (Set.set 42 set1To100)
     ]
 
 
@@ -147,8 +147,8 @@ sizeTests =
 
 foldlTests : Array Test
 foldlTests =
-    [ test "with insert and empty set acts as identity function" <|
-        \{} -> Expect.equal set1To100 (Set.foldl Set.insert Set.empty set1To100)
+    [ test "with set and empty set acts as identity function" <|
+        \{} -> Expect.equal set1To100 (Set.foldl Set.set Set.empty set1To100)
     , test "with counter and zero acts as size function" <|
         \{} -> Expect.equal 100 (Set.foldl (\_ count -> count + 1) 0 set1To100)
     , test "folds set elements from lowest to highest" <|
@@ -158,8 +158,8 @@ foldlTests =
 
 foldrTests : Array Test
 foldrTests =
-    [ test "with insert and empty set acts as identity function" <|
-        \{} -> Expect.equal set1To100 (Set.foldr Set.insert Set.empty set1To100)
+    [ test "with set and empty set acts as identity function" <|
+        \{} -> Expect.equal set1To100 (Set.foldr Set.set Set.empty set1To100)
     , test "with counter and zero acts as size function" <|
         \{} -> Expect.equal 100 (Set.foldr (\_ count -> count + 1) 0 set1To100)
     , test "folds set elements from highest to lowest" <|
@@ -207,7 +207,7 @@ unionTests =
     , test "with superset returns superset" <|
         \{} -> Expect.equal set1To100 (Set.union set42 set1To100)
     , test "contains elements of both singletons" <|
-        \{} -> Expect.equal (Set.insert 1 set42) (Set.union set42 (Set.singleton 1))
+        \{} -> Expect.equal (Set.set 1 set42) (Set.union set42 (Set.singleton 1))
     , test "consists of elements from either set" <|
         \{} ->
             Set.union set1To100 set51To150

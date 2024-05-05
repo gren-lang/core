@@ -1,28 +1,28 @@
 module Set exposing
     ( Set
-    , empty, singleton, insert, remove
-    , isEmpty, member, size
+    , empty, singleton, set, remove
+    , isEmpty, member, size, first, last
     , union, intersect, diff
     , toArray, fromArray
-    , map, foldl, foldr, filter, partition
+    , map, foldl, foldr, filter, filterMap, partition
     )
 
 {-| A set of unique values. The values can be any comparable type. This
 includes `Int`, `Float`, `Time`, `Char`, `String`, and tuples or lists
 of comparable types.
 
-Insert, remove, and query operations all take _O(log n)_ time.
+Set, remove, and query operations all take _O(log n)_ time.
 
 
 @docs Set
 
 
-@docs empty, singleton, insert, remove
+@docs empty, singleton, set, remove
 
 
 ## Query
 
-@docs isEmpty, member, size
+@docs isEmpty, member, size, first, last
 
 
 ## Combine
@@ -37,7 +37,7 @@ Insert, remove, and query operations all take _O(log n)_ time.
 
 ## Transform
 
-@docs map, foldl, foldr, filter, partition
+@docs map, foldl, foldr, filter, filterMap, partition
 
 -}
 
@@ -68,11 +68,11 @@ singleton key =
     Set_gren_builtin (Dict.singleton key {})
 
 
-{-| Insert a value into a set.
+{-| Set a value into a set.
 -}
-insert : comparable -> Set comparable -> Set comparable
-insert key (Set_gren_builtin dict) =
-    Set_gren_builtin (Dict.insert key {} dict)
+set : comparable -> Set comparable -> Set comparable
+set key (Set_gren_builtin dict) =
+    Set_gren_builtin (Dict.set key {} dict)
 
 
 {-| Remove a value from a set. If the value is not found, no changes are made.
@@ -101,6 +101,20 @@ member key (Set_gren_builtin dict) =
 size : Set a -> Int
 size (Set_gren_builtin dict) =
     Dict.size dict
+
+
+{-| Get the first element of the set.
+-}
+first : Set a -> Maybe a
+first (Set_gren_builtin dict) =
+    Maybe.map .key (Dict.first dict)
+
+
+{-| Get the last element of the set.
+-}
+last : Set a -> Maybe a
+last (Set_gren_builtin dict) =
+    Maybe.map .key (Dict.last dict)
 
 
 {-| Get the union of two sets. Keep all values.
@@ -136,7 +150,7 @@ toArray (Set_gren_builtin dict) =
 -}
 fromArray : Array comparable -> Set comparable
 fromArray list =
-    Array.foldl insert empty list
+    Array.foldl set empty list
 
 
 {-| Fold over the values in a set, in order from lowest to highest.
@@ -156,8 +170,8 @@ foldr func initialState (Set_gren_builtin dict) =
 {-| Map a function onto a set, creating a new set with no duplicates.
 -}
 map : (comparable -> comparable2) -> Set comparable -> Set comparable2
-map func set =
-    foldl (\x xs -> insert (func x) xs) empty set
+map func coll =
+    foldl (\x xs -> set (func x) xs) empty coll
 
 
 {-| Only keep elements that pass the given test.
@@ -178,6 +192,36 @@ map func set =
 filter : (comparable -> Bool) -> Set comparable -> Set comparable
 filter isGood (Set_gren_builtin dict) =
     Set_gren_builtin (Dict.filter (\key _ -> isGood key) dict)
+
+
+{-| Only keep the Just values
+
+    import Set exposing (Set)
+
+    numbers : Set Int
+    numbers =
+        Set.fromArray [ -2, -1, 0, 1, 2 ]
+
+    positives : Set Int
+    positives =
+        Set.filter (\x -> x > 0) numbers
+
+    -- positives == Set.fromArray [1,2]
+
+-}
+filterMap : (comparable -> Maybe comparable2) -> Set comparable -> Set comparable2
+filterMap toMaybe coll =
+    foldl
+        (\old news ->
+            case toMaybe old of
+                Just new ->
+                    set new news
+
+                Nothing ->
+                    news
+        )
+        empty
+        coll
 
 
 {-| Create two new sets. The first contains all the elements that passed the

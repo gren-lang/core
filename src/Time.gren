@@ -481,10 +481,10 @@ addMySub : MySub msg -> Taggers msg -> Taggers msg
 addMySub (Every interval tagger) state =
   case Dict.get interval state of
     Nothing ->
-      Dict.insert interval [tagger] state
+      Dict.set interval [tagger] state
 
     Just taggers ->
-      Dict.insert interval ([tagger] ++ taggers) state
+      Dict.set interval ([tagger] ++ taggers) state
 
 
 spawnHelp : Platform.Router msg Float -> Array Float -> Processes -> Task.Task x Processes
@@ -502,7 +502,7 @@ spawnHelp router intervals processes =
           Array.slice 1 (Array.length intervals) intervals
 
         spawnRest id =
-          spawnHelp router rest (Dict.insert interval id processes)
+          spawnHelp router rest (Dict.set interval id processes)
       in
         spawnTimer
           |> Task.andThen spawnRest

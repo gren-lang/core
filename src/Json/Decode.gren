@@ -165,7 +165,7 @@ array =
 {-| Decode a JSON object into an Gren `Dict`.
 
     decodeString (dict int) "{ \"alice\": 42, \"bob\": 99 }"
-        == Ok (Dict.fromArray [ { key = "alice", value = 42 }, { key = "bob", value = 99 } ])
+        == Ok (Dict.empty |> Dict.set "alice" 42 |> Dict.set "bob" 99)
 
 If you need the keys (like `"alice"` and `"bob"`) available in the `Dict`
 values as well, I recommend using a (private) intermediate data structure like
@@ -221,7 +221,7 @@ you need that.
 -}
 dict : Decoder a -> Decoder (Dict String a)
 dict decoder =
-    map Dict.fromArray (keyValuePairs decoder)
+    map (\pairs -> Array.foldl (\p coll -> Dict.set p.key p.value coll) Dict.empty pairs) (keyValuePairs decoder)
 
 
 {-| Decode a JSON object into an Gren `Array` of pairs.
