@@ -6,7 +6,7 @@ module Crypto exposing
     , randomUuid
     , Key, PublicKey, PrivateKey, KeyPair
     , Extractable(..)
-    , RsaKeyParams, PublicExponent(..), RsaKeyGenerationError(..)
+    , RsaOaepKey, RsaPssKey, RsaSsaPkcs1V1_5Key, RsaKeyParams, PublicExponent(..), RsaKeyGenerationError(..)
     , generateRsaOaepKeyPair, generateRsaPssKeyPair, generateRsaSsaPkcs1V1_5KeyPair
     , AesLength(..)
     , generateAesCtrKey, generateAesCbcKey, generateAesGcmKey
@@ -85,6 +85,8 @@ Each key can be only be used for specific cryptographic operations.
 ### Generate RSA Keys
 
 Generate keys to use with RSA (Rivest-Shamir-Adleman) algorithm.
+
+@docs RsaOaepKey, RsaPssKey, RsaSsaPkcs1V1_5Key
 
 @docs RsaKeyParams, PublicExponent, RsaKeyGenerationError
 
