@@ -29,6 +29,7 @@ module Crypto exposing
     , exportEcdhPublicKeyAsRaw, exportEcdhPublicKeyAsSpki, exportEcdhPublicKeyAsJwt
     , exportEcdhPrivateKeyAsPkcs8, exportEcdhPrivateKeyAsJwt
     , exportHmacKeyAsRaw, exportHmacKeyAsJwk
+    , ImportRsaKeyError(..)
     , importRsaOaepPublicKeyFromJwk
     , DigestAlgorithm(..)
     )
@@ -1175,7 +1176,12 @@ type alias ImportRsaKeyParams =
 
 
 {-|-}
-importRsaOaepPublicKeyFromJwk : SecureContext -> Json.Encode.Value -> ImportRsaKeyParams -> Extractable -> Task {} (PublicKey RsaOaepKey)
+type ImportRsaKeyError
+    = HashMismatch
+
+
+{-|-}
+importRsaOaepPublicKeyFromJwk : SecureContext -> Json.Encode.Value -> ImportRsaKeyParams -> Extractable -> Task ImportRsaKeyError (PublicKey RsaOaepKey)
 importRsaOaepPublicKeyFromJwk _context jwk { hash } extractable =
     -- Note that there can be an error if you try to import a key with a different hash than the
     -- exported key... Not sure how to identify in Gren before calling kernel code... todo

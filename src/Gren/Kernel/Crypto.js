@@ -2,7 +2,7 @@
 
 import Gren.Kernel.Scheduler exposing (binding, succeed, fail)
 import Gren.Kernel.Bytes exposing (writeBytes)
-import Crypto exposing (KeyPair, Key, SecureContext, InsecureContext, Error, KeyIsNotExtractable, PublicKey, PrivateKey)
+import Crypto exposing (KeyPair, HashMismatch, Key, SecureContext, InsecureContext, Error, KeyIsNotExtractable, PublicKey, PrivateKey)
 import Maybe exposing (Just, Nothing)
 import Bytes exposing (Bytes)
 
@@ -143,6 +143,12 @@ var _Crypto_importKey = F6(function (wrapper, format, keyData, algorithm, extrac
                         return callback(__Scheduler_succeed(__Crypto_PrivateKey(_Crypto_constructKey(key))))
                     default:
                         return callback(__Scheduler_succeed(_Crypto_constructKey(key)));
+                }
+            })
+            .catch(function (err) {
+                switch (err.message) {
+                    case "Hash mismatch":
+                        return callback(__Scheduler_fail(__Crypto_HashMismatch));
                 }
             });
     });
