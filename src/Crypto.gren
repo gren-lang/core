@@ -447,8 +447,9 @@ generateRsaKeyHelper name permissions { modulusLength, hash, publicExponent } ex
             case publicExponent of
                 PublicExponent3 ->
                     [ 3 ]
+                    
                 PublicExponent65537 ->
-                        [ 1, 0, 1 ]
+                    [ 1, 0, 1 ]
     in
     if Math.remainderBy 8 clampedModulusLength == 0 then
         Gren.Kernel.Crypto.generateRsaKey 
