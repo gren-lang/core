@@ -1182,8 +1182,8 @@ importRsaOaepPublicKeyFromJwk _context jwk { hash } extractable =
     Gren.Kernel.Crypto.importKey
         "public"
         "jwk"
-        jwk
-        { name = "rsa-oaep"
+        (Gren.Kernel.Json.unwrap jwk)
+        { name = "RSA-OAEP"
         , hash = digestAlgorithmToString hash
         }
         (extractableToBool extractable)
