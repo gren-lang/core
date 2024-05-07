@@ -90,8 +90,7 @@ var _Crypto_generateRsaKey = F6(function (name, modulusLength, publicExponent, h
                         __$privateKey: __Crypto_PrivateKey(_Crypto_constructKey(key.privateKey))
                     }
                 ))
-            })
-
+            });
     });
 });
 
