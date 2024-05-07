@@ -1185,13 +1185,12 @@ importRsaOaepPublicKeyFromJwk : SecureContext -> Json.Encode.Value -> ImportRsaK
 importRsaOaepPublicKeyFromJwk _context jwk { hash } extractable =
     -- Note that there can be an error if you try to import a key with a different hash than the
     -- exported key... Not sure how to identify in Gren before calling kernel code... todo
-    Gren.Kernel.Crypto.importKey
+    Gren.Kernel.Crypto.importRsaKey
         "public"
         "jwk"
         (Gren.Kernel.Json.unwrap jwk)
-        { name = "RSA-OAEP"
-        , hash = digestAlgorithmToString hash
-        }
+        "RSA-OAEP"
+        (digestAlgorithmToString hash)
         (extractableToBool extractable)
         [ "encrypt" ]
 
