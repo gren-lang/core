@@ -2,7 +2,7 @@
 
 import Gren.Kernel.Scheduler exposing (binding, succeed, fail)
 import Gren.Kernel.Bytes exposing (writeBytes)
-import Crypto exposing (KeyPair, HashMismatch, Key, SecureContext, InsecureContext, Error, KeyIsNotExtractable, PublicKey, PrivateKey)
+import Crypto exposing (KeyPair, ImportRsaKeyHashMismatchError, ImportRsaKeyValueError, ImportRsaKeyUnknownError, Key, SecureContext, InsecureContext, Error, PublicKey, PrivateKey)
 import Maybe exposing (Just, Nothing)
 import Bytes exposing (Bytes)
 
@@ -145,7 +145,22 @@ var _Crypto_importRsaKey = F7(function (wrapper, format, keyData, algorithm, has
                 }
             })
             .catch(function (err) {
-                return callback(__Scheduler_fail(__Crypto_HashMismatch));
+                switch (err.message) {
+                    case "Invalid JWK keyData":
+                        return callback(__Scheduler_fail(__Crypto_ImportRsaKeyHashMismatchError));
+
+                    case "Failed to execute 'importKey' on 'SubtleCrypto': The provided value is not of type '(ArrayBuffer or ArrayBufferView or JsonWebKey)'":
+                        return callback(__Scheduler_fail(__Crypto_ImportRsaKeyHashMismatchError));
+
+                    case 'The JWK "alg" member was inconsistent with that specified by the Web Crypto call':
+                        return callback(__Scheduler_fail(__Crypto_ImportRsaKeyValueError));
+
+                    case "Hash mismatch":
+                        return callback(__Scheduler_fail(__Crypto_ImportRsaKeyValueError));
+
+                    default:
+                        return callback(__Scheduler_fail(__Crypto_ImportRsaKeyUnknownError(err.message)));
+                }
             })
     })
 });
@@ -167,7 +182,7 @@ var _Crypto_importKey = F6(function (wrapper, format, keyData, algorithm, extrac
             .catch(function (err) {
                 switch (err.message) {
                     case "Hash mismatch":
-                        return callback(__Scheduler_fail(__Crypto_HashMismatch));
+                        return callback(__Scheduler_fail(__Crypto_ImportRsaKeyHashMismatchError));
                 }
             });
     });

@@ -1177,7 +1177,9 @@ type alias ImportRsaKeyParams =
 
 {-|-}
 type ImportRsaKeyError
-    = HashMismatch
+    = ImportRsaKeyHashMismatchError
+    | ImportRsaKeyValueError
+    | ImportRsaKeyUnknownError String
 
 
 {-|-}
