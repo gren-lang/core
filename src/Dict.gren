@@ -593,7 +593,7 @@ filter isGood dict =
         dict
 
 
-{-| Keep only the key-value pairs that pass the given test.
+{-| Filter out unwanted results of a map operation.
 -}
 filterMap : (comparable -> v -> Maybe x) -> Dict comparable v -> Dict comparable x
 filterMap toMaybe dict =

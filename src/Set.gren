@@ -194,20 +194,19 @@ filter isGood (Set_gren_builtin dict) =
     Set_gren_builtin (Dict.filter (\key _ -> isGood key) dict)
 
 
-{-| Only keep the Just values
+{-| Filter out unwanted results of a map operation.
+    
+    import Set
 
-    import Set exposing (Set)
+    strings : Set String
+    strings =
+        Set.fromArray [ "3", "not a number", "-5" ]
 
     numbers : Set Int
     numbers =
-        Set.fromArray [ -2, -1, 0, 1, 2 ]
+        Set.filterMap String.toInt strings
 
-    positives : Set Int
-    positives =
-        Set.filter (\x -> x > 0) numbers
-
-    -- positives == Set.fromArray [1,2]
-
+    -- numbers == Set.fromArray [ 3, -5 ]
 -}
 filterMap : (comparable -> Maybe comparable2) -> Set comparable -> Set comparable2
 filterMap toMaybe coll =
