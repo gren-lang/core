@@ -1177,16 +1177,12 @@ type alias ImportRsaKeyParams =
 
 {-|-}
 type ImportRsaKeyError
-    = ImportRsaKeyHashMismatchError
-    | ImportRsaKeyValueError
-    | ImportRsaKeyUnknownError String
+    = ImportRsaKeyError
 
 
 {-|-}
 importRsaOaepPublicKeyFromJwk : SecureContext -> Json.Encode.Value -> ImportRsaKeyParams -> Extractable -> Task ImportRsaKeyError (PublicKey RsaOaepKey)
 importRsaOaepPublicKeyFromJwk _context jwk { hash } extractable =
-    -- Note that there can be an error if you try to import a key with a different hash than the
-    -- exported key... Not sure how to identify in Gren before calling kernel code... todo
     Gren.Kernel.Crypto.importRsaKey
         "public"
         "jwk"
