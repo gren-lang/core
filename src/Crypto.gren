@@ -1169,13 +1169,20 @@ type ImportRsaPublicKeyFormat
     | ImportRsaPublicKeyUsingJsonWebKey Json.Encode.Value
 
 
-{-|-}
+{-| Parameters required for importing a key using an RSA algorithm.
+-}
 type alias ImportRsaKeyParams =
     { hash : DigestAlgorithm
     }
 
 
-{-|-}
+{-| Appears if there's an error when importing a key using an RSA algorithm.
+
+There are two possible reasons this error happens:
+
+1. The passed key value (either `Json.Encode.Value` or `Bytes`) is not a valid key and cannot be imported.
+2. The `hash` passed to the function does not match the `hash` of the imported key.
+-}
 type ImportRsaKeyError
     = ImportRsaKeyError
 
