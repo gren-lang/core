@@ -171,13 +171,9 @@ for the Web Crypto API.
 
 ### Import RSA Keys
 
-Importing RSA keys can fail in the following ways:
+@docs ImportRsaKeyError
 
-- The `DigestAlgorithm` passed does not match the `DigestAlgorithm` of the passed key.
-- A `PublicKey` is imported as a `PrivateKey` and vice-versa
-- ...
-
-@docs importRsaOaepPublicKeyFromJwk
+@docs importRsaOaepPublicKeyFromJwk, importRsaOaepPublicKeyFromSpki
 
 ...
 
@@ -1180,8 +1176,11 @@ type alias ImportRsaKeyParams =
 
 There are two possible reasons this error happens:
 
-1. The passed key value (either `Json.Encode.Value` or `Bytes`) is not a valid key and cannot be imported.
-2. The `hash` passed to the function does not match the `hash` of the imported key.
+1. The passed key value (either `Json.Encode.Value` or `Bytes`) is not 
+a valid key and cannot be imported.
+2. The `hash` passed to the function does not match the `hash` of the imported key. This only 
+happens when importing a JSON Web Key. It is recommended to _always_ match the hash of the 
+imported key or you will get different results when using the imported key.
 -}
 type ImportRsaKeyError
     = ImportRsaKeyError
