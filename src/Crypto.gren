@@ -30,7 +30,7 @@ module Crypto exposing
     , exportEcdhPrivateKeyAsPkcs8, exportEcdhPrivateKeyAsJwt
     , exportHmacKeyAsRaw, exportHmacKeyAsJwk
     , ImportRsaKeyError(..)
-    , importRsaOaepPublicKeyFromJwk
+    , importRsaOaepPublicKeyFromJwk, importRsaOaepPublicKeyFromSpki
     , DigestAlgorithm(..)
     )
 
@@ -1201,8 +1201,16 @@ importRsaOaepPublicKeyFromJwk _context jwk { hash } extractable =
 
 
 {-|-}
-importRsaOaepPublicKeyFromSpki =
-    Debug.todo ""
+importRsaOaepPublicKeyFromSpki : SecureContext -> Bytes -> ImportRsaKeyParams -> Extractable -> Task ImportRsaKeyError (PublicKey RsaOaepKey)
+importRsaOaepPublicKeyFromSpki _context bytes { hash } extractable =
+    Gren.Kernel.Crypto.importRsaKey
+        "public"
+        "spki"
+        bytes
+        "RSA-OAEP"
+        (digestAlgorithmToString hash)
+        (extractableToBool extractable)
+        [ "encrypt" ]
 
 
 {-|-}
