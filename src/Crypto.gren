@@ -177,6 +177,19 @@ for the Web Crypto API.
 @docs importRsaOaepPublicKeyFromJwk, importRsaOaepPublicKeyFromSpki
 
 @docs importRsaOaepPrivateKeyFromJwk, importRsaOaepPrivateKeyFromPkcs8
+
+### Import AES Keys
+
+...
+
+### Import ECD Keys
+
+...
+
+### Import HMAC Keys 
+
+...
+
 ...
 
 ## Encryption
