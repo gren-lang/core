@@ -31,6 +31,7 @@ module Crypto exposing
     , exportHmacKeyAsRaw, exportHmacKeyAsJwk
     , ImportRsaKeyError(..)
     , importRsaOaepPublicKeyFromJwk, importRsaOaepPublicKeyFromSpki
+    , importRsaOaepPrivateKeyFromJwk, importRsaOaepPrivateKeyFromPkcs8
     , DigestAlgorithm(..)
     )
 
@@ -175,6 +176,7 @@ for the Web Crypto API.
 
 @docs importRsaOaepPublicKeyFromJwk, importRsaOaepPublicKeyFromSpki
 
+@docs importRsaOaepPrivateKeyFromJwk, importRsaOaepPrivateKeyFromPkcs8
 ...
 
 ## Encryption
@@ -1224,27 +1226,40 @@ importRsassaPkcs1V1_5PublicKey _context =
     Debug.todo ""
 
 
-{-| Available options for importing keys for RAS algorithms.
--}
-type ImportRsaPrivateKeyFormat
-    = ImportRsaPrivateKeyUsingPkcs8 Bytes
-    | ImportRsaPrivateKeyUsingJsonWebKey Json.Encode.Value
+{-|-}
+importRsaOaepPrivateKeyFromJwk : SecureContext -> Json.Encode.Value -> ImportRsaKeyParams -> Extractable -> Task x (PrivateKey RsaOaepKey)
+importRsaOaepPrivateKeyFromJwk _context jwk { hash } extractable =
+    Gren.Kernel.Crypto.importRsaKey
+        "private"
+        "jwk"
+        (Gren.Kernel.Json.unwrap jwk)
+        "RSA-OAEP"
+        (digestAlgorithmToString hash)
+        (extractableToBool extractable)
+        [ "decrypt" ]
 
 
 {-|-}
-importRsaOaepPrivateKey : SecureContext -> ImportRsaPrivateKeyFormat -> Extractable -> Task x (PrivateKey RsaOaepKey)
-importRsaOaepPrivateKey _context =
-    Debug.todo ""
+importRsaOaepPrivateKeyFromPkcs8 : SecureContext -> Bytes -> ImportRsaKeyParams -> Extractable -> Task x (PrivateKey RsaOaepKey)
+importRsaOaepPrivateKeyFromPkcs8 _context bytes { hash } extractable =
+    Gren.Kernel.Crypto.importRsaKey
+        "private"
+        "pkcs8"
+        bytes
+        "RSA-OAEP"
+        (digestAlgorithmToString hash)
+        (extractableToBool extractable)
+        [ "decrypt" ]
 
 
 {-|-}
-importRsaPssPrivateKey : SecureContext -> ImportRsaPrivateKeyFormat -> Extractable -> Task x (PrivateKey RsaPssKey)
+importRsaPssPrivateKey : SecureContext -> Bytes -> Extractable -> Task x (PrivateKey RsaPssKey)
 importRsaPssPrivateKey _context =
     Debug.todo ""
 
 
 {-|-}
-importRsassaPkcs1V1_5PrivateKey : SecureContext -> ImportRsaPrivateKeyFormat -> Extractable -> Task x (PrivateKey RsaSsaPkcs1V1_5Key)
+importRsassaPkcs1V1_5PrivateKey : SecureContext -> Bytes -> Extractable -> Task x (PrivateKey RsaSsaPkcs1V1_5Key)
 importRsassaPkcs1V1_5PrivateKey _context =
     Debug.todo ""
 
