@@ -981,25 +981,25 @@ exportRsaOaepPrivateKeyAsJwk _context (PrivateKey key) =
 
 
 {-|-}
-exportRsaPssPublicKeyAsSpki : SecureContext -> PublicKey RsaOaepKey -> Task ExportKeyError Bytes
+exportRsaPssPublicKeyAsSpki : SecureContext -> PublicKey RsaPssKey -> Task ExportKeyError Bytes
 exportRsaPssPublicKeyAsSpki _context (PublicKey key)=
     exportKeyAsSpki key
 
 
 {-|-}
-exportRsaPssPublicKeyAsJwk : SecureContext -> PublicKey RsaOaepKey -> Task ExportKeyError Json.Encode.Value
+exportRsaPssPublicKeyAsJwk : SecureContext -> PublicKey RsaPssKey -> Task ExportKeyError Json.Encode.Value
 exportRsaPssPublicKeyAsJwk _context (PublicKey key) =
     exportKeyAsJwk key
 
 
 {-|-}
-exportRsaPssPrivateKeyAsPkcs8 : SecureContext -> PrivateKey RsaOaepKey -> Task ExportKeyError Bytes
+exportRsaPssPrivateKeyAsPkcs8 : SecureContext -> PrivateKey RsaPssKey -> Task ExportKeyError Bytes
 exportRsaPssPrivateKeyAsPkcs8 _context (PrivateKey key) =
     exportKeyAsPkcs8 key
 
 
 {-|-}
-exportRsaPssPrivateKeyAsJwk : SecureContext -> PrivateKey RsaOaepKey -> Task ExportKeyError Json.Encode.Value
+exportRsaPssPrivateKeyAsJwk : SecureContext -> PrivateKey RsaPssKey -> Task ExportKeyError Json.Encode.Value
 exportRsaPssPrivateKeyAsJwk _context (PrivateKey key) =
     exportKeyAsJwk key
 
