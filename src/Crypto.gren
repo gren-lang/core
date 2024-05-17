@@ -620,7 +620,7 @@ type alias HmacKeyParams =
     }
 
 
-{-|Generate a new key using the HMAC algorithm.
+{-| Generate a new key using the HMAC algorithm.
 -}
 generateHmacKey : SecureContext -> HmacKeyParams -> Extractable -> Task x (Key HmacKey)
 generateHmacKey _context { hash, length } extractable =
