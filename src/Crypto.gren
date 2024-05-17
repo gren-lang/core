@@ -34,6 +34,8 @@ module Crypto exposing
     , importRsaOaepPrivateKeyFromJwk, importRsaOaepPrivateKeyFromPkcs8
     , importRsaPssPublicKeyFromJwk, importRsaPssPublicKeyFromSpki
     , importRsaPssPrivateKeyFromJwk, importRsaPssPrivateKeyFromPkcs8
+    , importRsaSsaPkcs1V1_5PublicKeyFromJwk, importRsaSsaPkcs1V1_5PublicKeyFromSpki
+    , importRsaSsaPkcs1V1_5PrivateKeyFromJwk, importRsaSsaPkcs1V1_5PrivateKeyFromPkcs8
     , DigestAlgorithm(..)
     )
 
@@ -1256,12 +1258,6 @@ importRsaPssPublicKeyFromSpki _context bytes { hash } extractable =
 
 
 {-|-}
-importRsassaPkcs1V1_5PublicKey : SecureContext -> ImportRsaKeyParams -> Extractable -> Task x (PublicKey RsaSsaPkcs1V1_5Key)
-importRsassaPkcs1V1_5PublicKey _context =
-    Debug.todo ""
-
-
-{-|-}
 importRsaOaepPrivateKeyFromJwk : SecureContext -> Json.Encode.Value -> ImportRsaKeyParams -> Extractable -> Task x (PrivateKey RsaOaepKey)
 importRsaOaepPrivateKeyFromJwk _context jwk { hash } extractable =
     Gren.Kernel.Crypto.importRsaKey
@@ -1314,15 +1310,55 @@ importRsaPssPrivateKeyFromPkcs8 _context bytes { hash } extractable =
 
 
 {-|-}
-importRsaPssPrivateKey : SecureContext -> Bytes -> Extractable -> Task x (PrivateKey RsaPssKey)
-importRsaPssPrivateKey _context =
-    Debug.todo ""
+importRsaSsaPkcs1V1_5PublicKeyFromJwk : SecureContext -> Json.Encode.Value -> ImportRsaKeyParams -> Extractable -> Task x (PrivateKey RsaSsaPkcs1V1_5Key)
+importRsaSsaPkcs1V1_5PublicKeyFromJwk _context jwk { hash } extractable =
+    Gren.Kernel.Crypto.importRsaKey
+        "public"
+        "jwk"
+        (Gren.Kernel.Json.unwrap jwk)
+        "RSASSA-PKCS1-v1_5"
+        (digestAlgorithmToString hash)
+        (extractableToBool extractable)
+        [ "sign" ]
 
 
 {-|-}
-importRsassaPkcs1V1_5PrivateKey : SecureContext -> Bytes -> Extractable -> Task x (PrivateKey RsaSsaPkcs1V1_5Key)
-importRsassaPkcs1V1_5PrivateKey _context =
-    Debug.todo ""
+importRsaSsaPkcs1V1_5PublicKeyFromSpki : SecureContext -> Bytes -> ImportRsaKeyParams -> Extractable -> Task x (PrivateKey RsaSsaPkcs1V1_5Key)
+importRsaSsaPkcs1V1_5PublicKeyFromSpki _context bytes { hash } extractable =
+    Gren.Kernel.Crypto.importRsaKey
+        "public"
+        "spki"
+        bytes
+        "RSASSA-PKCS1-v1_5"
+        (digestAlgorithmToString hash)
+        (extractableToBool extractable)
+        [ "verify" ]
+
+
+{-|-}
+importRsaSsaPkcs1V1_5PrivateKeyFromJwk : SecureContext -> Json.Encode.Value -> ImportRsaKeyParams -> Extractable -> Task x (PrivateKey RsaSsaPkcs1V1_5Key)
+importRsaSsaPkcs1V1_5PrivateKeyFromJwk _context jwk { hash } extractable =
+    Gren.Kernel.Crypto.importRsaKey
+        "private"
+        "jwk"
+        (Gren.Kernel.Json.unwrap jwk)
+        "RSASSA-PKCS1-v1_5"
+        (digestAlgorithmToString hash)
+        (extractableToBool extractable)
+        [ "sign" ]
+
+
+{-|-}
+importRsaSsaPkcs1V1_5PrivateKeyFromPkcs8 : SecureContext -> Bytes -> ImportRsaKeyParams -> Extractable -> Task x (PrivateKey RsaSsaPkcs1V1_5Key)
+importRsaSsaPkcs1V1_5PrivateKeyFromPkcs8 _context bytes { hash } extractable =
+    Gren.Kernel.Crypto.importRsaKey
+        "private"
+        "pkcs8"
+        bytes
+        "RSASSA-PKCS1-v1_5"
+        (digestAlgorithmToString hash)
+        (extractableToBool extractable)
+        [ "sign" ]
 
 
 {-| Available options for importing keys for AES algorithms.
