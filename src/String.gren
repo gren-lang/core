@@ -1,6 +1,6 @@
 module String exposing
     ( String, isEmpty, length, reverse, repeat, replace
-    , append, concat, split, join, words, lines
+    , append, split, join, words, lines
     , slice, left, right, dropLeft, dropRight
     , contains, startsWith, endsWith, indices
     , toInt, fromInt
@@ -19,7 +19,7 @@ are enclosed in `"double quotes"`.
 
 ## Building and Splitting
 
-@docs append, concat, split, join, words, lines
+@docs prepend, append, split, join, words, lines
 
 
 ## Get Substrings
@@ -194,25 +194,26 @@ replace before after string =
 -- BUILDING AND SPLITTING
 
 
-{-| Append two strings. You can also use [the `(++)` operator](Basics#++)
+{-| Combine two strings. You can also use [the `(++)` operator](Basics#++)
 to do this.
 
-    append "butter" "fly" == "butterfly"
+    prepend "butter" "fly" == "butterfly"
+
+-}
+prepend : String -> String -> String
+prepend =
+    Gren.Kernel.String.append
+
+
+{-| Append one string onto another. This is the same operation as [prepend](prepend),
+but with the arguments reversed.
+    
+    append "butter" "fly" == "flybutter"
 
 -}
 append : String -> String -> String
 append =
     Gren.Kernel.String.append
-
-
-{-| Concatenate many strings into one.
-
-    concat [ "never", "the", "less" ] == "nevertheless"
-
--}
-concat : Array String -> String
-concat strings =
-    join "" strings
 
 
 {-| Split a string using a given separator.
