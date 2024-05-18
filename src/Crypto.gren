@@ -626,19 +626,18 @@ generateHmacKey : SecureContext -> HmacKeyParams -> Extractable -> Task x (Key H
 generateHmacKey _context { hash, length } extractable =
     case length of
         Just passedLength ->
-            Gren.Kernel.Crypto.generateKey
-                { name = "HMAC"
-                , hash = digestAlgorithmToString hash
-                , length = passedLength
-                }
+            Gren.Kernel.Crypto.generateHmacKey
+                "HMAC"
+                (digestAlgorithmToString hash)
+                passedLength
                 (extractableToBool extractable)
                 [ "sign", "verify" ]
 
         Nothing ->
-            Gren.Kernel.Crypto.generateKey
-                { name = "HMAC"
-                , hash = digestAlgorithmToString hash
-                }
+            Gren.Kernel.Crypto.generateHmacKey
+                "HMAC"
+                (digestAlgorithmToString hash)
+                ""
                 (extractableToBool extractable)
                 [ "sign", "verify" ]
 

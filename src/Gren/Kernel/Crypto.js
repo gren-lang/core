@@ -94,6 +94,33 @@ var _Crypto_generateRsaKey = F6(function (name, modulusLength, publicExponent, h
     });
 });
 
+var _Crypto_generateHmacKey = F5(function (name, hash, length, extractable, permissions) {
+    console.log("generating HMAC key...");
+    var algorithm;
+    if (length == "") {
+        algorithm = {
+            name: name,
+            hash: hash
+        }
+    } else {
+        algorithm = {
+            name: name,
+            hash: hash,
+            length: length
+        }
+    }
+    return __Scheduler_binding(function (callback) {
+        crypto.subtle
+            .generateKey(algorithm, extractable, permissions)
+            .then(function (key) {
+                return callback(__Scheduler_succeed(_Crypto_constructKey(key)))
+            })
+            .catch(function (err) {
+                console.log(err);
+            });
+    });
+});
+
 var _Crypto_generateKey = F3(function (algorithm, extractable, permissions) {
     return __Scheduler_binding(function (callback) {
         crypto.subtle
