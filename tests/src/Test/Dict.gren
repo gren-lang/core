@@ -34,8 +34,8 @@ tests =
                 , test "member 2" <| \{} -> Expect.equal False (Dict.member "Spike" animals)
                 , test "get 1" <| \{} -> Expect.equal (Just "cat") (Dict.get "Tom" animals)
                 , test "get 2" <| \{} -> Expect.equal Nothing (Dict.get "Spike" animals)
-                , test "size of empty dictionary" <| \{} -> Expect.equal 0 (Dict.size Dict.empty)
-                , test "size of example dictionary" <| \{} -> Expect.equal 2 (Dict.size animals)
+                , test "count of empty dictionary" <| \{} -> Expect.equal 0 (Dict.count Dict.empty)
+                , test "count of example dictionary" <| \{} -> Expect.equal 2 (Dict.count animals)
                 , test "first value of animals is (J)erry" <| \{} -> Expect.equal (Just { key = "Jerry", value = "mouse" }) (Dict.first animals)
                 , test "first value of animals is (T)om" <| \{} -> Expect.equal (Just { key = "Tom", value = "cat" }) (Dict.last animals)
                 ]

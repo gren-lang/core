@@ -1,7 +1,7 @@
 module Set exposing
     ( Set
     , empty, singleton, set, remove
-    , isEmpty, member, size, first, last
+    , isEmpty, member, count, first, last
     , union, intersect, diff
     , toArray, fromArray
     , map, foldl, foldr, filter, filterMap, partition
@@ -22,7 +22,7 @@ Set, remove, and query operations all take _O(log n)_ time.
 
 ## Query
 
-@docs isEmpty, member, size, first, last
+@docs isEmpty, member, count, first, last
 
 
 ## Combine
@@ -98,9 +98,9 @@ member key (Set_gren_builtin dict) =
 
 {-| Determine the number of elements in a set.
 -}
-size : Set a -> Int
-size (Set_gren_builtin dict) =
-    Dict.size dict
+count : Set a -> Int
+count (Set_gren_builtin dict) =
+    Dict.count dict
 
 
 {-| Get the first element of the set.

@@ -1,15 +1,14 @@
 module Dict exposing
     ( Dict
     , empty, singleton, set, update, remove
-    , isEmpty, get, member, size, first, last
+    , isEmpty, get, member, count, first, last
     , keys, values
     , map, foldl, foldr, filter, filterMap, partition
     , union, intersect, diff, merge
     )
 
 {-| A dictionary mapping unique keys to values. The keys can be any comparable
-type. This includes `Int`, `Float`, `Time`, `Char`, `String`, and tuples or
-lists of comparable types.
+type. This includes `Int`, `Float`, `Time`, `Char` and `String`.
 
 Set, remove, and query operations all take _O(log n)_ time.
 
@@ -22,7 +21,7 @@ Set, remove, and query operations all take _O(log n)_ time.
 
 ## Query
 
-@docs isEmpty, get, member, size, first, last
+@docs isEmpty, get, member, count, first, last
 
 
 ## Arrays
@@ -145,19 +144,19 @@ member key dict =
 
 {-| Determine the number of key-value pairs in the dictionary.
 -}
-size : Dict k v -> Int
-size dict =
-    sizeHelp 0 dict
+count : Dict k v -> Int
+count dict =
+    countHelp 0 dict
 
 
-sizeHelp : Int -> Dict k v -> Int
-sizeHelp n dict =
+countHelp : Int -> Dict k v -> Int
+countHelp n dict =
     case dict of
         RBEmpty_gren_builtin ->
             n
 
         RBNode_gren_builtin _ _ _ left right ->
-            sizeHelp (sizeHelp (n + 1) right) left
+            countHelp (countHelp (n + 1) right) left
 
 
 {-| Retrieve the first, or lowest, key-value pair.
