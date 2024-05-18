@@ -623,7 +623,7 @@ The passed `length` will be the length of the resulting key in bits. If
 It's recommended to pass `Nothing` and let the length of the key be equal 
 to the hash function (`DigestAlgorithm`).
 
-If passed, the `length` is clamped be at least 8 and no greater than 2147483647. 
+If passed, the `length` is clamped be at least 8 and no greater than 2048. 
 If the `Int` used is outside of that range, it will be corrected.
 -}
 type alias HmacKeyParams =
@@ -640,7 +640,7 @@ generateHmacKey _context { hash, length } extractable =
         Just passedLength ->
             let
                 clampedLength =
-                    clamp 8 2147483647 passedLength
+                    clamp 8 2048 passedLength
             in
             if Math.remainderBy 8 clampedLength == 0 then
                 Gren.Kernel.Crypto.generateHmacKey
