@@ -1,6 +1,6 @@
 effect module Task where { command = MyCmd } exposing
     ( Task, perform, attempt, execute
-    , andThen, succeed, fail, sequence
+    , andThen, await, succeed, fail, sequence
     , map, map2, map3, map4, map5
     , onError, mapError
     )
@@ -14,7 +14,7 @@ HTTP requests or writing to a database.
 
 ## Chains
 
-@docs andThen, succeed, fail, sequence
+@docs andThen, await, succeed, fail, sequence
 
 
 ## Maps
@@ -248,6 +248,25 @@ andThen : (a -> Task x b) -> Task x a -> Task x b
 andThen =
     Gren.Kernel.Scheduler.andThen
 
+
+{-| This is like [andThen](andThen) but the arguments are reversed. The callback
+is the last argument, instead of the first. This makes it easier to write imperative
+code where each callback involves more logic.
+
+    import Process
+    import Time
+
+    timeInOneHour : Task x Time.Posix
+    timeInOneHour =
+        Task.await (Process.sleep <| 60 * 60 * 1000) <| \_ ->
+            Time.now
+
+(a)wait for an hour, then fetch the current time.
+
+-}
+await : Task x a -> (a -> Task x b) -> Task x b
+await tsk callback =
+    Gren.Kernel.Scheduler.andThen callback tsk
 
 
 -- ERRORS
