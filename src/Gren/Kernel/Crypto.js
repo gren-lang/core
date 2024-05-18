@@ -95,7 +95,6 @@ var _Crypto_generateRsaKey = F6(function (name, modulusLength, publicExponent, h
 });
 
 var _Crypto_generateHmacKey = F5(function (name, hash, length, extractable, permissions) {
-    console.log("generating HMAC key...");
     var algorithm;
     if (length == "") {
         algorithm = {
