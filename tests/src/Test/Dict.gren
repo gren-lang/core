@@ -15,6 +15,14 @@ animals =
         |> Dict.set "Jerry" "mouse"
 
 
+mice : Dict.Dict String String
+mice =
+    Dict.empty
+        |> Dict.set "Jerry" "mouse"
+        |> Dict.set "John" "mouse"
+        |> Dict.set "Mike" "mouse"
+
+
 tests : Test
 tests =
     let
@@ -38,6 +46,12 @@ tests =
                 , test "count of example dictionary" <| \{} -> Expect.equal 2 (Dict.count animals)
                 , test "first value of animals is (J)erry" <| \{} -> Expect.equal (Just { key = "Jerry", value = "mouse" }) (Dict.first animals)
                 , test "first value of animals is (T)om" <| \{} -> Expect.equal (Just { key = "Tom", value = "cat" }) (Dict.last animals)
+                , test "there is no cats in mice" <| \{} -> Expect.equal Nothing (Dict.findFirst (\_key val -> val == "cat") mice)
+                , test "first mouse of mice is Jerry" <| \{} -> Expect.equal (Just { key = "Jerry", value = "mouse" }) (Dict.findFirst (\_key val -> val == "mouse") mice)
+                , test "last mouse of mice is Mike" <| \{} -> Expect.equal (Just { key = "Mike", value = "mouse" }) (Dict.findLast (\_key val -> val == "mouse") mice)
+                , test "there is a mouse in animals" <| \{} -> Expect.equal True (Dict.any (\_key value -> value == "mouse") animals)
+                , test "not all animals in animals are mice" <| \{} -> Expect.equal False (Dict.all (\_key value -> value == "mouse") animals)
+                , test "all animals in mice are mice, though" <| \{} -> Expect.equal True (Dict.all (\_key value -> value == "mouse") mice)
                 ]
 
         combineTests =

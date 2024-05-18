@@ -1,7 +1,7 @@
 module Set exposing
     ( Set
     , empty, singleton, set, remove
-    , isEmpty, member, count, first, last
+    , isEmpty, member, count, first, last, findFirst, findLast, any, all
     , union, intersect, diff
     , toArray, fromArray
     , map, foldl, foldr, filter, filterMap, partition
@@ -22,7 +22,7 @@ Set, remove, and query operations all take _O(log n)_ time.
 
 ## Query
 
-@docs isEmpty, member, count, first, last
+@docs isEmpty, member, count, first, last, findFirst, findLast, any, all
 
 
 ## Combine
@@ -115,6 +115,34 @@ first (Set_gren_builtin dict) =
 last : Set a -> Maybe a
 last (Set_gren_builtin dict) =
     Maybe.map .key (Dict.last dict)
+
+
+{-| Find the first value that passes the test.
+-}
+findFirst : (a -> Bool) -> Set a -> Maybe a
+findFirst fn (Set_gren_builtin dict) =
+    Maybe.map .key (Dict.findFirst (\key _ -> fn key) dict)
+
+
+{-| Find the last value that passes the test.
+-}
+findLast : (a -> Bool) -> Set a -> Maybe a
+findLast fn (Set_gren_builtin dict) =
+    Maybe.map .key (Dict.findLast (\key _ -> fn key) dict)
+
+
+{-| Checks if any value in the set passes the test.
+-}
+any : (a -> Bool) -> Set a -> Bool
+any fn (Set_gren_builtin dict) =
+    Dict.any (\key _ -> fn key) dict
+
+
+{-| Checks if all values in the set passes the test.
+-}
+all : (a -> Bool) -> Set a -> Bool
+all fn (Set_gren_builtin dict) =
+    Dict.all (\key _ -> fn key) dict
 
 
 {-| Get the union of two sets. Keep all values.

@@ -1,7 +1,7 @@
 module Dict exposing
     ( Dict
     , empty, singleton, set, update, remove
-    , isEmpty, get, member, count, first, last
+    , isEmpty, count, get, member, first, last, findFirst, findLast, any, all
     , keys, values
     , map, foldl, foldr, filter, filterMap, partition
     , union, intersect, diff, merge
@@ -21,7 +21,7 @@ Set, remove, and query operations all take _O(log n)_ time.
 
 ## Query
 
-@docs isEmpty, get, member, count, first, last
+@docs isEmpty, count, get, member, first, last, findFirst, findLast, any, all
 
 
 ## Arrays
@@ -187,6 +187,72 @@ last dict =
 
         RBNode_gren_builtin _ _ _ _ right ->
             last right
+
+
+{-| Find the first key-value pair that passes the test.
+-}
+findFirst : (k -> v -> Bool) -> Dict k v -> Maybe { key : k, value : v }
+findFirst fn dict =
+    case dict of
+        RBEmpty_gren_builtin ->
+            Nothing
+
+        RBNode_gren_builtin _ key value left right ->
+            case findFirst fn left of
+                Nothing ->
+                    if fn key value then
+                        Just { key = key, value = value }
+
+                    else
+                        findFirst fn right
+
+                foundValue ->
+                    foundValue
+
+
+{-| Find the last key-value pair that passes the test.
+-}
+findLast : (k -> v -> Bool) -> Dict k v -> Maybe { key : k, value : v }
+findLast fn dict =
+    case dict of
+        RBEmpty_gren_builtin ->
+            Nothing
+
+        RBNode_gren_builtin _ key value left right ->
+            case findLast fn right of
+                Nothing ->
+                    if fn key value then
+                        Just { key = key, value = value }
+
+                    else
+                        findLast fn left
+
+                foundValue ->
+                    foundValue
+
+
+{-| Checks if any key-value pair in the dictionary passes the test.
+-}
+any : (k -> v -> Bool) -> Dict k v -> Bool
+any fn dict =
+    case findFirst fn dict of
+        Just _ ->
+            True
+
+        Nothing ->
+            False
+
+
+{-| Checks if all key-value pairs in the dictionary passes the test.
+-}
+all : (k -> v -> Bool) -> Dict k v -> Bool
+all fn dict =
+    case findFirst (\key value -> not <| fn key value) dict of
+        Just _ ->
+            False
+
+        Nothing ->
+            True
 
 
 {-| Determine if a dictionary is empty.
