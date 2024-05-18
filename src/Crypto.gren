@@ -12,7 +12,7 @@ module Crypto exposing
     , generateAesCtrKey, generateAesCbcKey, generateAesGcmKey
     , EcNamedCurve(..)
     , generateEcdsaKeyPair, generateEcdhKeyPair
-    , HmacKeyParams
+    , HmacKeyParams, HmacKeyGenerationError(..)
     , generateHmacKey
     , ExportKeyError(..)
     , exportRsaOaepPublicKeyAsSpki, exportRsaOaepPublicKeyAsJwk
@@ -607,12 +607,24 @@ type HmacKey =
     HmacKey
 
 
+{-| Errors that can happen when generating a key for use with the RSA algorithm.
+
+- `ModulusLengthNotDivisibleByEight` happens when the passed `modulusLength` is
+not divisible by 8, as is required by the algorithm.
+-}
+type HmacKeyGenerationError
+    = LengthNotDivisibleByEight
+
+
 {-| Parameters required to generate a key for uses with the HMAC algorithm.
 
 The passed `length` will be the length of the resulting key in bits. If
 `Nothing`, the key will be equal in bits to the passed `DigestAlgorithm`. 
 It's recommended to pass `Nothing` and let the length of the key be equal 
 to the hash function (`DigestAlgorithm`).
+
+If passed, the `length` is clamped be at least 8 and no greater than 2147483647. 
+If the `Int` used is outside of that range, it will be corrected.
 -}
 type alias HmacKeyParams =
     { length : Maybe Int
@@ -622,16 +634,24 @@ type alias HmacKeyParams =
 
 {-| Generate a new key using the HMAC algorithm.
 -}
-generateHmacKey : SecureContext -> HmacKeyParams -> Extractable -> Task x (Key HmacKey)
+generateHmacKey : SecureContext -> HmacKeyParams -> Extractable -> Task HmacKeyGenerationError (Key HmacKey)
 generateHmacKey _context { hash, length } extractable =
     case length of
         Just passedLength ->
-            Gren.Kernel.Crypto.generateHmacKey
-                "HMAC"
-                (digestAlgorithmToString hash)
-                passedLength
-                (extractableToBool extractable)
-                [ "sign", "verify" ]
+            let
+                clampedLength =
+                    clamp 8 2147483647 passedLength
+            in
+            if Math.remainderBy 8 clampedLength == 0 then
+                Gren.Kernel.Crypto.generateHmacKey
+                    "HMAC"
+                    (digestAlgorithmToString hash)
+                    clampedLength
+                    (extractableToBool extractable)
+                    [ "sign", "verify" ]
+            
+            else
+                Task.fail LengthNotDivisibleByEight
 
         Nothing ->
             Gren.Kernel.Crypto.generateHmacKey
