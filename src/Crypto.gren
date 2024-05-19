@@ -505,10 +505,13 @@ type AesGcmKey
 
 {-| The length of bits of the key that is being generated using the AES 
 algorithm. These are the only values that can be chosen.
+
+The Web Crypto API supports a length of 192, but some browsers do not implement
+this. To keep compatability across browser, the option is not provided.
 -}
 type AesLength
     = AesLength128
-    | AesLength192
+    -- | AesLength192
     | AesLength256
 
 
@@ -1509,8 +1512,8 @@ aesLengthToInt length =
         AesLength128 ->
             128
 
-        AesLength192 ->
-            192
+        -- AesLength192 ->
+        --     192
 
         AesLength256 ->
             256
