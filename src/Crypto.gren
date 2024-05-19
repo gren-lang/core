@@ -24,10 +24,10 @@ module Crypto exposing
     , exportAesCtrKeyAsRaw, exportAesCtrKeyAsJwk
     , exportAesCbcKeyAsRaw, exportAesCbcKeyAsJwk
     , exportAesGcmKeyAsRaw, exportAesGcmKeyAsJwk
-    , exportEcdsaPublicKeyAsRaw, exportEcdsaPublicKeyAsSpki, exportEcdsaPublicKeyAsJwt
-    , exportEcdsaPrivateKeyAsPkcs8, exportEcdsaPrivateKeyAsJwt
+    , exportEcdsaPublicKeyAsRaw, exportEcdsaPublicKeyAsSpki, exportEcdsaPublicKeyAsJwk
+    , exportEcdsaPrivateKeyAsPkcs8, exportEcdsaPrivateKeyAsJwk
     , exportEcdhPublicKeyAsRaw, exportEcdhPublicKeyAsSpki, exportEcdhPublicKeyAsJwk
-    , exportEcdhPrivateKeyAsPkcs8, exportEcdhPrivateKeyAsJwt
+    , exportEcdhPrivateKeyAsPkcs8, exportEcdhPrivateKeyAsJwk
     , exportHmacKeyAsRaw, exportHmacKeyAsJwk
     , ImportRsaKeyError(..)
     , importRsaOaepPublicKeyFromJwk, importRsaOaepPublicKeyFromSpki
@@ -155,13 +155,13 @@ for the Web Crypto API.
 
 ### Export ECD Keys
 
-@docs exportEcdsaPublicKeyAsRaw, exportEcdsaPublicKeyAsSpki, exportEcdsaPublicKeyAsJwt
+@docs exportEcdsaPublicKeyAsRaw, exportEcdsaPublicKeyAsSpki, exportEcdsaPublicKeyAsJwk
 
-@docs exportEcdsaPrivateKeyAsPkcs8, exportEcdsaPrivateKeyAsJwt
+@docs exportEcdsaPrivateKeyAsPkcs8, exportEcdsaPrivateKeyAsJwk
 
-@docs exportEcdhPublicKeyAsRaw, exportEcdhPublicKeyAsSpki, exportEcdhPublicKeyAsJwt
+@docs exportEcdhPublicKeyAsRaw, exportEcdhPublicKeyAsSpki, exportEcdhPublicKeyAsJwk
 
-@docs exportEcdhPrivateKeyAsPkcs8, exportEcdhPrivateKeyAsJwt
+@docs exportEcdhPrivateKeyAsPkcs8, exportEcdhPrivateKeyAsJwk
 
 ### Export HMAC Keys 
 
@@ -1103,8 +1103,8 @@ exportEcdsaPublicKeyAsSpki _context (PublicKey key) =
 
 
 {-|-}
-exportEcdsaPublicKeyAsJwt : SecureContext -> PublicKey EcdsaKey -> Task ExportKeyError Json.Encode.Value
-exportEcdsaPublicKeyAsJwt _context (PublicKey key) =
+exportEcdsaPublicKeyAsJwk : SecureContext -> PublicKey EcdsaKey -> Task ExportKeyError Json.Encode.Value
+exportEcdsaPublicKeyAsJwk _context (PublicKey key) =
     exportKeyAsJwk key
 
 
@@ -1115,8 +1115,8 @@ exportEcdsaPrivateKeyAsPkcs8 _context (PrivateKey key) =
 
 
 {-|-}
-exportEcdsaPrivateKeyAsJwt : SecureContext -> PrivateKey EcdsaKey -> Task ExportKeyError Json.Encode.Value
-exportEcdsaPrivateKeyAsJwt _context (PrivateKey key)=
+exportEcdsaPrivateKeyAsJwk : SecureContext -> PrivateKey EcdsaKey -> Task ExportKeyError Json.Encode.Value
+exportEcdsaPrivateKeyAsJwk _context (PrivateKey key)=
     exportKeyAsJwk key
 
 
@@ -1145,8 +1145,8 @@ exportEcdhPrivateKeyAsPkcs8 _context (PrivateKey key) =
 
 
 {-|-}
-exportEcdhPrivateKeyAsJwt : SecureContext -> PrivateKey EcdhKey -> Task ExportKeyError Json.Encode.Value
-exportEcdhPrivateKeyAsJwt _context (PrivateKey key) =
+exportEcdhPrivateKeyAsJwk : SecureContext -> PrivateKey EcdhKey -> Task ExportKeyError Json.Encode.Value
+exportEcdhPrivateKeyAsJwk _context (PrivateKey key) =
     exportKeyAsJwk key
 
 
