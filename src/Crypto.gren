@@ -26,7 +26,7 @@ module Crypto exposing
     , exportAesGcmKeyAsRaw, exportAesGcmKeyAsJwk
     , exportEcdsaPublicKeyAsRaw, exportEcdsaPublicKeyAsSpki, exportEcdsaPublicKeyAsJwt
     , exportEcdsaPrivateKeyAsPkcs8, exportEcdsaPrivateKeyAsJwt
-    , exportEcdhPublicKeyAsRaw, exportEcdhPublicKeyAsSpki, exportEcdhPublicKeyAsJwt
+    , exportEcdhPublicKeyAsRaw, exportEcdhPublicKeyAsSpki, exportEcdhPublicKeyAsJwk
     , exportEcdhPrivateKeyAsPkcs8, exportEcdhPrivateKeyAsJwt
     , exportHmacKeyAsRaw, exportHmacKeyAsJwk
     , ImportRsaKeyError(..)
@@ -1133,8 +1133,8 @@ exportEcdhPublicKeyAsSpki _context (PublicKey key)=
 
 
 {-|-}
-exportEcdhPublicKeyAsJwt : SecureContext -> PublicKey EcdhKey -> Task ExportKeyError Json.Encode.Value
-exportEcdhPublicKeyAsJwt _context (PublicKey key)=
+exportEcdhPublicKeyAsJwk : SecureContext -> PublicKey EcdhKey -> Task ExportKeyError Json.Encode.Value
+exportEcdhPublicKeyAsJwk _context (PublicKey key)=
     exportKeyAsJwk key
 
 
