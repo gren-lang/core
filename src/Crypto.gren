@@ -519,10 +519,9 @@ type AesLength
 -}
 generateAesCtrKey : SecureContext -> AesLength -> Extractable -> Task {} (Key AesCtrKey)
 generateAesCtrKey _context length extractable =
-    Gren.Kernel.Crypto.generateKey
-        { name = "AES-CTR"
-        , length = aesLengthToInt length
-        }
+    Gren.Kernel.Crypto.generateAesKey
+        "AES-CTR"
+        (aesLengthToInt length)
         (extractableToBool extractable)
         [ "encrypt", "decrypt" ]
 
@@ -531,10 +530,9 @@ generateAesCtrKey _context length extractable =
 -}
 generateAesCbcKey : SecureContext -> AesLength -> Extractable -> Task {} (Key AesCbcKey)
 generateAesCbcKey _context length extractable =
-    Gren.Kernel.Crypto.generateKey
-        { name = "AES-CBC"
-        , length = aesLengthToInt length
-        }
+    Gren.Kernel.Crypto.generateAesKey
+        "AES-CBC"
+        (aesLengthToInt length)
         (extractableToBool extractable)
         [ "encrypt", "decrypt" ]
 
@@ -543,10 +541,9 @@ generateAesCbcKey _context length extractable =
 -}
 generateAesGcmKey : SecureContext -> AesLength -> Extractable -> Task {} (Key AesGcmKey)
 generateAesGcmKey _context length extractable =
-    Gren.Kernel.Crypto.generateKey
-        { name = "AES-GCM"
-        , length = aesLengthToInt length
-        }
+    Gren.Kernel.Crypto.generateAesKey
+        "AES-GCM"
+        (aesLengthToInt length)
         (extractableToBool extractable)
         [ "encrypt", "decrypt" ]
 
