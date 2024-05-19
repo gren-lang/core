@@ -94,6 +94,25 @@ var _Crypto_generateRsaKey = F6(function (name, modulusLength, publicExponent, h
     });
 });
 
+var _Crypto_generateEcKey = F4(function (name, namedCurve, extractable, permissions) {
+    var algorithm = {
+        name: name,
+        namedCurve: namedCurve
+    }
+    return __Scheduler_binding(function (callback) {
+        crypto.subtle
+            .generateKey(algorithm, extractable, permissions)
+            .then(function (key) {
+                return callback(__Scheduler_succeed(
+                    {
+                        __$publicKey: __Crypto_PublicKey(_Crypto_constructKey(key.publicKey)),
+                        __$privateKey: __Crypto_PrivateKey(_Crypto_constructKey(key.privateKey))
+                    }
+                ))
+            })
+    })
+});
+
 var _Crypto_generateHmacKey = F5(function (name, hash, length, extractable, permissions) {
     var algorithm;
     if (length == "") {

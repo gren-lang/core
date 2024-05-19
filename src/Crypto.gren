@@ -580,10 +580,9 @@ type EcNamedCurve
 -}
 generateEcdsaKeyPair : SecureContext -> EcNamedCurve -> Extractable -> Task x (KeyPair EcdsaKey)
 generateEcdsaKeyPair _context namedCurve extractable =
-    Gren.Kernel.Crypto.generateKey
-        { name = "ECDSA"
-        , namedCurve = ecNamedCurveToString namedCurve
-        }
+    Gren.Kernel.Crypto.generateEcKey
+        "ECDSA"
+        (ecNamedCurveToString namedCurve)
         (extractableToBool extractable)
         [ "sign", "verify" ]
 
@@ -592,10 +591,9 @@ generateEcdsaKeyPair _context namedCurve extractable =
 -}
 generateEcdhKeyPair : SecureContext -> EcNamedCurve -> Extractable -> Task x (KeyPair EcdhKey)
 generateEcdhKeyPair _context namedCurve extractable =
-    Gren.Kernel.Crypto.generateKey
-        { name = "ECDH"
-        , namedCurve = ecNamedCurveToString namedCurve
-        }
+    Gren.Kernel.Crypto.generateEcKey
+        "ECDH"
+        (ecNamedCurveToString namedCurve)
         (extractableToBool extractable)
         [ "deriveKey", "deriveBits" ]
 
