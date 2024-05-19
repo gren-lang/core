@@ -1092,25 +1092,25 @@ exportAesGcmKeyAsJwk _context =
 
 {-|-}
 exportEcdsaPublicKeyAsRaw : SecureContext -> PublicKey EcdsaKey -> Task ExportKeyError Bytes
-exportEcdsaPublicKeyAsRaw _context (PublicKey key)=
+exportEcdsaPublicKeyAsRaw _context (PublicKey key) =
     exportKeyAsRaw key
 
 
 {-|-}
 exportEcdsaPublicKeyAsSpki : SecureContext -> PublicKey EcdsaKey -> Task ExportKeyError Bytes
-exportEcdsaPublicKeyAsSpki _context (PublicKey key)=
+exportEcdsaPublicKeyAsSpki _context (PublicKey key) =
     exportKeyAsSpki key
 
 
 {-|-}
 exportEcdsaPublicKeyAsJwt : SecureContext -> PublicKey EcdsaKey -> Task ExportKeyError Json.Encode.Value
-exportEcdsaPublicKeyAsJwt _context (PublicKey key)=
+exportEcdsaPublicKeyAsJwt _context (PublicKey key) =
     exportKeyAsJwk key
 
 
 {-|-}
 exportEcdsaPrivateKeyAsPkcs8 : SecureContext -> PrivateKey EcdsaKey -> Task ExportKeyError Bytes
-exportEcdsaPrivateKeyAsPkcs8 _context (PrivateKey key)=
+exportEcdsaPrivateKeyAsPkcs8 _context (PrivateKey key) =
     exportKeyAsPkcs8 key
 
 
@@ -1122,31 +1122,31 @@ exportEcdsaPrivateKeyAsJwt _context (PrivateKey key)=
 
 {-|-}
 exportEcdhPublicKeyAsRaw : SecureContext -> PublicKey EcdhKey -> Task ExportKeyError Bytes
-exportEcdhPublicKeyAsRaw _context (PublicKey key)=
+exportEcdhPublicKeyAsRaw _context (PublicKey key) =
     exportKeyAsRaw key
 
 
 {-|-}
 exportEcdhPublicKeyAsSpki : SecureContext -> PublicKey EcdhKey -> Task ExportKeyError Bytes
-exportEcdhPublicKeyAsSpki _context (PublicKey key)=
+exportEcdhPublicKeyAsSpki _context (PublicKey key) =
     exportKeyAsSpki key
 
 
 {-|-}
 exportEcdhPublicKeyAsJwk : SecureContext -> PublicKey EcdhKey -> Task ExportKeyError Json.Encode.Value
-exportEcdhPublicKeyAsJwk _context (PublicKey key)=
+exportEcdhPublicKeyAsJwk _context (PublicKey key) =
     exportKeyAsJwk key
 
 
 {-|-}
 exportEcdhPrivateKeyAsPkcs8 : SecureContext -> PrivateKey EcdhKey -> Task ExportKeyError Bytes
-exportEcdhPrivateKeyAsPkcs8 _context (PrivateKey key)=
+exportEcdhPrivateKeyAsPkcs8 _context (PrivateKey key) =
     exportKeyAsPkcs8 key
 
 
 {-|-}
 exportEcdhPrivateKeyAsJwt : SecureContext -> PrivateKey EcdhKey -> Task ExportKeyError Json.Encode.Value
-exportEcdhPrivateKeyAsJwt _context (PrivateKey key)=
+exportEcdhPrivateKeyAsJwt _context (PrivateKey key) =
     exportKeyAsJwk key
 
 
