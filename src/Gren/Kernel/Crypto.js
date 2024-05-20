@@ -186,6 +186,32 @@ var _Crypto_importRsaKey = F7(function (wrapper, format, keyData, algorithm, has
     })
 });
 
+var _Crypto_importHmacKey = F7(function (format, keyData, algorithm, hash, length, extractable, keyUsages) {
+    var algorithm;
+    if (length == "") {
+        algorithm = {
+            name: algorithm,
+            hash: hash
+        }
+    } else {
+        algorithm = {
+            name: algorithm,
+            hash: hash,
+            length: length
+        }
+    }
+    return __Scheduler_binding(function (callback) {
+        crypto.subtle
+            .importKey(format, keyData, algorithm, extractable, keyUsages)
+            .then(function (key) {
+                return callback(__Scheduler_succeed(_Crypto_constructKey(key)))
+            })
+            .catch(function (err) {
+                console.log(err);
+            })
+    });
+});
+
 var _Crypto_importKey = F6(function (wrapper, format, keyData, algorithm, extractable, keyUsages) {
     return __Scheduler_binding(function (callback) {
         crypto.subtle

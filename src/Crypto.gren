@@ -36,6 +36,7 @@ module Crypto exposing
     , importRsaPssPrivateKeyFromJwk, importRsaPssPrivateKeyFromPkcs8
     , importRsaSsaPkcs1V1_5PublicKeyFromJwk, importRsaSsaPkcs1V1_5PublicKeyFromSpki
     , importRsaSsaPkcs1V1_5PrivateKeyFromJwk, importRsaSsaPkcs1V1_5PrivateKeyFromPkcs8
+    , importHmacKeyFromJwk, importHmacKeyFromRaw
     , DigestAlgorithm(..)
     )
 
@@ -1460,14 +1461,54 @@ importEcdhPrivateKey _context =
 
 
 {-|-}
-type ImportHmacFormat
-    = ImportHmacUsingRaw Bytes
-    | ImportHmacUsingJsonWebKey Json.Encode.Value
+importHmacKeyFromJwk : SecureContext -> Json.Encode.Value -> DigestAlgorithm -> Maybe Int -> Extractable -> Task x (PrivateKey EcdhKey)
+importHmacKeyFromJwk _context jwk hash passedLength extractable =
+    case passedLength of
+        Just length ->
+            Gren.Kernel.Crypto.importHmacKey
+                "jwk"
+                (Gren.Kernel.Json.unwrap jwk)
+                "HMAC"
+                (digestAlgorithmToString hash)
+                length
+                extractable
+                [ "sign", "verify" ]
+
+        Nothing ->
+            Gren.Kernel.Crypto.importHmacKey
+                "jwk"
+                (Gren.Kernel.Json.unwrap jwk)
+                "HMAC"
+                (digestAlgorithmToString hash)
+                ""
+                extractable
+                [ "sign", "verify" ]
 
 
 {-|-}
-importHmacKey =
-    Debug.todo ""
+importHmacKeyFromRaw : SecureContext -> Bytes -> DigestAlgorithm -> Maybe Int -> Extractable -> Task x (PrivateKey EcdhKey)
+importHmacKeyFromRaw _context bytes hash passedLength extractable =
+    case passedLength of
+        Just length ->
+            Gren.Kernel.Crypto.importHmacKey
+                "raw"
+                bytes
+                { name = "HMAC"
+                , hash = digestAlgorithmToString hash
+                }
+                extractable
+                [ "sign", "verify" ]
+
+        Nothing ->
+            Gren.Kernel.Crypto.importHmacKey
+                "jwk"
+                bytes
+                { name = "HMAC"
+                , hash = digestAlgorithmToString hash
+                }
+                extractable
+                [ "sign", "verify" ]
+
 
 
 -- UTILITIES
