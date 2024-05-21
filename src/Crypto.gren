@@ -36,6 +36,7 @@ module Crypto exposing
     , importRsaPssPrivateKeyFromJwk, importRsaPssPrivateKeyFromPkcs8
     , importRsaSsaPkcs1V1_5PublicKeyFromJwk, importRsaSsaPkcs1V1_5PublicKeyFromSpki
     , importRsaSsaPkcs1V1_5PrivateKeyFromJwk, importRsaSsaPkcs1V1_5PrivateKeyFromPkcs8
+    , ImportHmacKeyError(..)
     , importHmacKeyFromJwk, importHmacKeyFromRaw
     , DigestAlgorithm(..)
     )
@@ -1485,8 +1486,29 @@ importHmacKeyFromJwk _context jwk hash passedLength extractable =
                 [ "sign", "verify" ]
 
 
+{-| Appears if there's an error when importing a key using the HMAC algorithm.
+
+There are not specific error types for importing HMAC keys due to inconsistencies
+in how errors are thrown across `browser` and `node` platforms.
+
+There are three reasons an error can happen when importing HMAC keys:
+
+1. The passed key value (either `Json.Encode.Value` or `Bytes`) is not a valid key 
+and cannot be imported.
+1. The `length` passed to the function does not match the `length` of the key being
+imported. It's generally recommended that the `length` match the hash length, and 
+that can be done by passing `Nothing` for the `length`.
+2. The `hash` passed to the function does not match the `hash` of the imported key.
+This only happens when importing a JSON Web Key. It is recommended to _always_ match 
+the hash of the  imported key or you will get different results when using the imported 
+key. 
+-}
+type ImportHmacKeyError
+    = ImportHmacKeyError
+
+
 {-|-}
-importHmacKeyFromRaw : SecureContext -> Bytes -> DigestAlgorithm -> Maybe Int -> Extractable -> Task x (PrivateKey EcdhKey)
+importHmacKeyFromRaw : SecureContext -> Bytes -> DigestAlgorithm -> Maybe Int -> Extractable -> Task ImportHmacKeyError (PrivateKey EcdhKey)
 importHmacKeyFromRaw _context bytes hash passedLength extractable =
     case passedLength of
         Just length ->
