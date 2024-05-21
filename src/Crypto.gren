@@ -1395,7 +1395,7 @@ importAesCtrKey _context extractable format =
                 "raw"
                 bytes
                 { name = "AES-CTR" }
-                extractable
+                (extractableToBool extractable)
                 [ "encrypt", "decrypt" ]
         
         ImportAesUsingJsonWebKey json ->
@@ -1403,7 +1403,7 @@ importAesCtrKey _context extractable format =
                 "jwk"
                 json
                 { name = "AES-CTR" }
-                extractable
+                (extractableToBool extractable)
                 [ "encrypt", "decrypt" ]
 
 
@@ -1471,7 +1471,7 @@ importHmacKeyFromJwk _context jwk hash passedLength extractable =
                 "HMAC"
                 (digestAlgorithmToString hash)
                 length
-                extractable
+                (extractableToBool extractable)
                 [ "sign", "verify" ]
 
         Nothing ->
@@ -1481,7 +1481,7 @@ importHmacKeyFromJwk _context jwk hash passedLength extractable =
                 "HMAC"
                 (digestAlgorithmToString hash)
                 ""
-                extractable
+                (extractableToBool extractable)
                 [ "sign", "verify" ]
 
 
@@ -1493,20 +1493,20 @@ importHmacKeyFromRaw _context bytes hash passedLength extractable =
             Gren.Kernel.Crypto.importHmacKey
                 "raw"
                 bytes
-                { name = "HMAC"
-                , hash = digestAlgorithmToString hash
-                }
-                extractable
+                 "HMAC"
+                (digestAlgorithmToString hash)
+                length
+                (extractableToBool extractable)
                 [ "sign", "verify" ]
 
         Nothing ->
             Gren.Kernel.Crypto.importHmacKey
                 "jwk"
                 bytes
-                { name = "HMAC"
-                , hash = digestAlgorithmToString hash
-                }
-                extractable
+                "HMAC"
+                (digestAlgorithmToString hash)
+                ""
+                (extractableToBool extractable)
                 [ "sign", "verify" ]
 
 
