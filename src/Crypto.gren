@@ -1196,13 +1196,6 @@ exportKeyAsJwk key =
 -- IMPORT KEYS
 
 
-{-| Available options for importing keys for RAS algorithms.
--}
-type ImportRsaPublicKeyFormat
-    = ImportRsaPublicKeyUsingSubjectPublicKeyInfo Bytes
-    | ImportRsaPublicKeyUsingJsonWebKey Json.Encode.Value
-
-
 {-| Parameters required for importing a key using an RSA algorithm.
 -}
 type alias ImportRsaKeyParams =
