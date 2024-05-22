@@ -1542,7 +1542,7 @@ clamp : Int -> Int -> Int -> Int
 clamp min max number =
     if number < min then
         min
-        
+
     else if number > max then
         max
 
