@@ -1496,6 +1496,31 @@ type ImportHmacKeyError
 
 
 {-|-}
+importHmacKeyFromJwk : SecureContext -> Json.Encode.Value -> DigestAlgorithm -> Maybe Int -> Extractable -> Task ImportHmacKeyError (PrivateKey EcdhKey)
+importHmacKeyFromJwk _context jwk hash passedLength extractable =
+    case passedLength of
+        Just length ->
+            Gren.Kernel.Crypto.importHmacKey
+                "jwk"
+                (Gren.Kernel.Json.unwrap jwk)
+                "HMAC"
+                (digestAlgorithmToString hash)
+                length
+                (extractableToBool extractable)
+                [ "sign", "verify" ]
+
+        Nothing ->
+            Gren.Kernel.Crypto.importHmacKey
+                "jwk"
+                (Gren.Kernel.Json.unwrap jwk)
+                "HMAC"
+                (digestAlgorithmToString hash)
+                ""
+                (extractableToBool extractable)
+                [ "sign", "verify" ]
+
+
+{-|-}
 importHmacKeyFromRaw : SecureContext -> Bytes -> DigestAlgorithm -> Maybe Int -> Extractable -> Task ImportHmacKeyError (PrivateKey EcdhKey)
 importHmacKeyFromRaw _context bytes hash passedLength extractable =
     case passedLength of
