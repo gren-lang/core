@@ -1373,44 +1373,38 @@ importRsaSsaPkcs1V1_5PrivateKeyFromPkcs8 _context bytes { hash } extractable =
         [ "sign" ]
 
 
-{-| Available options for importing keys for AES algorithms.
--}
-type ImportAesFormat
-    = ImportAesUsingRaw Bytes
-    | ImportAesUsingJsonWebKey Json.Encode.Value
+{-|-}
+type ImportAesKeyError
+    = ImportAesKeyError
 
 
 {-|-}
-importAesCtrKey : SecureContext -> Extractable -> ImportAesFormat -> Task x (Key AesCtrKey)
-importAesCtrKey _context extractable format =
-    case format of
-        ImportAesUsingRaw bytes ->
-            Gren.Kernel.Crypto.importKey
-                "raw"
-                bytes
-                { name = "AES-CTR" }
-                (extractableToBool extractable)
-                [ "encrypt", "decrypt" ]
-        
-        ImportAesUsingJsonWebKey json ->
-            Gren.Kernel.Crypto.importKey
-                "jwk"
-                json
-                { name = "AES-CTR" }
-                (extractableToBool extractable)
-                [ "encrypt", "decrypt" ]
-
-
-
-{-|-}
-importAesCbcKey : SecureContext -> AesLength -> Extractable -> Task x (Key AesCbcKey)
-importAesCbcKey =
+importAesCtrKeyFromRaw =
     Debug.todo ""
 
 
 {-|-}
-importAesGcmKey : SecureContext -> AesLength -> Extractable -> Task x (Key AesGcmKey)
-importAesGcmKey =
+importAesCtrKeyFromJwk =
+    Debug.todo ""
+
+
+{-|-}
+importAesCbcKeyFromRaw =
+    Debug.todo ""
+
+
+{-|-}
+importAesCbcKeyFromJwk =
+    Debug.todo ""
+
+
+{-|-}
+importAesGcmKeyFromRaw =
+    Debug.todo ""
+
+
+{-|-}
+importAesGcmKeyFromJwk =
     Debug.todo ""
 
 
