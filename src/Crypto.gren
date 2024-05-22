@@ -1408,23 +1408,38 @@ importAesGcmKeyFromJwk =
     Debug.todo ""
 
 
-{-| Available options for importing public keys for ECDSA algorithms.
--}
-type ImportEcPublicKeyFormat
-    = ImportEcPublicKeyUsingRaw Bytes
-    | ImportEcPublicKeyUsingSubjectPublicKeyInfo Bytes
-    | ImportEcPublicKeyUsingJsonWebKey Json.Encode.Value
+{-|-}
+type ImportEcKeyError
+    = ImportEcKeyError
 
 
 {-|-}
-importEcdsaPublicKey : SecureContext -> EcNamedCurve -> Extractable -> Task x (PublicKey EcdsaKey)
-importEcdsaPublicKey _context =
+importEcdsaPublicKeyFromRaw _context =
     Debug.todo ""
 
 
 {-|-}
-importEcdhPublicKey : SecureContext -> EcNamedCurve -> Extractable -> Task x (PublicKey EcdhKey)
-importEcdhPublicKey _context =
+importEcdsaPublicKeyFromSpki _context =
+    Debug.todo ""
+
+
+{-|-}
+importEcdsaPublicKeyFromJwk _context =
+    Debug.todo ""
+
+
+{-|-}
+importEcdhPublicKeyFromRaw _context =
+    Debug.todo ""
+
+
+{-|-}
+importEcdhPublicKeyFromSpki _context =
+    Debug.todo ""
+
+
+{-|-}
+importEcdhPublicKeyFromJwk _context =
     Debug.todo ""
 
 
@@ -1437,40 +1452,33 @@ type ImportEcPrivateKeyFormat
 
 
 {-|-}
-importEcdsaPrivateKey : SecureContext -> EcNamedCurve -> Extractable -> Task x (PrivateKey EcdsaKey)
-importEcdsaPrivateKey _context =
+importEcdsaPrivateKeyFromPkcs _context =
     Debug.todo ""
 
 
 {-|-}
-importEcdhPrivateKey : SecureContext -> EcNamedCurve -> Extractable -> Task x (PrivateKey EcdhKey)
-importEcdhPrivateKey _context =
+importEcdsaPrivateKeyFromSpki _context =
     Debug.todo ""
 
 
 {-|-}
-importHmacKeyFromJwk : SecureContext -> Json.Encode.Value -> DigestAlgorithm -> Maybe Int -> Extractable -> Task x (PrivateKey EcdhKey)
-importHmacKeyFromJwk _context jwk hash passedLength extractable =
-    case passedLength of
-        Just length ->
-            Gren.Kernel.Crypto.importHmacKey
-                "jwk"
-                (Gren.Kernel.Json.unwrap jwk)
-                "HMAC"
-                (digestAlgorithmToString hash)
-                length
-                (extractableToBool extractable)
-                [ "sign", "verify" ]
+importEcdsaPrivateKeyFromJwk _context =
+    Debug.todo ""
 
-        Nothing ->
-            Gren.Kernel.Crypto.importHmacKey
-                "jwk"
-                (Gren.Kernel.Json.unwrap jwk)
-                "HMAC"
-                (digestAlgorithmToString hash)
-                ""
-                (extractableToBool extractable)
-                [ "sign", "verify" ]
+
+{-|-}
+importEcdhPrivateKeyFromPkcs _context =
+    Debug.todo ""
+
+
+{-|-}
+importEcdhPrivateKeyFromSpki _context =
+    Debug.todo ""
+
+
+{-|-}
+importEcdhPrivateKeyFromJwk _context =
+    Debug.todo ""
 
 
 {-| Appears if there's an error when importing a key using the HMAC algorithm.
