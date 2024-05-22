@@ -1491,17 +1491,18 @@ importHmacKeyFromJwk _context jwk hash passedLength extractable =
 There are not specific error types for importing HMAC keys due to inconsistencies
 in how errors are thrown across `browser` and `node` platforms.
 
-There are three reasons an error can happen when importing HMAC keys:
+There are three known reasons an error can happen when importing HMAC keys:
 
 1. The passed key value (either `Json.Encode.Value` or `Bytes`) is not a valid key 
 and cannot be imported.
-1. The `length` passed to the function does not match the `length` of the key being
-imported. It's generally recommended that the `length` match the hash length, and 
-that can be done by passing `Nothing` for the `length`.
+1. The `length` passed to the function is not correct for the imported key. The
+appearance of this error is inconsistent across `browser` and `node` platforms. It's
+recommended to avoid passing a `length` and instead use `Nothing` for both HMAC key
+generation and importing.
 2. The `hash` passed to the function does not match the `hash` of the imported key.
 This only happens when importing a JSON Web Key. It is recommended to _always_ match 
-the hash of the  imported key or you will get different results when using the imported 
-key. 
+the hash of the imported key or you will get different results when using the imported 
+key for cryptographic functions.
 -}
 type ImportHmacKeyError
     = ImportHmacKeyError
