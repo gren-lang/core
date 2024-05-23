@@ -1244,7 +1244,7 @@ importRsaOaepPublicKeyFromSpki _context bytes { hash } extractable =
 
 
 {-|-}
-importRsaPssPublicKeyFromJwk : SecureContext -> Json.Encode.Value -> ImportRsaKeyParams -> Extractable -> Task x (PublicKey RsaPssKey)
+importRsaPssPublicKeyFromJwk : SecureContext -> Json.Encode.Value -> ImportRsaKeyParams -> Extractable -> Task ImportRsaKeyError (PublicKey RsaPssKey)
 importRsaPssPublicKeyFromJwk _context jwk { hash } extractable =
     Gren.Kernel.Crypto.importRsaKey
         "public"
@@ -1257,7 +1257,7 @@ importRsaPssPublicKeyFromJwk _context jwk { hash } extractable =
 
 
 {-|-}
-importRsaPssPublicKeyFromSpki : SecureContext -> Bytes -> ImportRsaKeyParams -> Extractable -> Task x (PublicKey RsaPssKey)
+importRsaPssPublicKeyFromSpki : SecureContext -> Bytes -> ImportRsaKeyParams -> Extractable -> Task ImportRsaKeyError (PublicKey RsaPssKey)
 importRsaPssPublicKeyFromSpki _context bytes { hash } extractable =
     Gren.Kernel.Crypto.importRsaKey
         "public"
@@ -1270,7 +1270,7 @@ importRsaPssPublicKeyFromSpki _context bytes { hash } extractable =
 
 
 {-|-}
-importRsaOaepPrivateKeyFromJwk : SecureContext -> Json.Encode.Value -> ImportRsaKeyParams -> Extractable -> Task x (PrivateKey RsaOaepKey)
+importRsaOaepPrivateKeyFromJwk : SecureContext -> Json.Encode.Value -> ImportRsaKeyParams -> Extractable -> Task ImportRsaKeyError (PrivateKey RsaOaepKey)
 importRsaOaepPrivateKeyFromJwk _context jwk { hash } extractable =
     Gren.Kernel.Crypto.importRsaKey
         "private"
@@ -1283,7 +1283,7 @@ importRsaOaepPrivateKeyFromJwk _context jwk { hash } extractable =
 
 
 {-|-}
-importRsaOaepPrivateKeyFromPkcs8 : SecureContext -> Bytes -> ImportRsaKeyParams -> Extractable -> Task x (PrivateKey RsaOaepKey)
+importRsaOaepPrivateKeyFromPkcs8 : SecureContext -> Bytes -> ImportRsaKeyParams -> Extractable -> Task ImportRsaKeyError (PrivateKey RsaOaepKey)
 importRsaOaepPrivateKeyFromPkcs8 _context bytes { hash } extractable =
     Gren.Kernel.Crypto.importRsaKey
         "private"
@@ -1296,7 +1296,7 @@ importRsaOaepPrivateKeyFromPkcs8 _context bytes { hash } extractable =
 
 
 {-|-}
-importRsaPssPrivateKeyFromJwk : SecureContext -> Json.Encode.Value -> ImportRsaKeyParams -> Extractable -> Task x (PrivateKey RsaPssKey)
+importRsaPssPrivateKeyFromJwk : SecureContext -> Json.Encode.Value -> ImportRsaKeyParams -> Extractable -> Task ImportRsaKeyError (PrivateKey RsaPssKey)
 importRsaPssPrivateKeyFromJwk _context jwk { hash } extractable =
     Gren.Kernel.Crypto.importRsaKey
         "private"
@@ -1309,7 +1309,7 @@ importRsaPssPrivateKeyFromJwk _context jwk { hash } extractable =
 
 
 {-|-}
-importRsaPssPrivateKeyFromPkcs8 : SecureContext -> Bytes -> ImportRsaKeyParams -> Extractable -> Task x (PrivateKey RsaPssKey)
+importRsaPssPrivateKeyFromPkcs8 : SecureContext -> Bytes -> ImportRsaKeyParams -> Extractable -> Task ImportRsaKeyError (PrivateKey RsaPssKey)
 importRsaPssPrivateKeyFromPkcs8 _context bytes { hash } extractable =
     Gren.Kernel.Crypto.importRsaKey
         "private"
@@ -1322,7 +1322,7 @@ importRsaPssPrivateKeyFromPkcs8 _context bytes { hash } extractable =
 
 
 {-|-}
-importRsaSsaPkcs1V1_5PublicKeyFromJwk : SecureContext -> Json.Encode.Value -> ImportRsaKeyParams -> Extractable -> Task x (PrivateKey RsaSsaPkcs1V1_5Key)
+importRsaSsaPkcs1V1_5PublicKeyFromJwk : SecureContext -> Json.Encode.Value -> ImportRsaKeyParams -> Extractable -> Task ImportRsaKeyError (PrivateKey RsaSsaPkcs1V1_5Key)
 importRsaSsaPkcs1V1_5PublicKeyFromJwk _context jwk { hash } extractable =
     Gren.Kernel.Crypto.importRsaKey
         "public"
@@ -1335,7 +1335,7 @@ importRsaSsaPkcs1V1_5PublicKeyFromJwk _context jwk { hash } extractable =
 
 
 {-|-}
-importRsaSsaPkcs1V1_5PublicKeyFromSpki : SecureContext -> Bytes -> ImportRsaKeyParams -> Extractable -> Task x (PrivateKey RsaSsaPkcs1V1_5Key)
+importRsaSsaPkcs1V1_5PublicKeyFromSpki : SecureContext -> Bytes -> ImportRsaKeyParams -> Extractable -> Task ImportRsaKeyError (PrivateKey RsaSsaPkcs1V1_5Key)
 importRsaSsaPkcs1V1_5PublicKeyFromSpki _context bytes { hash } extractable =
     Gren.Kernel.Crypto.importRsaKey
         "public"
@@ -1348,7 +1348,7 @@ importRsaSsaPkcs1V1_5PublicKeyFromSpki _context bytes { hash } extractable =
 
 
 {-|-}
-importRsaSsaPkcs1V1_5PrivateKeyFromJwk : SecureContext -> Json.Encode.Value -> ImportRsaKeyParams -> Extractable -> Task x (PrivateKey RsaSsaPkcs1V1_5Key)
+importRsaSsaPkcs1V1_5PrivateKeyFromJwk : SecureContext -> Json.Encode.Value -> ImportRsaKeyParams -> Extractable -> Task ImportRsaKeyError (PrivateKey RsaSsaPkcs1V1_5Key)
 importRsaSsaPkcs1V1_5PrivateKeyFromJwk _context jwk { hash } extractable =
     Gren.Kernel.Crypto.importRsaKey
         "private"
@@ -1361,7 +1361,7 @@ importRsaSsaPkcs1V1_5PrivateKeyFromJwk _context jwk { hash } extractable =
 
 
 {-|-}
-importRsaSsaPkcs1V1_5PrivateKeyFromPkcs8 : SecureContext -> Bytes -> ImportRsaKeyParams -> Extractable -> Task x (PrivateKey RsaSsaPkcs1V1_5Key)
+importRsaSsaPkcs1V1_5PrivateKeyFromPkcs8 : SecureContext -> Bytes -> ImportRsaKeyParams -> Extractable -> Task ImportRsaKeyError (PrivateKey RsaSsaPkcs1V1_5Key)
 importRsaSsaPkcs1V1_5PrivateKeyFromPkcs8 _context bytes { hash } extractable =
     Gren.Kernel.Crypto.importRsaKey
         "private"
