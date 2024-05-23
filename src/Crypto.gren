@@ -1483,14 +1483,6 @@ importEcdhPublicKeyFromJwk _context =
     Debug.todo ""
 
 
-{-| Available options for importing private keys for ECDSA algorithms.
--}
-type ImportEcPrivateKeyFormat
-    = ImportEcPrivateKeyUsingPkcs Bytes
-    | ImportEcPrivateKeyUsingSubjectPublicKeyInfo Bytes
-    | ImportEcPrivateKeyUsingJsonWebKey Json.Encode.Value
-
-
 {-|-}
 importEcdsaPrivateKeyFromPkcs _context =
     Debug.todo ""
