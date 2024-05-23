@@ -1421,7 +1421,7 @@ importAesCbcKeyFromJwk _context jwk extractable =
     Gren.Kernel.Crypto.importAesKey
         "jwk"
         (Gren.Kernel.Json.unwrap jwk)
-        "AES-CTR"
+        "AES-CBC"
         (extractableToBool extractable)
         [ "encrypt", "decrypt" ]
 
