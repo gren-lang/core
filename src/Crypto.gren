@@ -36,6 +36,10 @@ module Crypto exposing
     , importRsaPssPrivateKeyFromJwk, importRsaPssPrivateKeyFromPkcs8
     , importRsaSsaPkcs1V1_5PublicKeyFromJwk, importRsaSsaPkcs1V1_5PublicKeyFromSpki
     , importRsaSsaPkcs1V1_5PrivateKeyFromJwk, importRsaSsaPkcs1V1_5PrivateKeyFromPkcs8
+    , ImportAesKeyError(..)
+    , importAesCtrKeyFromRaw, importAesCtrKeyFromJwk
+    , importAesCbcKeyFromRaw, importAesCbcKeyFromJwk
+    , importAesGcmKeyFromRaw, importAesGcmKeyFromJwk
     , ImportHmacKeyError(..)
     , importHmacKeyFromJwk, importHmacKeyFromRaw
     , DigestAlgorithm(..)
@@ -1379,33 +1383,69 @@ type ImportAesKeyError
 
 
 {-|-}
-importAesCtrKeyFromRaw =
-    Debug.todo ""
+importAesCtrKeyFromRaw : SecureContext -> Bytes -> Extractable -> Task ImportAesKeyError (Key AesCtrKey)
+importAesCtrKeyFromRaw _context bytes extractable =
+    Gren.Kernel.Crypto.importAesKey
+        "raw"
+        bytes
+        "AES-CTR"
+        (extractableToBool extractable)
+        [ "encrypt", "decrypt" ]
 
 
 {-|-}
-importAesCtrKeyFromJwk =
-    Debug.todo ""
+importAesCtrKeyFromJwk : SecureContext -> Json.Encode.Value -> Extractable -> Task ImportAesKeyError (Key AesCtrKey)
+importAesCtrKeyFromJwk _context jwk extractable =
+    Gren.Kernel.Crypto.importAesKey
+        "jwk"
+        (Gren.Kernel.Json.unwrap jwk)
+        "AES-CTR"
+        (extractableToBool extractable)
+        [ "encrypt", "decrypt" ]
 
 
 {-|-}
-importAesCbcKeyFromRaw =
-    Debug.todo ""
+importAesCbcKeyFromRaw : SecureContext -> Bytes -> Extractable -> Task ImportAesKeyError (Key AesCtrKey)
+importAesCbcKeyFromRaw _context bytes extractable =
+    Gren.Kernel.Crypto.importAesKey
+        "raw"
+        bytes
+        "AES-CBC"
+        (extractableToBool extractable)
+        [ "encrypt", "decrypt" ]
 
 
 {-|-}
-importAesCbcKeyFromJwk =
-    Debug.todo ""
+importAesCbcKeyFromJwk : SecureContext -> Json.Encode.Value -> Extractable -> Task ImportAesKeyError (Key AesCtrKey)
+importAesCbcKeyFromJwk _context jwk extractable =
+    Gren.Kernel.Crypto.importAesKey
+        "jwk"
+        (Gren.Kernel.Json.unwrap jwk)
+        "AES-CTR"
+        (extractableToBool extractable)
+        [ "encrypt", "decrypt" ]
 
 
 {-|-}
-importAesGcmKeyFromRaw =
-    Debug.todo ""
+importAesGcmKeyFromRaw : SecureContext -> Bytes -> Extractable -> Task ImportAesKeyError (Key AesCtrKey)
+importAesGcmKeyFromRaw _context bytes extractable =
+    Gren.Kernel.Crypto.importAesKey
+        "raw"
+        bytes
+        "AES-GCM"
+        (extractableToBool extractable)
+        [ "encrypt", "decrypt" ]
 
 
 {-|-}
-importAesGcmKeyFromJwk =
-    Debug.todo ""
+importAesGcmKeyFromJwk : SecureContext -> Json.Encode.Value -> Extractable -> Task ImportAesKeyError (Key AesCtrKey)
+importAesGcmKeyFromJwk _context jwk extractable =
+    Gren.Kernel.Crypto.importAesKey
+        "jwk"
+        (Gren.Kernel.Json.unwrap jwk)
+        "AES-GCM"
+        (extractableToBool extractable)
+        [ "encrypt", "decrypt" ]
 
 
 {-|-}

@@ -2,7 +2,7 @@
 
 import Gren.Kernel.Scheduler exposing (binding, succeed, fail)
 import Gren.Kernel.Bytes exposing (writeBytes)
-import Crypto exposing (ImportRsaKeyError, ImportHmacKeyError, Key, SecureContext, PublicKey, PrivateKey)
+import Crypto exposing (ImportRsaKeyError, ImportHmacKeyError, ImportAesKeyError, Key, SecureContext, PublicKey, PrivateKey)
 import Maybe exposing (Just, Nothing)
 import Bytes exposing (Bytes)
 
@@ -184,6 +184,20 @@ var _Crypto_importRsaKey = F7(function (wrapper, format, keyData, algorithm, has
                 return callback(__Scheduler_fail(__Crypto_ImportRsaKeyError));
             })
     })
+});
+
+var _Crypto_importAesKey = F5(function (format, keyData, algorithm, extractable, keyUsages) {
+    return __Scheduler_binding(function (callback) {
+        crypto.subtle
+            .importKey(format, keyData, { name: algorithm }, extractable, keyUsages)
+            .then(function (key) {
+                return callback(__Scheduler_succeed(_Crypto_constructKey(key)))
+            })
+            .catch(function (err) {
+                console.log(err);
+                return callback(__Scheduler_fail(__Crypto_ImportAesKeyError));
+            });
+    });
 });
 
 var _Crypto_importHmacKey = F7(function (format, keyData, algorithm, hash, length, extractable, keyUsages) {
