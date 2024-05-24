@@ -2,7 +2,7 @@
 
 import Gren.Kernel.Scheduler exposing (binding, succeed, fail)
 import Gren.Kernel.Bytes exposing (writeBytes)
-import Crypto exposing (ImportRsaKeyError, ImportHmacKeyError, ImportAesKeyError, Key, SecureContext, PublicKey, PrivateKey)
+import Crypto exposing (ImportRsaKeyError, ImportHmacKeyError, ImportEcKeyError, ImportAesKeyError, Key, SecureContext, PublicKey, PrivateKey)
 import Maybe exposing (Just, Nothing)
 import Bytes exposing (Bytes)
 
@@ -177,7 +177,7 @@ var _Crypto_importRsaKey = F7(function (wrapper, format, keyData, algorithm, has
                     case "private":
                         return callback(__Scheduler_succeed(__Crypto_PrivateKey(_Crypto_constructKey(key))))
                     default:
-                        return callback(__Scheduler_succeed(_Crypto_constructKey(key)));
+                        return callback(__Scheduler_fail(__Crypto_ImportRsaKeyError));
                 }
             })
             .catch(function (err) {
@@ -197,6 +197,34 @@ var _Crypto_importAesKey = F5(function (format, keyData, algorithm, extractable,
                 console.log(err);
                 return callback(__Scheduler_fail(__Crypto_ImportAesKeyError));
             });
+    });
+});
+
+var _Crypto_importEcKey = F7(function (wrapper, format, keyData, algorithm, namedCurve, extractable, keyUsages) {
+    return __Scheduler_binding(function (callback) {
+        crypto.subtle
+            .importKey(
+                format,
+                keyData,
+                {
+                    algorithm: algorithm,
+                    namedCurve: namedCurve
+                },
+                extractable,
+                keyUsages)
+            .then(function (key) {
+                switch (wrapper) {
+                    case "public":
+                        return callback(__Scheduler_succeed(__Crypto_PublicKey(_Crypto_constructKey(key))))
+                    case "private":
+                        return callback(__Scheduler_succeed(__Crypto_PrivateKey(_Crypto_constructKey(key))))
+                    default:
+                        return callback(__Scheduler_fail(__Crypto_ImportEcKeyError));
+                }
+            })
+            .catch(function (err) {
+                return callback(__Scheduler_fail(__Crypto_ImportEcKeyError));
+            })
     });
 });
 
@@ -223,26 +251,6 @@ var _Crypto_importHmacKey = F7(function (format, keyData, algorithm, hash, lengt
             .catch(function (err) {
                 return callback(__Scheduler_fail(__Crypto_ImportHmacKeyError));
             })
-    });
-});
-
-var _Crypto_importKey = F6(function (wrapper, format, keyData, algorithm, extractable, keyUsages) {
-    return __Scheduler_binding(function (callback) {
-        crypto.subtle
-            .importKey(format, keyData, algorithm, extractable, keyUsages)
-            .then(function (key) {
-                switch (wrapper) {
-                    case "public":
-                        return callback(__Scheduler_succeed(__Crypto_PublicKey(_Crypto_constructKey(key))))
-                    case "private":
-                        return callback(__Scheduler_succeed(__Crypto_PrivateKey(_Crypto_constructKey(key))))
-                    default:
-                        return callback(__Scheduler_succeed(_Crypto_constructKey(key)));
-                }
-            })
-            .catch(function (err) {
-                return callback(__Scheduler_fail(__Crypto_ImportRsaKeyError));
-            });
     });
 });
 
