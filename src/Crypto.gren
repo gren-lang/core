@@ -123,15 +123,13 @@ Generate keys to use with RSA (Rivest-Shamir-Adleman) algorithm.
 
 ### Generate HMAC Keys 
 
-@docs HmacKeyParams
+@docs HmacKeyParams, HmacKeyGenerationError
 
 @docs generateHmacKey
 
 ## Derive Keys
 
 Create keys from other keys.
-
-...
 
 ## Export Keys
 
@@ -164,7 +162,7 @@ for the Web Crypto API.
 
 @docs exportAesGcmKeyAsRaw, exportAesGcmKeyAsJwk
 
-### Export ECD Keys
+### Export EC Keys
 
 @docs exportEcdsaPublicKeyAsRaw, exportEcdsaPublicKeyAsSpki, exportEcdsaPublicKeyAsJwk
 
@@ -193,19 +191,41 @@ for the Web Crypto API.
 
 @docs importRsaOaepPrivateKeyFromJwk, importRsaOaepPrivateKeyFromPkcs8
 
+@docs importRsaPssPublicKeyFromJwk, importRsaPssPublicKeyFromSpki
+
+@docs importRsaPssPrivateKeyFromJwk, importRsaPssPrivateKeyFromPkcs8
+
+@docs importRsaSsaPkcs1V1_5PrivateKeyFromJwk, importRsaSsaPkcs1V1_5PrivateKeyFromPkcs8
+
+@docs importRsaSsaPkcs1V1_5PublicKeyFromJwk, importRsaSsaPkcs1V1_5PublicKeyFromSpki
+
 ### Import AES Keys
 
-...
+@docs ImportAesKeyError
 
-### Import ECD Keys
+@docs importAesCbcKeyFromJwk, importAesCbcKeyFromRaw
 
-...
+@docs importAesCtrKeyFromJwk, importAesCtrKeyFromRaw
+
+@docs importAesGcmKeyFromJwk, importAesGcmKeyFromRaw
+
+### Import EC Keys
+
+@docs ImportEcKeyError
+
+@docs importEcdhPrivateKeyFromJwk, importEcdhPrivateKeyFromPkcs, importEcdhPrivateKeyFromSpki
+
+@docs importEcdhPublicKeyFromJwk, importEcdhPublicKeyFromRaw, importEcdhPublicKeyFromSpki
+
+@docs importEcdsaPrivateKeyFromJwk, importEcdsaPrivateKeyFromPkcs, importEcdsaPrivateKeyFromSpki
+
+@docs importEcdsaPublicKeyFromJwk, importEcdsaPublicKeyFromRaw, importEcdsaPublicKeyFromSpki
 
 ### Import HMAC Keys 
 
-...
+@docs ImportHmacKeyError
 
-...
+@docs importHmacKeyFromJwk, importHmacKeyFromRaw
 
 ## Encryption
 
@@ -1754,3 +1774,20 @@ digestAlgorithmToString digestAlgorithm =
 
         Sha512 ->
             "SHA-512"
+
+
+
+--
+
+deriveHmacKeyUsingEcdh : PublicKey EcdhKey -> PrivateKey EcdhKey -> Extractable -> Key HmacKey
+deriveHmacKeyUsingEcdh publicKey privateKey extractable =
+    Debug.todo ""
+
+
+-- deriveHmacKeyUsingHkdf : DigestAlgorithm -> Bytes -> Bytes -> Key HkdfKey -> Key HmacKey
+deriveHmacKeyUsingHkdf hash salt info =
+    Debug.todo ""
+
+
+deriveHmacKeyUsingPbkdf2 =
+    Debug.todo ""
