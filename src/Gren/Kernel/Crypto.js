@@ -207,7 +207,7 @@ var _Crypto_importEcKey = F7(function (wrapper, format, keyData, algorithm, name
                 format,
                 keyData,
                 {
-                    algorithm: algorithm,
+                    name: algorithm,
                     namedCurve: namedCurve
                 },
                 extractable,

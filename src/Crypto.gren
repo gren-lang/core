@@ -43,8 +43,8 @@ module Crypto exposing
     , ImportEcKeyError(..)
     , importEcdsaPublicKeyFromRaw, importEcdsaPublicKeyFromSpki, importEcdsaPublicKeyFromJwk
     , importEcdhPublicKeyFromRaw, importEcdhPublicKeyFromSpki, importEcdhPublicKeyFromJwk
-    , importEcdsaPrivateKeyFromPkcs, importEcdsaPrivateKeyFromSpki, importEcdsaPrivateKeyFromJwk
-    , importEcdhPrivateKeyFromPkcs, importEcdhPrivateKeyFromSpki, importEcdhPrivateKeyFromJwk
+    , importEcdsaPrivateKeyFromPkcs8, importEcdsaPrivateKeyFromSpki, importEcdsaPrivateKeyFromJwk
+    , importEcdhPrivateKeyFromPkcs8, importEcdhPrivateKeyFromSpki, importEcdhPrivateKeyFromJwk
     , ImportHmacKeyError(..)
     , importHmacKeyFromJwk, importHmacKeyFromRaw
     , DigestAlgorithm(..)
@@ -1210,7 +1210,16 @@ importAesGcmKeyFromJwk _context jwk extractable =
         [ "encrypt", "decrypt" ]
 
 
-{-|-}
+{-| Appears if there's an error when importing a key using an EC (ellipical-curve)
+algorithm.
+
+There are two possible reasons this error happens:
+
+1. The passed key value (either `Json.Encode.Value` or `Bytes`) is not a valid key 
+and cannot be imported.
+2. The `EcNamedCurve` passed to the function does not match the `EcNamedCurve` of 
+the imported key.
+-}
 type ImportEcKeyError
     = ImportEcKeyError
 
@@ -1225,7 +1234,7 @@ importEcdsaPublicKeyFromRaw _context namedCurve bytes extractable =
         "ECDSA"
         (ecNamedCurveToString namedCurve)
         (extractableToBool extractable)
-        [ "sign", "verify" ]
+        [ "verify" ]
 
 
 {-|-}
@@ -1238,7 +1247,7 @@ importEcdsaPublicKeyFromSpki _context namedCurve bytes extractable =
         "ECDSA"
         (ecNamedCurveToString namedCurve)
         (extractableToBool extractable)
-        [ "sign", "verify" ]
+        [ "verify" ]
 
 
 {-|-}
@@ -1251,7 +1260,7 @@ importEcdsaPublicKeyFromJwk _context namedCurve jwk extractable =
         "ECDSA"
         (ecNamedCurveToString namedCurve)
         (extractableToBool extractable)
-        [ "sign", "verify" ]
+        [ "verify" ]
 
 
 {-|-}
@@ -1264,7 +1273,7 @@ importEcdhPublicKeyFromRaw _context namedCurve bytes extractable =
         "ECDH"
         (ecNamedCurveToString namedCurve)
         (extractableToBool extractable)
-        [ "deriveKey", "deriveBits" ]
+        []
 
 
 {-|-}
@@ -1277,7 +1286,7 @@ importEcdhPublicKeyFromSpki _context namedCurve bytes extractable =
         "ECDH"
         (ecNamedCurveToString namedCurve)
         (extractableToBool extractable)
-        [ "deriveKey", "deriveBits" ]
+        []
 
 
 {-|-}
@@ -1290,20 +1299,20 @@ importEcdhPublicKeyFromJwk _context namedCurve jwk extractable =
         "ECDH"
         (ecNamedCurveToString namedCurve)
         (extractableToBool extractable)
-        [ "deriveKey", "deriveBits" ]
+        []
 
 
 {-|-}
-importEcdsaPrivateKeyFromPkcs : SecureContext -> EcNamedCurve -> Bytes -> Extractable -> Task ImportEcKeyError (PrivateKey EcdsaKey)
-importEcdsaPrivateKeyFromPkcs _context namedCurve bytes extractable =
+importEcdsaPrivateKeyFromPkcs8 : SecureContext -> EcNamedCurve -> Bytes -> Extractable -> Task ImportEcKeyError (PrivateKey EcdsaKey)
+importEcdsaPrivateKeyFromPkcs8 _context namedCurve bytes extractable =
     Gren.Kernel.Crypto.importEcKey
         "private"
-        "pkcs"
+        "pkcs8"
         bytes
         "ECDSA"
         (ecNamedCurveToString namedCurve)
         (extractableToBool extractable)
-        [ "sign", "verify" ]
+        [ "sign" ]
 
 
 {-|-}
@@ -1316,7 +1325,7 @@ importEcdsaPrivateKeyFromSpki _context namedCurve bytes extractable =
         "ECDSA"
         (ecNamedCurveToString namedCurve)
         (extractableToBool extractable)
-        [ "sign", "verify" ]
+        [ "sign" ]
 
 
 {-|-}
@@ -1329,20 +1338,20 @@ importEcdsaPrivateKeyFromJwk _context namedCurve jwk extractable =
         "ECDSA"
         (ecNamedCurveToString namedCurve)
         (extractableToBool extractable)
-        [ "sign", "verify" ]
+        [ "sign" ]
 
 
 {-|-}
-importEcdhPrivateKeyFromPkcs : SecureContext -> EcNamedCurve -> Bytes -> Extractable -> Task ImportEcKeyError (PrivateKey EcdhKey)
-importEcdhPrivateKeyFromPkcs _context namedCurve bytes extractable =
+importEcdhPrivateKeyFromPkcs8 : SecureContext -> EcNamedCurve -> Bytes -> Extractable -> Task ImportEcKeyError (PrivateKey EcdhKey)
+importEcdhPrivateKeyFromPkcs8 _context namedCurve bytes extractable =
     Gren.Kernel.Crypto.importEcKey
         "private"
-        "pkcs"
+        "pkcs8"
         bytes
         "ECDH"
         (ecNamedCurveToString namedCurve)
         (extractableToBool extractable)
-        [ "deriveKey", "deriveBits" ]
+        []
 
 
 {-|-}
@@ -1355,7 +1364,7 @@ importEcdhPrivateKeyFromSpki _context namedCurve bytes extractable =
         "ECDH"
         (ecNamedCurveToString namedCurve)
         (extractableToBool extractable)
-        [ "deriveKey", "deriveBits" ]
+        []
 
 
 {-|-}
@@ -1368,7 +1377,7 @@ importEcdhPrivateKeyFromJwk  _context namedCurve jwk extractable =
         "ECDH"
         (ecNamedCurveToString namedCurve)
         (extractableToBool extractable)
-        [ "deriveKey", "deriveBits" ]
+        []
 
 
 {-| Appears if there's an error when importing a key using the HMAC algorithm.
