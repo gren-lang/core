@@ -1,6 +1,6 @@
 /*
 
-import Bytes.Encode as Encode exposing (getWidth, write)
+import Bytes.Encode as Encode exposing (getLength, write)
 import Gren.Kernel.Scheduler exposing (binding, succeed)
 import Gren.Kernel.Utils exposing (chr)
 import Maybe exposing (Just, Nothing)
@@ -9,7 +9,9 @@ import Maybe exposing (Just, Nothing)
 
 // BYTES
 
-function _Bytes_width(bytes) {
+var _Bytes_empty = new DataView(new ArrayBuffer(0));
+
+function _Bytes_length(bytes) {
   return bytes.byteLength;
 }
 
@@ -26,8 +28,8 @@ var _Bytes_getHostEndianness = F2(function (le, be) {
 // ENCODERS
 
 function _Bytes_encode(encoder) {
-  var mutableBytes = new DataView(new ArrayBuffer(__Encode_getWidth(encoder)));
-  __Encode_write(encoder)(mutableBytes)(0);
+  var mutableBytes = new DataView(new ArrayBuffer(__Encode_getLength(encoder)));
+  A3(__Encode_write, encoder, mutableBytes, 0);
   return mutableBytes;
 }
 

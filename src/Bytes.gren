@@ -1,6 +1,8 @@
 module Bytes exposing
   ( Bytes
-  , width
+  , empty
+  , isEmpty
+  , length
   , Endianness(..)
   , getHostEndianness
   )
@@ -8,7 +10,7 @@ module Bytes exposing
 
 {-| Functions for working with sequences of bytes.
 
-@docs Bytes, width
+@docs Bytes, empty, isEmpty, length
 
 ## Endianness
 @docs Endianness, getHostEndianness
@@ -67,16 +69,30 @@ Anyway, the point is that `Bytes` is a sequence of bytes!
 type Bytes = Bytes
 
 
-{-| Get the width of a sequence of bytes.
+{-| The sequence with exactly 0 bytes.
+-}
+empty : Bytes
+empty =
+  Gren.Kernel.Bytes.empty
 
-So if a sequence has four-hundred bytes, then `width bytes` would give back
+
+{-| Check if the given byte sequence has 0 bytes in it.
+-}
+isEmpty : Bytes -> Bool
+isEmpty bytes =
+  length bytes == 0
+
+
+{-| Get the length of a sequence of bytes.
+
+So if a sequence has four-hundred bytes, then `length bytes` would give back
 `400`. That may be 400 unsigned 8-bit integers, 100 signed 32-bit integers, or
 even a UTF-8 string. The content does not matter. This is just figuring out
 how many bytes there are!
 -}
-width : Bytes -> Int
-width =
-  Gren.Kernel.Bytes.width
+length : Bytes -> Int
+length =
+  Gren.Kernel.Bytes.length
 
 
 

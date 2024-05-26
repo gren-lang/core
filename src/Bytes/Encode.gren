@@ -70,7 +70,7 @@ type Encoder
     encode (unsignedInt16 LE 7) -- <0700>
 
 The `encode` function is designed to minimize allocation. It figures out the
-exact width necessary to fit everything in `Bytes` and then generate that
+exact length necessary to fit everything in `Bytes` and then generate that
 value directly. This is valuable when you are encoding more elaborate data:
 
     import Bytes exposing (Endianness(..))
@@ -169,7 +169,7 @@ float64 =
 
 
 {-| Copy bytes directly into the new `Bytes` sequence. This does not record the
-width though! You usually want to say something like this:
+length though! You usually want to say something like this:
 
     import Bytes exposing (Bytes, Endianness(..))
     import Bytes.Encode as Encode
@@ -177,11 +177,11 @@ width though! You usually want to say something like this:
     png : Bytes -> Encode.Encoder
     png imageData =
       Encode.sequence
-        [ Encode.unsignedInt32 BE (Bytes.width imageData)
+        [ Encode.unsignedInt32 BE (Bytes.length imageData)
         , Encode.bytes imageData
         ]
 
-This allows you to represent the width however is necessary for your protocol.
+This allows you to represent the length however is necessary for your protocol.
 For example, you can use [Base 128 Varints][pb] for ProtoBuf,
 [Variable-Length Integers][sql] for SQLite, or whatever else they dream up.
 
@@ -219,7 +219,7 @@ how many bytes follow, like this:
         , string str
         ]
 
-You can choose whatever representation you want for the width, which is helpful
+You can choose whatever representation you want for the length, which is helpful
 because many protocols use different integer representations to save space. For
 example:
 
@@ -277,7 +277,7 @@ values for the position of a ball in 3D space, you could say:
 -}
 sequence : Array Encoder -> Encoder
 sequence builders =
-  Seq (getWidths 0 builders) builders
+  Seq (getLengths 0 builders) builders
 
 
 
@@ -302,20 +302,19 @@ write builder mb offset =
 
 writeSequence : Array Encoder -> Bytes -> Int -> Int
 writeSequence builders mb offset =
-  case Array.first builders of
-    Nothing ->
-      offset
-
-    Just b ->
-      writeSequence (Array.dropFirst 1 builders) mb (write b mb offset)
-
-
-
--- WIDTHS
+  Array.foldl
+    (\builder currentOffset ->
+      write builder mb currentOffset
+    )
+    offset
+    builders
 
 
-getWidth : Encoder -> Int
-getWidth builder =
+-- LENGTHS
+
+
+getLength : Encoder -> Int
+getLength builder =
   case builder of
     I8    _ -> 1
     I16 _ _ -> 2
@@ -327,14 +326,14 @@ getWidth builder =
     F64 _ _ -> 8
     Seq w _ -> w
     Utf8 w _ -> w
-    Bytes bs -> Gren.Kernel.Bytes.width bs
+    Bytes bs -> Gren.Kernel.Bytes.length bs
 
 
-getWidths : Int -> Array Encoder -> Int
-getWidths width builders =
-  case Array.first builders of
-    Nothing ->
-      width
-
-    Just b ->
-      getWidths (width + getWidth b) (Array.dropFirst 1 builders)
+getLengths : Int -> Array Encoder -> Int
+getLengths length builders =
+  Array.foldl 
+    (\builder sum ->
+      sum + getLength builder
+    )
+    length
+    builders
