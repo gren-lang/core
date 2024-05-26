@@ -176,7 +176,16 @@ leeway to read the length as a [Base 128 Varint][pb] for ProtoBuf, a
 -}
 string : Int -> Decoder String
 string n =
-  Decoder (Gren.Kernel.Bytes.read_string n)
+  bytes n
+    |> andThen 
+      (\bits ->
+        case Bytes.toString bits of
+          Just str ->
+            succeed str
+
+          Nothing ->
+            fail
+      )
 
 
 

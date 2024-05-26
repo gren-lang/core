@@ -7,12 +7,6 @@ import Fuzz
 import Test exposing (..)
 
 
-encodeString : String -> Bytes
-encodeString s =
-    Bytes.Encode.encode <|
-        Bytes.Encode.string s
-
-
 encodeInt : Int -> Bytes
 encodeInt i =
     Bytes.Encode.encode <|
@@ -23,13 +17,13 @@ tests : Test
 tests =
     describe "Byte comparison"
         [ fuzz Fuzz.string "same strings are equal" <| \s ->
-            Expect.equal (encodeString s) (encodeString s)
+            Expect.equal (Bytes.fromString s) (Bytes.fromString s)
         , fuzz (Fuzz.intRange -128 127) "same ints are equal" <| \i ->
             Expect.equal (encodeInt i) (encodeInt i)
         , fuzz Fuzz.string "different strings are not equal" <| \s ->
-            Expect.notEqual (encodeString s) (encodeString (s ++ "a"))
+            Expect.notEqual (Bytes.fromString s) (Bytes.fromString (s ++ "a"))
         , fuzz (Fuzz.intRange -100 100) "different ints are not equal" <| \i ->
             Expect.notEqual (encodeInt i) (encodeInt (i + 1))
         , fuzz2 Fuzz.string (Fuzz.intRange 1 127) "string and int are not equal" <| \s i ->
-            Expect.notEqual (encodeString s) (encodeInt i)
+            Expect.notEqual (Bytes.fromString s) (encodeInt i)
         ]

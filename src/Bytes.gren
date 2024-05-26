@@ -3,8 +3,12 @@ module Bytes exposing
   , empty
   , isEmpty
   , length
+  --
   , Endianness(..)
   , getHostEndianness
+  --
+  , fromString
+  , toString
   )
 
 
@@ -15,10 +19,15 @@ module Bytes exposing
 ## Endianness
 @docs Endianness, getHostEndianness
 
+## Strings
+@docs fromString, toString
+
 -}
 
 
 import Basics exposing (..)
+import Maybe exposing (Maybe)
+import String exposing (String)
 import Task exposing (Task)
 import Gren.Kernel.Bytes
 
@@ -152,3 +161,25 @@ type Endianness = LE | BE
 getHostEndianness : Task x Endianness
 getHostEndianness =
   Gren.Kernel.Bytes.getHostEndianness LE BE
+
+
+-- STRINGS
+
+
+{-| Convert a `String` to a `Bytes`. The resulting bytes will be in the
+UTF-8 encoding.
+
+Some characters take one byte, while others can take up to four. Read more
+about [UTF-8](https://en.wikipedia.org/wiki/UTF-8) to learn the details!
+-}
+fromString : String -> Bytes
+fromString =
+  Gren.Kernel.Bytes.fromString
+
+
+{-| Convert UTF-8 encoded `Bytes` to `String`. If the byte sequence isn't
+valid UTF-8, `Nothing` will be returned.
+-}
+toString : Bytes -> Maybe String
+toString =
+  Gren.Kernel.Bytes.toString

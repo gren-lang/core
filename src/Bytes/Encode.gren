@@ -5,7 +5,6 @@ module Bytes.Encode exposing
   , unsignedInt8, unsignedInt16, unsignedInt32
   , float32, float64
   , bytes
-  , string, getStringWidth
   , sequence
   )
 
@@ -22,9 +21,6 @@ module Bytes.Encode exposing
 
 ## Bytes
 @docs bytes
-
-## Strings
-@docs string, getStringWidth
 
 -}
 
@@ -193,68 +189,6 @@ bytes =
   Bytes
 
 
-
--- STRINGS
-
-
-{-| Encode a `String` as a bunch of UTF-8 bytes.
-
-    encode (string "$20")   -- <24 32 30>
-    encode (string "£20")   -- <C2A3 32 30>
-    encode (string "€20")   -- <E282AC 32 30>
-    encode (string "bread") -- <62 72 65 61 64>
-    encode (string "brød")  -- <62 72 C3B8 64>
-
-Some characters take one byte, while others can take up to four. Read more
-about [UTF-8](https://en.wikipedia.org/wiki/UTF-8) to learn the details!
-
-But if you just encode UTF-8 directly, how can you know when you get to the end
-of the string when you are decoding? So most protocols have an integer saying
-how many bytes follow, like this:
-
-    sizedString : String -> Encoder
-    sizedString str =
-      sequence
-        [ unsignedInt32 BE (getStringWidth str)
-        , string str
-        ]
-
-You can choose whatever representation you want for the length, which is helpful
-because many protocols use different integer representations to save space. For
-example:
-
-- ProtoBuf uses [Base 128 Varints](https://developers.google.com/protocol-buffers/docs/encoding#varints)
-- SQLite uses [Variable-Length Integers](https://www.sqlite.org/src4/doc/trunk/www/varint.wiki)
-
-In both cases, small numbers can fit just one byte, saving some space. (The
-SQLite encoding has the benefit that the first byte tells you how long the
-number is, making it faster to decode.) In both cases, it is sort of tricky
-to make negative numbers small.
--}
-string : String -> Encoder
-string str =
-  Utf8 (Gren.Kernel.Bytes.getStringWidth str) str
-
-
-{-| Get the width of a `String` in UTF-8 bytes.
-
-    getStringWidth "$20"   == 3
-    getStringWidth "£20"   == 4
-    getStringWidth "€20"   == 5
-    getStringWidth "bread" == 5
-    getStringWidth "brød"  == 5
-
-Most protocols need this number to come directly before a chunk of UTF-8 bytes
-as a way to know where the string ends!
-
-Read more about how UTF-8 works [here](https://en.wikipedia.org/wiki/UTF-8).
--}
-getStringWidth : String -> Int
-getStringWidth =
-  Gren.Kernel.Bytes.getStringWidth
-
-
-
 -- SEQUENCE
 
 
@@ -278,7 +212,6 @@ values for the position of a ball in 3D space, you could say:
 sequence : Array Encoder -> Encoder
 sequence builders =
   Seq (getLengths 0 builders) builders
-
 
 
 -- WRITE
