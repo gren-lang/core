@@ -130,7 +130,11 @@ var _Bytes_decode = F2(function (decoder, bytes) {
   try {
     return __Maybe_Just(A2(decoder, bytes, 0).__$value);
   } catch (e) {
-    return __Maybe_Nothing;
+    if (e instanceof RangeError) {
+      return __Maybe_Nothing;
+    } else {
+      throw e;
+    }
   }
 });
 
