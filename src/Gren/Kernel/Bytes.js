@@ -41,6 +41,28 @@ function _Bytes_toString(bytes) {
   }
 }
 
+function _Bytes_join(arrayOfBytes) {
+  var requiredSize = 0;
+  for (var i = 0; i < arrayOfBytes.length; i++) {
+    requiredSize += arrayOfBytes[i].byteLength;
+  }
+
+  var offset = 0;
+  var result = new Uint8Array(requiredSize);
+  
+  for (var i = 0; i < arrayOfBytes.length; i++) {
+    var currentBytes = new UInt8Array(arrayOfBytes[i].buffer);
+    var currentByteLength = arrayOfBytes[i].byteLength;
+    
+    for (var j = 0; j < currentByteLength; j++) {
+      result[offset] = currentBytes[j];
+      offset++;
+    }
+  }
+
+  return new DataView(result.buffer);
+}
+
 // ENCODERS
 
 function _Bytes_encode(encoder) {

@@ -9,6 +9,8 @@ module Bytes exposing
   --
   , fromString
   , toString
+  --
+  , join
   )
 
 
@@ -22,9 +24,13 @@ module Bytes exposing
 ## Strings
 @docs fromString, toString
 
+## Combine
+@docs join
+
 -}
 
 
+import Array exposing (Array)
 import Basics exposing (..)
 import Maybe exposing (Maybe)
 import String exposing (String)
@@ -183,3 +189,13 @@ valid UTF-8, `Nothing` will be returned.
 toString : Bytes -> Maybe String
 toString =
   Gren.Kernel.Bytes.toString
+
+
+-- COMBINE
+
+
+{-| Join all `Bytes` in an `Array` into a single `Bytes`.
+-}
+join : Array Bytes -> Bytes
+join =
+  Gren.Kernel.Bytes.join
