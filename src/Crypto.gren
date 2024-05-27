@@ -1459,6 +1459,22 @@ importHmacKeyFromRaw _context bytes hash passedLength extractable =
 
 
 {-|-}
+type alias HkdfParams =
+    { hash : DigestAlgorithm
+    , salt : Bytes
+    , info : Bytes
+    }
+
+
+{-|-}
+type alias Pbkdf2Params =
+    { hash : DigestAlgorithm
+    , salt : Bytes
+    , itterations : Int
+    }
+
+
+{-|-}
 type DeriveHmacKeyError
     = DeriveHmacKeyUnknownError
     | DeriveHmacKeyLengthNotDivisibleByEight
@@ -1493,6 +1509,18 @@ deriveHmacKeyUsingEcdh { hash, length } (PublicKey (Key publicKey)) (PrivateKey 
                 ""
                 (extractableToBool extractable)
                 [ "sign", "verify" ]
+
+
+{-|-}
+deriveHmacKeyUsingHkdf : HmacKeyParams -> Key a -> HkdfParams -> Extractable -> Task DeriveHmacKeyError (Key HmacKey)
+deriveHmacKeyUsingHkdf { hash, length } (Key key) hkdfParams extractable =
+    Debug.todo ""
+
+
+{-|-}
+deriveHmacKeyUsingPbkdf2 : HmacKeyParams -> Key a -> Pbkdf2Params -> Extractable -> Task DeriveHmacKeyError (Key HmacKey)
+deriveHmacKeyUsingPbkdf2 { hash, length } (Key key) pbkdb2Params extractable =
+    Debug.todo ""
 
 
 
