@@ -2,7 +2,7 @@
 
 import Gren.Kernel.Scheduler exposing (binding, succeed, fail)
 import Gren.Kernel.Bytes exposing (writeBytes)
-import Crypto exposing (ImportRsaKeyError, ImportHmacKeyError, ImportEcKeyError, ImportAesKeyError, Key, SecureContext, PublicKey, PrivateKey)
+import Crypto exposing (DeriveHmacKeyUnknownError, ImportRsaKeyError, ImportHmacKeyError, ImportEcKeyError, ImportAesKeyError, Key, SecureContext, PublicKey, PrivateKey)
 import Maybe exposing (Just, Nothing)
 import Bytes exposing (Bytes)
 
@@ -250,6 +250,41 @@ var _Crypto_importHmacKey = F7(function (format, keyData, algorithm, hash, lengt
             })
             .catch(function (err) {
                 return callback(__Scheduler_fail(__Crypto_ImportHmacKeyError));
+            })
+    });
+});
+
+var _Crypto_deriveHmacKeyUsingEcdh = F6(function (publicKey, ecdhPrivateKey, hash, length, extractable, keyUsages) {
+    var algorithm;
+    if (length == "") {
+        algorithm = {
+            name: "HMAC",
+            hash: hash
+        }
+    } else {
+        algorithm = {
+            name: "HMAC",
+            hash: hash,
+            length: length
+        }
+    }
+    return __Scheduler_binding(function (callback) {
+        crypto.subtle
+            .deriveKey(
+                {
+                    name: "ECDH",
+                    public: publicKey
+                },
+                ecdhPrivateKey,
+                algorithm,
+                extractable,
+                keyUsages
+            )
+            .then(function (key) {
+                return callback(__Scheduler_succeed(_Crypto_constructKey(key)))
+            })
+            .catch(function (err) {
+                return callback(__Scheduler_fail(__Crypto_DeriveHmacKeyUnknownError))
             })
     });
 });

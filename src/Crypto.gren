@@ -48,6 +48,8 @@ module Crypto exposing
     , ImportHmacKeyError(..)
     , importHmacKeyFromJwk, importHmacKeyFromRaw
     , DigestAlgorithm(..)
+    , deriveHmacKeyUsingEcdh
+    , DeriveHmacKeyError(..)
     )
 
 
@@ -1453,6 +1455,47 @@ importHmacKeyFromRaw _context bytes hash passedLength extractable =
 
 
 
+-- DERIVE KEYS
+
+
+{-|-}
+type DeriveHmacKeyError
+    = DeriveHmacKeyUnknownError
+    | DeriveHmacKeyLengthNotDivisibleByEight
+
+
+{-|-}
+deriveHmacKeyUsingEcdh : HmacKeyParams -> PublicKey EcdhKey -> PrivateKey EcdhKey -> Extractable -> Task DeriveHmacKeyError (Key HmacKey)
+deriveHmacKeyUsingEcdh { hash, length } (PublicKey (Key publicKey)) (PrivateKey (Key privateKey)) extractable =
+    case length of
+        Just val ->
+            let
+                clampedLength =
+                    clamp 8 2048 val
+            in
+            if Math.remainderBy 8 clampedLength == 0 then
+                Gren.Kernel.Crypto.deriveHmacKeyUsingEcdh
+                    publicKey.key
+                    privateKey.key
+                    (digestAlgorithmToString hash)
+                    clampedLength
+                    (extractableToBool extractable)
+                    [ "sign", "verify" ]
+            
+            else
+                Task.fail DeriveHmacKeyLengthNotDivisibleByEight
+
+        Nothing ->
+            Gren.Kernel.Crypto.deriveHmacKeyUsingEcdh
+                publicKey.key
+                privateKey.key
+                (digestAlgorithmToString hash)
+                ""
+                (extractableToBool extractable)
+                [ "sign", "verify" ]
+
+
+
 -- UTILITIES
 
 
@@ -1520,20 +1563,3 @@ digestAlgorithmToString digestAlgorithm =
 
         Sha512 ->
             "SHA-512"
-
-
-
---
-
-deriveHmacKeyUsingEcdh : PublicKey EcdhKey -> PrivateKey EcdhKey -> Extractable -> Key HmacKey
-deriveHmacKeyUsingEcdh publicKey privateKey extractable =
-    Debug.todo ""
-
-
--- deriveHmacKeyUsingHkdf : DigestAlgorithm -> Bytes -> Bytes -> Key HkdfKey -> Key HmacKey
-deriveHmacKeyUsingHkdf hash salt info =
-    Debug.todo ""
-
-
-deriveHmacKeyUsingPbkdf2 =
-    Debug.todo ""
