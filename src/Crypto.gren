@@ -1474,13 +1474,22 @@ type alias Pbkdf2Params =
     }
 
 
-{-|-}
+{-| Errors that can happen when deriving an HMAC key.
+-}
 type DeriveHmacKeyError
     = DeriveHmacKeyUnknownError
     | DeriveHmacKeyLengthNotDivisibleByEight
 
 
-{-|-}
+{-| Derive an HMAC key using the ECDH algorithm.
+
+This function can procduce errors if:
+
+1. The curve of the passed `PublicKey EcdhKey` and `PrivateKey EcdhKey` do not match
+3. The passed `length` of `HmacKeyParams`, if not `Nothing`, is not divisible by eight
+4. The passed `hash` of `HmacKeyParams`, if `length` is not provided, if not equal 
+to or greater than the curves of the `PublicKey EcdhKey` and `PrivateKey EcdhKey`.
+-}
 deriveHmacKeyUsingEcdh : HmacKeyParams -> PublicKey EcdhKey -> PrivateKey EcdhKey -> Extractable -> Task DeriveHmacKeyError (Key HmacKey)
 deriveHmacKeyUsingEcdh { hash, length } (PublicKey (Key publicKey)) (PrivateKey (Key privateKey)) extractable =
     case length of
