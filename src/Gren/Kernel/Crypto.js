@@ -18,10 +18,7 @@ var crypto = function () {
 var _Crypto_constructKey = function (key) {
     return __Crypto_Key({
         __$key: key,
-        __$algorithm: key.__$algorithm,
-        __$keyType: key.__$type,
-        __$extractable: key.__$extractable,
-        __$usages: key.__$usages
+        __$extractable: key.__$extractable
     });
 };
 

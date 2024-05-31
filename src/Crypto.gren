@@ -371,10 +371,7 @@ type Extractable
 type Key algorithm
     = Key 
         { key : algorithm
-        , algorithm : String
-        , keyType : String
         , extractable : Bool
-        , usages : Array String 
         }
 
 
