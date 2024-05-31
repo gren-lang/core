@@ -285,27 +285,3 @@ var _Crypto_deriveHmacKeyUsingEcdh = F6(function (publicKey, ecdhPrivateKey, has
             })
     });
 });
-
-var _Crypto_encrypt = F3(function (key, params, data) {
-    return __Scheduler_binding(function (callback) {
-        crypto.subtle.encrypt(params, key.__$a.key, data)
-            .then(function (res) {
-                return callback(__Scheduler_succeed(new DataView(res)));
-            })
-            .catch(function (err) {
-                return callback(__Scheduler_fail(err));
-            });
-    });
-});
-
-var _Crypto_decrypt = F3(function (key, params, data) {
-    return __Scheduler_binding(function (callback) {
-        crypto.subtle.decrypt(params, key.__$a.key, data)
-            .then(function (res) {
-                return callback(__Scheduler_succeed(new DataView(res)));
-            })
-            .catch(function (err) {
-                return callback(__Scheduler_fail());
-            })
-    });
-});
