@@ -50,6 +50,9 @@ module Crypto exposing
     , DigestAlgorithm(..)
     , deriveHmacKeyUsingEcdh
     , DeriveHmacKeyError(..)
+    , encryptWithRsaOaep
+    , DecryptWithRsaOaepError(..)
+    , decryptWithRsaOaep
     )
 
 
@@ -1494,6 +1497,138 @@ deriveHmacKeyUsingHkdf { hash, length } (Key key) hkdfParams extractable =
 deriveHmacKeyUsingPbkdf2 : HmacKeyParams -> Key a -> Pbkdf2Params -> Extractable -> Task DeriveHmacKeyError (Key HmacKey)
 deriveHmacKeyUsingPbkdf2 { hash, length } (Key key) pbkdb2Params extractable =
     Debug.todo ""
+
+
+-- ENCRYPT
+
+
+{-| Encrypt some values with a `PublicKey RsaOaepKey`. The optional `label` parameter is ...
+
+This operation should always succeed.
+-}
+encryptWithRsaOaep : Maybe Bytes -> PublicKey RsaOaepKey -> Bytes -> Task {} Bytes
+encryptWithRsaOaep passedLabel (PublicKey (Key key)) bytes =
+    case passedLabel of
+        Nothing ->
+            Gren.Kernel.Crypto.encryptWithRsaOaep
+                ""
+                key.key
+                bytes
+        
+        Just label ->
+            Gren.Kernel.Crypto.encryptWithRsaOaep
+                label
+                key.key
+                bytes
+
+
+{-|-}
+encryptWithAesCtr =
+    Debug.todo ""
+
+
+{-|-}
+encryptWithAesCbc =
+    Debug.todo ""
+
+
+{-|-}
+encryptWithAesGcm =
+    Debug.todo ""
+
+
+
+-- DECRYPT
+
+
+{-|-}
+type DecryptWithRsaOaepError =
+    DecryptWithRsaOaepError
+
+
+{-| Decryption can fail when either:
+
+- The label used to encrypt the data does not match the label used when encryption the data
+- The passed `Bytes`, for whatever reason, cannot be decrypted
+-}
+decryptWithRsaOaep : Maybe Bytes -> PrivateKey RsaOaepKey -> Bytes -> Task DecryptWithRsaOaepError Bytes
+decryptWithRsaOaep passedLabel (PrivateKey (Key privateKey)) bytes =
+    case passedLabel of
+        Nothing ->
+            Gren.Kernel.Crypto.decryptWithRsaOaep
+                ""
+                privateKey.key
+                bytes
+        
+        Just label ->
+            Gren.Kernel.Crypto.decryptWithRsaOaep
+                label
+                privateKey.key
+                bytes
+
+
+{-|-}
+decryptWithAesCtr =
+    Debug.todo ""
+
+
+{-|-}
+decryptWithAesCbc =
+    Debug.todo ""
+
+
+{-|-}
+decryptWithAesGcm =
+    Debug.todo ""
+
+
+
+-- SIGN
+
+
+{-|-}
+signWithRsaSsaPkcs1V1_5 =
+    Debug.todo ""
+
+
+{-|-}
+signWithRsaPss =
+    Debug.todo ""
+
+
+{-|-}
+signWithEcdsa =
+    Debug.todo ""
+
+
+{-|-}
+signWithHmac =
+    Debug.todo ""
+
+
+
+-- VERIFY
+
+
+{-|-}
+verifyWithRsaSsaPkcs1V1_5 =
+    Debug.todo ""
+
+
+{-|-}
+verifyWithRsaPss =
+    Debug.todo ""
+
+
+{-|-}
+verifyWithEcdsa =
+    Debug.todo ""
+
+
+{-|-}
+verifyWithHmac =
+    Debug.todo ""
+
 
 
 -- DIGEST

@@ -2,7 +2,7 @@
 
 import Gren.Kernel.Scheduler exposing (binding, succeed, fail)
 import Gren.Kernel.Bytes exposing (writeBytes)
-import Crypto exposing (DeriveHmacKeyUnknownError, ImportRsaKeyError, ImportHmacKeyError, ImportEcKeyError, ImportAesKeyError, Key, SecureContext, PublicKey, PrivateKey)
+import Crypto exposing (DecryptWithRsaOaepError, DeriveHmacKeyUnknownError, ImportRsaKeyError, ImportHmacKeyError, ImportEcKeyError, ImportAesKeyError, Key, SecureContext, PublicKey, PrivateKey)
 import Maybe exposing (Just, Nothing)
 import Bytes exposing (Bytes)
 
@@ -15,12 +15,16 @@ var crypto = function () {
     return window.crypto;
 }();
 
+// Utils
+
 var _Crypto_constructKey = function (key) {
     return __Crypto_Key({
         __$key: key,
         __$extractable: key.__$extractable
     });
 };
+
+// Random
 
 var _Crypto_randomUUID = __Scheduler_binding(function (callback) {
     var randomUUID = crypto.randomUUID();
@@ -62,6 +66,8 @@ var _Crypto_getRandomValues = F2(function (arrayLength, valueType) {
     })
 });
 
+// Context
+
 var _Crypto_getContext = __Scheduler_binding(function (callback) {
     if (crypto.subtle) {
         return callback(__Scheduler_succeed(__Crypto_SecureContext));
@@ -69,7 +75,8 @@ var _Crypto_getContext = __Scheduler_binding(function (callback) {
     return callback(__Scheduler_fail);
 });
 
-// Keys
+// Generate keys
+
 var _Crypto_generateRsaKey = F6(function (name, modulusLength, publicExponent, hash, extractable, permissions) {
     var algorithm = {
         name: name,
@@ -147,6 +154,8 @@ var _Crypto_generateHmacKey = F5(function (name, hash, length, extractable, perm
     });
 });
 
+// Exprort key
+
 var _Crypto_exportKey = F2(function (format, key) {
     return __Scheduler_binding(function (callback) {
         crypto.subtle
@@ -162,6 +171,8 @@ var _Crypto_exportKey = F2(function (format, key) {
             });
     });
 });
+
+// Import keys
 
 var _Crypto_importRsaKey = F7(function (wrapper, format, keyData, algorithm, hash, extractable, keyUsages) {
     return __Scheduler_binding(function (callback) {
@@ -251,6 +262,8 @@ var _Crypto_importHmacKey = F7(function (format, keyData, algorithm, hash, lengt
     });
 });
 
+// Derive keys
+
 var _Crypto_deriveHmacKeyUsingEcdh = F6(function (publicKey, ecdhPrivateKey, hash, length, extractable, keyUsages) {
     var algorithm;
     if (length == "") {
@@ -285,3 +298,111 @@ var _Crypto_deriveHmacKeyUsingEcdh = F6(function (publicKey, ecdhPrivateKey, has
             })
     });
 });
+
+// Encryption
+
+var _Crypto_encryptWithRsaOaep = F3(function (label, key, bytes) {
+    var algorithm;
+    if (label == "") {
+        algorithm = {
+            name: "RSA-OAEP"
+        }
+    } else {
+        algorithm = {
+            name: "RSA-OAEP",
+            label: label
+        }
+    };
+    return __Scheduler_binding(function (callback) {
+        crypto.subtle
+            .encrypt(algorithm, key, bytes)
+            .then(function (res) {
+                return callback(__Scheduler_succeed(new DataView(res)));
+            })
+            .catch(function (err) {
+                console.log("Encrypt with RSAOAEP", err);
+            });
+    });
+});
+
+var _Crypto_encryptWithAes = F5(function (name, counter, length, key, bytes) {
+    var algorithm = {
+        name: name,
+        counter: counter,
+        length: length
+    };
+    return __Scheduler_binding(function (callback) {
+        crypto.subtle
+            .encrypt(algorithm, key, bytes)
+            .then(function (res) {
+                return callback(__Scheduler_succeed(new DataView(res)));
+            })
+            .catch(function (err) {
+                return callback(__Scheduler_fail(__Crypto_DecryptWithRsaOaepError));
+            });
+    });
+});
+
+// Decrypt
+
+var _Crypto_decryptWithRsaOaep = F3(function (label, key, bytes) {
+    var algorithm;
+    if (label == "") {
+        algorithm = {
+            name: "RSA-OAEP"
+        }
+    } else {
+        algorithm = {
+            name: "RSA-OAEP",
+            label: label
+        }
+    };
+    return __Scheduler_binding(function (callback) {
+        crypto.subtle
+            .decrypt(algorithm, key, bytes)
+            .then(function (res) {
+                return callback(__Scheduler_succeed(new DataView(res)));
+            })
+            .catch(function (err) {
+                return callback(__Scheduler_fail(__Crypto_DecryptWithRsaOaepError));
+            });
+    });
+});
+
+var _Crypto_decryptWithAes = function (name) {
+
+};
+
+// Signing
+
+var _Crypto_signWithRsa = function () {
+
+};
+
+var _Crypto_signWithEcdsa = function () {
+
+};
+
+var _Crypto_signWithHmac = function () {
+
+};
+
+// Verify
+
+var _Crypto_verifyWithRsa = function () {
+
+};
+
+var _Crypto_verifyWithEcdsa = function () {
+
+};
+
+var _Crypto_verifywithHmac = function () {
+
+};
+
+// Digest
+
+var _Crypto_digest = function () {
+
+};
