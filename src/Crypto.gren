@@ -690,39 +690,6 @@ generateHmacKey _context { hash, length } extractable =
                 [ "sign", "verify" ]
 
 
--- ENCRYPT / DECRYPT DATA
-
-
-
--- SIGN / VERIFY DATA
-
-
-
--- DIGEST
-
-
-{-| Supported algorithms suitable for digesting data.
-
-Note: The algorithm `SHA1` is supported by the WebCrypto API, but not available 
-in this package due to known security vunerabilities.
--}
-type DigestAlgorithm
-    = Sha256
-    | Sha384
-    | Sha512
-
-
-{-|-}
-digest : SecureContext -> DigestAlgorithm -> Bytes -> Task {} Bytes
-digest _context algorithm data =
-    Gren.Kernel.Crypto.digest
-        (digestAlgorithmToString algorithm)
-        data
-
-
--- DERIVE
-
-
 
 -- EXPORT KEYS
 
@@ -1527,6 +1494,28 @@ deriveHmacKeyUsingHkdf { hash, length } (Key key) hkdfParams extractable =
 deriveHmacKeyUsingPbkdf2 : HmacKeyParams -> Key a -> Pbkdf2Params -> Extractable -> Task DeriveHmacKeyError (Key HmacKey)
 deriveHmacKeyUsingPbkdf2 { hash, length } (Key key) pbkdb2Params extractable =
     Debug.todo ""
+
+
+-- DIGEST
+
+
+{-| Supported algorithms suitable for digesting data.
+
+Note: The algorithm `SHA1` is supported by the WebCrypto API, but not available 
+in this package due to known security vunerabilities.
+-}
+type DigestAlgorithm
+    = Sha256
+    | Sha384
+    | Sha512
+
+
+{-|-}
+digest : SecureContext -> DigestAlgorithm -> Bytes -> Task {} Bytes
+digest _context algorithm data =
+    Gren.Kernel.Crypto.digest
+        (digestAlgorithmToString algorithm)
+        data
 
 
 
