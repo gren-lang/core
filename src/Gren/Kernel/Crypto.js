@@ -62,7 +62,7 @@ var _Crypto_getRandomValues = F2(function (arrayLength, valueType) {
         console.log("err", err);
     }
     return __Scheduler_binding(function (callback) {
-        return callback(__Scheduler_succeed(randomValues));
+        return callback(__Scheduler_succeed(Array.from(randomValues)));
     })
 });
 
