@@ -287,7 +287,7 @@ randomUuid _context =
 {-| Get a `Array` of random, signed, 8-bit values equal to the length of the passed `Int`
 with a maximum of 65536 values.
 -}
-getRandomInt8Values : Int -> Task Never (Array Int)
+getRandomInt8Values : Int -> Task x (Array Int)
 getRandomInt8Values int =
     Gren.Kernel.Crypto.getRandomValues (clamp 0 65536 int) "int8"
 
@@ -295,7 +295,7 @@ getRandomInt8Values int =
 {-| Get a `Array` of random, unsigned, 8-bit values equal to the length of the passed `Int`
 with a maximum of 65536 values.
 -}
-getRandomUInt8Values : Int -> Task Never (Array Int)
+getRandomUInt8Values : Int -> Task x (Array Int)
 getRandomUInt8Values int =
     Gren.Kernel.Crypto.getRandomValues (clamp 0 65536 int) "uint8"
 
@@ -303,7 +303,7 @@ getRandomUInt8Values int =
 {-| Get a `Array` of random, signed, 16-bit values equal to the length of the passed `Int`.
 with a maximum of 32768 values.
 -}
-getRandomInt16Values : Int -> Task Never (Array Int)
+getRandomInt16Values : Int -> Task x (Array Int)
 getRandomInt16Values int =
     Gren.Kernel.Crypto.getRandomValues (clamp 0 32768 int) "int16"
 
@@ -311,7 +311,7 @@ getRandomInt16Values int =
 {-| Get a `Array` of random, unsigned, 16-bit values equal to the length of the passed `Int`.
 with a maximum of 32768 values.
 -}
-getRandomUInt16Values : Int -> Task Never (Array Int)
+getRandomUInt16Values : Int -> Task x (Array Int)
 getRandomUInt16Values int =
     Gren.Kernel.Crypto.getRandomValues (clamp 0 32768 int) "uint16"
 
@@ -319,7 +319,7 @@ getRandomUInt16Values int =
 {-| Get a `Array` of random, signed, 32-bit values equal to the length of the passed `Int`
 with a maximum of 16384 values.
 -}
-getRandomInt32Values : Int -> Task Never (Array Int)
+getRandomInt32Values : Int -> Task x (Array Int)
 getRandomInt32Values int =
     Gren.Kernel.Crypto.getRandomValues (clamp 0 16384 int) "int32"
 
@@ -327,7 +327,7 @@ getRandomInt32Values int =
 {-| Get a `Array` of random, unsigned, 32-bit values equal to the length of the passed `Int`
 with a maximum of 16384 values.
 -}
-getRandomUInt32Values : Int -> Task Never (Array Int)
+getRandomUInt32Values : Int -> Task x (Array Int)
 getRandomUInt32Values int =
     Gren.Kernel.Crypto.getRandomValues (clamp 0 16384 int) "uint32"
 
