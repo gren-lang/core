@@ -51,6 +51,8 @@ module Crypto exposing
     , deriveHmacKeyUsingEcdh
     , DeriveHmacKeyError(..)
     , encryptWithRsaOaep
+    , AesCtrParams, AesCtrEncryptError(..)
+    , encryptWithAesCtr
     , DecryptWithRsaOaepError(..)
     , decryptWithRsaOaep
     )
@@ -256,7 +258,7 @@ Verify signed `Bytes`.
 
 
 import Array exposing ( Array )
-import Basics exposing ( Never, Bool(..), Int, (>), (<), (<=), (==) )
+import Basics exposing ( toFloat, Never, Bool(..), Int, (>), (<), (<=), (==), (*), (^), (/), (/=), (|>) )
 import Gren.Kernel.Crypto
 import String exposing ( String )
 import Task exposing ( Task )
@@ -1523,8 +1525,36 @@ encryptWithRsaOaep passedLabel (PublicKey (Key key)) bytes =
 
 
 {-|-}
-encryptWithAesCtr =
-    Debug.todo ""
+type AesCtrEncryptError =
+    AesCtrEncryptError
+
+
+{-| Required paramaters (along with a key) to encrypy and decrypt values with 
+the AES-CTR algorithm.
+
+`length` must be between 1 and 128 (it's clamped)
+`counter` must be exactly 16 bytes
+-}
+type alias AesCtrParams =
+    { counter : Bytes
+    , length : Int
+    }
+
+
+{-| Encrypt some values using a AES-CTR key.
+-}
+encryptWithAesCtr : AesCtrParams -> Key AesCtrKey -> Bytes -> Task AesCtrEncryptError Bytes
+encryptWithAesCtr { counter, length } (Key { key }) bytes =
+    -- The counter must be exactly 16 bytes long
+    if Bytes.width counter == 16 then
+        Gren.Kernel.Crypto.encryptWithAesCtr
+            counter
+            (clamp 1 128 length)
+            key
+            bytes
+
+    else
+        Task.fail AesCtrEncryptError
 
 
 {-|-}
