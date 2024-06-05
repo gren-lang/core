@@ -2,7 +2,7 @@
 
 import Gren.Kernel.Scheduler exposing (binding, succeed, fail)
 import Gren.Kernel.Bytes exposing (writeBytes)
-import Crypto exposing (AesCtrEncryptError, DecryptWithRsaOaepError, DeriveHmacKeyUnknownError, ImportRsaKeyError, ImportHmacKeyError, ImportEcKeyError, ImportAesKeyError, Key, SecureContext, PublicKey, PrivateKey)
+import Crypto exposing (AesCtrDecryptError, AesCtrEncryptError, DecryptWithRsaOaepError, DeriveHmacKeyUnknownError, ImportRsaKeyError, ImportHmacKeyError, ImportEcKeyError, ImportAesKeyError, Key, SecureContext, PublicKey, PrivateKey)
 import Maybe exposing (Just, Nothing)
 import Bytes exposing (Bytes)
 
@@ -362,14 +362,28 @@ var _Crypto_decryptWithRsaOaep = F3(function (label, key, bytes) {
                 return callback(__Scheduler_succeed(new DataView(res)));
             })
             .catch(function (err) {
-                return callback(__Scheduler_fail(__Crypto_DecryptWithRsaOaepError));
+                return callback(__Scheduler_fail(__Crypto_AesCtrDecryptError));
             });
     });
 });
 
-var _Crypto_decryptWithAes = function (name) {
-
-};
+var _Crypto_decryptWithAesCtr = F4(function (counter, length, key, bytes) {
+    var algorithm = {
+        name: "AES-CTR",
+        counter: counter,
+        length: length
+    }
+    return __Scheduler_binding(function (callback) {
+        crypto.subtle
+            .decrypt(algorithm, key, bytes)
+            .then(function (res) {
+                return callback(__Scheduler_succeed(new DataView(res)));
+            })
+            .catch(function (err) {
+                console.log("decryptpWithAesCtr error: ", err);
+            });
+    })
+});
 
 // Signing
 

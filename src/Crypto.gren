@@ -51,8 +51,8 @@ module Crypto exposing
     , deriveHmacKeyUsingEcdh
     , DeriveHmacKeyError(..)
     , encryptWithRsaOaep
-    , AesCtrParams, AesCtrEncryptError(..)
-    , encryptWithAesCtr
+    , AesCtrParams, AesCtrEncryptError(..), AesCtrDecryptError(..)
+    , encryptWithAesCtr, decryptWithAesCtr
     , DecryptWithRsaOaepError(..)
     , decryptWithRsaOaep
     )
@@ -1598,8 +1598,22 @@ decryptWithRsaOaep passedLabel (PrivateKey (Key privateKey)) bytes =
 
 
 {-|-}
-decryptWithAesCtr =
-    Debug.todo ""
+type AesCtrDecryptError =
+    AesCtrDecryptError
+
+
+{-|-}
+decryptWithAesCtr : AesCtrParams -> Key AesCtrKey -> Bytes -> Task AesCtrDecryptError Bytes
+decryptWithAesCtr { counter, length } (Key { key }) bytes =
+    if Bytes.width counter == 16 then
+        Gren.Kernel.Crypto.decryptWithAesCtr
+            counter
+            (clamp 1 128 length)
+            key
+            bytes
+
+    else
+        Task.fail AesCtrDecryptError
 
 
 {-|-}
