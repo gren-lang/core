@@ -50,11 +50,12 @@ module Crypto exposing
     , DigestAlgorithm(..)
     , deriveHmacKeyUsingEcdh
     , DeriveHmacKeyError(..)
-    , encryptWithRsaOaep
+    , DecryptWithRsaOaepError(..)
+    , encryptWithRsaOaep, decryptWithRsaOaep
     , AesCtrParams, AesCtrEncryptError(..), AesCtrDecryptError(..)
     , encryptWithAesCtr, decryptWithAesCtr
-    , DecryptWithRsaOaepError(..)
-    , decryptWithRsaOaep
+    , AesCbcParams, AesCbcEncryptionError(..)
+    , encryptWithAesCbc
     )
 
 
@@ -1558,8 +1559,27 @@ encryptWithAesCtr _context { counter, length } (Key { key }) bytes =
 
 
 {-|-}
-encryptWithAesCbc =
-    Debug.todo ""
+type AesCbcEncryptionError =
+    AesCbcEncryptionError
+
+
+{-|-}
+type alias AesCbcParams =
+    { iv : Bytes
+    }
+
+
+{-|-}
+encryptWithAesCbc : SecureContext -> AesCbcParams -> Key AesCbcKey -> Bytes -> Task AesCbcEncryptionError Bytes
+encryptWithAesCbc _context { iv } (Key { key }) bytes =
+    if Bytes.width iv == 16 then
+        Gren.Kernel.Crypto.encryptWithAesCbc
+            iv
+            key
+            bytes
+
+    else
+        Task.fail AesCbcEncryptionError
 
 
 {-|-}

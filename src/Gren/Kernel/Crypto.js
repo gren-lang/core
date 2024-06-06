@@ -2,7 +2,7 @@
 
 import Gren.Kernel.Scheduler exposing (binding, succeed, fail)
 import Gren.Kernel.Bytes exposing (writeBytes)
-import Crypto exposing (AesCtrDecryptError, AesCtrEncryptError, DecryptWithRsaOaepError, DeriveHmacKeyUnknownError, ImportRsaKeyError, ImportHmacKeyError, ImportEcKeyError, ImportAesKeyError, Key, SecureContext, PublicKey, PrivateKey)
+import Crypto exposing (AesCbcEncryptionError, AesCtrDecryptError, AesCtrEncryptError, DecryptWithRsaOaepError, DeriveHmacKeyUnknownError, ImportRsaKeyError, ImportHmacKeyError, ImportEcKeyError, ImportAesKeyError, Key, SecureContext, PublicKey, PrivateKey)
 import Maybe exposing (Just, Nothing)
 import Bytes exposing (Bytes)
 
@@ -337,6 +337,23 @@ var _Crypto_encryptWithAesCtr = F4(function (counter, length, key, bytes) {
             })
             .catch(function (err) {
                 return callback(__Scheduler_fail(__Crypto_AesCtrEncryptError));
+            });
+    });
+});
+
+var _Crypto_encryptWithAesCbc = F3(function (iv, key, bytes) {
+    var algorithm = {
+        name: "AES-CBC",
+        iv: iv
+    };
+    return __Scheduler_binding(function (callback) {
+        crypto.subtle
+            .encrypt(algorithm, key, bytes)
+            .then(function (res) {
+                return callback(__Scheduler_succeed(new DataView(res)));
+            })
+            .catch(function (err) {
+                return callback(__Scheduler_fail(__Crypto_AesCbcEncryptionError))
             });
     });
 });
