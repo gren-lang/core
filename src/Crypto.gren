@@ -1508,8 +1508,8 @@ deriveHmacKeyUsingPbkdf2 { hash, length } (Key key) pbkdb2Params extractable =
 
 This operation should always succeed.
 -}
-encryptWithRsaOaep : Maybe Bytes -> PublicKey RsaOaepKey -> Bytes -> Task {} Bytes
-encryptWithRsaOaep passedLabel (PublicKey (Key key)) bytes =
+encryptWithRsaOaep : SecureContext -> Maybe Bytes -> PublicKey RsaOaepKey -> Bytes -> Task {} Bytes
+encryptWithRsaOaep _context passedLabel (PublicKey (Key key)) bytes =
     case passedLabel of
         Nothing ->
             Gren.Kernel.Crypto.encryptWithRsaOaep
@@ -1543,8 +1543,8 @@ type alias AesCtrParams =
 
 {-| Encrypt some values using a AES-CTR key.
 -}
-encryptWithAesCtr : AesCtrParams -> Key AesCtrKey -> Bytes -> Task AesCtrEncryptError Bytes
-encryptWithAesCtr { counter, length } (Key { key }) bytes =
+encryptWithAesCtr : SecureContext -> AesCtrParams -> Key AesCtrKey -> Bytes -> Task AesCtrEncryptError Bytes
+encryptWithAesCtr _context { counter, length } (Key { key }) bytes =
     -- The counter must be exactly 16 bytes long
     if Bytes.width counter == 16 then
         Gren.Kernel.Crypto.encryptWithAesCtr
