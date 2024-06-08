@@ -358,6 +358,30 @@ var _Crypto_encryptWithAesCbc = F3(function (iv, key, bytes) {
     });
 });
 
+var _Crypto_encryptWithAesGcm = F5(function (iv, additionalData, tagLength, key, bytes) {
+    var algorithm = {
+        name: "AES-GCM",
+        iv: iv
+    };
+    if (additionalData != "") {
+        algorithm.additionalData = additionalData;
+    };
+    if (tagLength != "") {
+        algorithm.tagLength = tagLength;
+    };
+    return __Scheduler_binding(function (callback) {
+        crypto.subtle
+            .encrypt(algorithm, key, bytes)
+            .then(function (res) {
+                return callback(__Scheduler_succeed(new DataView(res)));
+            })
+            .catch(function (err) {
+                console.log(err);
+                return callback(__Scheduler_fail())
+            });
+    });
+});
+
 // Decrypt
 
 var _Crypto_decryptWithRsaOaep = F3(function (label, key, bytes) {

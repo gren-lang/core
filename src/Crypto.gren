@@ -56,6 +56,8 @@ module Crypto exposing
     , encryptWithAesCtr, decryptWithAesCtr
     , AesCbcParams, AesCbcEncryptionError(..), AesCbcDecryptionError(..)
     , encryptWithAesCbc, decryptWithAesCbc
+    , AesGcmParams, AesGcmTagLength(..)
+    , encryptWithAesGcm
     )
 
 
@@ -259,7 +261,7 @@ Verify signed `Bytes`.
 
 
 import Array exposing ( Array )
-import Basics exposing ( toFloat, Never, Bool(..), Int, (>), (<), (<=), (==), (*), (^), (/), (/=), (|>) )
+import Basics exposing ( toFloat, Never, Bool(..), Int, (>), (<), (<=), (>=), (==), (*), (^), (/), (/=), (|>), (&&) )
 import Gren.Kernel.Crypto
 import String exposing ( String )
 import Task exposing ( Task )
@@ -1582,9 +1584,67 @@ encryptWithAesCbc _context { iv } (Key { key }) bytes =
         Task.fail AesCbcEncryptionError
 
 
+{-| The set of allowed tag lengths for the AES-GCM algorithm.
+-}
+type AesGcmTagLength
+    = AesGcmTagLength96
+    | AesGcmTagLength104
+    | AesGcmTagLength112
+    | AesGcmTagLength120
+    | AesGcmTagLength128
+
+
 {-|-}
-encryptWithAesGcm =
-    Debug.todo ""
+type alias AesGcmParams =
+    { iv : Bytes
+    , additionalData : Maybe Bytes
+    , tagLength : Maybe AesGcmTagLength
+    }
+
+
+{-|-}
+encryptWithAesGcm : SecureContext -> AesGcmParams -> Key AesGcmKey -> Bytes -> Task {} Bytes
+encryptWithAesGcm _context { iv, additionalData, tagLength } (Key { key }) bytes =
+    let
+        byteWidth =
+            Bytes.width iv
+    in
+    if byteWidth <= 128 && byteWidth >= 12 then
+        case { ad = additionalData, tl = tagLength } of
+            { ad = Nothing, tl = Nothing } ->
+                Gren.Kernel.Crypto.encryptWithAesGcm
+                    iv
+                    ""
+                    ""
+                    key
+                    bytes
+            
+            { ad = Just ad, tl = Nothing} ->
+                Gren.Kernel.Crypto.encryptWithAesGcm
+                    iv
+                    ad
+                    ""
+                    key
+                    bytes
+
+            { ad = Nothing, tl = Just tl } ->
+                Gren.Kernel.Crypto.encryptWithAesGcm
+                    iv
+                    ""
+                    (aesTagLengthToInt tl)
+                    key
+                    bytes
+
+            { ad = Just ad, tl = Just tl } ->
+                Gren.Kernel.Crypto.encryptWithAesGcm
+                    iv
+                    ad
+                    (aesTagLengthToInt tl)
+                    key
+                    bytes
+
+    else
+        Task.fail {}
 
 
 
@@ -1780,6 +1840,25 @@ aesLengthToInt length =
 
         AesLength256 ->
             256
+
+
+{-|-}
+aesTagLengthToInt aesTagLength =
+    case aesTagLength of
+        AesGcmTagLength96 ->
+            96
+
+        AesGcmTagLength104 ->
+            104
+
+        AesGcmTagLength112 ->
+            112
+    
+        AesGcmTagLength120 ->
+            120
+
+        AesGcmTagLength128 ->
+            128
 
 
 {-|-}
