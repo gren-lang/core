@@ -54,8 +54,8 @@ module Crypto exposing
     , encryptWithRsaOaep, decryptWithRsaOaep
     , AesCtrParams, AesCtrEncryptError(..), AesCtrDecryptError(..)
     , encryptWithAesCtr, decryptWithAesCtr
-    , AesCbcParams, AesCbcEncryptionError(..)
-    , encryptWithAesCbc
+    , AesCbcParams, AesCbcEncryptionError(..), AesCbcDecryptionError(..)
+    , encryptWithAesCbc, decryptWithAesCbc
     )
 
 
@@ -1637,8 +1637,28 @@ decryptWithAesCtr { counter, length } (Key { key }) bytes =
 
 
 {-|-}
-decryptWithAesCbc =
-    Debug.todo ""
+type AesCbcDecryptionError
+    = AesCbcDecryptionError
+
+
+{-| Decrypt some `Bytes` with the AES-CBC algorithm.
+
+Errors can happen when:
+- The passed `iv` value does not equal 16 bytes
+- The passsed `iv` value does not equal the `iv` value that was used to encrypt the passed `Bytes`
+- The passed `Bytes` cannot be decrypted
+
+-}
+decryptWithAesCbc : SecureContext -> AesCbcParams -> Key AesCbcKey -> Bytes -> Task AesCbcDecryptionError Bytes
+decryptWithAesCbc _context { iv } (Key { key }) bytes = 
+    if Bytes.width iv == 16 then
+        Gren.Kernel.Crypto.decryptWithAesCbc
+            iv
+            key
+            bytes
+
+    else
+        Task.fail AesCbcDecryptionError
 
 
 {-|-}
