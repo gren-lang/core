@@ -2,7 +2,7 @@
 
 import Gren.Kernel.Scheduler exposing (binding, succeed, fail)
 import Gren.Kernel.Bytes exposing (writeBytes)
-import Crypto exposing (AesGcmEncryptionError, AesCbcDecryptionError, AesCbcEncryptionError, AesCtrDecryptError, AesCtrEncryptError, DecryptWithRsaOaepError, DeriveHmacKeyUnknownError, ImportRsaKeyError, ImportHmacKeyError, ImportEcKeyError, ImportAesKeyError, Key, SecureContext, PublicKey, PrivateKey)
+import Crypto exposing (AesGcmDecryptionError, AesGcmEncryptionError, AesCbcDecryptionError, AesCbcEncryptionError, AesCtrDecryptError, AesCtrEncryptError, DecryptWithRsaOaepError, DeriveHmacKeyUnknownError, ImportRsaKeyError, ImportHmacKeyError, ImportEcKeyError, ImportAesKeyError, Key, SecureContext, PublicKey, PrivateKey)
 import Maybe exposing (Just, Nothing)
 import Bytes exposing (Bytes)
 
@@ -439,6 +439,32 @@ var _Crypto_decryptWithAesCbc = F3(function (iv, key, bytes) {
             })
             .catch(function (err) {
                 return callback(__Scheduler_fail(__Crypto_AesCbcDecryptionError))
+            });
+    });
+});
+
+var _Crypto_decryptWithAesGcm = F5(function (iv, additionalData, tagLength, key, bytes) {
+    var algorithm = {
+        name: "AES-GCM",
+        iv: iv
+    };
+    if (additionalData != "") {
+        algorithm.additionalData = additionalData;
+    };
+    if (tagLength != "") {
+        algorithm.tagLength = tagLength;
+    };
+    return __Scheduler_binding(function (callback) {
+        crypto.subtle
+            // For some reason, passing a DataView for encrypted bytes does not work on node
+            // So, turned into Uint8Array to work on node _and_ browser platforms
+            .decrypt(algorithm, key, new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength))
+            .then(function (res) {
+                return callback(__Scheduler_succeed(new DataView(res)));
+            })
+            .catch(function (err) {
+                console.log(err);
+                return callback(__Scheduler_fail(__Crypto_AesGcmDecryptionError))
             });
     });
 });

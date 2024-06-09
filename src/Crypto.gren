@@ -56,8 +56,8 @@ module Crypto exposing
     , encryptWithAesCtr, decryptWithAesCtr
     , AesCbcParams, AesCbcEncryptionError(..), AesCbcDecryptionError(..)
     , encryptWithAesCbc, decryptWithAesCbc
-    , AesGcmParams, AesGcmTagLength(..), AesGcmEncryptionError(..)
-    , encryptWithAesGcm
+    , AesGcmParams, AesGcmTagLength(..), AesGcmEncryptionError(..), AesGcmDecryptionError(..)
+    , encryptWithAesGcm, decryptWithAesGcm
     )
 
 
@@ -1727,9 +1727,53 @@ decryptWithAesCbc _context { iv } (Key { key }) bytes =
 
 
 {-|-}
-decryptWithAesGcm =
-    Debug.todo ""
+type AesGcmDecryptionError =
+    AesGcmDecryptionError
 
+
+{-|-}
+decryptWithAesGcm : SecureContext -> AesGcmParams -> Key AesGcmKey -> Bytes -> Task AesGcmDecryptionError Bytes
+decryptWithAesGcm _context { iv, additionalData, tagLength } (Key { key }) bytes =
+    let
+        byteWidth =
+            Bytes.width iv
+    in
+    if byteWidth <= 128 && byteWidth >= 12 then
+        case { ad = additionalData, tl = tagLength } of
+            { ad = Nothing, tl = Nothing } ->
+                Gren.Kernel.Crypto.decryptWithAesGcm
+                    iv
+                    ""
+                    ""
+                    key
+                    bytes
+            
+            { ad = Just ad, tl = Nothing} ->
+                Gren.Kernel.Crypto.decryptWithAesGcm
+                    iv
+                    ad
+                    ""
+                    key
+                    bytes
+
+            { ad = Nothing, tl = Just tl } ->
+                Gren.Kernel.Crypto.decryptWithAesGcm
+                    iv
+                    ""
+                    (aesTagLengthToInt tl)
+                    key
+                    bytes
+
+            { ad = Just ad, tl = Just tl } ->
+                Gren.Kernel.Crypto.decryptWithAesGcm
+                    iv
+                    ad
+                    (aesTagLengthToInt tl)
+                    key
+                    bytes
+
+    else
+        Task.fail AesGcmDecryptionError
 
 
 -- SIGN
