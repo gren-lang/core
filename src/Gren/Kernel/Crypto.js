@@ -2,7 +2,7 @@
 
 import Gren.Kernel.Scheduler exposing (binding, succeed, fail)
 import Gren.Kernel.Bytes exposing (writeBytes)
-import Crypto exposing (AesCbcDecryptionError, AesCbcEncryptionError, AesCtrDecryptError, AesCtrEncryptError, DecryptWithRsaOaepError, DeriveHmacKeyUnknownError, ImportRsaKeyError, ImportHmacKeyError, ImportEcKeyError, ImportAesKeyError, Key, SecureContext, PublicKey, PrivateKey)
+import Crypto exposing (AesGcmEncryptionError, AesCbcDecryptionError, AesCbcEncryptionError, AesCtrDecryptError, AesCtrEncryptError, DecryptWithRsaOaepError, DeriveHmacKeyUnknownError, ImportRsaKeyError, ImportHmacKeyError, ImportEcKeyError, ImportAesKeyError, Key, SecureContext, PublicKey, PrivateKey)
 import Maybe exposing (Just, Nothing)
 import Bytes exposing (Bytes)
 
@@ -377,7 +377,7 @@ var _Crypto_encryptWithAesGcm = F5(function (iv, additionalData, tagLength, key,
             })
             .catch(function (err) {
                 console.log(err);
-                return callback(__Scheduler_fail())
+                return callback(__Scheduler_fail(__Crypto_AesGcmEncryptionError))
             });
     });
 });

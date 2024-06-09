@@ -56,7 +56,7 @@ module Crypto exposing
     , encryptWithAesCtr, decryptWithAesCtr
     , AesCbcParams, AesCbcEncryptionError(..), AesCbcDecryptionError(..)
     , encryptWithAesCbc, decryptWithAesCbc
-    , AesGcmParams, AesGcmTagLength(..)
+    , AesGcmParams, AesGcmTagLength(..), AesGcmEncryptionError(..)
     , encryptWithAesGcm
     )
 
@@ -1603,7 +1603,12 @@ type alias AesGcmParams =
 
 
 {-|-}
-encryptWithAesGcm : SecureContext -> AesGcmParams -> Key AesGcmKey -> Bytes -> Task {} Bytes
+type AesGcmEncryptionError =
+    AesGcmEncryptionError
+
+
+{-|-}
+encryptWithAesGcm : SecureContext -> AesGcmParams -> Key AesGcmKey -> Bytes -> Task AesGcmEncryptionError Bytes
 encryptWithAesGcm _context { iv, additionalData, tagLength } (Key { key }) bytes =
     let
         byteWidth =
@@ -1644,7 +1649,7 @@ encryptWithAesGcm _context { iv, additionalData, tagLength } (Key { key }) bytes
                     bytes
 
     else
-        Task.fail {}
+        Task.fail AesGcmEncryptionError
 
 
 
