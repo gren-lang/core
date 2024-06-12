@@ -149,7 +149,7 @@ indexedMap =
 
     foldl (+) 0 [ 1, 2, 3 ] == 6
 
-So `foldl step state [ 1, 2, 3 ] is like saying:
+So `foldl step state [ 1, 2, 3 ]` is like saying:
 
     state
         |> step 1
