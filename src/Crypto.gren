@@ -47,7 +47,7 @@ module Crypto exposing
     , importEcdhPrivateKeyFromPkcs8, importEcdhPrivateKeyFromSpki, importEcdhPrivateKeyFromJwk
     , ImportHmacKeyError(..)
     , importHmacKeyFromJwk, importHmacKeyFromRaw
-    , DigestAlgorithm(..)
+    , DigestAlgorithm(..), digest
     , deriveHmacKeyUsingEcdh
     , DeriveHmacKeyError(..)
     , DecryptWithRsaOaepError(..)
@@ -58,6 +58,10 @@ module Crypto exposing
     , encryptWithAesCbc, decryptWithAesCbc
     , AesGcmParams, AesGcmTagLength(..), AesGcmEncryptionError(..), AesGcmDecryptionError(..)
     , encryptWithAesGcm, decryptWithAesGcm
+    , signWithRsaSsaPkcs1V1_5, verifyWithRsaSsaPkcs1V1_5
+    , SignWithRsaPssError(..), signWithRsaPss, verifyWithRsaPss
+    , signWithEcdsa, verifyWithEcdsa
+    , signWithHmac, verifyWithHmac
     )
 
 
@@ -267,6 +271,7 @@ import String exposing ( String )
 import Task exposing ( Task )
 import Debug
 import Bytes exposing ( Bytes )
+import Bytes.Encode
 import Maybe exposing ( Maybe(..) )
 import Result exposing ( Result(..) )
 import Set exposing ( Set )
@@ -429,7 +434,7 @@ type RsaSsaPkcs1V1_5Key
 
 {-| Parameters required to generate a key for uses with the RSA algorithm.
 
-`modulusLength` is clamped be at least 2048 and no greater than 16384. If the
+`modulusLength` is clamped be at least 2048 and no greater than 4096. If the
 `Int` used is outside of that range, it will be corrected.
 
 The public exponent for RSA keys is always `[ 1, 0, 1 ]` or `65537`. This is
@@ -489,7 +494,7 @@ generateRsaKeyHelper : String -> Array String -> RsaKeyParams -> Extractable -> 
 generateRsaKeyHelper name permissions { modulusLength, hash } extractable =
     let
         clampedModulusLength = 
-            clamp 2048 16384 modulusLength
+            clamp 2048 4096 modulusLength
     in
     if Math.remainderBy 8 clampedModulusLength == 0 then
         Gren.Kernel.Crypto.generateRsaKey 
@@ -1762,27 +1767,68 @@ decryptWithAesGcm _context { iv, additionalData, tagLength } (Key { key }) bytes
         Task.fail AesGcmDecryptionError
 
 
+
+-- SIGN & VERIFY TYPES
+
+
+{-|-}
+type alias Signature
+    = Bytes
+
+
+
 -- SIGN
 
 
-{-|-}
-signWithRsaSsaPkcs1V1_5 =
-    Debug.todo ""
+{-| Sign some `Bytes` with the RSA-SSAPKCS1v1.5 algorithm. This operation should always succeed.
+-}
+signWithRsaSsaPkcs1V1_5 : SecureContext -> PrivateKey RsaSsaPkcs1V1_5Key -> Bytes -> Task {} Signature
+signWithRsaSsaPkcs1V1_5 _context (PrivateKey (Key { key })) bytes =
+    Gren.Kernel.Crypto.signWithRsaSsaPkcs1V1_5 
+        key 
+        bytes
+
+
+{-| An error that can appear when signing using the RSA-PSS algorithm.
+-}
+type SignWithRsaPssError
+    = SignWithRsaPssError
+
+
+{-| Sign some `Bytes` with the RSA-PSS algorithm.
+
+When run, the returned `Task` can fail if the passed `salt` is not equal to or less then the
+amount of bytes than the `DigestAlgorithm` that was used to generate the key. For example, if 
+the `RsaPssKey` was generated with SHA-256, the maximum number for the `salt` value must be 
+32 or less. Note that some platforms may succeed even when the `salt` is not as expected.
+-}
+signWithRsaPss : SecureContext -> Int -> PrivateKey RsaPssKey -> Bytes -> Task SignWithRsaPssError Signature
+signWithRsaPss _context salt (PrivateKey (Key { key })) bytes =
+    let
+        clampedSaltBytes =
+            clamp 0 2147483647 salt
+    in
+    Gren.Kernel.Crypto.signWithRsaPss 
+        clampedSaltBytes
+        key
+        bytes
 
 
 {-|-}
-signWithRsaPss =
-    Debug.todo ""
+signWithEcdsa : SecureContext -> DigestAlgorithm -> PrivateKey EcdsaKey -> Bytes -> Task {} Signature
+signWithEcdsa _context hash (PrivateKey (Key { key })) bytes =
+    Gren.Kernel.Crypto.signWithEcdsa
+        (digestAlgorithmToString hash)
+        key 
+        bytes
 
 
 {-|-}
-signWithEcdsa =
-    Debug.todo ""
-
-
-{-|-}
-signWithHmac =
-    Debug.todo ""
+signWithHmac : SecureContext -> Key HmacKey -> Bytes -> Task {} Signature
+signWithHmac _context (Key { key }) bytes =
+    Gren.Kernel.Crypto.signWithHmac 
+        key 
+        bytes
 
 
 
@@ -1790,23 +1836,41 @@ signWithHmac =
 
 
 {-|-}
-verifyWithRsaSsaPkcs1V1_5 =
-    Debug.todo ""
+verifyWithRsaSsaPkcs1V1_5 : SecureContext -> PublicKey RsaSsaPkcs1V1_5Key -> Signature -> Bytes -> Task {} {}
+verifyWithRsaSsaPkcs1V1_5 _context (PublicKey (Key { key })) signature bytes =
+    Gren.Kernel.Crypto.verifyWithRsaSsaPkcs1V1_5
+        key
+        signature
+        bytes
 
 
 {-|-}
-verifyWithRsaPss =
-    Debug.todo ""
+verifyWithRsaPss : SecureContext -> Int -> PublicKey RsaPssKey -> Signature -> Bytes -> Task {} Bytes
+verifyWithRsaPss _context salt (PublicKey (Key { key })) signature bytes =
+    Gren.Kernel.Crypto.verifyWithRsaPss
+        salt
+        key
+        signature
+        bytes
 
 
 {-|-}
-verifyWithEcdsa =
-    Debug.todo ""
+verifyWithEcdsa : SecureContext -> DigestAlgorithm -> PublicKey EcdsaKey -> Signature -> Bytes -> Task {} Bytes
+verifyWithEcdsa _context hash (PublicKey (Key { key })) signature bytes =
+    Gren.Kernel.Crypto.verifyWithEcdsa
+        (digestAlgorithmToString hash)
+        key
+        signature
+        bytes
 
 
 {-|-}
-verifyWithHmac =
-    Debug.todo ""
+verifyWithHmac : SecureContext -> Key HmacKey -> Signature -> Bytes -> Task {} Bytes
+verifyWithHmac _context (Key { key }) signature bytes =
+    Gren.Kernel.Crypto.verifyWithHmac
+        key
+        signature
+        bytes
 
 
 
@@ -1919,3 +1983,17 @@ digestAlgorithmToString digestAlgorithm =
 
         Sha512 ->
             "SHA-512"
+
+
+{-|-}
+digestAlgorithmToBytes : DigestAlgorithm -> Int
+digestAlgorithmToBytes digestAlgorithm =
+    case digestAlgorithm of
+        Sha256 ->
+            32
+        
+        Sha384 ->
+            48
+        
+        Sha512 ->
+            64

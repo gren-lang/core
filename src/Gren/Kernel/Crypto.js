@@ -2,7 +2,7 @@
 
 import Gren.Kernel.Scheduler exposing (binding, succeed, fail)
 import Gren.Kernel.Bytes exposing (writeBytes)
-import Crypto exposing (AesGcmDecryptionError, AesGcmEncryptionError, AesCbcDecryptionError, AesCbcEncryptionError, AesCtrDecryptError, AesCtrEncryptError, DecryptWithRsaOaepError, DeriveHmacKeyUnknownError, ImportRsaKeyError, ImportHmacKeyError, ImportEcKeyError, ImportAesKeyError, Key, SecureContext, PublicKey, PrivateKey)
+import Crypto exposing (SignWithRsaPssError, AesGcmDecryptionError, AesGcmEncryptionError, AesCbcDecryptionError, AesCbcEncryptionError, AesCtrDecryptError, AesCtrEncryptError, DecryptWithRsaOaepError, DeriveHmacKeyUnknownError, ImportRsaKeyError, ImportHmacKeyError, ImportEcKeyError, ImportAesKeyError, Key, SecureContext, PublicKey, PrivateKey)
 import Maybe exposing (Just, Nothing)
 import Bytes exposing (Bytes)
 
@@ -94,6 +94,8 @@ var _Crypto_generateRsaKey = F6(function (name, modulusLength, publicExponent, h
                         __$privateKey: __Crypto_PrivateKey(_Crypto_constructKey(key.privateKey))
                     }
                 ))
+            }).catch(function (err) {
+                console.log("generate rsa key error", err);
             });
     });
 });
@@ -471,34 +473,160 @@ var _Crypto_decryptWithAesGcm = F5(function (iv, additionalData, tagLength, key,
 
 // Signing
 
-var _Crypto_signWithRsa = function () {
+var _Crypto_signWithRsaSsaPkcs1V1_5 = F2(function (key, bytes) {
+    var algorithm = {
+        name: "RSASSA-PKCS1-v1_5"
+    }
+    return __Scheduler_binding(function (callback) {
+        crypto.subtle
+            .sign(algorithm, key, bytes)
+            .then(function (res) {
+                return callback(__Scheduler_succeed(new DataView(res)));
+            })
+            .catch(function (err) {
+                console.log(err);
+                return callback(__Scheduler_fail());
+            })
+    })
+});
 
-};
+var _Crypto_signWithRsaPss = F3(function (saltLength, key, bytes) {
+    var algorithm = {
+        name: "RSA-PSS",
+        saltLength: saltLength
+    };
+    return __Scheduler_binding(function (callback) {
+        crypto.subtle
+            .sign(algorithm, key, bytes)
+            .then(function (res) {
+                return callback(__Scheduler_succeed(new DataView(res)));
+            })
+            .catch(function (err) {
+                console.log("sign with rsa-pss error: ", err);
+                return callback(__Scheduler_fail());
+            });
+    });
+});
 
-var _Crypto_signWithEcdsa = function () {
+var _Crypto_signWithEcdsa = F3(function (hash, key, bytes) {
+    var algorithm = {
+        name: "ECDSA",
+        hash: hash
+    };
+    return __Scheduler_binding(function (callback) {
+        crypto.subtle
+            .sign(algorithm, key, bytes)
+            .then(function (res) {
+                return callback(__Scheduler_succeed(new DataView(res)));
+            })
+            .catch(function (err) {
+                console.log(err);
+                return callback(__Scheduler_fail());
+            });
+    });
+});
 
-};
-
-var _Crypto_signWithHmac = function () {
-
-};
+var _Crypto_signWithHmac = F2(function (key, bytes) {
+    var algorithm = {
+        name: "HMAC"
+    }
+    return __Scheduler_binding(function (callback) {
+        crypto.subtle
+            .sign(algorithm, key, bytes)
+            .then(function (res) {
+                return callback(__Scheduler_succeed(new DataView(res)));
+            })
+            .catch(function (err) {
+                console.log(err);
+                return callback(__Scheduler_fail());
+            });
+    });
+});
 
 // Verify
 
-var _Crypto_verifyWithRsa = function () {
+var _Crypto_verifyWithRsaSsaPkcs1V1_5 = F3(function (key, signature, bytes) {
+    var algorithm = {
+        name: "RSASSA-PKCS1-v1_5"
+    };
+    return __Scheduler_binding(function (callback) {
+        crypto.subtle
+            .verify(algorithm, key, signature, bytes)
+            .then(function (res) {
+                return callback(__Scheduler_succeed(res));
+            })
+            .catch(function (err) {
+                console.log(err);
+                return callback(__Scheduler_fail());
+            });
+    });
+});
 
-};
+var _Crypto_verifyWithRsaPss = F4(function (saltLength, key, signature, bytes) {
+    var algorithm = {
+        name: "RSA-PSS",
+        saltLength: saltLength
+    };
+    return __Scheduler_binding(function (callback) {
+        crypto.subtle
+            .verify(algorithm, key, signature, bytes)
+            .then(function (res) {
+                return callback(__Scheduler_succeed(res));
+            })
+            .catch(function (err) {
+                console.log(err);
+                return callback(__Scheduler_fail());
+            });
+    });
+});
 
-var _Crypto_verifyWithEcdsa = function () {
+var _Crypto_verifyWithEcdsa = F4(function (hash, key, signature, bytes) {
+    var algorithm = {
+        name: "ECDSA",
+        hash: hash
+    };
+    return __Scheduler_binding(function (callback) {
+        crypto.subtle
+            .verify(algorithm, key, signature, bytes)
+            .then(function (res) {
+                return callback(__Scheduler_succeed(res));
+            })
+            .catch(function (err) {
+                console.log(err);
+                return callback(__Scheduler_fail());
+            });
+    });
+});
 
-};
-
-var _Crypto_verifywithHmac = function () {
-
-};
+var _Crypto_verifywithHmac = F3(function (key, signature, bytes) {
+    var algorithm = {
+        name: "HMAC"
+    }
+    return __Scheduler_binding(function (callback) {
+        crypto.subtle
+            .verify(algorithm, key, signature, bytes)
+            .then(function (res) {
+                return callback(__Scheduler_succeed(res));
+            })
+            .catch(function (err) {
+                console.log(err);
+                return callback(__Scheduler_fail());
+            });
+    });
+});
 
 // Digest
 
-var _Crypto_digest = function () {
-
-};
+var _Crypto_digest = F2(function (algorithm, bytes) {
+    return __Scheduler_binding(function (callback) {
+        crypto.subtle
+            .digest(algorithm, bytes)
+            .then(function (res) {
+                return callback(__Scheduler_succeed(new DataView(res)));
+            })
+            .catch(function (err) {
+                console.log(err);
+                return callback(__Scheduler_fail());
+            });
+    });
+});
