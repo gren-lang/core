@@ -598,7 +598,7 @@ var _Crypto_verifyWithEcdsa = F4(function (hash, key, signature, bytes) {
     });
 });
 
-var _Crypto_verifywithHmac = F3(function (key, signature, bytes) {
+var _Crypto_verifyWithHmac = F3(function (key, signature, bytes) {
     var algorithm = {
         name: "HMAC"
     }
