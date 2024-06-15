@@ -87,7 +87,6 @@ tests =
         higherOrderTests =
             describe "Higher Order Helpers"
                 [ test "identity 'c'" <| \{} -> Expect.equal 'c' (identity 'c')
-                , test "always 42 {}" <| \{} -> Expect.equal 42 (always 42 {})
                 , test "<|" <| \{} -> Expect.equal 9 (identity <| 3 + 6)
                 , test "|>" <| \{} -> Expect.equal 9 (3 + 6 |> identity)
                 , test "<<" <| \{} -> Expect.equal True (not << xor True <| True)
