@@ -17,10 +17,10 @@ var crypto = function () {
 
 // Utils
 
-var _Crypto_constructKey = function (key) {
+var _Crypto_constructKey = function (__$key, __$extractable) {
     return __Crypto_Key({
-        __$key: key,
-        __$extractable: key.__$extractable
+        __$key: __$key,
+        __$extractable: __$extractable
     });
 };
 
@@ -59,7 +59,6 @@ var _Crypto_getRandomValues = F2(function (arrayLength, valueType) {
     try {
         var randomValues = crypto.getRandomValues(array);
     } catch (err) {
-        console.log("err", err);
     }
     return __Scheduler_binding(function (callback) {
         return callback(__Scheduler_succeed(Array.from(randomValues)));
@@ -90,12 +89,11 @@ var _Crypto_generateRsaKey = F6(function (name, modulusLength, publicExponent, h
             .then(function (key) {
                 return callback(__Scheduler_succeed(
                     {
-                        __$publicKey: __Crypto_PublicKey(_Crypto_constructKey(key.publicKey)),
-                        __$privateKey: __Crypto_PrivateKey(_Crypto_constructKey(key.privateKey))
+                        __$publicKey: __Crypto_PublicKey(_Crypto_constructKey(key.publicKey, key.publicKey.extractable)),
+                        __$privateKey: __Crypto_PrivateKey(_Crypto_constructKey(key.privateKey, key.publicKey.extractable))
                     }
                 ))
             }).catch(function (err) {
-                console.log("generate rsa key error", err);
             });
     });
 });
@@ -109,7 +107,7 @@ var _Crypto_generateAesKey = F4(function (name, length, extractable, permissions
         crypto.subtle
             .generateKey(algorithm, extractable, permissions)
             .then(function (key) {
-                return callback(__Scheduler_succeed(_Crypto_constructKey(key)))
+                return callback(__Scheduler_succeed(_Crypto_constructKey(key, key, extractable)))
             });
     });
 });
@@ -125,8 +123,8 @@ var _Crypto_generateEcKey = F4(function (name, namedCurve, extractable, permissi
             .then(function (key) {
                 return callback(__Scheduler_succeed(
                     {
-                        __$publicKey: __Crypto_PublicKey(_Crypto_constructKey(key.publicKey)),
-                        __$privateKey: __Crypto_PrivateKey(_Crypto_constructKey(key.privateKey))
+                        __$publicKey: __Crypto_PublicKey(_Crypto_constructKey(key.publicKey, key.publicKey.extractable)),
+                        __$privateKey: __Crypto_PrivateKey(_Crypto_constructKey(key.privateKey, key.privateKey.extractable))
                     }
                 ))
             })
@@ -151,8 +149,10 @@ var _Crypto_generateHmacKey = F5(function (name, hash, length, extractable, perm
         crypto.subtle
             .generateKey(algorithm, extractable, permissions)
             .then(function (key) {
-                return callback(__Scheduler_succeed(_Crypto_constructKey(key)))
+                return callback(__Scheduler_succeed(_Crypto_constructKey(key, key.extractable)))
             })
+            .catch(function (err) {
+            });
     });
 });
 
@@ -170,6 +170,8 @@ var _Crypto_exportKey = F2(function (format, key) {
                     default:
                         return callback(__Scheduler_succeed(new DataView(res)));
                 };
+            })
+            .catch(function (err) {
             });
     });
 });
@@ -183,9 +185,9 @@ var _Crypto_importRsaKey = F7(function (wrapper, format, keyData, algorithm, has
             .then(function (key) {
                 switch (wrapper) {
                     case "public":
-                        return callback(__Scheduler_succeed(__Crypto_PublicKey(_Crypto_constructKey(key))))
+                        return callback(__Scheduler_succeed(__Crypto_PublicKey(_Crypto_constructKey(key, key.extractable))))
                     case "private":
-                        return callback(__Scheduler_succeed(__Crypto_PrivateKey(_Crypto_constructKey(key))))
+                        return callback(__Scheduler_succeed(__Crypto_PrivateKey(_Crypto_constructKey(key, key.extractable))))
                     default:
                         return callback(__Scheduler_fail(__Crypto_ImportRsaKeyError));
                 }
@@ -201,10 +203,9 @@ var _Crypto_importAesKey = F5(function (format, keyData, algorithm, extractable,
         crypto.subtle
             .importKey(format, keyData, { name: algorithm }, extractable, keyUsages)
             .then(function (key) {
-                return callback(__Scheduler_succeed(_Crypto_constructKey(key)))
+                return callback(__Scheduler_succeed(_Crypto_constructKey(key, key.extractable)))
             })
             .catch(function (err) {
-                console.log(err);
                 return callback(__Scheduler_fail(__Crypto_ImportAesKeyError));
             });
     });
@@ -225,9 +226,9 @@ var _Crypto_importEcKey = F7(function (wrapper, format, keyData, algorithm, name
             .then(function (key) {
                 switch (wrapper) {
                     case "public":
-                        return callback(__Scheduler_succeed(__Crypto_PublicKey(_Crypto_constructKey(key))))
+                        return callback(__Scheduler_succeed(__Crypto_PublicKey(_Crypto_constructKey(key, key.extractable))))
                     case "private":
-                        return callback(__Scheduler_succeed(__Crypto_PrivateKey(_Crypto_constructKey(key))))
+                        return callback(__Scheduler_succeed(__Crypto_PrivateKey(_Crypto_constructKey(key, key.extractable))))
                     default:
                         return callback(__Scheduler_fail(__Crypto_ImportEcKeyError));
                 }
@@ -256,7 +257,7 @@ var _Crypto_importHmacKey = F7(function (format, keyData, algorithm, hash, lengt
         crypto.subtle
             .importKey(format, keyData, algorithm, extractable, keyUsages)
             .then(function (key) {
-                return callback(__Scheduler_succeed(_Crypto_constructKey(key)))
+                return callback(__Scheduler_succeed(_Crypto_constructKey(key, key.extractable)))
             })
             .catch(function (err) {
                 return callback(__Scheduler_fail(__Crypto_ImportHmacKeyError));
@@ -293,7 +294,7 @@ var _Crypto_deriveHmacKeyUsingEcdh = F6(function (publicKey, ecdhPrivateKey, has
                 keyUsages
             )
             .then(function (key) {
-                return callback(__Scheduler_succeed(_Crypto_constructKey(key)))
+                return callback(__Scheduler_succeed(_Crypto_constructKey(key, key.extractable)))
             })
             .catch(function (err) {
                 return callback(__Scheduler_fail(__Crypto_DeriveHmacKeyUnknownError))
@@ -378,7 +379,6 @@ var _Crypto_encryptWithAesGcm = F5(function (iv, additionalData, tagLength, key,
                 return callback(__Scheduler_succeed(new DataView(res)));
             })
             .catch(function (err) {
-                console.log(err);
                 return callback(__Scheduler_fail(__Crypto_AesGcmEncryptionError))
             });
     });
@@ -423,7 +423,6 @@ var _Crypto_decryptWithAesCtr = F4(function (counter, length, key, bytes) {
                 return callback(__Scheduler_succeed(new DataView(res)));
             })
             .catch(function (err) {
-                console.log("decryptpWithAesCtr error: ", err);
             });
     })
 });
@@ -465,7 +464,6 @@ var _Crypto_decryptWithAesGcm = F5(function (iv, additionalData, tagLength, key,
                 return callback(__Scheduler_succeed(new DataView(res)));
             })
             .catch(function (err) {
-                console.log(err);
                 return callback(__Scheduler_fail(__Crypto_AesGcmDecryptionError))
             });
     });
@@ -484,7 +482,6 @@ var _Crypto_signWithRsaSsaPkcs1V1_5 = F2(function (key, bytes) {
                 return callback(__Scheduler_succeed(new DataView(res)));
             })
             .catch(function (err) {
-                console.log(err);
                 return callback(__Scheduler_fail());
             })
     })
@@ -502,7 +499,6 @@ var _Crypto_signWithRsaPss = F3(function (saltLength, key, bytes) {
                 return callback(__Scheduler_succeed(new DataView(res)));
             })
             .catch(function (err) {
-                console.log("sign with rsa-pss error: ", err);
                 return callback(__Scheduler_fail());
             });
     });
@@ -520,7 +516,6 @@ var _Crypto_signWithEcdsa = F3(function (hash, key, bytes) {
                 return callback(__Scheduler_succeed(new DataView(res)));
             })
             .catch(function (err) {
-                console.log(err);
                 return callback(__Scheduler_fail());
             });
     });
@@ -537,7 +532,6 @@ var _Crypto_signWithHmac = F2(function (key, bytes) {
                 return callback(__Scheduler_succeed(new DataView(res)));
             })
             .catch(function (err) {
-                console.log(err);
                 return callback(__Scheduler_fail());
             });
     });
@@ -556,7 +550,6 @@ var _Crypto_verifyWithRsaSsaPkcs1V1_5 = F3(function (key, signature, bytes) {
                 return callback(__Scheduler_succeed(res));
             })
             .catch(function (err) {
-                console.log(err);
                 return callback(__Scheduler_fail());
             });
     });
@@ -574,7 +567,6 @@ var _Crypto_verifyWithRsaPss = F4(function (saltLength, key, signature, bytes) {
                 return callback(__Scheduler_succeed(res));
             })
             .catch(function (err) {
-                console.log(err);
                 return callback(__Scheduler_fail());
             });
     });
@@ -592,7 +584,6 @@ var _Crypto_verifyWithEcdsa = F4(function (hash, key, signature, bytes) {
                 return callback(__Scheduler_succeed(res));
             })
             .catch(function (err) {
-                console.log(err);
                 return callback(__Scheduler_fail());
             });
     });
@@ -609,7 +600,6 @@ var _Crypto_verifyWithHmac = F3(function (key, signature, bytes) {
                 return callback(__Scheduler_succeed(res));
             })
             .catch(function (err) {
-                console.log(err);
                 return callback(__Scheduler_fail());
             });
     });
@@ -625,7 +615,6 @@ var _Crypto_digest = F2(function (algorithm, bytes) {
                 return callback(__Scheduler_succeed(new DataView(res)));
             })
             .catch(function (err) {
-                console.log(err);
                 return callback(__Scheduler_fail());
             });
     });
