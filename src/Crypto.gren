@@ -1316,7 +1316,7 @@ importEcdhPrivateKeyFromPkcs8 _context namedCurve bytes extractable =
         "ECDH"
         (ecNamedCurveToString namedCurve)
         (extractableToBool extractable)
-        []
+        [ "deriveKey", "deriveBits" ]
 
 
 {-|-}
@@ -1329,7 +1329,7 @@ importEcdhPrivateKeyFromSpki _context namedCurve bytes extractable =
         "ECDH"
         (ecNamedCurveToString namedCurve)
         (extractableToBool extractable)
-        []
+        [ "deriveKey", "deriveBits" ]
 
 
 {-|-}
@@ -1342,7 +1342,7 @@ importEcdhPrivateKeyFromJwk  _context namedCurve jwk extractable =
         "ECDH"
         (ecNamedCurveToString namedCurve)
         (extractableToBool extractable)
-        []
+        [ "deriveKey", "deriveBits" ]
 
 
 {-| Appears if there's an error when importing a key using the HMAC algorithm.
