@@ -464,6 +464,7 @@ a recommended value and a value that works across the `browser` and `node` platf
 type alias RsaKeyParams =
     { modulusLength : Int
     , hash : DigestAlgorithm
+    , extractable : Extractable
     }
 
 
@@ -481,7 +482,7 @@ Padding) algorithm.
 
 Produces a `KeyPair` that can be used to encrypt and decrypt data.
 -}
-generateRsaOaepKeyPair : SecureContext -> RsaKeyParams -> Extractable -> Task RsaKeyGenerationError (KeyPair RsaOaepKey)
+generateRsaOaepKeyPair : SecureContext -> RsaKeyParams -> Task RsaKeyGenerationError (KeyPair RsaOaepKey)
 generateRsaOaepKeyPair _context =
     generateRsaKeyHelper 
         "RSA-OAEP" 
@@ -492,7 +493,7 @@ generateRsaOaepKeyPair _context =
 
 Produces a `KeyPair` that can be used to sign and verify data.
 -}
-generateRsaPssKeyPair : SecureContext -> RsaKeyParams -> Extractable -> Task RsaKeyGenerationError (KeyPair RsaPssKey)
+generateRsaPssKeyPair : SecureContext -> RsaKeyParams -> Task RsaKeyGenerationError (KeyPair RsaPssKey)
 generateRsaPssKeyPair _context =
     generateRsaKeyHelper 
         "RSA-PSS"
@@ -503,7 +504,7 @@ generateRsaPssKeyPair _context =
 
 Produces a `KeyPair` that can be used to sign and verify data.
 -}
-generateRsaSsaPkcs1V1_5KeyPair : SecureContext -> RsaKeyParams -> Extractable -> Task RsaKeyGenerationError (KeyPair RsaSsaPkcs1V1_5Key)
+generateRsaSsaPkcs1V1_5KeyPair : SecureContext -> RsaKeyParams -> Task RsaKeyGenerationError (KeyPair RsaSsaPkcs1V1_5Key)
 generateRsaSsaPkcs1V1_5KeyPair _context =
     generateRsaKeyHelper 
         "RSASSA-PKCS1-v1_5"
@@ -511,8 +512,8 @@ generateRsaSsaPkcs1V1_5KeyPair _context =
 
 
 {-|-}
-generateRsaKeyHelper : String -> Array String -> RsaKeyParams -> Extractable -> Task RsaKeyGenerationError a
-generateRsaKeyHelper name permissions { modulusLength, hash } extractable =
+generateRsaKeyHelper : String -> Array String -> RsaKeyParams -> Task RsaKeyGenerationError a
+generateRsaKeyHelper name permissions { modulusLength, hash, extractable } =
     let
         clampedModulusLength = 
             clamp 2048 4096 modulusLength
