@@ -87,6 +87,21 @@ var _Crypto_constructAesKey = function (__$key) {
     return A2(__Crypto_KeyV2, __$key, aesKeyData);
 };
 
+var _Crypto_constructEcKey = function (__$key) {
+    var ecKeyData = {
+        __$extractable: _Crypto_extractableFromBool(__$key.extractable)
+    };
+    switch (__$key.algorithm.namedCurve) {
+        case "P-256":
+            ecKeyData.__$namedCurve = __Crypto_P256;
+        case "P-384":
+            ecKeyData.__$namedCurve = __Crypto_P384;
+        case "P-521":
+            ecKeyData.__$namedCurve = __Crypto_P521;
+    }
+    return A2(__Crypto_KeyV2, __$key, ecKeyData);
+};
+
 // Random
 
 var _Crypto_randomUUID = __Scheduler_binding(function (callback) {
@@ -187,8 +202,8 @@ var _Crypto_generateEcKey = F4(function (name, namedCurve, extractable, permissi
             .then(function (key) {
                 return callback(__Scheduler_succeed(
                     {
-                        __$publicKey: __Crypto_PublicKey(_Crypto_constructKey(key.publicKey, key.publicKey.extractable)),
-                        __$privateKey: __Crypto_PrivateKey(_Crypto_constructKey(key.privateKey, key.privateKey.extractable))
+                        __$publicKey: __Crypto_PublicKey(_Crypto_constructEcKey(key.publicKey)),
+                        __$privateKey: __Crypto_PrivateKey(_Crypto_constructEcKey(key.privateKey))
                     }
                 ))
             })
@@ -269,7 +284,7 @@ var _Crypto_importAesKey = F5(function (format, keyData, algorithm, extractable,
         crypto.subtle
             .importKey(format, keyData, { name: algorithm }, extractable, keyUsages)
             .then(function (key) {
-                return callback(__Scheduler_succeed(_Crypto_constructKey(key, key.extractable)))
+                return callback(__Scheduler_succeed(_Crypto_constructAesKey(key)))
             })
             .catch(function (err) {
                 return callback(__Scheduler_fail(__Crypto_ImportAesKeyError));
@@ -292,9 +307,9 @@ var _Crypto_importEcKey = F7(function (wrapper, format, keyData, algorithm, name
             .then(function (key) {
                 switch (wrapper) {
                     case "public":
-                        return callback(__Scheduler_succeed(__Crypto_PublicKey(_Crypto_constructKey(key, key.extractable))))
+                        return callback(__Scheduler_succeed(__Crypto_PublicKey(_Crypto_constructEcKey(key))))
                     case "private":
-                        return callback(__Scheduler_succeed(__Crypto_PrivateKey(_Crypto_constructKey(key, key.extractable))))
+                        return callback(__Scheduler_succeed(__Crypto_PrivateKey(_Crypto_constructEcKey(key))))
                     default:
                         return callback(__Scheduler_fail(__Crypto_ImportEcKeyError));
                 }

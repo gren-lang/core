@@ -658,7 +658,7 @@ type EcNamedCurve
 
 {-| Generate a new key using the ECDSA algorithm.
 -}
-generateEcdsaKeyPair : SecureContext -> EcKeyParams-> Task x (KeyPair EcdsaKey)
+generateEcdsaKeyPair : SecureContext -> EcKeyParams-> Task x (KeyPairV2 EcdsaKey EcKeyParams)
 generateEcdsaKeyPair _context { namedCurve, extractable } =
     Gren.Kernel.Crypto.generateEcKey
         "ECDSA"
@@ -669,7 +669,7 @@ generateEcdsaKeyPair _context { namedCurve, extractable } =
 
 {-| Generate a new key using the ECDH algorithm.
 -}
-generateEcdhKeyPair : SecureContext -> EcKeyParams -> Task x (KeyPair EcdhKey)
+generateEcdhKeyPair : SecureContext -> EcKeyParams -> Task x (KeyPairV2 EcdhKey EcKeyParams)
 generateEcdhKeyPair _context { namedCurve, extractable } =
     Gren.Kernel.Crypto.generateEcKey
         "ECDH"
@@ -874,63 +874,63 @@ exportAesGcmKeyAsJwk _context =
 
 
 {-|-}
-exportEcdsaPublicKeyAsRaw : SecureContext -> PublicKey EcdsaKey -> Task ExportKeyError Bytes
-exportEcdsaPublicKeyAsRaw _context (PublicKey key) =
-    exportKeyAsRaw key
+exportEcdsaPublicKeyAsRaw : SecureContext -> PublicKeyV2 EcdsaKey EcKeyParams -> Task ExportKeyError Bytes
+exportEcdsaPublicKeyAsRaw _context (PublicKeyV2 key) =
+    exportKeyAsRawV2 key
 
 
 {-|-}
-exportEcdsaPublicKeyAsSpki : SecureContext -> PublicKey EcdsaKey -> Task ExportKeyError Bytes
-exportEcdsaPublicKeyAsSpki _context (PublicKey key) =
-    exportKeyAsSpki key
+exportEcdsaPublicKeyAsSpki : SecureContext -> PublicKeyV2 EcdsaKey EcKeyParams -> Task ExportKeyError Bytes
+exportEcdsaPublicKeyAsSpki _context (PublicKeyV2 key) =
+    exportKeyAsSpkiV2 key
 
 
 {-|-}
-exportEcdsaPublicKeyAsJwk : SecureContext -> PublicKey EcdsaKey -> Task ExportKeyError Json.Encode.Value
-exportEcdsaPublicKeyAsJwk _context (PublicKey key) =
-    exportKeyAsJwk key
+exportEcdsaPublicKeyAsJwk : SecureContext -> PublicKeyV2 EcdsaKey EcKeyParams -> Task ExportKeyError Json.Encode.Value
+exportEcdsaPublicKeyAsJwk _context (PublicKeyV2 key) =
+    exportKeyAsJwkV2 key
 
 
 {-|-}
-exportEcdsaPrivateKeyAsPkcs8 : SecureContext -> PrivateKey EcdsaKey -> Task ExportKeyError Bytes
-exportEcdsaPrivateKeyAsPkcs8 _context (PrivateKey key) =
-    exportKeyAsPkcs8 key
+exportEcdsaPrivateKeyAsPkcs8 : SecureContext -> PrivateKeyV2 EcdsaKey EcKeyParams -> Task ExportKeyError Bytes
+exportEcdsaPrivateKeyAsPkcs8 _context (PrivateKeyV2 key) =
+    exportKeyAsPkcs8V2 key
 
 
 {-|-}
-exportEcdsaPrivateKeyAsJwk : SecureContext -> PrivateKey EcdsaKey -> Task ExportKeyError Json.Encode.Value
-exportEcdsaPrivateKeyAsJwk _context (PrivateKey key)=
-    exportKeyAsJwk key
+exportEcdsaPrivateKeyAsJwk : SecureContext -> PrivateKeyV2 EcdsaKey EcKeyParams -> Task ExportKeyError Json.Encode.Value
+exportEcdsaPrivateKeyAsJwk _context (PrivateKeyV2 key)=
+    exportKeyAsJwkV2 key
 
 
 {-|-}
-exportEcdhPublicKeyAsRaw : SecureContext -> PublicKey EcdhKey -> Task ExportKeyError Bytes
-exportEcdhPublicKeyAsRaw _context (PublicKey key) =
-    exportKeyAsRaw key
+exportEcdhPublicKeyAsRaw : SecureContext -> PublicKeyV2 EcdhKey EcKeyParams -> Task ExportKeyError Bytes
+exportEcdhPublicKeyAsRaw _context (PublicKeyV2 key) =
+    exportKeyAsRawV2 key
 
 
 {-|-}
-exportEcdhPublicKeyAsSpki : SecureContext -> PublicKey EcdhKey -> Task ExportKeyError Bytes
-exportEcdhPublicKeyAsSpki _context (PublicKey key) =
-    exportKeyAsSpki key
+exportEcdhPublicKeyAsSpki : SecureContext -> PublicKeyV2 EcdhKey EcKeyParams -> Task ExportKeyError Bytes
+exportEcdhPublicKeyAsSpki _context (PublicKeyV2 key) =
+    exportKeyAsSpkiV2 key
 
 
 {-|-}
-exportEcdhPublicKeyAsJwk : SecureContext -> PublicKey EcdhKey -> Task ExportKeyError Json.Encode.Value
-exportEcdhPublicKeyAsJwk _context (PublicKey key) =
-    exportKeyAsJwk key
+exportEcdhPublicKeyAsJwk : SecureContext -> PublicKeyV2 EcdhKey EcKeyParams -> Task ExportKeyError Json.Encode.Value
+exportEcdhPublicKeyAsJwk _context (PublicKeyV2 key) =
+    exportKeyAsJwkV2 key
 
 
 {-|-}
-exportEcdhPrivateKeyAsPkcs8 : SecureContext -> PrivateKey EcdhKey -> Task ExportKeyError Bytes
-exportEcdhPrivateKeyAsPkcs8 _context (PrivateKey key) =
-    exportKeyAsPkcs8 key
+exportEcdhPrivateKeyAsPkcs8 : SecureContext -> PrivateKeyV2 EcdhKey EcKeyParams -> Task ExportKeyError Bytes
+exportEcdhPrivateKeyAsPkcs8 _context (PrivateKeyV2 key) =
+    exportKeyAsPkcs8V2 key
 
 
 {-|-}
-exportEcdhPrivateKeyAsJwk : SecureContext -> PrivateKey EcdhKey -> Task ExportKeyError Json.Encode.Value
-exportEcdhPrivateKeyAsJwk _context (PrivateKey key) =
-    exportKeyAsJwk key
+exportEcdhPrivateKeyAsJwk : SecureContext -> PrivateKeyV2 EcdhKey EcKeyParams -> Task ExportKeyError Json.Encode.Value
+exportEcdhPrivateKeyAsJwk _context (PrivateKeyV2 key) =
+    exportKeyAsJwkV2 key
 
 
 {-|-}
@@ -1275,7 +1275,7 @@ type ImportEcKeyError
 
 
 {-|-}
-importEcdsaPublicKeyFromRaw : SecureContext -> EcNamedCurve -> Bytes -> Extractable -> Task ImportEcKeyError (PublicKey EcdsaKey)
+importEcdsaPublicKeyFromRaw : SecureContext -> EcNamedCurve -> Bytes -> Extractable -> Task ImportEcKeyError (PublicKeyV2 EcdsaKey EcKeyParams)
 importEcdsaPublicKeyFromRaw _context namedCurve bytes extractable =
     Gren.Kernel.Crypto.importEcKey
         "public"
@@ -1288,7 +1288,7 @@ importEcdsaPublicKeyFromRaw _context namedCurve bytes extractable =
 
 
 {-|-}
-importEcdsaPublicKeyFromSpki : SecureContext -> EcNamedCurve -> Bytes -> Extractable -> Task ImportEcKeyError (PublicKey EcdsaKey)
+importEcdsaPublicKeyFromSpki : SecureContext -> EcNamedCurve -> Bytes -> Extractable -> Task ImportEcKeyError (PublicKeyV2 EcdsaKey EcKeyParams)
 importEcdsaPublicKeyFromSpki _context namedCurve bytes extractable =
     Gren.Kernel.Crypto.importEcKey
         "public"
@@ -1301,7 +1301,7 @@ importEcdsaPublicKeyFromSpki _context namedCurve bytes extractable =
 
 
 {-|-}
-importEcdsaPublicKeyFromJwk : SecureContext -> EcNamedCurve -> Json.Encode.Value -> Extractable -> Task ImportEcKeyError (PublicKey EcdsaKey)
+importEcdsaPublicKeyFromJwk : SecureContext -> EcNamedCurve -> Json.Encode.Value -> Extractable -> Task ImportEcKeyError (PublicKeyV2 EcdsaKey EcKeyParams)
 importEcdsaPublicKeyFromJwk _context namedCurve jwk extractable =
     Gren.Kernel.Crypto.importEcKey
         "public"
@@ -1314,7 +1314,7 @@ importEcdsaPublicKeyFromJwk _context namedCurve jwk extractable =
 
 
 {-|-}
-importEcdhPublicKeyFromRaw : SecureContext -> EcNamedCurve -> Bytes -> Extractable -> Task ImportEcKeyError (PublicKey EcdhKey)
+importEcdhPublicKeyFromRaw : SecureContext -> EcNamedCurve -> Bytes -> Extractable -> Task ImportEcKeyError (PublicKeyV2 EcdhKey EcKeyParams)
 importEcdhPublicKeyFromRaw _context namedCurve bytes extractable =
     Gren.Kernel.Crypto.importEcKey
         "public"
@@ -1327,7 +1327,7 @@ importEcdhPublicKeyFromRaw _context namedCurve bytes extractable =
 
 
 {-|-}
-importEcdhPublicKeyFromSpki : SecureContext -> EcNamedCurve -> Bytes -> Extractable -> Task ImportEcKeyError (PublicKey EcdhKey)
+importEcdhPublicKeyFromSpki : SecureContext -> EcNamedCurve -> Bytes -> Extractable -> Task ImportEcKeyError (PublicKeyV2 EcdhKey EcKeyParams)
 importEcdhPublicKeyFromSpki _context namedCurve bytes extractable =
     Gren.Kernel.Crypto.importEcKey
         "public"
@@ -1340,7 +1340,7 @@ importEcdhPublicKeyFromSpki _context namedCurve bytes extractable =
 
 
 {-|-}
-importEcdhPublicKeyFromJwk : SecureContext -> EcNamedCurve -> Json.Encode.Value -> Extractable -> Task ImportEcKeyError (PublicKey EcdhKey)
+importEcdhPublicKeyFromJwk : SecureContext -> EcNamedCurve -> Json.Encode.Value -> Extractable -> Task ImportEcKeyError (PublicKeyV2 EcdhKey EcKeyParams)
 importEcdhPublicKeyFromJwk _context namedCurve jwk extractable =
     Gren.Kernel.Crypto.importEcKey
         "public"
@@ -1353,7 +1353,7 @@ importEcdhPublicKeyFromJwk _context namedCurve jwk extractable =
 
 
 {-|-}
-importEcdsaPrivateKeyFromPkcs8 : SecureContext -> EcNamedCurve -> Bytes -> Extractable -> Task ImportEcKeyError (PrivateKey EcdsaKey)
+importEcdsaPrivateKeyFromPkcs8 : SecureContext -> EcNamedCurve -> Bytes -> Extractable -> Task ImportEcKeyError (PrivateKeyV2 EcdsaKey EcKeyParams)
 importEcdsaPrivateKeyFromPkcs8 _context namedCurve bytes extractable =
     Gren.Kernel.Crypto.importEcKey
         "private"
@@ -1366,7 +1366,7 @@ importEcdsaPrivateKeyFromPkcs8 _context namedCurve bytes extractable =
 
 
 {-|-}
-importEcdsaPrivateKeyFromSpki : SecureContext -> EcNamedCurve -> Bytes -> Extractable -> Task ImportEcKeyError (PrivateKey EcdsaKey)
+importEcdsaPrivateKeyFromSpki : SecureContext -> EcNamedCurve -> Bytes -> Extractable -> Task ImportEcKeyError (PrivateKeyV2 EcdsaKey EcKeyParams)
 importEcdsaPrivateKeyFromSpki _context namedCurve bytes extractable =
     Gren.Kernel.Crypto.importEcKey
         "private"
@@ -1379,7 +1379,7 @@ importEcdsaPrivateKeyFromSpki _context namedCurve bytes extractable =
 
 
 {-|-}
-importEcdsaPrivateKeyFromJwk : SecureContext -> EcNamedCurve -> Json.Encode.Value -> Extractable -> Task ImportEcKeyError (PrivateKey EcdsaKey)
+importEcdsaPrivateKeyFromJwk : SecureContext -> EcNamedCurve -> Json.Encode.Value -> Extractable -> Task ImportEcKeyError (PrivateKeyV2 EcdsaKey EcKeyParams)
 importEcdsaPrivateKeyFromJwk _context namedCurve jwk extractable =
     Gren.Kernel.Crypto.importEcKey
         "private"
@@ -1392,7 +1392,7 @@ importEcdsaPrivateKeyFromJwk _context namedCurve jwk extractable =
 
 
 {-|-}
-importEcdhPrivateKeyFromPkcs8 : SecureContext -> EcNamedCurve -> Bytes -> Extractable -> Task ImportEcKeyError (PrivateKey EcdhKey)
+importEcdhPrivateKeyFromPkcs8 : SecureContext -> EcNamedCurve -> Bytes -> Extractable -> Task ImportEcKeyError (PrivateKeyV2 EcdhKey EcKeyParams)
 importEcdhPrivateKeyFromPkcs8 _context namedCurve bytes extractable =
     Gren.Kernel.Crypto.importEcKey
         "private"
@@ -1405,7 +1405,7 @@ importEcdhPrivateKeyFromPkcs8 _context namedCurve bytes extractable =
 
 
 {-|-}
-importEcdhPrivateKeyFromSpki : SecureContext -> EcNamedCurve -> Bytes -> Extractable -> Task ImportEcKeyError (PrivateKey EcdhKey)
+importEcdhPrivateKeyFromSpki : SecureContext -> EcNamedCurve -> Bytes -> Extractable -> Task ImportEcKeyError (PrivateKeyV2 EcdhKey EcKeyParams)
 importEcdhPrivateKeyFromSpki _context namedCurve bytes extractable =
     Gren.Kernel.Crypto.importEcKey
         "private"
@@ -1418,7 +1418,7 @@ importEcdhPrivateKeyFromSpki _context namedCurve bytes extractable =
 
 
 {-|-}
-importEcdhPrivateKeyFromJwk : SecureContext -> EcNamedCurve -> Json.Encode.Value -> Extractable -> Task ImportEcKeyError (PrivateKey EcdhKey)
+importEcdhPrivateKeyFromJwk : SecureContext -> EcNamedCurve -> Json.Encode.Value -> Extractable -> Task ImportEcKeyError (PrivateKeyV2 EcdhKey EcKeyParams)
 importEcdhPrivateKeyFromJwk  _context namedCurve jwk extractable =
     Gren.Kernel.Crypto.importEcKey
         "private"
@@ -1900,8 +1900,8 @@ signWithRsaPss _context salt (PrivateKeyV2 (KeyV2 key _)) bytes =
 
 
 {-|-}
-signWithEcdsa : SecureContext -> DigestAlgorithm -> PrivateKey EcdsaKey -> Bytes -> Task {} Signature
-signWithEcdsa _context hash (PrivateKey (Key { key })) bytes =
+signWithEcdsa : SecureContext -> DigestAlgorithm -> PrivateKeyV2 EcdsaKey EcKeyParams -> Bytes -> Task {} Signature
+signWithEcdsa _context hash (PrivateKeyV2 (KeyV2 key _)) bytes =
     Gren.Kernel.Crypto.signWithEcdsa
         (digestAlgorithmToString hash)
         key 
@@ -1940,8 +1940,8 @@ verifyWithRsaPss _context salt (PublicKeyV2 (KeyV2 key _)) signature bytes =
 
 
 {-|-}
-verifyWithEcdsa : SecureContext -> DigestAlgorithm -> PublicKey EcdsaKey -> Signature -> Bytes -> Task {} Bytes
-verifyWithEcdsa _context hash (PublicKey (Key { key })) signature bytes =
+verifyWithEcdsa : SecureContext -> DigestAlgorithm -> PublicKeyV2 EcdsaKey EcKeyParams -> Signature -> Bytes -> Task {} Bytes
+verifyWithEcdsa _context hash (PublicKeyV2 (KeyV2 key _)) signature bytes =
     Gren.Kernel.Crypto.verifyWithEcdsa
         (digestAlgorithmToString hash)
         key
