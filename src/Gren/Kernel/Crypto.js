@@ -28,21 +28,37 @@ var _Crypto_constructHmacKey = function (__$key) {
     var hmacKeyData = {};
     if (__$key.extractable) {
         hmacKeyData.__$extractable = __Crypto_CanBeExtracted;
+var _Crypto_hashFromString = function (__$hash) {
+    switch (__$hash) {
+        case "SHA-256":
+            return __Crypto_Sha256;
+        case "SHA-384":
+            return __Crypto_Sha384;
+        case "SHA-512":
+            return __Crypto_Sha512;
+    };
+};
+var _Crypto_extractableFromBool = function (__$extractable) {
+    if (__$extractable) {
+        return __Crypto_CanBeExtracted;
     } else {
-        hmacKeyData.__$extractable = __Crypto_CannotBeExtracted;
-    }
+        return __Crypto_CannotBeExtracted;
+    };
+};
+
+var _Crypto_constructRsaKey = function (__$key) {
+    var rsaKeyData = {
+        __$modulusLength: __$key.algorithm.modulusLength,
+        __$publicExponent: __$key.algorithm.publicExponent,
+        __$hash: _Crypto_hashFromString(__$key.algorithm.hash.name),
+        __$extractable: _Crypto_extractableFromBool(__$key.extractable)
+    };
+    return A2(__Crypto_KeyV2, __$key, rsaKeyData);
+};
     if (__$key.algorithm.length) {
         hmacKeyData.__$length = __Maybe_Just(__$key.algorithm.length);
     } else {
         hmacKeyData.__$length = __Maybe_Nothing
-    }
-    switch (__$key.algorithm.hash.name) {
-        case "SHA-256":
-            hmacKeyData.__$hash = __Crypto_Sha256
-        case "SHA-384":
-            hmacKeyData.__$hash = __Crypto_Sha384
-        case "SHA-512":
-            hmacKeyData.__$hash = __Crypto_Sha512
     }
     return A2(__Crypto_KeyV2, __$key, hmacKeyData);
 };
@@ -112,11 +128,12 @@ var _Crypto_generateRsaKey = F6(function (name, modulusLength, publicExponent, h
             .then(function (key) {
                 return callback(__Scheduler_succeed(
                     {
-                        __$publicKey: __Crypto_PublicKey(_Crypto_constructKey(key.publicKey, key.publicKey.extractable)),
-                        __$privateKey: __Crypto_PrivateKey(_Crypto_constructKey(key.privateKey, key.publicKey.extractable))
+                        __$publicKey: __Crypto_PublicKeyV2(_Crypto_constructRsaKey(key.publicKey)),
+                        __$privateKey: __Crypto_PrivateKeyV2(_Crypto_constructRsaKey(key.privateKey))
                     }
                 ))
             }).catch(function (err) {
+                console.log(err);
             });
     });
 });
@@ -209,14 +226,15 @@ var _Crypto_importRsaKey = F7(function (wrapper, format, keyData, algorithm, has
             .then(function (key) {
                 switch (wrapper) {
                     case "public":
-                        return callback(__Scheduler_succeed(__Crypto_PublicKey(_Crypto_constructKey(key, key.extractable))))
+                        return callback(__Scheduler_succeed(__Crypto_PublicKeyV2(_Crypto_constructRsaKey(key))))
                     case "private":
-                        return callback(__Scheduler_succeed(__Crypto_PrivateKey(_Crypto_constructKey(key, key.extractable))))
+                        return callback(__Scheduler_succeed(__Crypto_PrivateKeyV2(_Crypto_constructRsaKey(key))))
                     default:
                         return callback(__Scheduler_fail(__Crypto_ImportRsaKeyError));
                 }
             })
             .catch(function (err) {
+                console.log(err);
                 return callback(__Scheduler_fail(__Crypto_ImportRsaKeyError));
             })
     })

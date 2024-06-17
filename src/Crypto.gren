@@ -15,6 +15,7 @@ module Crypto exposing
     , HmacKeyParams, HmacKeyGenerationError(..)
     , generateHmacKey
     , ExportKeyError(..)
+    , KeyPairV2
     , exportRsaOaepPublicKeyAsSpki, exportRsaOaepPublicKeyAsJwk
     , exportRsaOaepPrivateKeyAsPkcs8, exportRsaOaepPrivateKeyAsJwk
     , exportRsaPssPublicKeyAsSpki, exportRsaPssPublicKeyAsJwk
@@ -415,10 +416,20 @@ type PublicKey a
     = PublicKey (Key a)
 
 
+{-|-}
+type PublicKeyV2 a b
+    = PublicKeyV2 (KeyV2 a b)
+
+
 {-| Represents a private key which can only be used for specific actions.
 -}
 type PrivateKey a
     = PrivateKey (Key a)
+
+
+{-|-}
+type PrivateKeyV2 a b
+    = PrivateKeyV2 (KeyV2 a b)
 
 
 {-| A pair of public and private keys.
@@ -426,6 +437,13 @@ type PrivateKey a
 type alias KeyPair a =
     { publicKey : PublicKey a
     , privateKey : PrivateKey a
+    }
+
+
+{-|-}
+type alias KeyPairV2 a b =
+    { publicKey : PublicKeyV2 a b
+    , privateKey : PrivateKeyV2 a b
     }
 
 
@@ -482,7 +500,7 @@ Padding) algorithm.
 
 Produces a `KeyPair` that can be used to encrypt and decrypt data.
 -}
-generateRsaOaepKeyPair : SecureContext -> RsaKeyParams -> Task RsaKeyGenerationError (KeyPair RsaOaepKey)
+generateRsaOaepKeyPair : SecureContext -> RsaKeyParams -> Task RsaKeyGenerationError (KeyPairV2 RsaOaepKey RsaKeyParams)
 generateRsaOaepKeyPair _context =
     generateRsaKeyHelper 
         "RSA-OAEP" 
@@ -493,7 +511,7 @@ generateRsaOaepKeyPair _context =
 
 Produces a `KeyPair` that can be used to sign and verify data.
 -}
-generateRsaPssKeyPair : SecureContext -> RsaKeyParams -> Task RsaKeyGenerationError (KeyPair RsaPssKey)
+generateRsaPssKeyPair : SecureContext -> RsaKeyParams -> Task RsaKeyGenerationError (KeyPairV2 RsaPssKey RsaKeyParams)
 generateRsaPssKeyPair _context =
     generateRsaKeyHelper 
         "RSA-PSS"
@@ -504,7 +522,7 @@ generateRsaPssKeyPair _context =
 
 Produces a `KeyPair` that can be used to sign and verify data.
 -}
-generateRsaSsaPkcs1V1_5KeyPair : SecureContext -> RsaKeyParams -> Task RsaKeyGenerationError (KeyPair RsaSsaPkcs1V1_5Key)
+generateRsaSsaPkcs1V1_5KeyPair : SecureContext -> RsaKeyParams -> Task RsaKeyGenerationError (KeyPairV2 RsaSsaPkcs1V1_5Key RsaKeyParams)
 generateRsaSsaPkcs1V1_5KeyPair _context =
     generateRsaKeyHelper 
         "RSASSA-PKCS1-v1_5"
@@ -729,80 +747,80 @@ type ExportKeyError
 
 The result `Bytes` can be imported again using the `importRsaOaepPublicKey` function.
 -}
-exportRsaOaepPublicKeyAsSpki : SecureContext -> PublicKey RsaOaepKey -> Task ExportKeyError Bytes
-exportRsaOaepPublicKeyAsSpki _context (PublicKey key) =
-    exportKeyAsSpki key
+exportRsaOaepPublicKeyAsSpki : SecureContext -> PublicKeyV2 RsaOaepKey RsaKeyParams -> Task ExportKeyError Bytes
+exportRsaOaepPublicKeyAsSpki _context (PublicKeyV2 key) =
+    exportKeyAsSpkiV2 key
 
 
 {-| Export a `RsaOaepKey` as a [JSON Web Key](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/importKey#json_web_key).
 
 The resulting `Json.Encode.Value` can be imported again using the `importRsaOaepPublicKey` function.
 -}
-exportRsaOaepPublicKeyAsJwk : SecureContext -> PublicKey RsaOaepKey -> Task ExportKeyError Json.Encode.Value
-exportRsaOaepPublicKeyAsJwk _context (PublicKey key) =
-    exportKeyAsJwk key
+exportRsaOaepPublicKeyAsJwk : SecureContext -> PublicKeyV2 RsaOaepKey RsaKeyParams -> Task ExportKeyError Json.Encode.Value
+exportRsaOaepPublicKeyAsJwk _context (PublicKeyV2 key) =
+    exportKeyAsJwkV2 key
 
 
 {-| Export a `RsaOaepKey` as [PKCS #8](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/importKey#pkcs_8)
 -}
-exportRsaOaepPrivateKeyAsPkcs8 : SecureContext -> PrivateKey RsaOaepKey -> Task ExportKeyError Bytes
-exportRsaOaepPrivateKeyAsPkcs8 _context (PrivateKey key) =
-    exportKeyAsPkcs8 key
+exportRsaOaepPrivateKeyAsPkcs8 : SecureContext -> PrivateKeyV2 RsaOaepKey RsaKeyParams -> Task ExportKeyError Bytes
+exportRsaOaepPrivateKeyAsPkcs8 _context (PrivateKeyV2 key) =
+    exportKeyAsPkcs8V2 key
 
 
 {-| Export a private `RsaOaepKey` as a [JSON Web Key]() 
 -}
-exportRsaOaepPrivateKeyAsJwk : SecureContext -> PrivateKey RsaOaepKey -> Task ExportKeyError Json.Encode.Value
-exportRsaOaepPrivateKeyAsJwk _context (PrivateKey key) =
-    exportKeyAsJwk key
+exportRsaOaepPrivateKeyAsJwk : SecureContext -> PrivateKeyV2 RsaOaepKey RsaKeyParams -> Task ExportKeyError Json.Encode.Value
+exportRsaOaepPrivateKeyAsJwk _context (PrivateKeyV2 key) =
+    exportKeyAsJwkV2 key
 
 
 {-|-}
-exportRsaPssPublicKeyAsSpki : SecureContext -> PublicKey RsaPssKey -> Task ExportKeyError Bytes
-exportRsaPssPublicKeyAsSpki _context (PublicKey key)=
-    exportKeyAsSpki key
+exportRsaPssPublicKeyAsSpki : SecureContext -> PublicKeyV2 RsaPssKey RsaKeyParams -> Task ExportKeyError Bytes
+exportRsaPssPublicKeyAsSpki _context (PublicKeyV2 key)=
+    exportKeyAsSpkiV2 key
 
 
 {-|-}
-exportRsaPssPublicKeyAsJwk : SecureContext -> PublicKey RsaPssKey -> Task ExportKeyError Json.Encode.Value
-exportRsaPssPublicKeyAsJwk _context (PublicKey key) =
-    exportKeyAsJwk key
+exportRsaPssPublicKeyAsJwk : SecureContext -> PublicKeyV2 RsaPssKey RsaKeyParams -> Task ExportKeyError Json.Encode.Value
+exportRsaPssPublicKeyAsJwk _context (PublicKeyV2 key) =
+    exportKeyAsJwkV2 key
 
 
 {-|-}
-exportRsaPssPrivateKeyAsPkcs8 : SecureContext -> PrivateKey RsaPssKey -> Task ExportKeyError Bytes
-exportRsaPssPrivateKeyAsPkcs8 _context (PrivateKey key) =
-    exportKeyAsPkcs8 key
+exportRsaPssPrivateKeyAsPkcs8 : SecureContext -> PrivateKeyV2 RsaPssKey RsaKeyParams-> Task ExportKeyError Bytes
+exportRsaPssPrivateKeyAsPkcs8 _context (PrivateKeyV2 key) =
+    exportKeyAsPkcs8V2 key
 
 
 {-|-}
-exportRsaPssPrivateKeyAsJwk : SecureContext -> PrivateKey RsaPssKey -> Task ExportKeyError Json.Encode.Value
-exportRsaPssPrivateKeyAsJwk _context (PrivateKey key) =
-    exportKeyAsJwk key
+exportRsaPssPrivateKeyAsJwk : SecureContext -> PrivateKeyV2 RsaPssKey RsaKeyParams -> Task ExportKeyError Json.Encode.Value
+exportRsaPssPrivateKeyAsJwk _context (PrivateKeyV2 key) =
+    exportKeyAsJwkV2 key
 
 
 {-|-}
-exportRsaSsaPkcs1V1_5PublicKeyAsSpki : SecureContext -> PublicKey RsaSsaPkcs1V1_5Key -> Task ExportKeyError Bytes
-exportRsaSsaPkcs1V1_5PublicKeyAsSpki _context (PublicKey key) =
-    exportKeyAsSpki key
+exportRsaSsaPkcs1V1_5PublicKeyAsSpki : SecureContext -> PublicKeyV2 RsaSsaPkcs1V1_5Key RsaKeyParams -> Task ExportKeyError Bytes
+exportRsaSsaPkcs1V1_5PublicKeyAsSpki _context (PublicKeyV2 key) =
+    exportKeyAsSpkiV2 key
 
 
 {-|-}
-exportRsaSsaPkcs1V1_5PublicKeyAsJwk : SecureContext -> PublicKey RsaSsaPkcs1V1_5Key -> Task ExportKeyError Json.Encode.Value
-exportRsaSsaPkcs1V1_5PublicKeyAsJwk _context (PublicKey key) =
-    exportKeyAsJwk key
+exportRsaSsaPkcs1V1_5PublicKeyAsJwk : SecureContext -> PublicKeyV2 RsaSsaPkcs1V1_5Key RsaKeyParams -> Task ExportKeyError Json.Encode.Value
+exportRsaSsaPkcs1V1_5PublicKeyAsJwk _context (PublicKeyV2 key) =
+    exportKeyAsJwkV2 key
 
 
 {-|-}
-exportRsaSsaPkcs1V1_5PrivateKeyAsPkcs8 : SecureContext -> PrivateKey RsaSsaPkcs1V1_5Key -> Task ExportKeyError Bytes
-exportRsaSsaPkcs1V1_5PrivateKeyAsPkcs8 _context (PrivateKey key)=
-    exportKeyAsPkcs8 key
+exportRsaSsaPkcs1V1_5PrivateKeyAsPkcs8 : SecureContext -> PrivateKeyV2 RsaSsaPkcs1V1_5Key RsaKeyParams -> Task ExportKeyError Bytes
+exportRsaSsaPkcs1V1_5PrivateKeyAsPkcs8 _context (PrivateKeyV2 key)=
+    exportKeyAsPkcs8V2 key
 
 
 {-|-}
-exportRsaSsaPkcs1V1_5PrivateKeyAsJwk : SecureContext -> PrivateKey RsaSsaPkcs1V1_5Key -> Task ExportKeyError Json.Encode.Value
-exportRsaSsaPkcs1V1_5PrivateKeyAsJwk _context (PrivateKey key) =
-    exportKeyAsJwk key
+exportRsaSsaPkcs1V1_5PrivateKeyAsJwk : SecureContext -> PrivateKeyV2 RsaSsaPkcs1V1_5Key RsaKeyParams -> Task ExportKeyError Json.Encode.Value
+exportRsaSsaPkcs1V1_5PrivateKeyAsJwk _context (PrivateKeyV2 key) =
+    exportKeyAsJwkV2 key
 
 
 {-|-}
@@ -948,9 +966,21 @@ exportKeyAsPkcs8 =
 
 
 {-|-}
+exportKeyAsPkcs8V2 : KeyV2 a b -> Task ExportKeyError Bytes
+exportKeyAsPkcs8V2 =
+    exportKeyHelperV2 "pkcs8"
+
+
+{-|-}
 exportKeyAsSpki : Key a -> Task ExportKeyError Bytes
 exportKeyAsSpki =
     exportKeyHelper "spki"
+
+
+{-|-}
+exportKeyAsSpkiV2 : KeyV2 a b -> Task ExportKeyError Bytes
+exportKeyAsSpkiV2 =
+    exportKeyHelperV2 "spki"
 
 
 {-|-}
@@ -990,7 +1020,7 @@ type ImportRsaKeyError
 
 
 {-|-}
-importRsaOaepPublicKeyFromJwk : SecureContext -> Json.Encode.Value -> ImportRsaKeyParams -> Extractable -> Task ImportRsaKeyError (PublicKey RsaOaepKey)
+importRsaOaepPublicKeyFromJwk : SecureContext -> Json.Encode.Value -> ImportRsaKeyParams -> Extractable -> Task ImportRsaKeyError (PublicKeyV2 RsaOaepKey RsaKeyParams)
 importRsaOaepPublicKeyFromJwk _context jwk { hash } extractable =
     Gren.Kernel.Crypto.importRsaKey
         "public"
@@ -1003,7 +1033,7 @@ importRsaOaepPublicKeyFromJwk _context jwk { hash } extractable =
 
 
 {-|-}
-importRsaOaepPublicKeyFromSpki : SecureContext -> Bytes -> ImportRsaKeyParams -> Extractable -> Task ImportRsaKeyError (PublicKey RsaOaepKey)
+importRsaOaepPublicKeyFromSpki : SecureContext -> Bytes -> ImportRsaKeyParams -> Extractable -> Task ImportRsaKeyError (PublicKeyV2 RsaOaepKey RsaKeyParams)
 importRsaOaepPublicKeyFromSpki _context bytes { hash } extractable =
     Gren.Kernel.Crypto.importRsaKey
         "public"
@@ -1016,7 +1046,7 @@ importRsaOaepPublicKeyFromSpki _context bytes { hash } extractable =
 
 
 {-|-}
-importRsaPssPublicKeyFromJwk : SecureContext -> Json.Encode.Value -> ImportRsaKeyParams -> Extractable -> Task ImportRsaKeyError (PublicKey RsaPssKey)
+importRsaPssPublicKeyFromJwk : SecureContext -> Json.Encode.Value -> ImportRsaKeyParams -> Extractable -> Task ImportRsaKeyError (PublicKeyV2 RsaPssKey RsaKeyParams)
 importRsaPssPublicKeyFromJwk _context jwk { hash } extractable =
     Gren.Kernel.Crypto.importRsaKey
         "public"
@@ -1029,7 +1059,7 @@ importRsaPssPublicKeyFromJwk _context jwk { hash } extractable =
 
 
 {-|-}
-importRsaPssPublicKeyFromSpki : SecureContext -> Bytes -> ImportRsaKeyParams -> Extractable -> Task ImportRsaKeyError (PublicKey RsaPssKey)
+importRsaPssPublicKeyFromSpki : SecureContext -> Bytes -> ImportRsaKeyParams -> Extractable -> Task ImportRsaKeyError (PublicKeyV2 RsaPssKey RsaKeyParams)
 importRsaPssPublicKeyFromSpki _context bytes { hash } extractable =
     Gren.Kernel.Crypto.importRsaKey
         "public"
@@ -1042,7 +1072,7 @@ importRsaPssPublicKeyFromSpki _context bytes { hash } extractable =
 
 
 {-|-}
-importRsaOaepPrivateKeyFromJwk : SecureContext -> Json.Encode.Value -> ImportRsaKeyParams -> Extractable -> Task ImportRsaKeyError (PrivateKey RsaOaepKey)
+importRsaOaepPrivateKeyFromJwk : SecureContext -> Json.Encode.Value -> ImportRsaKeyParams -> Extractable -> Task ImportRsaKeyError (PrivateKeyV2 RsaOaepKey RsaKeyParams)
 importRsaOaepPrivateKeyFromJwk _context jwk { hash } extractable =
     Gren.Kernel.Crypto.importRsaKey
         "private"
@@ -1055,7 +1085,7 @@ importRsaOaepPrivateKeyFromJwk _context jwk { hash } extractable =
 
 
 {-|-}
-importRsaOaepPrivateKeyFromPkcs8 : SecureContext -> Bytes -> ImportRsaKeyParams -> Extractable -> Task ImportRsaKeyError (PrivateKey RsaOaepKey)
+importRsaOaepPrivateKeyFromPkcs8 : SecureContext -> Bytes -> ImportRsaKeyParams -> Extractable -> Task ImportRsaKeyError (PrivateKeyV2 RsaOaepKey RsaKeyParams)
 importRsaOaepPrivateKeyFromPkcs8 _context bytes { hash } extractable =
     Gren.Kernel.Crypto.importRsaKey
         "private"
@@ -1068,7 +1098,7 @@ importRsaOaepPrivateKeyFromPkcs8 _context bytes { hash } extractable =
 
 
 {-|-}
-importRsaPssPrivateKeyFromJwk : SecureContext -> Json.Encode.Value -> ImportRsaKeyParams -> Extractable -> Task ImportRsaKeyError (PrivateKey RsaPssKey)
+importRsaPssPrivateKeyFromJwk : SecureContext -> Json.Encode.Value -> ImportRsaKeyParams -> Extractable -> Task ImportRsaKeyError (PrivateKeyV2 RsaPssKey RsaKeyParams)
 importRsaPssPrivateKeyFromJwk _context jwk { hash } extractable =
     Gren.Kernel.Crypto.importRsaKey
         "private"
@@ -1081,7 +1111,7 @@ importRsaPssPrivateKeyFromJwk _context jwk { hash } extractable =
 
 
 {-|-}
-importRsaPssPrivateKeyFromPkcs8 : SecureContext -> Bytes -> ImportRsaKeyParams -> Extractable -> Task ImportRsaKeyError (PrivateKey RsaPssKey)
+importRsaPssPrivateKeyFromPkcs8 : SecureContext -> Bytes -> ImportRsaKeyParams -> Extractable -> Task ImportRsaKeyError (PrivateKeyV2 RsaPssKey RsaKeyParams)
 importRsaPssPrivateKeyFromPkcs8 _context bytes { hash } extractable =
     Gren.Kernel.Crypto.importRsaKey
         "private"
@@ -1094,7 +1124,7 @@ importRsaPssPrivateKeyFromPkcs8 _context bytes { hash } extractable =
 
 
 {-|-}
-importRsaSsaPkcs1V1_5PublicKeyFromJwk : SecureContext -> Json.Encode.Value -> ImportRsaKeyParams -> Extractable -> Task ImportRsaKeyError (PrivateKey RsaSsaPkcs1V1_5Key)
+importRsaSsaPkcs1V1_5PublicKeyFromJwk : SecureContext -> Json.Encode.Value -> ImportRsaKeyParams -> Extractable -> Task ImportRsaKeyError (PrivateKeyV2 RsaSsaPkcs1V1_5Key RsaKeyParams)
 importRsaSsaPkcs1V1_5PublicKeyFromJwk _context jwk { hash } extractable =
     Gren.Kernel.Crypto.importRsaKey
         "public"
@@ -1107,7 +1137,7 @@ importRsaSsaPkcs1V1_5PublicKeyFromJwk _context jwk { hash } extractable =
 
 
 {-|-}
-importRsaSsaPkcs1V1_5PublicKeyFromSpki : SecureContext -> Bytes -> ImportRsaKeyParams -> Extractable -> Task ImportRsaKeyError (PrivateKey RsaSsaPkcs1V1_5Key)
+importRsaSsaPkcs1V1_5PublicKeyFromSpki : SecureContext -> Bytes -> ImportRsaKeyParams -> Extractable -> Task ImportRsaKeyError (PrivateKeyV2 RsaSsaPkcs1V1_5Key RsaKeyParams)
 importRsaSsaPkcs1V1_5PublicKeyFromSpki _context bytes { hash } extractable =
     Gren.Kernel.Crypto.importRsaKey
         "public"
@@ -1120,7 +1150,7 @@ importRsaSsaPkcs1V1_5PublicKeyFromSpki _context bytes { hash } extractable =
 
 
 {-|-}
-importRsaSsaPkcs1V1_5PrivateKeyFromJwk : SecureContext -> Json.Encode.Value -> ImportRsaKeyParams -> Extractable -> Task ImportRsaKeyError (PrivateKey RsaSsaPkcs1V1_5Key)
+importRsaSsaPkcs1V1_5PrivateKeyFromJwk : SecureContext -> Json.Encode.Value -> ImportRsaKeyParams -> Extractable -> Task ImportRsaKeyError (PrivateKeyV2 RsaSsaPkcs1V1_5Key RsaKeyParams)
 importRsaSsaPkcs1V1_5PrivateKeyFromJwk _context jwk { hash } extractable =
     Gren.Kernel.Crypto.importRsaKey
         "private"
@@ -1133,7 +1163,7 @@ importRsaSsaPkcs1V1_5PrivateKeyFromJwk _context jwk { hash } extractable =
 
 
 {-|-}
-importRsaSsaPkcs1V1_5PrivateKeyFromPkcs8 : SecureContext -> Bytes -> ImportRsaKeyParams -> Extractable -> Task ImportRsaKeyError (PrivateKey RsaSsaPkcs1V1_5Key)
+importRsaSsaPkcs1V1_5PrivateKeyFromPkcs8 : SecureContext -> Bytes -> ImportRsaKeyParams -> Extractable -> Task ImportRsaKeyError (PrivateKeyV2 RsaSsaPkcs1V1_5Key RsaKeyParams)
 importRsaSsaPkcs1V1_5PrivateKeyFromPkcs8 _context bytes { hash } extractable =
     Gren.Kernel.Crypto.importRsaKey
         "private"
@@ -1543,19 +1573,19 @@ deriveHmacKeyUsingPbkdf2 { hash, length } (Key key) pbkdb2Params extractable =
 
 This operation should always succeed.
 -}
-encryptWithRsaOaep : SecureContext -> Maybe Bytes -> PublicKey RsaOaepKey -> Bytes -> Task {} Bytes
-encryptWithRsaOaep _context passedLabel (PublicKey (Key key)) bytes =
+encryptWithRsaOaep : SecureContext -> Maybe Bytes -> PublicKeyV2 RsaOaepKey RsaKeyParams -> Bytes -> Task {} Bytes
+encryptWithRsaOaep _context passedLabel (PublicKeyV2 (KeyV2 key _)) bytes =
     case passedLabel of
         Nothing ->
             Gren.Kernel.Crypto.encryptWithRsaOaep
                 ""
-                key.key
+                key
                 bytes
         
         Just label ->
             Gren.Kernel.Crypto.encryptWithRsaOaep
                 label
-                key.key
+                key
                 bytes
 
 
@@ -1698,19 +1728,19 @@ type DecryptWithRsaOaepError =
 - The label used to encrypt the data does not match the label used when encryption the data
 - The passed `Bytes`, for whatever reason, cannot be decrypted
 -}
-decryptWithRsaOaep : Maybe Bytes -> PrivateKey RsaOaepKey -> Bytes -> Task DecryptWithRsaOaepError Bytes
-decryptWithRsaOaep passedLabel (PrivateKey (Key privateKey)) bytes =
+decryptWithRsaOaep : Maybe Bytes -> PrivateKeyV2 RsaOaepKey RsaKeyParams -> Bytes -> Task DecryptWithRsaOaepError Bytes
+decryptWithRsaOaep passedLabel (PrivateKeyV2 (KeyV2 privateKey _)) bytes =
     case passedLabel of
         Nothing ->
             Gren.Kernel.Crypto.decryptWithRsaOaep
                 ""
-                privateKey.key
+                privateKey
                 bytes
         
         Just label ->
             Gren.Kernel.Crypto.decryptWithRsaOaep
                 label
-                privateKey.key
+                privateKey
                 bytes
 
 
@@ -1823,8 +1853,8 @@ type alias Signature
 
 {-| Sign some `Bytes` with the RSA-SSAPKCS1v1.5 algorithm. This operation should always succeed.
 -}
-signWithRsaSsaPkcs1V1_5 : SecureContext -> PrivateKey RsaSsaPkcs1V1_5Key -> Bytes -> Task {} Signature
-signWithRsaSsaPkcs1V1_5 _context (PrivateKey (Key { key })) bytes =
+signWithRsaSsaPkcs1V1_5 : SecureContext -> PrivateKeyV2 RsaSsaPkcs1V1_5Key RsaKeyParams -> Bytes -> Task {} Signature
+signWithRsaSsaPkcs1V1_5 _context (PrivateKeyV2 (KeyV2 key _)) bytes =
     Gren.Kernel.Crypto.signWithRsaSsaPkcs1V1_5 
         key 
         bytes
@@ -1843,8 +1873,8 @@ amount of bytes than the `DigestAlgorithm` that was used to generate the key. Fo
 the `RsaPssKey` was generated with SHA-256, the maximum number for the `salt` value must be 
 32 or less. Note that some platforms may succeed even when the `salt` is not as expected.
 -}
-signWithRsaPss : SecureContext -> Int -> PrivateKey RsaPssKey -> Bytes -> Task SignWithRsaPssError Signature
-signWithRsaPss _context salt (PrivateKey (Key { key })) bytes =
+signWithRsaPss : SecureContext -> Int -> PrivateKeyV2 RsaPssKey RsaKeyParams -> Bytes -> Task SignWithRsaPssError Signature
+signWithRsaPss _context salt (PrivateKeyV2 (KeyV2 key _)) bytes =
     let
         clampedSaltBytes =
             clamp 0 2147483647 salt
@@ -1877,8 +1907,8 @@ signWithHmac _context (KeyV2 key _) bytes =
 
 
 {-|-}
-verifyWithRsaSsaPkcs1V1_5 : SecureContext -> PublicKey RsaSsaPkcs1V1_5Key -> Signature -> Bytes -> Task {} {}
-verifyWithRsaSsaPkcs1V1_5 _context (PublicKey (Key { key })) signature bytes =
+verifyWithRsaSsaPkcs1V1_5 : SecureContext -> PublicKeyV2 RsaSsaPkcs1V1_5Key RsaKeyParams -> Signature -> Bytes -> Task {} {}
+verifyWithRsaSsaPkcs1V1_5 _context (PublicKeyV2 (KeyV2 key _)) signature bytes =
     Gren.Kernel.Crypto.verifyWithRsaSsaPkcs1V1_5
         key
         signature
@@ -1886,8 +1916,8 @@ verifyWithRsaSsaPkcs1V1_5 _context (PublicKey (Key { key })) signature bytes =
 
 
 {-|-}
-verifyWithRsaPss : SecureContext -> Int -> PublicKey RsaPssKey -> Signature -> Bytes -> Task {} Bytes
-verifyWithRsaPss _context salt (PublicKey (Key { key })) signature bytes =
+verifyWithRsaPss : SecureContext -> Int -> PublicKeyV2 RsaPssKey RsaKeyParams -> Signature -> Bytes -> Task {} Bytes
+verifyWithRsaPss _context salt (PublicKeyV2 (KeyV2 key _)) signature bytes =
     Gren.Kernel.Crypto.verifyWithRsaPss
         salt
         key
