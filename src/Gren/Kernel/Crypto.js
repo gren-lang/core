@@ -34,6 +34,7 @@ var _Crypto_hashFromString = function (__$hash) {
             return __Crypto_Sha512;
     };
 };
+
 var _Crypto_extractableFromBool = function (__$extractable) {
     if (__$extractable) {
         return __Crypto_CanBeExtracted;
@@ -41,6 +42,8 @@ var _Crypto_extractableFromBool = function (__$extractable) {
         return __Crypto_CannotBeExtracted;
     };
 };
+
+// Key Construction
 
 var _Crypto_constructRsaKey = function (__$key) {
     var rsaKeyData = {
