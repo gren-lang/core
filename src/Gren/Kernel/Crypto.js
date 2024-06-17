@@ -2,7 +2,7 @@
 
 import Gren.Kernel.Scheduler exposing (binding, succeed, fail)
 import Gren.Kernel.Bytes exposing (writeBytes)
-import Crypto exposing (PublicKeyV2, PrivateKeyV2, P256, P384, P521, AesLength128, AesLength192, AesLength256, CanBeExtracted, CannotBeExtracted, HmacKey, Sha256, Sha384, Sha512, KeyV2, SignWithRsaPssError, AesGcmDecryptionError, AesGcmEncryptionError, AesCbcDecryptionError, AesCbcEncryptionError, AesCtrDecryptError, AesCtrEncryptError, DecryptWithRsaOaepError, ImportRsaKeyError, ImportHmacKeyError, ImportEcKeyError, ImportAesKeyError, Key, SecureContext, PublicKey, PrivateKey)
+import Crypto exposing (P256, P384, P521, AesLength128, AesLength192, AesLength256, CanBeExtracted, CannotBeExtracted, HmacKey, Sha256, Sha384, Sha512, SignWithRsaPssError, AesGcmDecryptionError, AesGcmEncryptionError, AesCbcDecryptionError, AesCbcEncryptionError, AesCtrDecryptError, AesCtrEncryptError, DecryptWithRsaOaepError, ImportRsaKeyError, ImportHmacKeyError, ImportEcKeyError, ImportAesKeyError, Key, SecureContext, PublicKey, PrivateKey)
 import Maybe exposing (Just, Nothing)
 import Bytes exposing (Bytes)
 
@@ -52,7 +52,7 @@ var _Crypto_constructRsaKey = function (__$key) {
         __$hash: _Crypto_hashFromString(__$key.algorithm.hash.name),
         __$extractable: _Crypto_extractableFromBool(__$key.extractable)
     };
-    return A2(__Crypto_KeyV2, __$key, rsaKeyData);
+    return A2(__Crypto_Key, __$key, rsaKeyData);
 };
 
 var _Crypto_constructHmacKey = function (__$key) {
@@ -65,7 +65,7 @@ var _Crypto_constructHmacKey = function (__$key) {
     } else {
         hmacKeyData.__$length = __Maybe_Nothing
     }
-    return A2(__Crypto_KeyV2, __$key, hmacKeyData);
+    return A2(__Crypto_Key, __$key, hmacKeyData);
 };
 
 var _Crypto_constructAesKey = function (__$key) {
@@ -84,7 +84,7 @@ var _Crypto_constructAesKey = function (__$key) {
         case 256:
             aesKeyData.__$length = __Crypto_AesLength256
     }
-    return A2(__Crypto_KeyV2, __$key, aesKeyData);
+    return A2(__Crypto_Key, __$key, aesKeyData);
 };
 
 var _Crypto_constructEcKey = function (__$key) {
@@ -99,7 +99,7 @@ var _Crypto_constructEcKey = function (__$key) {
         case "P-521":
             ecKeyData.__$namedCurve = __Crypto_P521;
     }
-    return A2(__Crypto_KeyV2, __$key, ecKeyData);
+    return A2(__Crypto_Key, __$key, ecKeyData);
 };
 
 // Random
@@ -167,8 +167,8 @@ var _Crypto_generateRsaKey = F6(function (name, modulusLength, publicExponent, h
             .then(function (key) {
                 return callback(__Scheduler_succeed(
                     {
-                        __$publicKey: __Crypto_PublicKeyV2(_Crypto_constructRsaKey(key.publicKey)),
-                        __$privateKey: __Crypto_PrivateKeyV2(_Crypto_constructRsaKey(key.privateKey))
+                        __$publicKey: __Crypto_PublicKey(_Crypto_constructRsaKey(key.publicKey)),
+                        __$privateKey: __Crypto_PrivateKey(_Crypto_constructRsaKey(key.privateKey))
                     }
                 ))
             }).catch(function (err) {
@@ -265,9 +265,9 @@ var _Crypto_importRsaKey = F7(function (wrapper, format, keyData, algorithm, has
             .then(function (key) {
                 switch (wrapper) {
                     case "public":
-                        return callback(__Scheduler_succeed(__Crypto_PublicKeyV2(_Crypto_constructRsaKey(key))))
+                        return callback(__Scheduler_succeed(__Crypto_PublicKey(_Crypto_constructRsaKey(key))))
                     case "private":
-                        return callback(__Scheduler_succeed(__Crypto_PrivateKeyV2(_Crypto_constructRsaKey(key))))
+                        return callback(__Scheduler_succeed(__Crypto_PrivateKey(_Crypto_constructRsaKey(key))))
                     default:
                         return callback(__Scheduler_fail(__Crypto_ImportRsaKeyError));
                 }
