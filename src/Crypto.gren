@@ -48,8 +48,6 @@ module Crypto exposing
     , ImportHmacKeyError(..)
     , importHmacKeyFromJwk, importHmacKeyFromRaw
     , DigestAlgorithm(..), digest
-    , deriveHmacKeyUsingEcdh
-    , DeriveHmacKeyError(..)
     , DecryptWithRsaOaepError(..)
     , encryptWithRsaOaep, decryptWithRsaOaep
     , AesCtrParams, AesCtrEncryptError(..), AesCtrDecryptError(..)
@@ -119,7 +117,7 @@ Generate keys to use with RSA (Rivest-Shamir-Adleman) algorithm.
 
 @docs RsaOaepKey, RsaPssKey, RsaSsaPkcs1V1_5Key
 
-@docs RsaKeyParams, PublicExponent, RsaKeyGenerationError
+@docs RsaKeyParams, RsaKeyGenerationError
 
 @docs generateRsaOaepKeyPair, generateRsaPssKeyPair, generateRsaSsaPkcs1V1_5KeyPair
 
@@ -227,11 +225,11 @@ for the Web Crypto API.
 
 @docs ImportEcKeyError
 
-@docs importEcdhPrivateKeyFromJwk, importEcdhPrivateKeyFromPkcs, importEcdhPrivateKeyFromSpki
+@docs importEcdhPrivateKeyFromJwk, importEcdhPrivateKeyFromPkcs8, importEcdhPrivateKeyFromSpki
 
 @docs importEcdhPublicKeyFromJwk, importEcdhPublicKeyFromRaw, importEcdhPublicKeyFromSpki
 
-@docs importEcdsaPrivateKeyFromJwk, importEcdsaPrivateKeyFromPkcs, importEcdsaPrivateKeyFromSpki
+@docs importEcdsaPrivateKeyFromJwk, importEcdsaPrivateKeyFromPkcs8, importEcdsaPrivateKeyFromSpki
 
 @docs importEcdsaPublicKeyFromJwk, importEcdsaPublicKeyFromRaw, importEcdsaPublicKeyFromSpki
 
@@ -259,7 +257,25 @@ Verify signed `Bytes`.
 
 ## Digest
 
-@docs DigestAlgorithm
+@docs DigestAlgorithm, digest
+
+# TODO
+
+@docs DecryptWithRsaOaepError
+
+@docs KeyV2
+
+@docs encryptWithRsaOaep, decryptWithRsaOaep
+@docs AesCtrParams, AesCtrEncryptError, AesCtrDecryptError
+@docs encryptWithAesCtr, decryptWithAesCtr
+@docs AesCbcParams, AesCbcEncryptionError, AesCbcDecryptionError
+@docs encryptWithAesCbc, decryptWithAesCbc
+@docs AesGcmParams, AesGcmTagLength, AesGcmEncryptionError, AesGcmDecryptionError
+@docs encryptWithAesGcm, decryptWithAesGcm
+@docs signWithRsaSsaPkcs1V1_5, verifyWithRsaSsaPkcs1V1_5
+@docs SignWithRsaPssError, signWithRsaPss, verifyWithRsaPss
+@docs signWithEcdsa, verifyWithEcdsa
+@docs signWithHmac, verifyWithHmac
 
 -}
 
