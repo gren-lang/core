@@ -24,10 +24,6 @@ var _Crypto_constructKey = function (__$key, __$extractable) {
     });
 };
 
-var _Crypto_constructHmacKey = function (__$key) {
-    var hmacKeyData = {};
-    if (__$key.extractable) {
-        hmacKeyData.__$extractable = __Crypto_CanBeExtracted;
 var _Crypto_hashFromString = function (__$hash) {
     switch (__$hash) {
         case "SHA-256":
