@@ -17,13 +17,6 @@ var crypto = function () {
 
 // Utils
 
-var _Crypto_constructKey = function (__$key, __$extractable) {
-    return __Crypto_Key({
-        __$key: __$key,
-        __$extractable: __$extractable
-    });
-};
-
 var _Crypto_hashFromString = function (__$hash) {
     switch (__$hash) {
         case "SHA-256":
