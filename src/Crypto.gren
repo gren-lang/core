@@ -388,6 +388,11 @@ type Key algorithm
         }
 
 
+{-|-}
+type KeyV2 key keyData
+    = KeyV2 key keyData
+
+
 {-| Represents a public key which can only be used for specific actions.
 -}
 type PublicKey a
@@ -656,13 +661,14 @@ If the `Int` used is outside of that range, it will be corrected.
 type alias HmacKeyParams =
     { length : Maybe Int
     , hash : DigestAlgorithm
+    , extractable : Extractable
     }
 
 
 {-| Generate a new key using the HMAC algorithm.
 -}
-generateHmacKey : SecureContext -> HmacKeyParams -> Extractable -> Task HmacKeyGenerationError (Key HmacKey)
-generateHmacKey _context { hash, length } extractable =
+generateHmacKey : SecureContext -> HmacKeyParams -> Task HmacKeyGenerationError (KeyV2 HmacKey HmacKeyParams)
+generateHmacKey _context { hash, length, extractable } =
     case length of
         Just passedLength ->
             let
@@ -879,15 +885,15 @@ exportEcdhPrivateKeyAsJwk _context (PrivateKey key) =
 
 
 {-|-}
-exportHmacKeyAsRaw : SecureContext -> Key HmacKey -> Task ExportKeyError Bytes
+exportHmacKeyAsRaw : SecureContext -> KeyV2 HmacKey HmacKeyParams -> Task ExportKeyError Bytes
 exportHmacKeyAsRaw _context =
-    exportKeyAsRaw
+    exportKeyAsRawV2
 
 
 {-|-}
-exportHmacKeyAsJwk : SecureContext -> Key HmacKey -> Task ExportKeyError Json.Encode.Value
+exportHmacKeyAsJwk : SecureContext -> KeyV2 HmacKey HmacKeyParams -> Task ExportKeyError Json.Encode.Value
 exportHmacKeyAsJwk _context =
-    exportKeyAsJwk
+    exportKeyAsJwkV2
 
 
 {-|-}
@@ -898,6 +904,18 @@ exportKeyHelper keyType (Key { extractable, key }) =
 
     else
         Task.fail KeyNotExportable
+
+
+{-|-}
+exportKeyHelperV2 : String -> KeyV2 a b -> Task ExportKeyError c
+exportKeyHelperV2 keyType (KeyV2 key _) =
+    Gren.Kernel.Crypto.exportKey keyType key
+
+
+{-|-}
+exportKeyAsRawV2 : KeyV2 a b -> Task ExportKeyError Bytes
+exportKeyAsRawV2 =
+    exportKeyHelperV2 "raw"
 
 
 {-|-}
@@ -922,6 +940,12 @@ exportKeyAsSpki =
 exportKeyAsJwk : Key a -> Task ExportKeyError Json.Encode.Value
 exportKeyAsJwk key =
     Task.map Gren.Kernel.Json.wrap (exportKeyHelper "jwk" key)
+
+
+{-|-}
+exportKeyAsJwkV2 : KeyV2 a b -> Task ExportKeyError Json.Encode.Value
+exportKeyAsJwkV2 key =
+    Task.map Gren.Kernel.Json.wrap (exportKeyHelperV2 "jwk" key)
 
 
 -- IMPORT KEYS
@@ -1368,7 +1392,7 @@ type ImportHmacKeyError
 
 
 {-|-}
-importHmacKeyFromJwk : SecureContext -> Json.Encode.Value -> DigestAlgorithm -> Maybe Int -> Extractable -> Task ImportHmacKeyError (PrivateKey EcdhKey)
+importHmacKeyFromJwk : SecureContext -> Json.Encode.Value -> DigestAlgorithm -> Maybe Int -> Extractable -> Task ImportHmacKeyError (KeyV2 HmacKey HmacKeyParams)
 importHmacKeyFromJwk _context jwk hash passedLength extractable =
     case passedLength of
         Just length ->
@@ -1393,7 +1417,7 @@ importHmacKeyFromJwk _context jwk hash passedLength extractable =
 
 
 {-|-}
-importHmacKeyFromRaw : SecureContext -> Bytes -> DigestAlgorithm -> Maybe Int -> Extractable -> Task ImportHmacKeyError (PrivateKey EcdhKey)
+importHmacKeyFromRaw : SecureContext -> Bytes -> DigestAlgorithm -> Maybe Int -> Extractable -> Task ImportHmacKeyError (KeyV2 HmacKey HmacKeyParams)
 importHmacKeyFromRaw _context bytes hash passedLength extractable =
     case passedLength of
         Just length ->
@@ -1453,8 +1477,8 @@ This function can procduce errors if:
 4. The passed `hash` of `HmacKeyParams`, if `length` is not provided, if not equal 
 to or greater than the curves of the `PublicKey EcdhKey` and `PrivateKey EcdhKey`.
 -}
-deriveHmacKeyUsingEcdh : HmacKeyParams -> PublicKey EcdhKey -> PrivateKey EcdhKey -> Extractable -> Task DeriveHmacKeyError (Key HmacKey)
-deriveHmacKeyUsingEcdh { hash, length } (PublicKey (Key publicKey)) (PrivateKey (Key privateKey)) extractable =
+deriveHmacKeyUsingEcdh : HmacKeyParams -> PublicKey EcdhKey -> PrivateKey EcdhKey -> Task DeriveHmacKeyError (Key HmacKey)
+deriveHmacKeyUsingEcdh { hash, length, extractable } (PublicKey (Key publicKey)) (PrivateKey (Key privateKey)) =
     case length of
         Just val ->
             let
@@ -1824,8 +1848,8 @@ signWithEcdsa _context hash (PrivateKey (Key { key })) bytes =
 
 
 {-|-}
-signWithHmac : SecureContext -> Key HmacKey -> Bytes -> Task {} Signature
-signWithHmac _context (Key { key }) bytes =
+signWithHmac : SecureContext -> KeyV2 HmacKey HmacKeyParams -> Bytes -> Task {} Signature
+signWithHmac _context (KeyV2 key _) bytes =
     Gren.Kernel.Crypto.signWithHmac 
         key 
         bytes
@@ -1865,8 +1889,8 @@ verifyWithEcdsa _context hash (PublicKey (Key { key })) signature bytes =
 
 
 {-|-}
-verifyWithHmac : SecureContext -> Key HmacKey -> Signature -> Bytes -> Task {} Bytes
-verifyWithHmac _context (Key { key }) signature bytes =
+verifyWithHmac : SecureContext -> KeyV2 HmacKey HmacKeyParams -> Signature -> Bytes -> Task {} Bytes
+verifyWithHmac _context (KeyV2 key _) signature bytes =
     Gren.Kernel.Crypto.verifyWithHmac
         key
         signature

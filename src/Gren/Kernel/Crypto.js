@@ -2,7 +2,7 @@
 
 import Gren.Kernel.Scheduler exposing (binding, succeed, fail)
 import Gren.Kernel.Bytes exposing (writeBytes)
-import Crypto exposing (SignWithRsaPssError, AesGcmDecryptionError, AesGcmEncryptionError, AesCbcDecryptionError, AesCbcEncryptionError, AesCtrDecryptError, AesCtrEncryptError, DecryptWithRsaOaepError, DeriveHmacKeyUnknownError, ImportRsaKeyError, ImportHmacKeyError, ImportEcKeyError, ImportAesKeyError, Key, SecureContext, PublicKey, PrivateKey)
+import Crypto exposing (CanBeExtracted, CannotBeExtracted, HmacKey, Sha256, Sha384, Sha512, KeyV2, SignWithRsaPssError, AesGcmDecryptionError, AesGcmEncryptionError, AesCbcDecryptionError, AesCbcEncryptionError, AesCtrDecryptError, AesCtrEncryptError, DecryptWithRsaOaepError, DeriveHmacKeyUnknownError, ImportRsaKeyError, ImportHmacKeyError, ImportEcKeyError, ImportAesKeyError, Key, SecureContext, PublicKey, PrivateKey)
 import Maybe exposing (Just, Nothing)
 import Bytes exposing (Bytes)
 
@@ -22,6 +22,29 @@ var _Crypto_constructKey = function (__$key, __$extractable) {
         __$key: __$key,
         __$extractable: __$extractable
     });
+};
+
+var _Crypto_constructHmacKey = function (__$key) {
+    var hmacKeyData = {};
+    if (__$key.extractable) {
+        hmacKeyData.__$extractable = __Crypto_CanBeExtracted;
+    } else {
+        hmacKeyData.__$extractable = __Crypto_CannotBeExtracted;
+    }
+    if (__$key.algorithm.length) {
+        hmacKeyData.__$length = __Maybe_Just(__$key.algorithm.length);
+    } else {
+        hmacKeyData.__$length = __Maybe_Nothing
+    }
+    switch (__$key.algorithm.hash.name) {
+        case "SHA-256":
+            hmacKeyData.__$hash = __Crypto_Sha256
+        case "SHA-384":
+            hmacKeyData.__$hash = __Crypto_Sha384
+        case "SHA-512":
+            hmacKeyData.__$hash = __Crypto_Sha512
+    }
+    return A2(__Crypto_KeyV2, __$key, hmacKeyData);
 };
 
 // Random
@@ -149,9 +172,10 @@ var _Crypto_generateHmacKey = F5(function (name, hash, length, extractable, perm
         crypto.subtle
             .generateKey(algorithm, extractable, permissions)
             .then(function (key) {
-                return callback(__Scheduler_succeed(_Crypto_constructKey(key, key.extractable)))
+                return callback(__Scheduler_succeed(_Crypto_constructHmacKey(key)))
             })
             .catch(function (err) {
+                return callback(__Scheduler_fail);
             });
     });
 });
@@ -257,7 +281,7 @@ var _Crypto_importHmacKey = F7(function (format, keyData, algorithm, hash, lengt
         crypto.subtle
             .importKey(format, keyData, algorithm, extractable, keyUsages)
             .then(function (key) {
-                return callback(__Scheduler_succeed(_Crypto_constructKey(key, key.extractable)))
+                return callback(__Scheduler_succeed(_Crypto_constructHmacKey(key)));
             })
             .catch(function (err) {
                 return callback(__Scheduler_fail(__Crypto_ImportHmacKeyError));
