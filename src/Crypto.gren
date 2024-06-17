@@ -593,7 +593,7 @@ type AesLength
 
 {-| Generate a new key using the AES-CTR algorithm.
 -}
-generateAesCtrKey : SecureContext -> AesKeyParams -> Task {} (Key AesCtrKey)
+generateAesCtrKey : SecureContext -> AesKeyParams -> Task {} (KeyV2 AesCtrKey AesKeyParams)
 generateAesCtrKey _context { length, extractable }=
     Gren.Kernel.Crypto.generateAesKey
         "AES-CTR"
@@ -604,7 +604,7 @@ generateAesCtrKey _context { length, extractable }=
 
 {-| Generate a new key using the AES-CTR algorithm.
 -}
-generateAesCbcKey : SecureContext -> AesKeyParams -> Task {} (Key AesCbcKey)
+generateAesCbcKey : SecureContext -> AesKeyParams -> Task {} (KeyV2 AesCbcKey AesKeyParams)
 generateAesCbcKey _context { length, extractable } =
     Gren.Kernel.Crypto.generateAesKey
         "AES-CBC"
@@ -615,7 +615,7 @@ generateAesCbcKey _context { length, extractable } =
 
 {-| Generate a new key using the AES-GCM algorithm.
 -}
-generateAesGcmKey : SecureContext -> AesKeyParams -> Task {} (Key AesGcmKey)
+generateAesGcmKey : SecureContext -> AesKeyParams -> Task {} (KeyV2 AesGcmKey AesKeyParams)
 generateAesGcmKey _context { length, extractable } =
     Gren.Kernel.Crypto.generateAesKey
         "AES-GCM"
@@ -831,39 +831,39 @@ exportRsaSsaPkcs1V1_5PrivateKeyAsJwk _context (PrivateKeyV2 key) =
 
 
 {-|-}
-exportAesCtrKeyAsRaw : SecureContext -> Key AesCtrKey -> Task ExportKeyError Bytes
+exportAesCtrKeyAsRaw : SecureContext -> KeyV2 AesCtrKey AesKeyParams -> Task ExportKeyError Bytes
 exportAesCtrKeyAsRaw _context =
-    exportKeyAsRaw
+    exportKeyAsRawV2
 
 
 {-|-}
-exportAesCtrKeyAsJwk : SecureContext -> Key AesCtrKey -> Task ExportKeyError Json.Encode.Value
+exportAesCtrKeyAsJwk : SecureContext -> KeyV2 AesCtrKey AesKeyParams -> Task ExportKeyError Json.Encode.Value
 exportAesCtrKeyAsJwk _context =
-    exportKeyAsJwk
+    exportKeyAsJwkV2
 
 
 {-|-}
-exportAesCbcKeyAsRaw : SecureContext -> Key AesCbcKey -> Task ExportKeyError Bytes
+exportAesCbcKeyAsRaw : SecureContext -> KeyV2 AesCbcKey AesKeyParams -> Task ExportKeyError Bytes
 exportAesCbcKeyAsRaw _context =
-    exportKeyAsRaw
+    exportKeyAsRawV2
 
 
 {-|-}
-exportAesCbcKeyAsJwk : SecureContext -> Key AesCbcKey -> Task ExportKeyError Json.Encode.Value
+exportAesCbcKeyAsJwk : SecureContext -> KeyV2 AesCbcKey AesKeyParams -> Task ExportKeyError Json.Encode.Value
 exportAesCbcKeyAsJwk _context =
-    exportKeyAsJwk
+    exportKeyAsJwkV2
 
 
 {-|-}
-exportAesGcmKeyAsRaw : SecureContext -> Key AesGcmKey -> Task ExportKeyError Bytes
+exportAesGcmKeyAsRaw : SecureContext -> KeyV2 AesGcmKey AesKeyParams -> Task ExportKeyError Bytes
 exportAesGcmKeyAsRaw _context =
-    exportKeyAsRaw
+    exportKeyAsRawV2
 
 
 {-|-}
-exportAesGcmKeyAsJwk : SecureContext -> Key AesGcmKey -> Task ExportKeyError Json.Encode.Value
+exportAesGcmKeyAsJwk : SecureContext -> KeyV2 AesGcmKey AesKeyParams -> Task ExportKeyError Json.Encode.Value
 exportAesGcmKeyAsJwk _context =
-    exportKeyAsJwk
+    exportKeyAsJwkV2
 
 
 {-|-}
@@ -1188,7 +1188,7 @@ type ImportAesKeyError
 
 
 {-|-}
-importAesCtrKeyFromRaw : SecureContext -> Bytes -> Extractable -> Task ImportAesKeyError (Key AesCtrKey)
+importAesCtrKeyFromRaw : SecureContext -> Bytes -> Extractable -> Task ImportAesKeyError (KeyV2 AesCtrKey AesKeyParams)
 importAesCtrKeyFromRaw _context bytes extractable =
     Gren.Kernel.Crypto.importAesKey
         "raw"
@@ -1199,7 +1199,7 @@ importAesCtrKeyFromRaw _context bytes extractable =
 
 
 {-|-}
-importAesCtrKeyFromJwk : SecureContext -> Json.Encode.Value -> Extractable -> Task ImportAesKeyError (Key AesCtrKey)
+importAesCtrKeyFromJwk : SecureContext -> Json.Encode.Value -> Extractable -> Task ImportAesKeyError (KeyV2 AesCtrKey AesKeyParams)
 importAesCtrKeyFromJwk _context jwk extractable =
     Gren.Kernel.Crypto.importAesKey
         "jwk"
@@ -1210,7 +1210,7 @@ importAesCtrKeyFromJwk _context jwk extractable =
 
 
 {-|-}
-importAesCbcKeyFromRaw : SecureContext -> Bytes -> Extractable -> Task ImportAesKeyError (Key AesCtrKey)
+importAesCbcKeyFromRaw : SecureContext -> Bytes -> Extractable -> Task ImportAesKeyError (KeyV2 AesCtrKey AesKeyParams)
 importAesCbcKeyFromRaw _context bytes extractable =
     Gren.Kernel.Crypto.importAesKey
         "raw"
@@ -1221,7 +1221,7 @@ importAesCbcKeyFromRaw _context bytes extractable =
 
 
 {-|-}
-importAesCbcKeyFromJwk : SecureContext -> Json.Encode.Value -> Extractable -> Task ImportAesKeyError (Key AesCtrKey)
+importAesCbcKeyFromJwk : SecureContext -> Json.Encode.Value -> Extractable -> Task ImportAesKeyError (KeyV2 AesCtrKey AesKeyParams)
 importAesCbcKeyFromJwk _context jwk extractable =
     Gren.Kernel.Crypto.importAesKey
         "jwk"
@@ -1232,7 +1232,7 @@ importAesCbcKeyFromJwk _context jwk extractable =
 
 
 {-|-}
-importAesGcmKeyFromRaw : SecureContext -> Bytes -> Extractable -> Task ImportAesKeyError (Key AesCtrKey)
+importAesGcmKeyFromRaw : SecureContext -> Bytes -> Extractable -> Task ImportAesKeyError (KeyV2 AesCtrKey AesKeyParams)
 importAesGcmKeyFromRaw _context bytes extractable =
     Gren.Kernel.Crypto.importAesKey
         "raw"
@@ -1243,7 +1243,7 @@ importAesGcmKeyFromRaw _context bytes extractable =
 
 
 {-|-}
-importAesGcmKeyFromJwk : SecureContext -> Json.Encode.Value -> Extractable -> Task ImportAesKeyError (Key AesCtrKey)
+importAesGcmKeyFromJwk : SecureContext -> Json.Encode.Value -> Extractable -> Task ImportAesKeyError (KeyV2 AesCtrKey AesKeyParams)
 importAesGcmKeyFromJwk _context jwk extractable =
     Gren.Kernel.Crypto.importAesKey
         "jwk"
@@ -1615,8 +1615,8 @@ type alias AesCtrParams =
 
 {-| Encrypt some values using a AES-CTR key.
 -}
-encryptWithAesCtr : SecureContext -> AesCtrParams -> Key AesCtrKey -> Bytes -> Task AesCtrEncryptError Bytes
-encryptWithAesCtr _context { counter, length } (Key { key }) bytes =
+encryptWithAesCtr : SecureContext -> AesCtrParams -> KeyV2 AesCtrKey AesKeyParams -> Bytes -> Task AesCtrEncryptError Bytes
+encryptWithAesCtr _context { counter, length } (KeyV2 key _) bytes =
     -- The counter must be exactly 16 bytes long
     if Bytes.width counter == 16 then
         Gren.Kernel.Crypto.encryptWithAesCtr
@@ -1641,8 +1641,8 @@ type alias AesCbcParams =
 
 
 {-|-}
-encryptWithAesCbc : SecureContext -> AesCbcParams -> Key AesCbcKey -> Bytes -> Task AesCbcEncryptionError Bytes
-encryptWithAesCbc _context { iv } (Key { key }) bytes =
+encryptWithAesCbc : SecureContext -> AesCbcParams -> KeyV2 AesCbcKey AesKeyParams -> Bytes -> Task AesCbcEncryptionError Bytes
+encryptWithAesCbc _context { iv } (KeyV2 key _) bytes =
     if Bytes.width iv == 16 then
         Gren.Kernel.Crypto.encryptWithAesCbc
             iv
@@ -1677,8 +1677,8 @@ type AesGcmEncryptionError =
 
 
 {-|-}
-encryptWithAesGcm : SecureContext -> AesGcmParams -> Key AesGcmKey -> Bytes -> Task AesGcmEncryptionError Bytes
-encryptWithAesGcm _context { iv, additionalData, tagLength } (Key { key }) bytes =
+encryptWithAesGcm : SecureContext -> AesGcmParams -> KeyV2 AesGcmKey AesKeyParams -> Bytes -> Task AesGcmEncryptionError Bytes
+encryptWithAesGcm _context { iv, additionalData, tagLength } (KeyV2 key _) bytes =
     let
         byteWidth =
             Bytes.width iv
@@ -1757,8 +1757,8 @@ type AesCtrDecryptError =
 
 
 {-|-}
-decryptWithAesCtr : AesCtrParams -> Key AesCtrKey -> Bytes -> Task AesCtrDecryptError Bytes
-decryptWithAesCtr { counter, length } (Key { key }) bytes =
+decryptWithAesCtr : AesCtrParams -> KeyV2 AesCtrKey AesKeyParams -> Bytes -> Task AesCtrDecryptError Bytes
+decryptWithAesCtr { counter, length } (KeyV2 key _) bytes =
     if Bytes.width counter == 16 then
         Gren.Kernel.Crypto.decryptWithAesCtr
             counter
@@ -1783,8 +1783,8 @@ Errors can happen when:
 - The passed `Bytes` cannot be decrypted
 
 -}
-decryptWithAesCbc : SecureContext -> AesCbcParams -> Key AesCbcKey -> Bytes -> Task AesCbcDecryptionError Bytes
-decryptWithAesCbc _context { iv } (Key { key }) bytes = 
+decryptWithAesCbc : SecureContext -> AesCbcParams -> KeyV2 AesCbcKey AesKeyParams -> Bytes -> Task AesCbcDecryptionError Bytes
+decryptWithAesCbc _context { iv } (KeyV2 key _) bytes = 
     if Bytes.width iv == 16 then
         Gren.Kernel.Crypto.decryptWithAesCbc
             iv
@@ -1801,8 +1801,8 @@ type AesGcmDecryptionError =
 
 
 {-|-}
-decryptWithAesGcm : SecureContext -> AesGcmParams -> Key AesGcmKey -> Bytes -> Task AesGcmDecryptionError Bytes
-decryptWithAesGcm _context { iv, additionalData, tagLength } (Key { key }) bytes =
+decryptWithAesGcm : SecureContext -> AesGcmParams -> KeyV2 AesGcmKey AesKeyParams -> Bytes -> Task AesGcmDecryptionError Bytes
+decryptWithAesGcm _context { iv, additionalData, tagLength } (KeyV2 key _) bytes =
     let
         byteWidth =
             Bytes.width iv

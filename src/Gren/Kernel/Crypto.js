@@ -68,6 +68,25 @@ var _Crypto_constructHmacKey = function (__$key) {
     return A2(__Crypto_KeyV2, __$key, hmacKeyData);
 };
 
+var _Crypto_constructAesKey = function (__$key) {
+    var aesKeyData = {
+        __$extractable: _Crypto_extractableFromBool(__$key.extractable)
+    };
+    switch (__$key.algorithm.length) {
+        case 128:
+            aesKeyData.__$length = __Crypto_AesLength128
+        case 192:
+            // Todo: I need to figure out how this works, given the cross-browser issues...
+            // (I believe this fails in Safari? Due to security concerns?)
+            // Fail in Gren when this is provided as a constructor? Fail here or in the 
+            // function for key import?
+            aesKeyData.__$length = __Crypto_AesLength192
+        case 256:
+            aesKeyData.__$length = __Crypto_AesLength256
+    }
+    return A2(__Crypto_KeyV2, __$key, aesKeyData);
+};
+
 // Random
 
 var _Crypto_randomUUID = __Scheduler_binding(function (callback) {
@@ -152,7 +171,7 @@ var _Crypto_generateAesKey = F4(function (name, length, extractable, permissions
         crypto.subtle
             .generateKey(algorithm, extractable, permissions)
             .then(function (key) {
-                return callback(__Scheduler_succeed(_Crypto_constructKey(key, key, extractable)))
+                return callback(__Scheduler_succeed(_Crypto_constructAesKey(key)))
             });
     });
 });
