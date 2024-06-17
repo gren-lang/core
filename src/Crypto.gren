@@ -641,6 +641,13 @@ type EcdhKey
     = EcdhKey
 
 
+{-|-}
+type alias EcKeyParams =
+    { namedCurve : EcNamedCurve
+    , extractable : Extractable
+    }
+
+
 {-| The name of the elliptic curve to use for the generated key.
 -}
 type EcNamedCurve
@@ -651,8 +658,8 @@ type EcNamedCurve
 
 {-| Generate a new key using the ECDSA algorithm.
 -}
-generateEcdsaKeyPair : SecureContext -> EcNamedCurve -> Extractable -> Task x (KeyPair EcdsaKey)
-generateEcdsaKeyPair _context namedCurve extractable =
+generateEcdsaKeyPair : SecureContext -> EcKeyParams-> Task x (KeyPair EcdsaKey)
+generateEcdsaKeyPair _context { namedCurve, extractable } =
     Gren.Kernel.Crypto.generateEcKey
         "ECDSA"
         (ecNamedCurveToString namedCurve)
@@ -662,8 +669,8 @@ generateEcdsaKeyPair _context namedCurve extractable =
 
 {-| Generate a new key using the ECDH algorithm.
 -}
-generateEcdhKeyPair : SecureContext -> EcNamedCurve -> Extractable -> Task x (KeyPair EcdhKey)
-generateEcdhKeyPair _context namedCurve extractable =
+generateEcdhKeyPair : SecureContext -> EcKeyParams -> Task x (KeyPair EcdhKey)
+generateEcdhKeyPair _context { namedCurve, extractable } =
     Gren.Kernel.Crypto.generateEcKey
         "ECDH"
         (ecNamedCurveToString namedCurve)
