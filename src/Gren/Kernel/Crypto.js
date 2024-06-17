@@ -54,6 +54,12 @@ var _Crypto_constructRsaKey = function (__$key) {
     };
     return A2(__Crypto_KeyV2, __$key, rsaKeyData);
 };
+
+var _Crypto_constructHmacKey = function (__$key) {
+    var hmacKeyData = {
+        __$hash: _Crypto_hashFromString(__$key.algorithm.hash.name),
+        __$extractable: _Crypto_extractableFromBool(__$key.extractable)
+    };
     if (__$key.algorithm.length) {
         hmacKeyData.__$length = __Maybe_Just(__$key.algorithm.length);
     } else {
