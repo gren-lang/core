@@ -572,6 +572,13 @@ type AesGcmKey
     = AesGcmKey
 
 
+{-|-}
+type alias AesKeyParams =
+    { length : AesLength
+    , extractable : Extractable
+    }
+
+
 {-| The length of bits of the key that is being generated using the AES 
 algorithm. These are the only values that can be chosen.
 
@@ -586,8 +593,8 @@ type AesLength
 
 {-| Generate a new key using the AES-CTR algorithm.
 -}
-generateAesCtrKey : SecureContext -> AesLength -> Extractable -> Task {} (Key AesCtrKey)
-generateAesCtrKey _context length extractable =
+generateAesCtrKey : SecureContext -> AesKeyParams -> Task {} (Key AesCtrKey)
+generateAesCtrKey _context { length, extractable }=
     Gren.Kernel.Crypto.generateAesKey
         "AES-CTR"
         (aesLengthToInt length)
@@ -597,8 +604,8 @@ generateAesCtrKey _context length extractable =
 
 {-| Generate a new key using the AES-CTR algorithm.
 -}
-generateAesCbcKey : SecureContext -> AesLength -> Extractable -> Task {} (Key AesCbcKey)
-generateAesCbcKey _context length extractable =
+generateAesCbcKey : SecureContext -> AesKeyParams -> Task {} (Key AesCbcKey)
+generateAesCbcKey _context { length, extractable } =
     Gren.Kernel.Crypto.generateAesKey
         "AES-CBC"
         (aesLengthToInt length)
@@ -608,8 +615,8 @@ generateAesCbcKey _context length extractable =
 
 {-| Generate a new key using the AES-GCM algorithm.
 -}
-generateAesGcmKey : SecureContext -> AesLength -> Extractable -> Task {} (Key AesGcmKey)
-generateAesGcmKey _context length extractable =
+generateAesGcmKey : SecureContext -> AesKeyParams -> Task {} (Key AesGcmKey)
+generateAesGcmKey _context { length, extractable } =
     Gren.Kernel.Crypto.generateAesKey
         "AES-GCM"
         (aesLengthToInt length)
