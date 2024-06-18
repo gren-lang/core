@@ -1744,18 +1744,33 @@ type SignWithRsaPssError
 When run, the returned `Task` can fail if the passed `salt` is not equal to or less then the
 amount of bytes than the `DigestAlgorithm` that was used to generate the key. For example, if 
 the `RsaPssKey` was generated with SHA-256, the maximum number for the `salt` value must be 
-32 or less. Note that some platforms may succeed even when the `salt` is not as expected.
+32 or less.
 -}
 signWithRsaPss : SecureContext -> Int -> PrivateKey RsaPssKey RsaKeyParams -> Bytes -> Task SignWithRsaPssError Signature
-signWithRsaPss _context salt (PrivateKey (Key key _)) bytes =
+signWithRsaPss _context salt (PrivateKey (Key key { modulusLength, hash, extractable })) bytes =
     let
         clampedSaltBytes =
             clamp 0 2147483647 salt
+
+        maxSalt =
+            case hash of
+                Sha256 ->
+                    32
+                
+                Sha384 ->
+                    48
+
+                Sha512 ->
+                    64
     in
-    Gren.Kernel.Crypto.signWithRsaPss 
-        clampedSaltBytes
-        key
-        bytes
+    if clampedSaltBytes > maxSalt then
+        Task.fail SignWithRsaPssError
+
+    else
+        Gren.Kernel.Crypto.signWithRsaPss 
+            clampedSaltBytes
+            key
+            bytes
 
 
 {-|-}
