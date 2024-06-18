@@ -1752,6 +1752,9 @@ signWithRsaPss _context salt (PrivateKey (Key key { modulusLength, hash, extract
         clampedSaltBytes =
             clamp 0 2147483647 salt
 
+        {- Safari (Webkit) will error if the `salt` length is greater than the `hash` of the 
+        created key. The `maxSalt` values ensures consistent behavior across platforms.
+        -}
         maxSalt =
             case hash of
                 Sha256 ->
