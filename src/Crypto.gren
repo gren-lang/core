@@ -263,8 +263,6 @@ Verify signed `Bytes`.
 
 @docs DecryptWithRsaOaepError
 
-@docs Key
-
 @docs encryptWithRsaOaep, decryptWithRsaOaep
 @docs AesCtrParams, AesCtrEncryptError, AesCtrDecryptError
 @docs encryptWithAesCtr, decryptWithAesCtr
