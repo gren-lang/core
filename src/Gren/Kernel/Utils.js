@@ -1,7 +1,7 @@
 /*
 
 import Basics exposing (LT, EQ, GT)
-import Dict exposing (toArray)
+import Dict exposing (foldl)
 import Gren.Kernel.Debug exposing (crash)
 import Set exposing (toArray)
 
@@ -42,20 +42,20 @@ function _Utils_eqHelp(x, y, depth, stack) {
 	}
 	if (x.$ === 'RBNode_gren_builtin' || x.$ === 'RBEmpty_gren_builtin')
 	{
-		x = __Dict_toArray(x);
-		y = __Dict_toArray(y);
+		x = A3(__Dict_foldl, F3(function(key, value, acc) { acc.push({ a: key, b: value }); return acc; }), [], x);
+		y = A3(__Dict_foldl, F3(function(key, value, acc) { acc.push({ a: key, b: value }); return acc; }), [], y);
 	}
 	//*/
 
   /**__PROD/
 	if (x.$ < 0)
 	{
-		x = __Dict_toArray(x);
-		y = __Dict_toArray(y);
+		x = A3(__Dict_foldl, F3(function(key, value, acc) { acc.push({ a: key, b: value }); return acc; }), [], x);
+		y = A3(__Dict_foldl, F3(function(key, value, acc) { acc.push({ a: key, b: value }); return acc; }), [], y);
 	}
 	//*/
 
-  if (typeof DataView === "function" && x instanceof DataView) {
+  if (x instanceof DataView) {
     var length = x.byteLength;
 
     if (y.byteLength !== length) {

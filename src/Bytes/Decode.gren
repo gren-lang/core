@@ -156,7 +156,7 @@ bytes n =
 
 {-| Decode a given number of UTF-8 bytes into a `String`.
 
-Most protocols store the width of the string right before the content, so you
+Most protocols store the length of the string right before the content, so you
 will probably write things like this:
 
     import Bytes exposing (Endianness(..))
@@ -167,8 +167,8 @@ will probably write things like this:
       Decode.unsignedInt32 BE
         |> Decode.andThen Decode.string
 
-In this case we read the width as a 32-bit unsigned integer, but you have the
-leeway to read the width as a [Base 128 Varint][pb] for ProtoBuf, a
+In this case we read the length as a 32-bit unsigned integer, but you have the
+leeway to read the length as a [Base 128 Varint][pb] for ProtoBuf, a
 [Variable-Length Integer][sql] for SQLite, or whatever else they dream up.
 
 [pb]: https://developers.google.com/protocol-buffers/docs/encoding#varints
@@ -176,7 +176,16 @@ leeway to read the width as a [Base 128 Varint][pb] for ProtoBuf, a
 -}
 string : Int -> Decoder String
 string n =
-  Decoder (Gren.Kernel.Bytes.read_string n)
+  bytes n
+    |> andThen 
+      (\bits ->
+        case Bytes.toString bits of
+          Just str ->
+            succeed str
+
+          Nothing ->
+            fail
+      )
 
 
 

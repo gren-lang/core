@@ -1,10 +1,10 @@
 module Array exposing
     ( Array
     , empty, singleton, initialize, repeat, range
-    , map, indexedMap, foldl, foldr, filter, filterMap, reverse
+    , map, indexedMap, foldl, foldr, indexedFoldl, indexedFoldr, filter, filterMap, reverse
     , isEmpty, length, get, findFirst, findLast, member, any, all, minimum, maximum
     , set, update, pushFirst, pushLast
-    , prefix, postfix, flatten, flatMap, intersperse, map2, map3
+    , prepend, append, flatten, flatMap, intersperse, map2, map3
     , first, last, slice, dropFirst, dropLast, takeFirst, takeLast, popFirst, popLast, partition
     , sort, sortBy, sortWith
     )
@@ -20,7 +20,7 @@ functions to help you work with them.
 
 ## Transform
 
-@docs map, indexedMap, foldl, foldr, filter, filterMap, reverse
+@docs map, indexedMap, foldl, foldr, indexedFoldl, indexedFoldr, filter, filterMap, reverse
 
 
 ## Query
@@ -35,7 +35,7 @@ functions to help you work with them.
 
 ## Combine
 
-@docs prefix, postfix, flatten, flatMap, intersperse, map2, map3
+@docs prepend, append, flatten, flatMap, intersperse, map2, map3
 
 
 ## Deconstruct
@@ -149,7 +149,7 @@ indexedMap =
 
     foldl (+) 0 [ 1, 2, 3 ] == 6
 
-So `foldl step state [ 1, 2, 3 ] is like saying:
+So `foldl step state [ 1, 2, 3 ]` is like saying:
 
     state
         |> step 1
@@ -169,23 +169,34 @@ foldr =
     Gren.Kernel.Array.foldr
 
 
+{-| Reduce the array from the left. The reducing function is 
+passed the index of the current value.
+
+    indexedFoldl (\idx val sum -> idx + val + sum) 0 [ 1, 2, 3 ] == 9
+
+-}
+indexedFoldl : (Int -> a -> b -> b) -> b -> Array a -> b
+indexedFoldl =
+    Gren.Kernel.Array.indexedFoldl
+
+
+{-| Reduce the array from the right. The reducing function
+is passed the index of the current value. Same as `indexedFoldl`
+but the execution order is reversed.
+-}
+indexedFoldr : (Int -> a -> b -> b) -> b -> Array a -> b
+indexedFoldr =
+    Gren.Kernel.Array.indexedFoldr
+
+
 {-| Keep values that pass the test.
 
     filter (\n -> n < 3) [ 1, 2, 3, 4 ] == [ 1, 2 ]
 
 -}
 filter : (a -> Bool) -> Array a -> Array a
-filter pred array =
-    foldl
-        (\v acc ->
-            if pred v then
-                pushLast v acc
-
-            else
-                acc
-        )
-        []
-        array
+filter =
+    Gren.Kernel.Array.filter
 
 
 {-| Filter out unwanted results of a map operation.
@@ -196,16 +207,15 @@ filter pred array =
 -}
 filterMap : (a -> Maybe b) -> Array a -> Array b
 filterMap mapper array =
-    foldl
-        (\v acc ->
+    flatMap
+        (\v ->
             case mapper v of
                 Just newValue ->
-                    pushLast newValue acc
+                    [ newValue ]
 
                 Nothing ->
-                    acc
+                    []
         )
-        []
         array
 
 
@@ -244,9 +254,11 @@ length =
 
 
 {-| Retrieve the element at a given index, or `Nothing` if the index is out of bounds.
+A negative index looks up an element in reverse from the end of the array.
 
     get 1 [ 1, 2, 3 ] == Just 2
     get 10 [ 1, 2, 3 ] == Nothing
+    get -1 [ 1, 2, 3 ] == Just 3
 
 -}
 get : Int -> Array a -> Maybe a
@@ -380,9 +392,11 @@ maximum array =
 
 
 {-| Replaces the element at the given index, or returns the array unmodified if the index is out of bounds.
+Passing a negative index means you want to replace an element counting backwards from the end of the array.
 
     set 1 10 [ 1, 2, 3 ] == [ 1, 10, 3 ]
     set 10 10 [ 1, 2, 3 ] == [ 1, 2, 3 ]
+    set -1 10 [ 1, 2, 3 ] == [ 1, 2, 10 ]
 
 -}
 set : Int -> a -> Array a -> Array a
@@ -414,7 +428,7 @@ update idx fn array =
 -}
 pushFirst : a -> Array a -> Array a
 pushFirst value array =
-    prefix [ value ] array
+    prepend [ value ] array
 
 
 {-| Add a value to the end of the array.
@@ -434,26 +448,26 @@ pushLast =
 {-| Combine two arrays so that the first array becomes the prefix,
 and the second array becomes the postfix of the resulting array.
 
-    prefix [ 1, 2, 3 ] [ 4, 5, 6 ] == [ 1, 2, 3, 4, 5, 6 ] 
+    prepend [ 1, 2, 3 ] [ 4, 5, 6 ] == [ 1, 2, 3, 4, 5, 6 ] 
 
 You can also use the `++` operator for this purpose.
 
     [ 1, 2, 3 ] ++ [ 4, 5, 6 ] == [ 1, 2, 3, 4, 5, 6 ]
 -}
-prefix : Array a -> Array a -> Array a
-prefix =
+prepend : Array a -> Array a -> Array a
+prepend =
     Gren.Kernel.Array.append
 
 
 {-| Combine two arrays so that the first array becomes the postfix,
 and the second array becomes the prefix of the resulting array.
 
-    postfix [ 1, 2, 3 ] [ 4, 5, 6 ] == [ 4, 5, 6, 1, 2, 3 ]
+    append [ 1, 2, 3 ] [ 4, 5, 6 ] == [ 4, 5, 6, 1, 2, 3 ]
     
 -}
-postfix : Array a -> Array a -> Array a
-postfix fst second =
-    prefix second fst
+append : Array a -> Array a -> Array a
+append fst second =
+    prepend second fst
 
 
 {-| Combine a bunch of arrays into a single array.
@@ -462,8 +476,8 @@ postfix fst second =
 
 -}
 flatten : Array (Array a) -> Array a
-flatten array =
-    foldl postfix [] array
+flatten =
+    Gren.Kernel.Array.flat
 
 
 {-| Map a given function onto an array, then flatten the resulting array.
@@ -472,8 +486,8 @@ flatten array =
 
 -}
 flatMap : (a -> Array b) -> Array a -> Array b
-flatMap mapper array =
-    foldl (\v acc -> prefix acc (mapper v)) [] array
+flatMap =
+    Gren.Kernel.Array.flatMap
 
 
 {-| Places the given value between all members of the given list.
@@ -488,14 +502,8 @@ intersperse sep xs =
             []
 
         Just { first = head, rest = tail } ->
-            let
-                step x rest =
-                    pushFirst sep (pushFirst x rest)
+            pushFirst head <| flatMap (\val -> [ sep, val ]) tail
 
-                spersed =
-                    foldr step [] tail
-            in
-            pushFirst head spersed
 
 {-| Combine two arrays, combining them with the given function.
 If one array is longer, the extra elements are dropped.
@@ -537,7 +545,7 @@ first array =
 -}
 last : Array a -> Maybe a
 last array =
-    get (length array - 1) array
+    get -1 array
 
 
 {-| Get a sub section of an array: `(slice start end array)`.
