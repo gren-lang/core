@@ -4,6 +4,7 @@ module Crypto exposing
     , getRandomInt32Values, getRandomUInt32Values
     , SecureContext, getSecureContext
     , randomUuid
+    , AesKeyParams
     , Key, PublicKey, PrivateKey, KeyPair
     , Extractable(..)
     , RsaOaepKey, RsaPssKey, RsaSsaPkcs1V1_5Key, RsaKeyParams, RsaKeyGenerationError(..)
@@ -101,11 +102,60 @@ the successfull completion of a `Task` returned by the `getSecureContext` functi
 
 @docs randomUuid
 
+## Encryption & Decryption
+
+Encrypt and decrypt values. Each operation requires a specific key for the algorithm
+being used. You can learn more about key generation in the "Key Generation" section of
+this module.
+
+### Encrypt & decrypt with RSA-OAEP algorithm
+
+@docs encryptWithRsaOaep
+
+@docs DecryptWithRsaOaepError, decryptWithRsaOaep
+
+### Encrypt & decrypt with AES-CTR algorithm
+
+@docs AesCtrParams
+@docs AesCtrEncryptError, encryptWithAesCtr
+@docs AesCtrDecryptError, decryptWithAesCtr
+
+### Encrypt & decrypt with AES-CBC algorithm
+
+@docs AesCbcParams
+@docs AesCbcEncryptionError, encryptWithAesCbc
+@docs AesCbcDecryptionError, decryptWithAesCbc
+
+### Encrypt & decrypt with AES-GCM algorithm
+
+@docs AesGcmParams, AesGcmTagLength
+@docs AesGcmEncryptionError, encryptWithAesGcm
+@docs AesGcmDecryptionError, decryptWithAesGcm
+
+## Signing & Verifying
+
+### Sign & vefify with the RSASSA-PKCS1-v1_5 algorithm
+
+@docs signWithRsaSsaPkcs1V1_5, verifyWithRsaSsaPkcs1V1_5
+@docs SignWithRsaPssError, signWithRsaPss, verifyWithRsaPss
+
+### Sign & vefify with the ECDSA algorithm
+
+@docs signWithEcdsa, verifyWithEcdsa
+
+### Sign & vefify with the HMAC algorithm
+
+@docs signWithHmac, verifyWithHmac
+
+## Digest
+
+@docs DigestAlgorithm, digest
+
 ## Generate Keys
 
-Generate, import, export, and derive keys for completing cryptographic operations. 
+Generate, import, and export keys for completing cryptographic operations. 
 Each section covers a different sets of keys that use the same underlying algorithm. 
-Each key can be only be used for specific cryptographic operations.
+Each key can be only be used for specific set of cryptographic operations.
 
 @docs Key, PublicKey, PrivateKey, KeyPair
 
@@ -123,7 +173,7 @@ Generate keys to use with RSA (Rivest-Shamir-Adleman) algorithm.
 
 ### Generate AES Keys
 
-@docs AesLength
+@docs AesKeyParams, AesLength
 
 @docs generateAesCtrKey, generateAesCbcKey, generateAesGcmKey
 
@@ -138,10 +188,6 @@ Generate keys to use with RSA (Rivest-Shamir-Adleman) algorithm.
 @docs HmacKeyParams, HmacKeyGenerationError
 
 @docs generateHmacKey
-
-## Derive Keys
-
-Create keys from other keys.
 
 ## Export Keys
 
@@ -239,42 +285,6 @@ for the Web Crypto API.
 
 @docs importHmacKeyFromJwk, importHmacKeyFromRaw
 
-## Encryption
-
-Encrypt some `Bytes`.
-
-## Decryption
-
-Decrypt some `Bytes`.
-
-## Signing
-
-Sign some `Bytes`.
-
-## Verifying
-
-Verify signed `Bytes`.
-
-## Digest
-
-@docs DigestAlgorithm, digest
-
-# TODO
-
-@docs DecryptWithRsaOaepError
-
-@docs encryptWithRsaOaep, decryptWithRsaOaep
-@docs AesCtrParams, AesCtrEncryptError, AesCtrDecryptError
-@docs encryptWithAesCtr, decryptWithAesCtr
-@docs AesCbcParams, AesCbcEncryptionError, AesCbcDecryptionError
-@docs encryptWithAesCbc, decryptWithAesCbc
-@docs AesGcmParams, AesGcmTagLength, AesGcmEncryptionError, AesGcmDecryptionError
-@docs encryptWithAesGcm, decryptWithAesGcm
-@docs signWithRsaSsaPkcs1V1_5, verifyWithRsaSsaPkcs1V1_5
-@docs SignWithRsaPssError, signWithRsaPss, verifyWithRsaPss
-@docs signWithEcdsa, verifyWithEcdsa
-@docs signWithHmac, verifyWithHmac
-
 -}
 
 
@@ -371,12 +381,13 @@ type SecureContext
 secure context. If this `Task` fails, most of the functions within this module
 will not be able to run.
 
-While running this function on the `node` platform, it should always succeed.
+While running this function on the `node` platform, it should succeed unless you
+are running a version of `node` that does not support the Web Crypto APIs.
 
 While running this function on the `browser` platform, it will succeed if the
 application being run is [considered as being in a secure context](https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts).
 -}
-getSecureContext : Task {} SecureContext
+getSecureContext : Task x SecureContext
 getSecureContext =
     Gren.Kernel.Crypto.getContext
 
@@ -393,22 +404,28 @@ type Extractable
     | CannotBeExtracted
 
 
-{-|-}
+{-| A generated key.
+-}
 type Key key keyData
     = Key key keyData
 
 
-{-|-}
+{-| A public key that is used for some operations. This key type, as the name
+suggests, can be exposed publically and is safe to transport across the network.
+-}
 type PublicKey a b
     = PublicKey (Key a b)
 
 
-{-|-}
+{-| A private key that is used for some specific cryptographic operations. This
+key should be protected and not revealed to any system outside of your application.
+-}
 type PrivateKey a b
     = PrivateKey (Key a b)
 
 
-{-|-}
+{-| A set of public and private keys created by some key generation algorithms.
+-}
 type alias KeyPair a b =
     { publicKey : PublicKey a b
     , privateKey : PrivateKey a b
@@ -540,7 +557,8 @@ type AesGcmKey
     = AesGcmKey
 
 
-{-|-}
+{-| The required parameters to generates an AES key.
+-}
 type alias AesKeyParams =
     { length : AesLength
     , extractable : Extractable
@@ -561,7 +579,7 @@ type AesLength
 
 {-| Generate a new key using the AES-CTR algorithm.
 -}
-generateAesCtrKey : SecureContext -> AesKeyParams -> Task {} (Key AesCtrKey AesKeyParams)
+generateAesCtrKey : SecureContext -> AesKeyParams -> Task x (Key AesCtrKey AesKeyParams)
 generateAesCtrKey _context { length, extractable }=
     Gren.Kernel.Crypto.generateAesKey
         "AES-CTR"
@@ -570,9 +588,9 @@ generateAesCtrKey _context { length, extractable }=
         [ "encrypt", "decrypt" ]
 
 
-{-| Generate a new key using the AES-CTR algorithm.
+{-| Generate a new key using the AES-CBC algorithm.
 -}
-generateAesCbcKey : SecureContext -> AesKeyParams -> Task {} (Key AesCbcKey AesKeyParams)
+generateAesCbcKey : SecureContext -> AesKeyParams -> Task x (Key AesCbcKey AesKeyParams)
 generateAesCbcKey _context { length, extractable } =
     Gren.Kernel.Crypto.generateAesKey
         "AES-CBC"
@@ -583,7 +601,7 @@ generateAesCbcKey _context { length, extractable } =
 
 {-| Generate a new key using the AES-GCM algorithm.
 -}
-generateAesGcmKey : SecureContext -> AesKeyParams -> Task {} (Key AesGcmKey AesKeyParams)
+generateAesGcmKey : SecureContext -> AesKeyParams -> Task x (Key AesGcmKey AesKeyParams)
 generateAesGcmKey _context { length, extractable } =
     Gren.Kernel.Crypto.generateAesKey
         "AES-GCM"
@@ -1848,8 +1866,10 @@ type DigestAlgorithm
     | Sha512
 
 
-{-|-}
-digest : SecureContext -> DigestAlgorithm -> Bytes -> Task {} Bytes
+{-| Take some `Bytes` and create a hash from them using the passed `DigestAlgorithm`.
+This operation should always succeed.
+-}
+digest : SecureContext -> DigestAlgorithm -> Bytes -> Task x Bytes
 digest _context algorithm data =
     Gren.Kernel.Crypto.digest
         (digestAlgorithmToString algorithm)
