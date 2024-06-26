@@ -127,12 +127,9 @@ var _Crypto_getRandomValues = F2(function (arrayLength, valueType) {
             array = new Int8Array(0);
             break;
     }
-    try {
-        var randomValues = crypto.getRandomValues(array);
-    } catch (err) {
-    }
+    var randomValues = crypto.getRandomValues(array);
     return __Scheduler_binding(function (callback) {
-        return callback(__Scheduler_succeed(Array.from(randomValues)));
+        return callback(__Scheduler_succeed(new DataView(randomValues.buffer)));
     })
 });
 
