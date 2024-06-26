@@ -323,7 +323,7 @@ getRandomUInt8Values : Int -> Task x Bytes
 getRandomUInt8Values int =
     Gren.Kernel.Crypto.getRandomValues (clamp 0 65536 int) "uint8"
 
-
+ 
 {-| Get some `Bytes` of random, signed, 16-bit values equal to the length of the passed `Int`.
 with a maximum of 32768 values.
 -}
