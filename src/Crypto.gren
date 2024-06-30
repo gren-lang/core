@@ -10,6 +10,8 @@ module Crypto exposing
     , RsaOaepKey, RsaPssKey, RsaSsaPkcs1V1_5Key, RsaKeyParams, RsaKeyGenerationError(..)
     , generateRsaOaepKeyPair, generateRsaPssKeyPair, generateRsaSsaPkcs1V1_5KeyPair
     , AesLength(..)
+    , Signature
+    , SignWithRsaSsaPkcs1V1_5Error(..)
     , RsaOaepParams, RsaOaepEncryptionError(..)
     , generateAesCtrKey, generateAesCbcKey, generateAesGcmKey
     , EcNamedCurve(..)
@@ -159,16 +161,30 @@ algorithm. These functions require an AES-GCM key. You can generate one with the
 
 ## Signing & Verifying
 
-### Sign & vefify with the RSASSA-PKCS1-v1_5 algorithm
+Sign and verify values. Each operation requires a specific key for the algorithm being used. You can 
+learn more about key generation in the "Key Generation" section of this module.
 
-@docs signWithRsaSsaPkcs1V1_5, verifyWithRsaSsaPkcs1V1_5
+@docs Signature
+
+### Sign & verify with the RSASSA-PKCS1-v1_5 algorithm
+
+Sign and verify some `Bytes` with the RSASSA-PKCS1-v1_5 (RSA Signature Scheme with Appendix ...) algorithm. 
+These functions require an RSASSA-PKCS1-v1_5 key. You can generate one with the 
+[`generateRsaSsaPkcs1V1_5KeyPair`](#generateRsaSsaPkcs1V1_5KeyPair) function.
+
+@docs SignWithRsaSsaPkcs1V1_5Error, signWithRsaSsaPkcs1V1_5
+
+@docs verifyWithRsaSsaPkcs1V1_5
+
+### Sign & verify with the RSA-PSS algorithm
+
 @docs SignWithRsaPssError, signWithRsaPss, verifyWithRsaPss
 
-### Sign & vefify with the ECDSA algorithm
+### Sign & verify with the ECDSA algorithm
 
 @docs signWithEcdsa, verifyWithEcdsa
 
-### Sign & vefify with the HMAC algorithm
+### Sign & verify with the HMAC algorithm
 
 @docs signWithHmac, verifyWithHmac
 
@@ -1848,7 +1864,9 @@ decryptWithAesGcm _context { iv, additionalData, tagLength } (Key key _) bytes =
 -- SIGN & VERIFY TYPES
 
 
-{-|-}
+{-| A handy alias for differentiating between artibrary `Bytes` and the `Bytes` of a generated
+signature (using a signing function).
+-}
 type alias Signature
     = Bytes
 
@@ -1857,9 +1875,21 @@ type alias Signature
 -- SIGN
 
 
-{-| Sign some `Bytes` with the RSA-SSAPKCS1v1.5 algorithm. This operation should always succeed.
+{-| Errors that can happen when signing using the 
+[`signWithRsaSsaPkcs1V1_5`](#signWithRsaSsaPkcs1V1_5) function.
+
+This error should only appear if there are problems in kernel code. If you run into it, please 
+file a ticket!
 -}
-signWithRsaSsaPkcs1V1_5 : SecureContext -> PrivateKey RsaSsaPkcs1V1_5Key RsaKeyParams -> Bytes -> Task {} Signature
+type SignWithRsaSsaPkcs1V1_5Error
+    = SignWithRsaSsaPkcs1V1_5Error
+
+
+{-| Sign some `Bytes` with the RSA-SSAPKCS1v1.5 algorithm. This produces a `Signature` (which 
+is just some `Bytes`). The `Signature` can be used with the cooresponding verification function 
+to verify that the passed `Bytes` were signed with the passed key.
+-}
+signWithRsaSsaPkcs1V1_5 : SecureContext -> PrivateKey RsaSsaPkcs1V1_5Key RsaKeyParams -> Bytes -> Task SignWithRsaSsaPkcs1V1_5Error Signature
 signWithRsaSsaPkcs1V1_5 _context (PrivateKey (Key key _)) bytes =
     Gren.Kernel.Crypto.signWithRsaSsaPkcs1V1_5 
         key 
