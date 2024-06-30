@@ -1960,8 +1960,15 @@ signWithHmac _context (Key key _) bytes =
 -- VERIFY
 
 
-{-|-}
-verifyWithRsaSsaPkcs1V1_5 : SecureContext -> PublicKey RsaSsaPkcs1V1_5Key RsaKeyParams -> Signature -> Bytes -> Task {} {}
+{-| Verify that some `Bytes` were signed with the passed `Signature` with the 
+RSA-SSAPKCS1v1.5 algorithm.
+
+This function produces no values. Instead, the `Task` succeeds if the passed 
+signature `Bytes` were created with the same key passed to this verification 
+function. If that's not the case, or if there's an unforseen error, the `Task` 
+fails.
+-}
+verifyWithRsaSsaPkcs1V1_5 : SecureContext -> PublicKey RsaSsaPkcs1V1_5Key RsaKeyParams -> Signature -> Bytes -> Task x a
 verifyWithRsaSsaPkcs1V1_5 _context (PublicKey (Key key _)) signature bytes =
     Gren.Kernel.Crypto.verifyWithRsaSsaPkcs1V1_5
         key
