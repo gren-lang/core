@@ -11,7 +11,7 @@ module Crypto exposing
     , generateRsaOaepKeyPair, generateRsaPssKeyPair, generateRsaSsaPkcs1V1_5KeyPair
     , AesLength(..)
     , Signature
-    , SignWithRsaSsaPkcs1V1_5Error(..)
+    , RsaSsaPkcs1V1_5SigningError(..)
     , RsaOaepParams, RsaOaepEncryptionError(..)
     , generateAesCtrKey, generateAesCbcKey, generateAesGcmKey
     , EcNamedCurve(..)
@@ -61,7 +61,7 @@ module Crypto exposing
     , AesGcmParams, AesGcmTagLength(..), AesGcmEncryptionError(..), AesGcmDecryptionError(..)
     , encryptWithAesGcm, decryptWithAesGcm
     , signWithRsaSsaPkcs1V1_5, verifyWithRsaSsaPkcs1V1_5
-    , SignWithRsaPssError(..), signWithRsaPss, verifyWithRsaPss
+    , RsaPssSigningError(..), signWithRsaPss, verifyWithRsaPss
     , signWithEcdsa, verifyWithEcdsa
     , signWithHmac, verifyWithHmac
     )
@@ -111,7 +111,7 @@ Encrypt and decrypt values. Each operation requires a specific key for the algor
 being used. You can learn more about key generation in the "Key Generation" section of
 this module.
 
-### Encrypt & decrypt with RSA-OAEP algorithm
+### Encrypt & decrypt with the RSA-OAEP algorithm
 
 Encrypt and decrypt `Bytes` with the RSA-OAEP (Rivest-Shamir-Adleman Optimal Asymmetric 
 Encryption Padding) algorithm. These functions require an RSA-OAEP key pair. You can 
@@ -123,7 +123,7 @@ generate one with the [`generateRsaOaepKeyPair`](#generateRsaOaepKeyPair) functi
 
 @docs RsaOaepDecryptionError, decryptWithRsaOaep
 
-### Encrypt & decrypt with AES-CTR algorithm
+### Encrypt & decrypt with the AES-CTR algorithm
 
 Encrypt and decrypt `Bytes` with the AES-CTR (Advanced Encryption Standard - Counter Mode) 
 algorithm. These functions require an AES-CTR key. You can generate one with the 
@@ -135,7 +135,7 @@ algorithm. These functions require an AES-CTR key. You can generate one with the
 
 @docs AesCtrDecryptionError, decryptWithAesCtr
 
-### Encrypt & decrypt with AES-CBC algorithm
+### Encrypt & decrypt with the AES-CBC algorithm
 
 Encrypt and decrypt `Bytes` with the AES-CBC (Advanced Encryption Standard - Cipher Block 
 Chaining) algorithm. These functions require an AES-CBC key. You can generate one with the 
@@ -147,7 +147,7 @@ Chaining) algorithm. These functions require an AES-CBC key. You can generate on
 
 @docs AesCbcDecryptionError, decryptWithAesCbc
 
-### Encrypt & decrypt with AES-GCM algorithm
+### Encrypt & decrypt with the AES-GCM algorithm
 
 Encrypt and decrypt `Bytes` with the AES-GCM (Advanced Encryption Standard - Galois/Counter Mode)
 algorithm. These functions require an AES-GCM key. You can generate one with the 
@@ -168,19 +168,29 @@ learn more about key generation in the "Key Generation" section of this module.
 
 ### Sign & verify with the RSASSA-PKCS1-v1_5 algorithm
 
-Sign and verify some `Bytes` with the RSASSA-PKCS1-v1_5 (RSA Signature Scheme with Appendix ...) algorithm. 
-These functions require an RSASSA-PKCS1-v1_5 key. You can generate one with the 
-[`generateRsaSsaPkcs1V1_5KeyPair`](#generateRsaSsaPkcs1V1_5KeyPair) function.
+Sign and verify some `Bytes` with the RSASSA-PKCS1-v1_5 (Rivest, Shamir, and Adleman Signature Scheme 
+with Appendix ...) algorithm. These functions require an RSASSA-PKCS1-v1_5 key. You can generate one 
+with the [`generateRsaSsaPkcs1V1_5KeyPair`](#generateRsaSsaPkcs1V1_5KeyPair) function.
 
-@docs SignWithRsaSsaPkcs1V1_5Error, signWithRsaSsaPkcs1V1_5
+@docs RsaSsaPkcs1V1_5SigningError, signWithRsaSsaPkcs1V1_5
 
 @docs verifyWithRsaSsaPkcs1V1_5
 
 ### Sign & verify with the RSA-PSS algorithm
 
-@docs SignWithRsaPssError, signWithRsaPss, verifyWithRsaPss
+Sign and verify some `Bytes` with the RSA-PSS (Rivest, Shamir, and Adleman - Probabilistic Signature 
+Scheme) algorithm. These functions require an RSA-PSS key. You can generate one with the 
+[`generateRsaPssKeyPair`](#generateRsaPssKeyPair) function.
+
+@docs RsaPssSigningError, signWithRsaPss
+
+@docs verifyWithRsaPss
 
 ### Sign & verify with the ECDSA algorithm
+
+Sign and verify some `Bytes` with the ECDSA (Elliptic Curve Digital Signature Algorithm) algorithm. 
+These functions require an RSA-PSS key. You can generate one with the
+[`generateEcdsaKeyPair`](#generateEcdsaKeyPair) function.
 
 @docs signWithEcdsa, verifyWithEcdsa
 
@@ -1881,35 +1891,40 @@ type alias Signature
 This error should only appear if there are problems in kernel code. If you run into it, please 
 file a ticket!
 -}
-type SignWithRsaSsaPkcs1V1_5Error
-    = SignWithRsaSsaPkcs1V1_5Error
+type RsaSsaPkcs1V1_5SigningError
+    = RsaSsaPkcs1V1_5SigningError
 
 
 {-| Sign some `Bytes` with the RSA-SSAPKCS1v1.5 algorithm. This produces a `Signature` (which 
 is just some `Bytes`). The `Signature` can be used with the cooresponding verification function 
 to verify that the passed `Bytes` were signed with the passed key.
 -}
-signWithRsaSsaPkcs1V1_5 : SecureContext -> PrivateKey RsaSsaPkcs1V1_5Key RsaKeyParams -> Bytes -> Task SignWithRsaSsaPkcs1V1_5Error Signature
+signWithRsaSsaPkcs1V1_5 : SecureContext -> PrivateKey RsaSsaPkcs1V1_5Key RsaKeyParams -> Bytes -> Task RsaSsaPkcs1V1_5SigningError Signature
 signWithRsaSsaPkcs1V1_5 _context (PrivateKey (Key key _)) bytes =
     Gren.Kernel.Crypto.signWithRsaSsaPkcs1V1_5 
         key 
         bytes
 
 
-{-| An error that can appear when signing using the RSA-PSS algorithm.
+{-| Errors that can happen when signing using the [`signWithRsaPss`](#signWithRsaPss) function. There are 
+a few cases where this function can fail:
+
+- If the passed `salt` as part of the `RsaPssParams` is not equal to or less than the amount of bytes of 
+the `DigestAlgorithm` that was used to generate the key. For example, if  the `RsaPssKey` was generated 
+with SHA-256, the maximum number for the `salt` value must be 32 or less. This is captured by
+`RsaPssSigningErrorInvalidSalt`.
+- Any unknown or unexpected errors are captured with `RsaPssSigningError`.
 -}
-type SignWithRsaPssError
-    = SignWithRsaPssError
+type RsaPssSigningError
+    = RsaPssSigningErrorInvalidSalt
+    | RsaPssSigningError
 
 
-{-| Sign some `Bytes` with the RSA-PSS algorithm.
-
-When run, the returned `Task` can fail if the passed `salt` is not equal to or less then the
-amount of bytes than the `DigestAlgorithm` that was used to generate the key. For example, if 
-the `RsaPssKey` was generated with SHA-256, the maximum number for the `salt` value must be 
-32 or less.
+{-| Sign some `Bytes` with the RSA-PSS algorithm. This produces a `Signature` (which 
+is just some `Bytes`). The `Signature` can be used with the cooresponding verification function 
+to verify that the passed `Bytes` were signed with the passed key.
 -}
-signWithRsaPss : SecureContext -> Int -> PrivateKey RsaPssKey RsaKeyParams -> Bytes -> Task SignWithRsaPssError Signature
+signWithRsaPss : SecureContext -> Int -> PrivateKey RsaPssKey RsaKeyParams -> Bytes -> Task RsaPssSigningError Signature
 signWithRsaPss _context salt (PrivateKey (Key key { modulusLength, hash, extractable })) bytes =
     let
         clampedSaltBytes =
@@ -1930,7 +1945,7 @@ signWithRsaPss _context salt (PrivateKey (Key key { modulusLength, hash, extract
                     64
     in
     if clampedSaltBytes > maxSalt then
-        Task.fail SignWithRsaPssError
+        Task.fail RsaPssSigningErrorInvalidSalt
 
     else
         Gren.Kernel.Crypto.signWithRsaPss 
@@ -1939,8 +1954,13 @@ signWithRsaPss _context salt (PrivateKey (Key key { modulusLength, hash, extract
             bytes
 
 
-{-|-}
-signWithEcdsa : SecureContext -> DigestAlgorithm -> PrivateKey EcdsaKey EcKeyParams -> Bytes -> Task {} Signature
+{-| Sign some `Bytes` with the ECDSA algorithm. This produces a `Signature` (which 
+is just some `Bytes`). The `Signature` can be used with the cooresponding verification function 
+to verify that the passed `Bytes` were signed with the passed key.
+
+The returned `Task` should not fail. If it does, please file a ticket!
+-}
+signWithEcdsa : SecureContext -> DigestAlgorithm -> PrivateKey EcdsaKey EcKeyParams -> Bytes -> Task x Signature
 signWithEcdsa _context hash (PrivateKey (Key key _)) bytes =
     Gren.Kernel.Crypto.signWithEcdsa
         (digestAlgorithmToString hash)
@@ -1948,8 +1968,13 @@ signWithEcdsa _context hash (PrivateKey (Key key _)) bytes =
         bytes
 
 
-{-|-}
-signWithHmac : SecureContext -> Key HmacKey HmacKeyParams -> Bytes -> Task {} Signature
+{-| Sign some `Bytes` with the HMAC algorithm. This produces a `Signature` (which 
+is just some `Bytes`). The `Signature` can be used with the cooresponding verification function 
+to verify that the passed `Bytes` were signed with the passed key.
+
+The returned `Task` should not fail. If it does, please file a ticket!
+-}
+signWithHmac : SecureContext -> Key HmacKey HmacKeyParams -> Bytes -> Task x Signature
 signWithHmac _context (Key key _) bytes =
     Gren.Kernel.Crypto.signWithHmac 
         key 
@@ -1964,9 +1989,7 @@ signWithHmac _context (Key key _) bytes =
 RSA-SSAPKCS1v1.5 algorithm.
 
 This function produces no values. Instead, the `Task` succeeds if the passed 
-signature `Bytes` were created with the same key passed to this verification 
-function. If that's not the case, or if there's an unforseen error, the `Task` 
-fails.
+signature is valid and fails otherwise.
 -}
 verifyWithRsaSsaPkcs1V1_5 : SecureContext -> PublicKey RsaSsaPkcs1V1_5Key RsaKeyParams -> Signature -> Bytes -> Task x a
 verifyWithRsaSsaPkcs1V1_5 _context (PublicKey (Key key _)) signature bytes =
@@ -1976,8 +1999,13 @@ verifyWithRsaSsaPkcs1V1_5 _context (PublicKey (Key key _)) signature bytes =
         bytes
 
 
-{-|-}
-verifyWithRsaPss : SecureContext -> Int -> PublicKey RsaPssKey RsaKeyParams -> Signature -> Bytes -> Task {} Bytes
+{-| Verify that some `Bytes` were signed with the passed `Signature` with the 
+RSA-PSS algorithm.
+
+This function produces no values. Instead, the `Task` succeeds if the passed 
+signature is valid and fails otherwise.
+-}
+verifyWithRsaPss : SecureContext -> Int -> PublicKey RsaPssKey RsaKeyParams -> Signature -> Bytes -> Task x a
 verifyWithRsaPss _context salt (PublicKey (Key key _)) signature bytes =
     Gren.Kernel.Crypto.verifyWithRsaPss
         salt
@@ -1986,8 +2014,13 @@ verifyWithRsaPss _context salt (PublicKey (Key key _)) signature bytes =
         bytes
 
 
-{-|-}
-verifyWithEcdsa : SecureContext -> DigestAlgorithm -> PublicKey EcdsaKey EcKeyParams -> Signature -> Bytes -> Task {} Bytes
+{-| Verify that some `Bytes` were signed with the passed `Signature` with the 
+ECDSA algorithm.
+
+This function produces no values. Instead, the `Task` succeeds if the passed 
+signature is valid and fails otherwise.
+-}
+verifyWithEcdsa : SecureContext -> DigestAlgorithm -> PublicKey EcdsaKey EcKeyParams -> Signature -> Bytes -> Task x a
 verifyWithEcdsa _context hash (PublicKey (Key key _)) signature bytes =
     Gren.Kernel.Crypto.verifyWithEcdsa
         (digestAlgorithmToString hash)
@@ -1996,8 +2029,13 @@ verifyWithEcdsa _context hash (PublicKey (Key key _)) signature bytes =
         bytes
 
 
-{-|-}
-verifyWithHmac : SecureContext -> Key HmacKey HmacKeyParams -> Signature -> Bytes -> Task {} Bytes
+{-| Verify that some `Bytes` were signed with the passed `Signature` with the 
+HMAC algorithm.
+
+This function produces no values. Instead, the `Task` succeeds if the passed 
+signature is valid and fails otherwise.
+-}
+verifyWithHmac : SecureContext -> Key HmacKey HmacKeyParams -> Signature -> Bytes -> Task x a
 verifyWithHmac _context (Key key _) signature bytes =
     Gren.Kernel.Crypto.verifyWithHmac
         key
