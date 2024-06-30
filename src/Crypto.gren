@@ -135,8 +135,14 @@ algorithm. These functions require an AES-CTR key. You can generate one with the
 
 ### Encrypt & decrypt with AES-CBC algorithm
 
+Encrypt and decrypt `Bytes` with the AES-CBC (Advanced Encryption Standard - Cipher Block 
+Chaining) algorithm. These functions require an AES-CBC key. You can generate one with the 
+[`generateAesCbcKey`](#generateAesCbcKey) function.
+
 @docs AesCbcParams
+
 @docs AesCbcEncryptionError, encryptWithAesCbc
+
 @docs AesCbcDecryptionError, decryptWithAesCbc
 
 ### Encrypt & decrypt with AES-GCM algorithm
@@ -1555,13 +1561,19 @@ type AesCbcEncryptionError =
     AesCbcEncryptionError
 
 
-{-|-}
+{-| Required paramaters to encrypt and decrypt values with the AES-CBC algorithm.
+
+- `iv` should be exactly 16 bytes. These bytes should be random, but do not need to
+be secret.
+-}
 type alias AesCbcParams =
     { iv : Bytes
     }
 
 
-{-|-}
+{-| Encrypt some Bytes with a `Key AesCbcKey`. You can generate the apporpriate key 
+with the [`generateAesCbcKey`](#generateAesCbcKey) function.
+-}
 encryptWithAesCbc : SecureContext -> AesCbcParams -> Key AesCbcKey AesKeyParams -> Bytes -> Task AesCbcEncryptionError Bytes
 encryptWithAesCbc _context { iv } (Key key _) bytes =
     if Bytes.width iv == 16 then
