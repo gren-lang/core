@@ -10,7 +10,7 @@ module Crypto exposing
     , RsaOaepKey, RsaPssKey, RsaSsaPkcs1V1_5Key, RsaKeyParams, RsaKeyGenerationError(..)
     , generateRsaOaepKeyPair, generateRsaPssKeyPair, generateRsaSsaPkcs1V1_5KeyPair
     , AesLength(..)
-    , RsaOaepParams, EncryptWithRsaOaepError(..)
+    , RsaOaepParams, RsaOaepEncryptionError(..)
     , generateAesCtrKey, generateAesCbcKey, generateAesGcmKey
     , EcNamedCurve(..)
     , generateEcdsaKeyPair, generateEcdhKeyPair
@@ -50,9 +50,9 @@ module Crypto exposing
     , ImportHmacKeyError(..)
     , importHmacKeyFromJwk, importHmacKeyFromRaw
     , DigestAlgorithm(..), digest
-    , DecryptWithRsaOaepError(..)
+    , RsaOaepDecryptionError(..)
     , encryptWithRsaOaep, decryptWithRsaOaep
-    , AesCtrParams, AesCtrEncryptError(..), AesCtrDecryptError(..)
+    , AesCtrParams, AesCtrEncryptionError(..), AesCtrDecryptError(..)
     , encryptWithAesCtr, decryptWithAesCtr
     , AesCbcParams, AesCbcEncryptionError(..), AesCbcDecryptionError(..)
     , encryptWithAesCbc, decryptWithAesCbc
@@ -117,14 +117,20 @@ generate one with the [`generateRsaOaepKeyPair`](#generateRsaOaepKeyPair) functi
 
 @docs RsaOaepParams
 
-@docs EncryptWithRsaOaepError, encryptWithRsaOaep
+@docs RsaOaepEncryptionError, encryptWithRsaOaep
 
-@docs DecryptWithRsaOaepError, decryptWithRsaOaep
+@docs RsaOaepDecryptionError, decryptWithRsaOaep
 
 ### Encrypt & decrypt with AES-CTR algorithm
 
+Encrypt and decrypt `Bytes` with the AES-CTR (Advanced Encryption Standard - Counter Mode) 
+algorithm. These functions require an AES-CTR key. You can generate one with the 
+[`generateAesCtrKey`](#generateAesCtrKey) function.
+
 @docs AesCtrParams
-@docs AesCtrEncryptError, encryptWithAesCtr
+
+@docs AesCtrEncryptionError, encryptWithAesCtr
+
 @docs AesCtrDecryptError, decryptWithAesCtr
 
 ### Encrypt & decrypt with AES-CBC algorithm
@@ -1474,20 +1480,20 @@ type alias RsaOaepParams =
     }
 
 
-{-| Errors that can happen when encrypting using the [`encryptWithRsaOaep`](encryptWithRsaOaep) 
+{-| Errors that can happen when encrypting using the [`encryptWithRsaOaep`](#encryptWithRsaOaep) 
 function.
 
 This error should only appear if there are problems in kernel code. If you run into it, please 
 file a ticket!
 -}
-type EncryptWithRsaOaepError
-    = EncryptWithRsaOaepError
+type RsaOaepEncryptionError
+    = RsaOaepEncryptionError
 
 
 {-| Encrypt some `Bytes` with a `PublicKey RsaOaepKey`. You can generate the apporpriate
 key with the [`generateRsaOaepKeyPair`](#generateRsaOaepKeyPair) function.
 -}
-encryptWithRsaOaep : SecureContext -> RsaOaepParams  -> PublicKey RsaOaepKey RsaKeyParams -> Bytes -> Task EncryptWithRsaOaepError Bytes
+encryptWithRsaOaep : SecureContext -> RsaOaepParams  -> PublicKey RsaOaepKey RsaKeyParams -> Bytes -> Task RsaOaepEncryptionError Bytes
 encryptWithRsaOaep _context { label } (PublicKey (Key key _)) bytes =
     case label of
         Nothing ->
@@ -1503,16 +1509,22 @@ encryptWithRsaOaep _context { label } (PublicKey (Key key _)) bytes =
                 bytes
 
 
-{-|-}
-type AesCtrEncryptError =
-    AesCtrEncryptError
+{-| Errors that can happen when encrypting using the [`encryptWithAesCtr`](#encryptWithAesCtr) 
+function.
+
+Any unknown or unexpected errors are captured with `AesCtrEncryptionError`. The `AesCtrEncryptionErrorCounterTooLong`
+variant comes up when the 
+-}
+type AesCtrEncryptionError 
+    = AesCtrEncryptionErrorCounterTooLong
+    | AesCtrEncryptionError
 
 
-{-| Required paramaters (along with a key) to encrypy and decrypt values with 
-the AES-CTR algorithm.
+{-| Required paramaters to encrypt and decrypt values with the AES-CTR algorithm.
 
-`length` must be between 1 and 128 (it's clamped)
-`counter` must be exactly 16 bytes
+- `counter` must be exactly 16 `Bytes`, or else encryption and decryption will fail.
+- `length` must be between 1 and 128. If provided an `Int` that is below or above that
+range, it will be clamped to prevent the operation from failing.
 -}
 type alias AesCtrParams =
     { counter : Bytes
@@ -1520,9 +1532,10 @@ type alias AesCtrParams =
     }
 
 
-{-| Encrypt some values using a AES-CTR key.
+{-| Encrypt some Bytes with a `Key AesCtrKey`. You can generate the apporpriate key 
+with the [`generateAesCtrKey`](#generateAesCtrKey) function.
 -}
-encryptWithAesCtr : SecureContext -> AesCtrParams -> Key AesCtrKey AesKeyParams -> Bytes -> Task AesCtrEncryptError Bytes
+encryptWithAesCtr : SecureContext -> AesCtrParams -> Key AesCtrKey AesKeyParams -> Bytes -> Task AesCtrEncryptionError Bytes
 encryptWithAesCtr _context { counter, length } (Key key _) bytes =
     -- The counter must be exactly 16 bytes long
     if Bytes.width counter == 16 then
@@ -1533,7 +1546,7 @@ encryptWithAesCtr _context { counter, length } (Key key _) bytes =
             bytes
 
     else
-        Task.fail AesCtrEncryptError
+        Task.fail AesCtrEncryptionErrorCounterTooLong
 
 
 {-|-}
@@ -1638,14 +1651,14 @@ There are two cases where the functionc can fail:
 - The `label` used to encrypt the data does not match the label used when decrypting the data
 - The decryption algorithm fails due to the passed `Bytes` not being suitable for decryption (for whatever reason)
 -}
-type DecryptWithRsaOaepError =
-    DecryptWithRsaOaepError
+type RsaOaepDecryptionError =
+    RsaOaepDecryptionError
 
 
 {-| Decrypt some `Bytes` with a `PrivateKey RsaOaepKey`. You can generate the apporpriate key with the 
 [`generateRsaOaepKeyPair`](#generateRsaOaepKeyPair) function.
 -}
-decryptWithRsaOaep : SecureContext -> RsaOaepParams -> PrivateKey RsaOaepKey RsaKeyParams -> Bytes -> Task DecryptWithRsaOaepError Bytes
+decryptWithRsaOaep : SecureContext -> RsaOaepParams -> PrivateKey RsaOaepKey RsaKeyParams -> Bytes -> Task RsaOaepDecryptionError Bytes
 decryptWithRsaOaep _context { label } (PrivateKey (Key privateKey _)) bytes =
     case label of
         Nothing ->

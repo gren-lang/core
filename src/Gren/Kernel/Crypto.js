@@ -2,7 +2,7 @@
 
 import Gren.Kernel.Scheduler exposing (binding, succeed, fail)
 import Gren.Kernel.Bytes exposing (writeBytes)
-import Crypto exposing (EncryptWithRsaOaepError, P256, P384, P521, AesLength128, AesLength192, AesLength256, CanBeExtracted, CannotBeExtracted, HmacKey, Sha256, Sha384, Sha512, SignWithRsaPssError, AesGcmDecryptionError, AesGcmEncryptionError, AesCbcDecryptionError, AesCbcEncryptionError, AesCtrDecryptError, AesCtrEncryptError, DecryptWithRsaOaepError, ImportRsaKeyError, ImportHmacKeyError, ImportEcKeyError, ImportAesKeyError, Key, SecureContext, PublicKey, PrivateKey)
+import Crypto exposing (AesCtrEncryptionError, RsaOaepEncryptionError, P256, P384, P521, AesLength128, AesLength192, AesLength256, CanBeExtracted, CannotBeExtracted, HmacKey, Sha256, Sha384, Sha512, SignWithRsaPssError, AesGcmDecryptionError, AesGcmEncryptionError, AesCbcDecryptionError, AesCbcEncryptionError, AesCtrDecryptError, AesCtrEncryptError, DecryptWithRsaOaepError, ImportRsaKeyError, ImportHmacKeyError, ImportEcKeyError, ImportAesKeyError, Key, SecureContext, PublicKey, PrivateKey)
 import Maybe exposing (Just, Nothing)
 import Bytes exposing (Bytes)
 
@@ -177,6 +177,9 @@ var _Crypto_generateAesKey = F4(function (name, length, extractable, permissions
             .generateKey(algorithm, extractable, permissions)
             .then(function (key) {
                 return callback(__Scheduler_succeed(_Crypto_constructAesKey(key)))
+            })
+            .catch(function (err) {
+                return callback(__Scheduler_fail(__Crypto_AesCtrEncryptionError))
             });
     });
 });
@@ -357,7 +360,7 @@ var _Crypto_encryptWithRsaOaep = F3(function (label, key, bytes) {
                 return callback(__Scheduler_succeed(new DataView(res)));
             })
             .catch(function (err) {
-                return callback(__Scheduler_fail(__Crypto_EncryptWithRsaOaepError))
+                return callback(__Scheduler_fail(__Crypto_RsaOaepEncryptionError))
             });
     });
 });
