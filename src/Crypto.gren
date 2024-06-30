@@ -10,6 +10,7 @@ module Crypto exposing
     , RsaOaepKey, RsaPssKey, RsaSsaPkcs1V1_5Key, RsaKeyParams, RsaKeyGenerationError(..)
     , generateRsaOaepKeyPair, generateRsaPssKeyPair, generateRsaSsaPkcs1V1_5KeyPair
     , AesLength(..)
+    , RsaOaepParams, EncryptWithRsaOaepError(..)
     , generateAesCtrKey, generateAesCbcKey, generateAesGcmKey
     , EcNamedCurve(..)
     , generateEcdsaKeyPair, generateEcdhKeyPair
@@ -110,7 +111,13 @@ this module.
 
 ### Encrypt & decrypt with RSA-OAEP algorithm
 
-@docs encryptWithRsaOaep
+Encrypt and decrypt `Bytes` with the RSA-OAEP (Rivest-Shamir-Adleman Optimal Asymmetric 
+Encryption Padding) algorithm. These functions require an RSA-OAEP key pair. You can 
+generate one with the [`generateRsaOaepKeyPair`](#generateRsaOaepKeyPair) function.
+
+@docs RsaOaepParams
+
+@docs EncryptWithRsaOaepError, encryptWithRsaOaep
 
 @docs DecryptWithRsaOaepError, decryptWithRsaOaep
 
@@ -1458,22 +1465,40 @@ importHmacKeyFromRaw _context bytes hash passedLength extractable =
 -- ENCRYPT
 
 
-{-| Encrypt some values with a `PublicKey RsaOaepKey`. The optional `label` parameter is ...
-
-This operation should always succeed.
+{-| The parameters needs to encrypt or decrypt with the RSA-OAEP algorithm. There's only
+one parameter: a `label` consisting of some `Bytes`. The label is completely optional and 
+passing `Nothing` will not make the operation less secure.
 -}
-encryptWithRsaOaep : SecureContext -> Maybe Bytes -> PublicKey RsaOaepKey RsaKeyParams -> Bytes -> Task {} Bytes
-encryptWithRsaOaep _context passedLabel (PublicKey (Key key _)) bytes =
-    case passedLabel of
+type alias RsaOaepParams =
+    { label : Maybe Bytes
+    }
+
+
+{-| Errors that can happen when encrypting using the [`encryptWithRsaOaep`](encryptWithRsaOaep) 
+function.
+
+This error should only appear if there are problems in kernel code. If you run into it, please 
+file a ticket!
+-}
+type EncryptWithRsaOaepError
+    = EncryptWithRsaOaepError
+
+
+{-| Encrypt some `Bytes` with a `PublicKey RsaOaepKey`. You can generate the apporpriate
+key with the [`generateRsaOaepKeyPair`](#generateRsaOaepKeyPair) function.
+-}
+encryptWithRsaOaep : SecureContext -> RsaOaepParams  -> PublicKey RsaOaepKey RsaKeyParams -> Bytes -> Task EncryptWithRsaOaepError Bytes
+encryptWithRsaOaep _context { label } (PublicKey (Key key _)) bytes =
+    case label of
         Nothing ->
             Gren.Kernel.Crypto.encryptWithRsaOaep
                 ""
                 key
                 bytes
         
-        Just label ->
+        Just actualLabel ->
             Gren.Kernel.Crypto.encryptWithRsaOaep
-                label
+                actualLabel
                 key
                 bytes
 
@@ -1607,28 +1632,31 @@ encryptWithAesGcm _context { iv, additionalData, tagLength } (Key key _) bytes =
 -- DECRYPT
 
 
-{-|-}
+{-| Errors that can happen when decrypting `Bytes` using the [`decryptWithRsaOaep`](#decryptWithRsaOaep) function.
+There are two cases where the functionc can fail:
+
+- The `label` used to encrypt the data does not match the label used when decrypting the data
+- The decryption algorithm fails due to the passed `Bytes` not being suitable for decryption (for whatever reason)
+-}
 type DecryptWithRsaOaepError =
     DecryptWithRsaOaepError
 
 
-{-| Decryption can fail when either:
-
-- The label used to encrypt the data does not match the label used when encryption the data
-- The passed `Bytes`, for whatever reason, cannot be decrypted
+{-| Decrypt some `Bytes` with a `PrivateKey RsaOaepKey`. You can generate the apporpriate key with the 
+[`generateRsaOaepKeyPair`](#generateRsaOaepKeyPair) function.
 -}
-decryptWithRsaOaep : Maybe Bytes -> PrivateKey RsaOaepKey RsaKeyParams -> Bytes -> Task DecryptWithRsaOaepError Bytes
-decryptWithRsaOaep passedLabel (PrivateKey (Key privateKey _)) bytes =
-    case passedLabel of
+decryptWithRsaOaep : SecureContext -> RsaOaepParams -> PrivateKey RsaOaepKey RsaKeyParams -> Bytes -> Task DecryptWithRsaOaepError Bytes
+decryptWithRsaOaep _context { label } (PrivateKey (Key privateKey _)) bytes =
+    case label of
         Nothing ->
             Gren.Kernel.Crypto.decryptWithRsaOaep
                 ""
                 privateKey
                 bytes
         
-        Just label ->
+        Just actualLabel ->
             Gren.Kernel.Crypto.decryptWithRsaOaep
-                label
+                actualLabel
                 privateKey
                 bytes
 
@@ -1639,8 +1667,8 @@ type AesCtrDecryptError =
 
 
 {-|-}
-decryptWithAesCtr : AesCtrParams -> Key AesCtrKey AesKeyParams -> Bytes -> Task AesCtrDecryptError Bytes
-decryptWithAesCtr { counter, length } (Key key _) bytes =
+decryptWithAesCtr : SecureContext -> AesCtrParams -> Key AesCtrKey AesKeyParams -> Bytes -> Task AesCtrDecryptError Bytes
+decryptWithAesCtr _context { counter, length } (Key key _) bytes =
     if Bytes.width counter == 16 then
         Gren.Kernel.Crypto.decryptWithAesCtr
             counter
