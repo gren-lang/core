@@ -147,8 +147,14 @@ Chaining) algorithm. These functions require an AES-CBC key. You can generate on
 
 ### Encrypt & decrypt with AES-GCM algorithm
 
+Encrypt and decrypt `Bytes` with the AES-GCM (Advanced Encryption Standard - Galois/Counter Mode)
+algorithm. These functions require an AES-GCM key. You can generate one with the 
+[`generateAesGcmKey`](#generateAesGcmKey) function.
+
 @docs AesGcmParams, AesGcmTagLength
+
 @docs AesGcmEncryptionError, encryptWithAesGcm
+
 @docs AesGcmDecryptionError, decryptWithAesGcm
 
 ## Signing & Verifying
@@ -1605,7 +1611,17 @@ type AesGcmTagLength
     | AesGcmTagLength128
 
 
-{-|-}
+{-| Required paramaters to encrypt and decrypt values with the AES-GCM algorithm.
+
+- `iv` needs to be be greater than 12 bytes, but less than 128 bytes. The recommended 
+length is 96 bytes.
+- `additionalData` is completely optional data that is not encrypted, but will be
+a part of the completed, encrypted, `Bytes`. If provided when encrypting data, the
+same value must be provided when decrypting it or else the operation will fail.
+- `tagLength` is optional and defaults to `AesTagLength128`, which is recommended.
+You can find more information about this on the 
+[Web Crypto API docs](https://developer.mozilla.org/en-US/docs/Web/API/AesGcmParams#taglength).
+-}
 type alias AesGcmParams =
     { iv : Bytes
     , additionalData : Maybe Bytes
@@ -1613,12 +1629,21 @@ type alias AesGcmParams =
     }
 
 
-{-|-}
-type AesGcmEncryptionError =
-    AesGcmEncryptionError
+{-| Errors that can happen when encrypting `Bytes` using the [`encryptWithAesGcm`](#encryptWithAesGcm)
+function. There are a few cases where this function can fail:
+
+- When the passed `iv` in `AesGcmParams` is longer or shorter than required. This is captured by 
+`AesGcmEncryptionErrorInvalidIvByteLegth`.
+- Any unknown or unexpected errors are captured with `AesCtrEncryptionError`.
+-}
+type AesGcmEncryptionError 
+    = AesGcmEncryptionErrorInvalidIvByteLegth
+    | AesGcmEncryptionError
 
 
-{-|-}
+{-| Encrypt some `Bytes` with a `Key AesGcmKey`. You can generate the apporpriate
+key with the [`generateAesGcmKey`](#generateAesGcmKey) function.
+-}
 encryptWithAesGcm : SecureContext -> AesGcmParams -> Key AesGcmKey AesKeyParams -> Bytes -> Task AesGcmEncryptionError Bytes
 encryptWithAesGcm _context { iv, additionalData, tagLength } (Key key _) bytes =
     let
@@ -1660,7 +1685,7 @@ encryptWithAesGcm _context { iv, additionalData, tagLength } (Key key _) bytes =
                     bytes
 
     else
-        Task.fail AesGcmEncryptionError
+        Task.fail AesGcmEncryptionErrorInvalidIvByteLegth
 
 
 
@@ -1756,12 +1781,25 @@ decryptWithAesCbc _context { iv } (Key key _) bytes =
         Task.fail AesCtrDecryptionErrorIvTooLong
 
 
-{-|-}
-type AesGcmDecryptionError =
-    AesGcmDecryptionError
+{-| Errors that can happen when decrypting `Bytes` using the [`decryptWithAesGcm`](#decryptWithAesGcm)
+function. There are a few cases where this function can fail:
+
+- The passed `Bytes` are unable to be decrypted for whatever reason. This is captured by 
+`AesGcmDecryptionError`.
+- When the passed `iv` in `AesGcmParams` is longer or shorter than required. This is captured by 
+`AesGcmDecryptionErrorInvalidIvByteLegth`.
+- If the passed `iv` for encrypting the data does not match the `iv` being used to decrypt the data.
+This is captured with `AesCtrDecryptionError`.
+- Any unknown or unexpected errors are captured with `AesCtrDecryptionError`.
+-}
+type AesGcmDecryptionError 
+    = AesGcmDecryptionErrorInvalidIvByteLegth
+    | AesGcmDecryptionError
 
 
-{-|-}
+{-| Decrypt some `Bytes` with a `Key AesGcmKey`. You can generate the apporpriate
+key with the [`generateAesGcmKey`](#generateAesGcmKey) function.
+-}
 decryptWithAesGcm : SecureContext -> AesGcmParams -> Key AesGcmKey AesKeyParams -> Bytes -> Task AesGcmDecryptionError Bytes
 decryptWithAesGcm _context { iv, additionalData, tagLength } (Key key _) bytes =
     let
