@@ -52,7 +52,7 @@ module Crypto exposing
     , DigestAlgorithm(..), digest
     , RsaOaepDecryptionError(..)
     , encryptWithRsaOaep, decryptWithRsaOaep
-    , AesCtrParams, AesCtrEncryptionError(..), AesCtrDecryptError(..)
+    , AesCtrParams, AesCtrEncryptionError(..), AesCtrDecryptionError(..)
     , encryptWithAesCtr, decryptWithAesCtr
     , AesCbcParams, AesCbcEncryptionError(..), AesCbcDecryptionError(..)
     , encryptWithAesCbc, decryptWithAesCbc
@@ -131,7 +131,7 @@ algorithm. These functions require an AES-CTR key. You can generate one with the
 
 @docs AesCtrEncryptionError, encryptWithAesCtr
 
-@docs AesCtrDecryptError, decryptWithAesCtr
+@docs AesCtrDecryptionError, decryptWithAesCtr
 
 ### Encrypt & decrypt with AES-CBC algorithm
 
@@ -1510,19 +1510,20 @@ encryptWithRsaOaep _context { label } (PublicKey (Key key _)) bytes =
 
 
 {-| Errors that can happen when encrypting using the [`encryptWithAesCtr`](#encryptWithAesCtr) 
-function.
+function. There are two cases where this function can fail:
 
-Any unknown or unexpected errors are captured with `AesCtrEncryptionError`. The `AesCtrEncryptionErrorCounterTooLong`
-variant comes up when the 
+- When the passed `counter` in `AesCtrParams` is greater or less than than the required 16 bytes.
+This is captured by `AesCtrEncryptionErrorCounterTooLong`.
+- Any unknown or unexpected errors are captured with `AesCtrEncryptionError`.
 -}
 type AesCtrEncryptionError 
-    = AesCtrEncryptionErrorCounterTooLong
-    | AesCtrEncryptionError
+    = AesCtrEncryptionError
+    | AesCtrEncryptionErrorCounterTooLong
 
 
 {-| Required paramaters to encrypt and decrypt values with the AES-CTR algorithm.
 
-- `counter` must be exactly 16 `Bytes`, or else encryption and decryption will fail.
+- `counter` must be exactly 16 bytes, or else encryption and decryption will fail.
 - `length` must be between 1 and 128. If provided an `Int` that is below or above that
 range, it will be clamped to prevent the operation from failing.
 -}
@@ -1646,7 +1647,7 @@ encryptWithAesGcm _context { iv, additionalData, tagLength } (Key key _) bytes =
 
 
 {-| Errors that can happen when decrypting `Bytes` using the [`decryptWithRsaOaep`](#decryptWithRsaOaep) function.
-There are two cases where the functionc can fail:
+There are two cases where the function can fail:
 
 - The `label` used to encrypt the data does not match the label used when decrypting the data
 - The decryption algorithm fails due to the passed `Bytes` not being suitable for decryption (for whatever reason)
@@ -1674,13 +1675,23 @@ decryptWithRsaOaep _context { label } (PrivateKey (Key privateKey _)) bytes =
                 bytes
 
 
-{-|-}
-type AesCtrDecryptError =
-    AesCtrDecryptError
+{-| Errors that can happen when decrypting `Bytes` using the [`decryptWithAesCtr`](#decryptWithAesCtr) function.
+There are a few cases where this function can fail:
+
+- The passed `Bytes` are unable to be decrypted for whatever reason. This is captured by `AesCtrDecryptionError`.
+- When the passed `counter` in `AesCtrParams` is greater or less than than the required 16 bytes. This is captured
+by `AesCtrDecryptionErrorCounterTooLong`
+- Any unknown or unexpected errors are captured by `AesCtrDecryptionError`.
+-}
+type AesCtrDecryptionError 
+    = AesCtrDecryptionError
+    | AesCtrDecryptionErrorCounterTooLong
 
 
-{-|-}
-decryptWithAesCtr : SecureContext -> AesCtrParams -> Key AesCtrKey AesKeyParams -> Bytes -> Task AesCtrDecryptError Bytes
+{-| Decrypt some Bytes with a `Key AesCtrKey`. You can generate the apporpriate key 
+with the [`generateAesCtrKey`](#generateAesCtrKey) function.
+-}
+decryptWithAesCtr : SecureContext -> AesCtrParams -> Key AesCtrKey AesKeyParams -> Bytes -> Task AesCtrDecryptionError Bytes
 decryptWithAesCtr _context { counter, length } (Key key _) bytes =
     if Bytes.width counter == 16 then
         Gren.Kernel.Crypto.decryptWithAesCtr
@@ -1690,7 +1701,7 @@ decryptWithAesCtr _context { counter, length } (Key key _) bytes =
             bytes
 
     else
-        Task.fail AesCtrDecryptError
+        Task.fail AesCtrDecryptionErrorCounterTooLong
 
 
 {-|-}
