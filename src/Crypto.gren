@@ -464,8 +464,8 @@ type RsaOaepKey
 {-| A key generated for use with the RSA-PSS algorithm. Used to sign and verify 
 values.
 -}
-type RsaPssKey =
-    RsaPssKey
+type RsaPssKey 
+    = RsaPssKey
 
 
 {-| A key generated for use with the RSASSA-PKCS1-v1_5 algorithm. Used to sign 
@@ -1556,9 +1556,18 @@ encryptWithAesCtr _context { counter, length } (Key key _) bytes =
         Task.fail AesCtrEncryptionErrorCounterTooLong
 
 
-{-|-}
-type AesCbcEncryptionError =
-    AesCbcEncryptionError
+{-| Errors that can happen when encrypting `Bytes` using the [`encryptWithAesCbc`](#encryptWithAesCbc)
+function. There are a few cases where this function can fail:
+
+- The passed `Bytes` are unable to be decrypted for whatever reason. This is captured by 
+`AesCbcDecryptionError`.
+- When the passed `iv` in `AesCtrParams` is greater or less than than the required 16 bytes. 
+This is captured by `AesCbcEncryptionErrorIvTooLong`
+- Any unknown or unexpected errors are captured by `AesCbcDecryptionError`.
+-}
+type AesCbcEncryptionError 
+    = AesCbcEncryptionErrorIvTooLong
+    | AesCbcEncryptionError
 
 
 {-| Required paramaters to encrypt and decrypt values with the AES-CBC algorithm.
@@ -1583,7 +1592,7 @@ encryptWithAesCbc _context { iv } (Key key _) bytes =
             bytes
 
     else
-        Task.fail AesCbcEncryptionError
+        Task.fail AesCbcEncryptionErrorIvTooLong
 
 
 {-| The set of allowed tag lengths for the AES-GCM algorithm.
@@ -1716,18 +1725,24 @@ decryptWithAesCtr _context { counter, length } (Key key _) bytes =
         Task.fail AesCtrDecryptionErrorCounterTooLong
 
 
-{-|-}
+{-| Errors that can happen when decrypting `Bytes` using the [`decryptWithAesCbc`](#decryptWithAesCbc) 
+function. There are a few cases where this function can fail:
+
+- The passed `Bytes` are unable to be decrypted for whatever reason. This is captured by 
+`AesCbcDecryptionError`.
+- The passed `iv` does not match the `iv` used when the data was encrypted. This is captured by
+`AesCbcDecryptionError`.
+- When the passed `iv` in `AesCbcParams` is greater or less than than the required 16 bytes. This is 
+captured by `AesCtrDecryptionErrorIvTooLong`
+- Any unknown or unexpected errors are captured by `AesCtrDecryptionError`.
+-}
 type AesCbcDecryptionError
-    = AesCbcDecryptionError
+    = AesCtrDecryptionErrorIvTooLong
+    | AesCbcDecryptionError
 
 
-{-| Decrypt some `Bytes` with the AES-CBC algorithm.
-
-Errors can happen when:
-- The passed `iv` value does not equal 16 bytes
-- The passsed `iv` value does not equal the `iv` value that was used to encrypt the passed `Bytes`
-- The passed `Bytes` cannot be decrypted
-
+{-| Decrypt some `Bytes` with a `Key AesCbcKey`. You can generate the apporpriate key with the 
+[`generateAesCbcKey`](#generateAesCbcKey) function.
 -}
 decryptWithAesCbc : SecureContext -> AesCbcParams -> Key AesCbcKey AesKeyParams -> Bytes -> Task AesCbcDecryptionError Bytes
 decryptWithAesCbc _context { iv } (Key key _) bytes = 
@@ -1738,7 +1753,7 @@ decryptWithAesCbc _context { iv } (Key key _) bytes =
             bytes
 
     else
-        Task.fail AesCbcDecryptionError
+        Task.fail AesCtrDecryptionErrorIvTooLong
 
 
 {-|-}
