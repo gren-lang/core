@@ -7,18 +7,20 @@ module Crypto exposing
     , AesKeyParams
     , Key, PublicKey, PrivateKey, KeyPair
     , Extractable(..)
-    , RsaOaepKey, RsaPssKey, RsaSsaPkcs1V1_5Key, RsaKeyParams, RsaKeyGenerationError(..)
+    , RsaKeyGenerationError(..)
     , generateRsaOaepKeyPair, generateRsaPssKeyPair, generateRsaSsaPkcs1V1_5KeyPair
     , AesLength(..)
     , Signature
+    , RsaKeyParams
     , RsaSsaPkcs1V1_5SigningError(..)
     , RsaOaepParams, RsaOaepEncryptionError(..)
     , generateAesCtrKey, generateAesCbcKey, generateAesGcmKey
     , EcNamedCurve(..)
-    , generateEcdsaKeyPair, generateEcdhKeyPair
+    , generateEcdsaKeyPair
     , HmacKeyParams, HmacKeyGenerationError(..)
     , generateHmacKey
     , ExportKeyError(..)
+    , EcKeyParams
     , exportRsaOaepPublicKeyAsSpki, exportRsaOaepPublicKeyAsJwk
     , exportRsaOaepPrivateKeyAsPkcs8, exportRsaOaepPrivateKeyAsJwk
     , exportRsaPssPublicKeyAsSpki, exportRsaPssPublicKeyAsJwk
@@ -30,8 +32,6 @@ module Crypto exposing
     , exportAesGcmKeyAsRaw, exportAesGcmKeyAsJwk
     , exportEcdsaPublicKeyAsRaw, exportEcdsaPublicKeyAsSpki, exportEcdsaPublicKeyAsJwk
     , exportEcdsaPrivateKeyAsPkcs8, exportEcdsaPrivateKeyAsJwk
-    , exportEcdhPublicKeyAsRaw, exportEcdhPublicKeyAsSpki, exportEcdhPublicKeyAsJwk
-    , exportEcdhPrivateKeyAsPkcs8, exportEcdhPrivateKeyAsJwk
     , exportHmacKeyAsRaw, exportHmacKeyAsJwk
     , ImportRsaKeyError(..)
     , importRsaOaepPublicKeyFromJwk, importRsaOaepPublicKeyFromSpki
@@ -196,6 +196,10 @@ These functions require an RSA-PSS key. You can generate one with the
 
 ### Sign & verify with the HMAC algorithm
 
+Sign and verify some `Bytes` with the HMAC (Hash-Based Message Authentication Code) algorithm. 
+These functions require an RSA-PSS key. You can generate one with the
+[`generateEcdsaKeyPair`](#generateEcdsaKeyPair) function.
+
 @docs signWithHmac, verifyWithHmac
 
 ## Digest
@@ -204,9 +208,7 @@ These functions require an RSA-PSS key. You can generate one with the
 
 ## Generate Keys
 
-Generate, import, and export keys for completing cryptographic operations. 
-Each section covers a different sets of keys that use the same underlying algorithm. 
-Each key can be only be used for specific set of cryptographic operations.
+Generate, import, and export keys for completing cryptographic operations.
 
 @docs Key, PublicKey, PrivateKey, KeyPair
 
@@ -216,25 +218,31 @@ Each key can be only be used for specific set of cryptographic operations.
 
 Generate keys to use with RSA (Rivest-Shamir-Adleman) algorithm.
 
-@docs RsaOaepKey, RsaPssKey, RsaSsaPkcs1V1_5Key
-
 @docs RsaKeyParams, RsaKeyGenerationError
 
 @docs generateRsaOaepKeyPair, generateRsaPssKeyPair, generateRsaSsaPkcs1V1_5KeyPair
 
 ### Generate AES Keys
 
+Generate keys to use with AES (Advanced Encryption Standard) algorithm.
+
 @docs AesKeyParams, AesLength
 
 @docs generateAesCtrKey, generateAesCbcKey, generateAesGcmKey
 
-### Generate ECD Keys
+### Generate EC Keys
+
+Generate keys to use with EC (Elliptic Curve) algorithm.
 
 @docs EcNamedCurve
 
-@docs generateEcdsaKeyPair, generateEcdhKeyPair
+@docs EcKeyParams
 
-### Generate HMAC Keys 
+@docs generateEcdsaKeyPair
+
+### Generate HMAC Keys
+
+Generate keys to use with HMAC (Hash-Based Message Authentication Code) algorithm.
 
 @docs HmacKeyParams, HmacKeyGenerationError
 
@@ -242,9 +250,8 @@ Generate keys to use with RSA (Rivest-Shamir-Adleman) algorithm.
 
 ## Export Keys
 
-Export keys in various formats. Available formats depend on the key being exported.
-
-For more information on exporting keys, check out the [MDN web docs](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/exportKey)
+Export keys in various formats. Available formats depend on the key being exported. For more 
+information on exporting keys, check out the [MDN web docs](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/exportKey)
 for the Web Crypto API.
 
 @docs ExportKeyError
@@ -277,19 +284,14 @@ for the Web Crypto API.
 
 @docs exportEcdsaPrivateKeyAsPkcs8, exportEcdsaPrivateKeyAsJwk
 
-@docs exportEcdhPublicKeyAsRaw, exportEcdhPublicKeyAsSpki, exportEcdhPublicKeyAsJwk
-
-@docs exportEcdhPrivateKeyAsPkcs8, exportEcdhPrivateKeyAsJwk
-
 ### Export HMAC Keys 
 
 @docs exportHmacKeyAsRaw, exportHmacKeyAsJwk
 
 ## Import Keys
 
-Import exported keys.
-
-For more information on exporting keys, check out the [MDN web docs](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/importKey)
+Import keys generated in this module or generated elsewhere. For more information on exporting keys, 
+check out the [MDN web docs](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/importKey)
 for the Web Crypto API.
 
 ### Import RSA Keys
@@ -461,15 +463,15 @@ type Key key keyData
     = Key key keyData
 
 
-{-| A public key that is used for some operations. This key type, as the name
-suggests, can be exposed publically and is safe to transport across the network.
+{-| A public key that is used for encrypting and verifying values. This key type, 
+as the name suggests, can be exposed publicly and is safe to transport across the network.
 -}
 type PublicKey a b
     = PublicKey (Key a b)
 
 
-{-| A private key that is used for some specific cryptographic operations. This
-key should be protected and not revealed to any system outside of your application.
+{-| A private key that is used for decrypting and signing values. This key should 
+be protected and not revealed to any system outside of your application.
 -}
 type PrivateKey a b
     = PrivateKey (Key a b)
@@ -486,8 +488,8 @@ type alias KeyPair a b =
 -- RSA KEYS
 
 
-{-| Represents a key generated and for use with the RSA-OAEP algorithm used to 
-encrypt and decrypt values.
+{-| A key generated and for use with the RSA-OAEP algorithm used to encrypt and 
+decrypt values.
 -}
 type RsaOaepKey
     = RsaOaepKey
@@ -507,13 +509,19 @@ type RsaSsaPkcs1V1_5Key
     = RsaSsaPkcs1V1_5Key
 
 
-{-| Parameters required to generate a key for uses with the RSA algorithm.
+{-| Parameters required to generate a key for use with the RSA algorithm.
 
-`modulusLength` is clamped be at least 2048 and no greater than 4096. If the
-`Int` used is outside of that range, it will be corrected.
+- `modulusLength` is clamped be at least 2048 and no greater than 4096. If the
+`Int` used is outside of that range, it will be corrected. It also needs to be
+divisible by 8.
+- `hash` is the `DigestAlgorithm` that's used for key generation
+- `extractable` denotes that if this key is extractable or not. For more information,
+see the [`Extractable` type documentation](#Extractable).
 
-The public exponent for RSA keys is always `[ 1, 0, 1 ]` or `65537`. This is
-a recommended value and a value that works across the `browser` and `node` platforms.
+A missing part of these parameters is the public exponent. Generated keys will always
+have a `[ 1, 0, 1 ]` or `65537` public exponent. This is a recommended value and a value 
+that works across the `browser` and `node` platforms. If you have need for other public
+exponents, please file a ticket!
 -}
 type alias RsaKeyParams =
     { modulusLength : Int
@@ -522,19 +530,20 @@ type alias RsaKeyParams =
     }
 
 
-{-| Errors that can happen when generating a key for use with the RSA algorithm.
+{-| Errors that can happen when generating a key for use with the RSA algorithm. There is
+a single case where this function can fail at runtime:
 
-- `ModulusLengthNotDivisibleByEight` happens when the passed `modulusLength` is
-not divisible by 8, as is required by the algorithm.
+- When the passed `modulusLength` is not divisible by 8, as is required by the algorithm.
+This is captured by `ModulusLengthNotDivisibleByEight`.
 -}
 type RsaKeyGenerationError
     = ModulusLengthNotDivisibleByEight
 
 
-{-| Generate a new key pair using the RSA-OAEP (Optimal Asymmetric Encryption 
-Padding) algorithm.
+{-| Generate a new key pair using the RSA-OAEP algorithm.
 
-Produces a `KeyPair` that can be used to encrypt and decrypt data.
+Produces a `KeyPair` that can be used to encrypt data with [`encryptWithRsaOaep`](#encryptWithRsaOaep) 
+and decrypt data with [`decryptWithRsaOaep`](#decryptWithRsaOaep).
 -}
 generateRsaOaepKeyPair : SecureContext -> RsaKeyParams -> Task RsaKeyGenerationError (KeyPair RsaOaepKey RsaKeyParams)
 generateRsaOaepKeyPair _context =
@@ -545,7 +554,8 @@ generateRsaOaepKeyPair _context =
 
 {-| Generate a new key using the RSA-PSS algorithm.
 
-Produces a `KeyPair` that can be used to sign and verify data.
+Produces a `KeyPair` that can be used to sign data with [`signWithRsaPss`](#signWithRsaPss) 
+and verify data with [`verifyWithRsaPss`](#verifyWithRsaPss).
 -}
 generateRsaPssKeyPair : SecureContext -> RsaKeyParams -> Task RsaKeyGenerationError (KeyPair RsaPssKey RsaKeyParams)
 generateRsaPssKeyPair _context =
@@ -556,7 +566,9 @@ generateRsaPssKeyPair _context =
 
 {-| Generate a new key using the RSASSA-PKCS1-v1_5 algorithm.
 
-Produces a `KeyPair` that can be used to sign and verify data.
+Produces a `KeyPair` that can be used to sign data with 
+[`signWithRsaSsaPkcs1V1_5`](#signWithRsaSsaPkcs1V1_5) and verify data with 
+[`verifyWithRsaSsaPkcs1V1_5`](#verifyWithRsaSsaPkcs1V1_5).
 -}
 generateRsaSsaPkcs1V1_5KeyPair : SecureContext -> RsaKeyParams -> Task RsaKeyGenerationError (KeyPair RsaSsaPkcs1V1_5Key RsaKeyParams)
 generateRsaSsaPkcs1V1_5KeyPair _context =
@@ -608,7 +620,12 @@ type AesGcmKey
     = AesGcmKey
 
 
-{-| The required parameters to generates an AES key.
+{-| Parameters required to generates an AES key.
+
+- `length` is the length, in bits, of the generated key. It must be one of the
+[`AesLength`](#AesLength) type.
+- `extractable` denotes that if this key is extractable or not. For more information,
+see the [`Extractable` type documentation](#Extractable).
 -}
 type alias AesKeyParams =
     { length : AesLength
@@ -620,7 +637,7 @@ type alias AesKeyParams =
 algorithm. These are the only values that can be chosen.
 
 The Web Crypto API supports a length of 192, but some browsers do not implement
-this. To keep compatability across browser, the option is not provided.
+this. To keep compatability across the `browser` platform, the option is not provided.
 -}
 type AesLength
     = AesLength128
@@ -629,6 +646,9 @@ type AesLength
 
 
 {-| Generate a new key using the AES-CTR algorithm.
+
+Produces a `Key` that can be used to encrypt data with [`encryptWithAesCtr`](#encryptWithAesCtr) 
+and decrypt data with [`decryptWithAesCtr`](#decryptWithAesCtr).
 -}
 generateAesCtrKey : SecureContext -> AesKeyParams -> Task x (Key AesCtrKey AesKeyParams)
 generateAesCtrKey _context { length, extractable }=
@@ -640,6 +660,9 @@ generateAesCtrKey _context { length, extractable }=
 
 
 {-| Generate a new key using the AES-CBC algorithm.
+
+Produces a `Key` that can be used to encrypt data with [`encryptWithAesCbc`](#encryptWithAesCbc) 
+and decrypt data with [`decryptWithAesCbc`](#decryptWithAesCbc).
 -}
 generateAesCbcKey : SecureContext -> AesKeyParams -> Task x (Key AesCbcKey AesKeyParams)
 generateAesCbcKey _context { length, extractable } =
@@ -651,6 +674,9 @@ generateAesCbcKey _context { length, extractable } =
 
 
 {-| Generate a new key using the AES-GCM algorithm.
+
+Produces a `Key` that can be used to encrypt data with [`encryptWithAesGcm`](#encryptWithAesGcm) 
+and decrypt data with [`decryptWithAesGcm`](#decryptWithAesGcm).
 -}
 generateAesGcmKey : SecureContext -> AesKeyParams -> Task x (Key AesGcmKey AesKeyParams)
 generateAesGcmKey _context { length, extractable } =
@@ -678,7 +704,13 @@ type EcdhKey
     = EcdhKey
 
 
-{-|-}
+{-| Parameters required to generates an AES key.
+
+- `namedCurve` is the curve used to generate the key. It must be one of the
+[`EcNamedCurve`](#EcNamedCurve) variant.
+- `extractable` denotes that if this key is extractable or not. For more information,
+see the [`Extractable` type documentation](#Extractable).
+-}
 type alias EcKeyParams =
     { namedCurve : EcNamedCurve
     , extractable : Extractable
@@ -694,6 +726,9 @@ type EcNamedCurve
 
 
 {-| Generate a new key using the ECDSA algorithm.
+
+Produces a `KeyPair` that can be used to sign data with [`signWithEcdsa`](#signWithEcdsa) 
+and verify data with [`verifyWithEcdsa`](#verifyWithEcdsa).
 -}
 generateEcdsaKeyPair : SecureContext -> EcKeyParams-> Task x (KeyPair EcdsaKey EcKeyParams)
 generateEcdsaKeyPair _context { namedCurve, extractable } =
@@ -718,8 +753,8 @@ generateEcdhKeyPair _context { namedCurve, extractable } =
 -- HMAC KEYS
 
 
-{-| Represents a key generated and for use with the HMAC algorithm used to
-sign and verify values.
+{-| A key generated and for use with the HMAC algorithm used to sign and verify 
+values.
 -}
 type HmacKey =
     HmacKey
@@ -727,22 +762,26 @@ type HmacKey =
 
 {-| Errors that can happen when generating a key for use with the RSA algorithm.
 
-- `ModulusLengthNotDivisibleByEight` happens when the passed `modulusLength` is
-not divisible by 8, as is required by the algorithm.
+Errors that can happen when enerating a key for use with the HMAC algorithm. 
+There's a single case where this function can fail:
+
+- When the passed `modulusLength` is not divisible by 8, as is required by the 
+algorithm. This is captured by `HmacLengthNotDivisibleByEight`.
 -}
 type HmacKeyGenerationError
-    = LengthNotDivisibleByEight
+    = HmacLengthNotDivisibleByEight
 
 
-{-| Parameters required to generate a key for uses with the HMAC algorithm.
+{-| Parameters required to generate a key for use with the HMAC algorithm.
 
-The passed `length` will be the length of the resulting key in bits. If
-`Nothing`, the key will be equal in bits to the passed `DigestAlgorithm`. 
-It's recommended to pass `Nothing` and let the length of the key be equal 
-to the hash function (`DigestAlgorithm`).
-
+- `length` is the length of the resulting key in bits. If `Nothing`, the key 
+will be equal in bits to the passed `DigestAlgorithm`. It's recommended to pass 
+`Nothing` and let the length of the key be equal to the hash function (`DigestAlgorithm`).
 If passed, the `length` is clamped be at least 8 and no greater than 2048. 
 If the `Int` used is outside of that range, it will be corrected.
+- `hash` is the `DigestAlgorithm` that's used for key generation
+- `extractable` denotes that if this key is extractable or not. For more information,
+see the [`Extractable` type documentation](#Extractable).
 -}
 type alias HmacKeyParams =
     { length : Maybe Int
@@ -752,6 +791,9 @@ type alias HmacKeyParams =
 
 
 {-| Generate a new key using the HMAC algorithm.
+
+Produces a `Key` that can be used to sign data with [`signWithHmac`](#signWithHmac) 
+and verify data with [`verifyWithHmac`](#verifyWithHmac).
 -}
 generateHmacKey : SecureContext -> HmacKeyParams -> Task HmacKeyGenerationError (Key HmacKey HmacKeyParams)
 generateHmacKey _context { hash, length, extractable } =
@@ -770,7 +812,7 @@ generateHmacKey _context { hash, length, extractable } =
                     [ "sign", "verify" ]
             
             else
-                Task.fail LengthNotDivisibleByEight
+                Task.fail HmacLengthNotDivisibleByEight
 
         Nothing ->
             Gren.Kernel.Crypto.generateHmacKey
@@ -787,40 +829,32 @@ generateHmacKey _context { hash, length, extractable } =
 
 {-| Errors that can arise when exporting keys.
 
-- `NotExportable` happens when trying to export a key that was not made
+- `KeyNotExportable` happens when trying to export a key that was not made
 `Extractable` during creation or import.
 -}
 type ExportKeyError
     = KeyNotExportable
 
 
-{-| Export a `RsaOaepKey` as a [SubjectPublicKeyInfo](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/importKey#subjectpublickeyinfo).
-
-The result `Bytes` can be imported again using the `importRsaOaepPublicKey` function.
--}
+{-| -}
 exportRsaOaepPublicKeyAsSpki : SecureContext -> PublicKey RsaOaepKey RsaKeyParams -> Task ExportKeyError Bytes
 exportRsaOaepPublicKeyAsSpki _context (PublicKey key) =
     exportKeyAsSpki key
 
 
-{-| Export a `RsaOaepKey` as a [JSON Web Key](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/importKey#json_web_key).
-
-The resulting `Json.Encode.Value` can be imported again using the `importRsaOaepPublicKey` function.
--}
+{-| -}
 exportRsaOaepPublicKeyAsJwk : SecureContext -> PublicKey RsaOaepKey RsaKeyParams -> Task ExportKeyError Json.Encode.Value
 exportRsaOaepPublicKeyAsJwk _context (PublicKey key) =
     exportKeyAsJwk key
 
 
-{-| Export a `RsaOaepKey` as [PKCS #8](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto/importKey#pkcs_8)
--}
+{-| -}
 exportRsaOaepPrivateKeyAsPkcs8 : SecureContext -> PrivateKey RsaOaepKey RsaKeyParams -> Task ExportKeyError Bytes
 exportRsaOaepPrivateKeyAsPkcs8 _context (PrivateKey key) =
     exportKeyAsPkcs8 key
 
 
-{-| Export a private `RsaOaepKey` as a [JSON Web Key]() 
--}
+{-| -}
 exportRsaOaepPrivateKeyAsJwk : SecureContext -> PrivateKey RsaOaepKey RsaKeyParams -> Task ExportKeyError Json.Encode.Value
 exportRsaOaepPrivateKeyAsJwk _context (PrivateKey key) =
     exportKeyAsJwk key
@@ -1022,15 +1056,15 @@ type alias ImportRsaKeyParams =
     }
 
 
-{-| Appears if there's an error when importing a key using an RSA algorithm.
+{-| Errors that can happen when importing a key using an RSA algorithm. There are a few possible 
+reasons this error happens:
 
-There are two possible reasons this error happens:
-
-1. The passed key value (either `Json.Encode.Value` or `Bytes`) is not 
-a valid key and cannot be imported.
-2. The `hash` passed to the function does not match the `hash` of the imported key. This only 
+- The passed key value (either `Json.Encode.Value` or `Bytes`) is not a valid key and cannot be 
+imported.
+- The `hash` passed to the function does not match the `hash` of the imported key. This only 
 happens when importing a JSON Web Key. It is recommended to _always_ match the hash of the 
-imported key or you will get different results when using the imported key.
+imported key or you will get different results when using the imported key, even when not importing
+in the JSON Web Key format.
 -}
 type ImportRsaKeyError
     = ImportRsaKeyError
@@ -1192,7 +1226,12 @@ importRsaSsaPkcs1V1_5PrivateKeyFromPkcs8 _context bytes { hash } extractable =
         [ "sign" ]
 
 
-{-|-}
+{-| Errors that can happen when importing a key using an AES algorithm. There's only one known
+instance where this error can appear:
+
+- The passed key value (either `Json.Encode.Value` or `Bytes`) is not a valid key and cannot be 
+imported.
+-}
 type ImportAesKeyError
     = ImportAesKeyError
 
@@ -1263,14 +1302,12 @@ importAesGcmKeyFromJwk _context jwk extractable =
         [ "encrypt", "decrypt" ]
 
 
-{-| Appears if there's an error when importing a key using an EC (ellipical-curve)
-algorithm.
+{-| Errors that can happen when importing a key using an EC algorithm. There are two 
+possible reasons this error happens:
 
-There are two possible reasons this error happens:
-
-1. The passed key value (either `Json.Encode.Value` or `Bytes`) is not a valid key 
+- The passed key value (either `Json.Encode.Value` or `Bytes`) is not a valid key 
 and cannot be imported.
-2. The `EcNamedCurve` passed to the function does not match the `EcNamedCurve` of 
+- The `EcNamedCurve` passed to the function does not match the `EcNamedCurve` of 
 the imported key.
 -}
 type ImportEcKeyError
@@ -1433,20 +1470,13 @@ importEcdhPrivateKeyFromJwk  _context namedCurve jwk extractable =
         [ "deriveKey", "deriveBits" ]
 
 
-{-| Appears if there's an error when importing a key using the HMAC algorithm.
+{-| Errors that can happen when importing a key using an HMAC algorithm. There are three 
+known reasons an errors can happen when importing HMAC keys:
 
-There are not specific error types for importing HMAC keys due to inconsistencies
-in how errors are thrown across `browser` and `node` platforms.
-
-There are three known reasons an error can happen when importing HMAC keys:
-
-1. The passed key value (either `Json.Encode.Value` or `Bytes`) is not a valid key 
+- The passed key `Bytes` value (either `Json.Encode.Value` or `Bytes`) is not a valid key 
 and cannot be imported.
-1. The `length` passed to the function is not correct for the imported key. The
-appearance of this error is inconsistent across `browser` and `node` platforms. It's
-recommended to avoid passing a `length` and instead use `Nothing` for both HMAC key
-generation and importing.
-2. The `hash` passed to the function does not match the `hash` of the imported key.
+- The `length` passed to the function is not correct for the imported key.
+- The `hash` passed to the function does not match the `hash` of the imported key.
 This only happens when importing a JSON Web Key. It is recommended to _always_ match 
 the hash of the imported key or you will get different results when using the imported 
 key for cryptographic functions.

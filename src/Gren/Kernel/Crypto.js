@@ -161,9 +161,7 @@ var _Crypto_generateRsaKey = F6(function (name, modulusLength, publicExponent, h
                         __$privateKey: __Crypto_PrivateKey(_Crypto_constructRsaKey(key.privateKey))
                     }
                 ))
-            }).catch(function (err) {
-                console.log(err);
-            });
+            }).catch(function (err) { });
     });
 });
 
