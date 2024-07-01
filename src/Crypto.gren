@@ -46,9 +46,7 @@ module Crypto exposing
     , importAesGcmKeyFromRaw, importAesGcmKeyFromJwk
     , ImportEcKeyError(..)
     , importEcdsaPublicKeyFromRaw, importEcdsaPublicKeyFromSpki, importEcdsaPublicKeyFromJwk
-    , importEcdhPublicKeyFromRaw, importEcdhPublicKeyFromSpki, importEcdhPublicKeyFromJwk
     , importEcdsaPrivateKeyFromPkcs8, importEcdsaPrivateKeyFromSpki, importEcdsaPrivateKeyFromJwk
-    , importEcdhPrivateKeyFromPkcs8, importEcdhPrivateKeyFromSpki, importEcdhPrivateKeyFromJwk
     , ImportHmacKeyError(..)
     , importHmacKeyFromJwk, importHmacKeyFromRaw
     , DigestAlgorithm(..), digest
@@ -323,10 +321,6 @@ for the Web Crypto API.
 ### Import EC Keys
 
 @docs ImportEcKeyError
-
-@docs importEcdhPrivateKeyFromJwk, importEcdhPrivateKeyFromPkcs8, importEcdhPrivateKeyFromSpki
-
-@docs importEcdhPublicKeyFromJwk, importEcdhPublicKeyFromRaw, importEcdhPublicKeyFromSpki
 
 @docs importEcdsaPrivateKeyFromJwk, importEcdsaPrivateKeyFromPkcs8, importEcdsaPrivateKeyFromSpki
 
