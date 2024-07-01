@@ -604,8 +604,8 @@ So our example expands out to something like this:
 
 -}
 composeL : (b -> c) -> (a -> b) -> (a -> c)
-composeL g f x =
-    g (f x)
+composeL g f =
+    \x -> g (f x)
 
 
 {-| Function composition, passing results along in the suggested direction. For
@@ -615,8 +615,8 @@ example, the following code checks if the result of rounding a float is odd:
 
 -}
 composeR : (a -> b) -> (b -> c) -> (a -> c)
-composeR f g x =
-    g (f x)
+composeR f g =
+    \x -> g (f x)
 
 
 {-| Saying `x |> f` is exactly the same as `f x`.
