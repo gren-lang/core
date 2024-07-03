@@ -846,182 +846,182 @@ type ExportKeyError
 
 
 {-| -}
-exportRsaOaepPublicKeyAsSpki : SecureContext -> PublicKey RsaOaepKey RsaKeyParams -> Task ExportKeyError Bytes
-exportRsaOaepPublicKeyAsSpki _context (PublicKey key) =
+exportRsaOaepPublicKeyAsSpki : PublicKey RsaOaepKey RsaKeyParams -> Task ExportKeyError Bytes
+exportRsaOaepPublicKeyAsSpki (PublicKey key) =
     exportKeyAsSpki key
 
 
 {-| -}
-exportRsaOaepPublicKeyAsJwk : SecureContext -> PublicKey RsaOaepKey RsaKeyParams -> Task ExportKeyError Json.Encode.Value
-exportRsaOaepPublicKeyAsJwk _context (PublicKey key) =
+exportRsaOaepPublicKeyAsJwk : PublicKey RsaOaepKey RsaKeyParams -> Task ExportKeyError Json.Encode.Value
+exportRsaOaepPublicKeyAsJwk (PublicKey key) =
     exportKeyAsJwk key
 
 
 {-| -}
-exportRsaOaepPrivateKeyAsPkcs8 : SecureContext -> PrivateKey RsaOaepKey RsaKeyParams -> Task ExportKeyError Bytes
-exportRsaOaepPrivateKeyAsPkcs8 _context (PrivateKey key) =
+exportRsaOaepPrivateKeyAsPkcs8 : PrivateKey RsaOaepKey RsaKeyParams -> Task ExportKeyError Bytes
+exportRsaOaepPrivateKeyAsPkcs8 (PrivateKey key) =
     exportKeyAsPkcs8 key
 
 
 {-| -}
-exportRsaOaepPrivateKeyAsJwk : SecureContext -> PrivateKey RsaOaepKey RsaKeyParams -> Task ExportKeyError Json.Encode.Value
-exportRsaOaepPrivateKeyAsJwk _context (PrivateKey key) =
+exportRsaOaepPrivateKeyAsJwk : PrivateKey RsaOaepKey RsaKeyParams -> Task ExportKeyError Json.Encode.Value
+exportRsaOaepPrivateKeyAsJwk (PrivateKey key) =
     exportKeyAsJwk key
 
 
 {-|-}
-exportRsaPssPublicKeyAsSpki : SecureContext -> PublicKey RsaPssKey RsaKeyParams -> Task ExportKeyError Bytes
-exportRsaPssPublicKeyAsSpki _context (PublicKey key)=
+exportRsaPssPublicKeyAsSpki : PublicKey RsaPssKey RsaKeyParams -> Task ExportKeyError Bytes
+exportRsaPssPublicKeyAsSpki (PublicKey key)=
     exportKeyAsSpki key
 
 
 {-|-}
-exportRsaPssPublicKeyAsJwk : SecureContext -> PublicKey RsaPssKey RsaKeyParams -> Task ExportKeyError Json.Encode.Value
-exportRsaPssPublicKeyAsJwk _context (PublicKey key) =
+exportRsaPssPublicKeyAsJwk : PublicKey RsaPssKey RsaKeyParams -> Task ExportKeyError Json.Encode.Value
+exportRsaPssPublicKeyAsJwk (PublicKey key) =
     exportKeyAsJwk key
 
 
 {-|-}
-exportRsaPssPrivateKeyAsPkcs8 : SecureContext -> PrivateKey RsaPssKey RsaKeyParams-> Task ExportKeyError Bytes
-exportRsaPssPrivateKeyAsPkcs8 _context (PrivateKey key) =
+exportRsaPssPrivateKeyAsPkcs8 : PrivateKey RsaPssKey RsaKeyParams-> Task ExportKeyError Bytes
+exportRsaPssPrivateKeyAsPkcs8 (PrivateKey key) =
     exportKeyAsPkcs8 key
 
 
 {-|-}
-exportRsaPssPrivateKeyAsJwk : SecureContext -> PrivateKey RsaPssKey RsaKeyParams -> Task ExportKeyError Json.Encode.Value
-exportRsaPssPrivateKeyAsJwk _context (PrivateKey key) =
+exportRsaPssPrivateKeyAsJwk : PrivateKey RsaPssKey RsaKeyParams -> Task ExportKeyError Json.Encode.Value
+exportRsaPssPrivateKeyAsJwk (PrivateKey key) =
     exportKeyAsJwk key
 
 
 {-|-}
-exportRsaSsaPkcs1V1_5PublicKeyAsSpki : SecureContext -> PublicKey RsaSsaPkcs1V1_5Key RsaKeyParams -> Task ExportKeyError Bytes
-exportRsaSsaPkcs1V1_5PublicKeyAsSpki _context (PublicKey key) =
+exportRsaSsaPkcs1V1_5PublicKeyAsSpki : PublicKey RsaSsaPkcs1V1_5Key RsaKeyParams -> Task ExportKeyError Bytes
+exportRsaSsaPkcs1V1_5PublicKeyAsSpki (PublicKey key) =
     exportKeyAsSpki key
 
 
 {-|-}
-exportRsaSsaPkcs1V1_5PublicKeyAsJwk : SecureContext -> PublicKey RsaSsaPkcs1V1_5Key RsaKeyParams -> Task ExportKeyError Json.Encode.Value
-exportRsaSsaPkcs1V1_5PublicKeyAsJwk _context (PublicKey key) =
+exportRsaSsaPkcs1V1_5PublicKeyAsJwk : PublicKey RsaSsaPkcs1V1_5Key RsaKeyParams -> Task ExportKeyError Json.Encode.Value
+exportRsaSsaPkcs1V1_5PublicKeyAsJwk (PublicKey key) =
     exportKeyAsJwk key
 
 
 {-|-}
-exportRsaSsaPkcs1V1_5PrivateKeyAsPkcs8 : SecureContext -> PrivateKey RsaSsaPkcs1V1_5Key RsaKeyParams -> Task ExportKeyError Bytes
-exportRsaSsaPkcs1V1_5PrivateKeyAsPkcs8 _context (PrivateKey key)=
+exportRsaSsaPkcs1V1_5PrivateKeyAsPkcs8 : PrivateKey RsaSsaPkcs1V1_5Key RsaKeyParams -> Task ExportKeyError Bytes
+exportRsaSsaPkcs1V1_5PrivateKeyAsPkcs8 (PrivateKey key)=
     exportKeyAsPkcs8 key
 
 
 {-|-}
-exportRsaSsaPkcs1V1_5PrivateKeyAsJwk : SecureContext -> PrivateKey RsaSsaPkcs1V1_5Key RsaKeyParams -> Task ExportKeyError Json.Encode.Value
-exportRsaSsaPkcs1V1_5PrivateKeyAsJwk _context (PrivateKey key) =
+exportRsaSsaPkcs1V1_5PrivateKeyAsJwk : PrivateKey RsaSsaPkcs1V1_5Key RsaKeyParams -> Task ExportKeyError Json.Encode.Value
+exportRsaSsaPkcs1V1_5PrivateKeyAsJwk (PrivateKey key) =
     exportKeyAsJwk key
 
 
 {-|-}
-exportAesCtrKeyAsRaw : SecureContext -> Key AesCtrKey AesKeyParams -> Task ExportKeyError Bytes
-exportAesCtrKeyAsRaw _context =
+exportAesCtrKeyAsRaw : Key AesCtrKey AesKeyParams -> Task ExportKeyError Bytes
+exportAesCtrKeyAsRaw =
     exportKeyAsRaw
 
 
 {-|-}
-exportAesCtrKeyAsJwk : SecureContext -> Key AesCtrKey AesKeyParams -> Task ExportKeyError Json.Encode.Value
-exportAesCtrKeyAsJwk _context =
+exportAesCtrKeyAsJwk :  Key AesCtrKey AesKeyParams -> Task ExportKeyError Json.Encode.Value
+exportAesCtrKeyAsJwk =
     exportKeyAsJwk
 
 
 {-|-}
-exportAesCbcKeyAsRaw : SecureContext -> Key AesCbcKey AesKeyParams -> Task ExportKeyError Bytes
-exportAesCbcKeyAsRaw _context =
+exportAesCbcKeyAsRaw : Key AesCbcKey AesKeyParams -> Task ExportKeyError Bytes
+exportAesCbcKeyAsRaw =
     exportKeyAsRaw
 
 
 {-|-}
-exportAesCbcKeyAsJwk : SecureContext -> Key AesCbcKey AesKeyParams -> Task ExportKeyError Json.Encode.Value
-exportAesCbcKeyAsJwk _context =
+exportAesCbcKeyAsJwk : Key AesCbcKey AesKeyParams -> Task ExportKeyError Json.Encode.Value
+exportAesCbcKeyAsJwk =
     exportKeyAsJwk
 
 
 {-|-}
-exportAesGcmKeyAsRaw : SecureContext -> Key AesGcmKey AesKeyParams -> Task ExportKeyError Bytes
-exportAesGcmKeyAsRaw _context =
+exportAesGcmKeyAsRaw : Key AesGcmKey AesKeyParams -> Task ExportKeyError Bytes
+exportAesGcmKeyAsRaw =
     exportKeyAsRaw
 
 
 {-|-}
-exportAesGcmKeyAsJwk : SecureContext -> Key AesGcmKey AesKeyParams -> Task ExportKeyError Json.Encode.Value
-exportAesGcmKeyAsJwk _context =
+exportAesGcmKeyAsJwk : Key AesGcmKey AesKeyParams -> Task ExportKeyError Json.Encode.Value
+exportAesGcmKeyAsJwk =
     exportKeyAsJwk
 
 
 {-|-}
-exportEcdsaPublicKeyAsRaw : SecureContext -> PublicKey EcdsaKey EcKeyParams -> Task ExportKeyError Bytes
-exportEcdsaPublicKeyAsRaw _context (PublicKey key) =
+exportEcdsaPublicKeyAsRaw : PublicKey EcdsaKey EcKeyParams -> Task ExportKeyError Bytes
+exportEcdsaPublicKeyAsRaw (PublicKey key) =
     exportKeyAsRaw key
 
 
 {-|-}
-exportEcdsaPublicKeyAsSpki : SecureContext -> PublicKey EcdsaKey EcKeyParams -> Task ExportKeyError Bytes
-exportEcdsaPublicKeyAsSpki _context (PublicKey key) =
+exportEcdsaPublicKeyAsSpki : PublicKey EcdsaKey EcKeyParams -> Task ExportKeyError Bytes
+exportEcdsaPublicKeyAsSpki (PublicKey key) =
     exportKeyAsSpki key
 
 
 {-|-}
-exportEcdsaPublicKeyAsJwk : SecureContext -> PublicKey EcdsaKey EcKeyParams -> Task ExportKeyError Json.Encode.Value
-exportEcdsaPublicKeyAsJwk _context (PublicKey key) =
+exportEcdsaPublicKeyAsJwk : PublicKey EcdsaKey EcKeyParams -> Task ExportKeyError Json.Encode.Value
+exportEcdsaPublicKeyAsJwk (PublicKey key) =
     exportKeyAsJwk key
 
 
 {-|-}
-exportEcdsaPrivateKeyAsPkcs8 : SecureContext -> PrivateKey EcdsaKey EcKeyParams -> Task ExportKeyError Bytes
-exportEcdsaPrivateKeyAsPkcs8 _context (PrivateKey key) =
+exportEcdsaPrivateKeyAsPkcs8 : PrivateKey EcdsaKey EcKeyParams -> Task ExportKeyError Bytes
+exportEcdsaPrivateKeyAsPkcs8 (PrivateKey key) =
     exportKeyAsPkcs8 key
 
 
 {-|-}
-exportEcdsaPrivateKeyAsJwk : SecureContext -> PrivateKey EcdsaKey EcKeyParams -> Task ExportKeyError Json.Encode.Value
-exportEcdsaPrivateKeyAsJwk _context (PrivateKey key)=
+exportEcdsaPrivateKeyAsJwk : PrivateKey EcdsaKey EcKeyParams -> Task ExportKeyError Json.Encode.Value
+exportEcdsaPrivateKeyAsJwk (PrivateKey key)=
     exportKeyAsJwk key
 
 
 {-|-}
-exportEcdhPublicKeyAsRaw : SecureContext -> PublicKey EcdhKey EcKeyParams -> Task ExportKeyError Bytes
-exportEcdhPublicKeyAsRaw _context (PublicKey key) =
+exportEcdhPublicKeyAsRaw :  PublicKey EcdhKey EcKeyParams -> Task ExportKeyError Bytes
+exportEcdhPublicKeyAsRaw (PublicKey key) =
     exportKeyAsRaw key
 
 
 {-|-}
-exportEcdhPublicKeyAsSpki : SecureContext -> PublicKey EcdhKey EcKeyParams -> Task ExportKeyError Bytes
-exportEcdhPublicKeyAsSpki _context (PublicKey key) =
+exportEcdhPublicKeyAsSpki : PublicKey EcdhKey EcKeyParams -> Task ExportKeyError Bytes
+exportEcdhPublicKeyAsSpki (PublicKey key) =
     exportKeyAsSpki key
 
 
 {-|-}
-exportEcdhPublicKeyAsJwk : SecureContext -> PublicKey EcdhKey EcKeyParams -> Task ExportKeyError Json.Encode.Value
-exportEcdhPublicKeyAsJwk _context (PublicKey key) =
+exportEcdhPublicKeyAsJwk : PublicKey EcdhKey EcKeyParams -> Task ExportKeyError Json.Encode.Value
+exportEcdhPublicKeyAsJwk (PublicKey key) =
     exportKeyAsJwk key
 
 
 {-|-}
-exportEcdhPrivateKeyAsPkcs8 : SecureContext -> PrivateKey EcdhKey EcKeyParams -> Task ExportKeyError Bytes
-exportEcdhPrivateKeyAsPkcs8 _context (PrivateKey key) =
+exportEcdhPrivateKeyAsPkcs8 : PrivateKey EcdhKey EcKeyParams -> Task ExportKeyError Bytes
+exportEcdhPrivateKeyAsPkcs8 (PrivateKey key) =
     exportKeyAsPkcs8 key
 
 
 {-|-}
-exportEcdhPrivateKeyAsJwk : SecureContext -> PrivateKey EcdhKey EcKeyParams -> Task ExportKeyError Json.Encode.Value
-exportEcdhPrivateKeyAsJwk _context (PrivateKey key) =
+exportEcdhPrivateKeyAsJwk : PrivateKey EcdhKey EcKeyParams -> Task ExportKeyError Json.Encode.Value
+exportEcdhPrivateKeyAsJwk (PrivateKey key) =
     exportKeyAsJwk key
 
 
 {-|-}
-exportHmacKeyAsRaw : SecureContext -> Key HmacKey HmacKeyParams -> Task ExportKeyError Bytes
-exportHmacKeyAsRaw _context =
+exportHmacKeyAsRaw : Key HmacKey HmacKeyParams -> Task ExportKeyError Bytes
+exportHmacKeyAsRaw =
     exportKeyAsRaw
 
 
 {-|-}
-exportHmacKeyAsJwk : SecureContext -> Key HmacKey HmacKeyParams -> Task ExportKeyError Json.Encode.Value
-exportHmacKeyAsJwk _context =
+exportHmacKeyAsJwk : Key HmacKey HmacKeyParams -> Task ExportKeyError Json.Encode.Value
+exportHmacKeyAsJwk =
     exportKeyAsJwk
 
 
@@ -1570,8 +1570,8 @@ type RsaOaepEncryptionError
 {-| Encrypt some `Bytes` with a `PublicKey RsaOaepKey`. You can generate the apporpriate
 key with the [`generateRsaOaepKeyPair`](#generateRsaOaepKeyPair) function.
 -}
-encryptWithRsaOaep : SecureContext -> RsaOaepParams  -> PublicKey RsaOaepKey RsaKeyParams -> Bytes -> Task RsaOaepEncryptionError Bytes
-encryptWithRsaOaep _context { label } (PublicKey (Key key _)) bytes =
+encryptWithRsaOaep : RsaOaepParams  -> PublicKey RsaOaepKey RsaKeyParams -> Bytes -> Task RsaOaepEncryptionError Bytes
+encryptWithRsaOaep { label } (PublicKey (Key key _)) bytes =
     case label of
         Nothing ->
             Gren.Kernel.Crypto.encryptWithRsaOaep
@@ -1613,8 +1613,8 @@ type alias AesCtrParams =
 {-| Encrypt some Bytes with a `Key AesCtrKey`. You can generate the apporpriate key 
 with the [`generateAesCtrKey`](#generateAesCtrKey) function.
 -}
-encryptWithAesCtr : SecureContext -> AesCtrParams -> Key AesCtrKey AesKeyParams -> Bytes -> Task AesCtrEncryptionError Bytes
-encryptWithAesCtr _context { counter, length } (Key key _) bytes =
+encryptWithAesCtr : AesCtrParams -> Key AesCtrKey AesKeyParams -> Bytes -> Task AesCtrEncryptionError Bytes
+encryptWithAesCtr { counter, length } (Key key _) bytes =
     -- The counter must be exactly 16 bytes long
     if Bytes.width counter == 16 then
         Gren.Kernel.Crypto.encryptWithAesCtr
@@ -1654,8 +1654,8 @@ type alias AesCbcParams =
 {-| Encrypt some Bytes with a `Key AesCbcKey`. You can generate the apporpriate key 
 with the [`generateAesCbcKey`](#generateAesCbcKey) function.
 -}
-encryptWithAesCbc : SecureContext -> AesCbcParams -> Key AesCbcKey AesKeyParams -> Bytes -> Task AesCbcEncryptionError Bytes
-encryptWithAesCbc _context { iv } (Key key _) bytes =
+encryptWithAesCbc : AesCbcParams -> Key AesCbcKey AesKeyParams -> Bytes -> Task AesCbcEncryptionError Bytes
+encryptWithAesCbc { iv } (Key key _) bytes =
     if Bytes.width iv == 16 then
         Gren.Kernel.Crypto.encryptWithAesCbc
             iv
@@ -1709,8 +1709,8 @@ type AesGcmEncryptionError
 {-| Encrypt some `Bytes` with a `Key AesGcmKey`. You can generate the apporpriate
 key with the [`generateAesGcmKey`](#generateAesGcmKey) function.
 -}
-encryptWithAesGcm : SecureContext -> AesGcmParams -> Key AesGcmKey AesKeyParams -> Bytes -> Task AesGcmEncryptionError Bytes
-encryptWithAesGcm _context { iv, additionalData, tagLength } (Key key _) bytes =
+encryptWithAesGcm : AesGcmParams -> Key AesGcmKey AesKeyParams -> Bytes -> Task AesGcmEncryptionError Bytes
+encryptWithAesGcm { iv, additionalData, tagLength } (Key key _) bytes =
     let
         byteWidth =
             Bytes.width iv
@@ -1770,8 +1770,8 @@ type RsaOaepDecryptionError =
 {-| Decrypt some `Bytes` with a `PrivateKey RsaOaepKey`. You can generate the apporpriate key with the 
 [`generateRsaOaepKeyPair`](#generateRsaOaepKeyPair) function.
 -}
-decryptWithRsaOaep : SecureContext -> RsaOaepParams -> PrivateKey RsaOaepKey RsaKeyParams -> Bytes -> Task RsaOaepDecryptionError Bytes
-decryptWithRsaOaep _context { label } (PrivateKey (Key privateKey _)) bytes =
+decryptWithRsaOaep : RsaOaepParams -> PrivateKey RsaOaepKey RsaKeyParams -> Bytes -> Task RsaOaepDecryptionError Bytes
+decryptWithRsaOaep { label } (PrivateKey (Key privateKey _)) bytes =
     case label of
         Nothing ->
             Gren.Kernel.Crypto.decryptWithRsaOaep
@@ -1802,8 +1802,8 @@ type AesCtrDecryptionError
 {-| Decrypt some Bytes with a `Key AesCtrKey`. You can generate the apporpriate key 
 with the [`generateAesCtrKey`](#generateAesCtrKey) function.
 -}
-decryptWithAesCtr : SecureContext -> AesCtrParams -> Key AesCtrKey AesKeyParams -> Bytes -> Task AesCtrDecryptionError Bytes
-decryptWithAesCtr _context { counter, length } (Key key _) bytes =
+decryptWithAesCtr : AesCtrParams -> Key AesCtrKey AesKeyParams -> Bytes -> Task AesCtrDecryptionError Bytes
+decryptWithAesCtr { counter, length } (Key key _) bytes =
     if Bytes.width counter == 16 then
         Gren.Kernel.Crypto.decryptWithAesCtr
             counter
@@ -1834,8 +1834,8 @@ type AesCbcDecryptionError
 {-| Decrypt some `Bytes` with a `Key AesCbcKey`. You can generate the apporpriate key with the 
 [`generateAesCbcKey`](#generateAesCbcKey) function.
 -}
-decryptWithAesCbc : SecureContext -> AesCbcParams -> Key AesCbcKey AesKeyParams -> Bytes -> Task AesCbcDecryptionError Bytes
-decryptWithAesCbc _context { iv } (Key key _) bytes = 
+decryptWithAesCbc : AesCbcParams -> Key AesCbcKey AesKeyParams -> Bytes -> Task AesCbcDecryptionError Bytes
+decryptWithAesCbc { iv } (Key key _) bytes = 
     if Bytes.width iv == 16 then
         Gren.Kernel.Crypto.decryptWithAesCbc
             iv
@@ -1865,8 +1865,8 @@ type AesGcmDecryptionError
 {-| Decrypt some `Bytes` with a `Key AesGcmKey`. You can generate the apporpriate
 key with the [`generateAesGcmKey`](#generateAesGcmKey) function.
 -}
-decryptWithAesGcm : SecureContext -> AesGcmParams -> Key AesGcmKey AesKeyParams -> Bytes -> Task AesGcmDecryptionError Bytes
-decryptWithAesGcm _context { iv, additionalData, tagLength } (Key key _) bytes =
+decryptWithAesGcm : AesGcmParams -> Key AesGcmKey AesKeyParams -> Bytes -> Task AesGcmDecryptionError Bytes
+decryptWithAesGcm { iv, additionalData, tagLength } (Key key _) bytes =
     let
         byteWidth =
             Bytes.width iv
@@ -1938,8 +1938,8 @@ type RsaSsaPkcs1V1_5SigningError
 is just some `Bytes`). The `Signature` can be used with the cooresponding verification function 
 to verify that the passed `Bytes` were signed with the passed key.
 -}
-signWithRsaSsaPkcs1V1_5 : SecureContext -> PrivateKey RsaSsaPkcs1V1_5Key RsaKeyParams -> Bytes -> Task RsaSsaPkcs1V1_5SigningError Signature
-signWithRsaSsaPkcs1V1_5 _context (PrivateKey (Key key _)) bytes =
+signWithRsaSsaPkcs1V1_5 : PrivateKey RsaSsaPkcs1V1_5Key RsaKeyParams -> Bytes -> Task RsaSsaPkcs1V1_5SigningError Signature
+signWithRsaSsaPkcs1V1_5 (PrivateKey (Key key _)) bytes =
     Gren.Kernel.Crypto.signWithRsaSsaPkcs1V1_5 
         key 
         bytes
@@ -1963,8 +1963,8 @@ type RsaPssSigningError
 is just some `Bytes`). The `Signature` can be used with the cooresponding verification function 
 to verify that the passed `Bytes` were signed with the passed key.
 -}
-signWithRsaPss : SecureContext -> Int -> PrivateKey RsaPssKey RsaKeyParams -> Bytes -> Task RsaPssSigningError Signature
-signWithRsaPss _context salt (PrivateKey (Key key { modulusLength, hash, extractable })) bytes =
+signWithRsaPss : Int -> PrivateKey RsaPssKey RsaKeyParams -> Bytes -> Task RsaPssSigningError Signature
+signWithRsaPss salt (PrivateKey (Key key { modulusLength, hash, extractable })) bytes =
     let
         clampedSaltBytes =
             clamp 0 2147483647 salt
@@ -1999,8 +1999,8 @@ to verify that the passed `Bytes` were signed with the passed key.
 
 The returned `Task` should not fail. If it does, please file a ticket!
 -}
-signWithEcdsa : SecureContext -> DigestAlgorithm -> PrivateKey EcdsaKey EcKeyParams -> Bytes -> Task x Signature
-signWithEcdsa _context hash (PrivateKey (Key key _)) bytes =
+signWithEcdsa : DigestAlgorithm -> PrivateKey EcdsaKey EcKeyParams -> Bytes -> Task x Signature
+signWithEcdsa hash (PrivateKey (Key key _)) bytes =
     Gren.Kernel.Crypto.signWithEcdsa
         (digestAlgorithmToString hash)
         key 
@@ -2013,8 +2013,8 @@ to verify that the passed `Bytes` were signed with the passed key.
 
 The returned `Task` should not fail. If it does, please file a ticket!
 -}
-signWithHmac : SecureContext -> Key HmacKey HmacKeyParams -> Bytes -> Task x Signature
-signWithHmac _context (Key key _) bytes =
+signWithHmac : Key HmacKey HmacKeyParams -> Bytes -> Task x Signature
+signWithHmac (Key key _) bytes =
     Gren.Kernel.Crypto.signWithHmac 
         key 
         bytes
@@ -2030,8 +2030,8 @@ RSA-SSAPKCS1v1.5 algorithm.
 This function produces no values. Instead, the `Task` succeeds if the passed 
 signature is valid and fails otherwise.
 -}
-verifyWithRsaSsaPkcs1V1_5 : SecureContext -> PublicKey RsaSsaPkcs1V1_5Key RsaKeyParams -> Signature -> Bytes -> Task x a
-verifyWithRsaSsaPkcs1V1_5 _context (PublicKey (Key key _)) signature bytes =
+verifyWithRsaSsaPkcs1V1_5 : PublicKey RsaSsaPkcs1V1_5Key RsaKeyParams -> Signature -> Bytes -> Task x a
+verifyWithRsaSsaPkcs1V1_5 (PublicKey (Key key _)) signature bytes =
     Gren.Kernel.Crypto.verifyWithRsaSsaPkcs1V1_5
         key
         signature
@@ -2044,8 +2044,8 @@ RSA-PSS algorithm.
 This function produces no values. Instead, the `Task` succeeds if the passed 
 signature is valid and fails otherwise.
 -}
-verifyWithRsaPss : SecureContext -> Int -> PublicKey RsaPssKey RsaKeyParams -> Signature -> Bytes -> Task x a
-verifyWithRsaPss _context salt (PublicKey (Key key _)) signature bytes =
+verifyWithRsaPss : Int -> PublicKey RsaPssKey RsaKeyParams -> Signature -> Bytes -> Task x a
+verifyWithRsaPss salt (PublicKey (Key key _)) signature bytes =
     Gren.Kernel.Crypto.verifyWithRsaPss
         salt
         key
@@ -2059,8 +2059,8 @@ ECDSA algorithm.
 This function produces no values. Instead, the `Task` succeeds if the passed 
 signature is valid and fails otherwise.
 -}
-verifyWithEcdsa : SecureContext -> DigestAlgorithm -> PublicKey EcdsaKey EcKeyParams -> Signature -> Bytes -> Task x a
-verifyWithEcdsa _context hash (PublicKey (Key key _)) signature bytes =
+verifyWithEcdsa : DigestAlgorithm -> PublicKey EcdsaKey EcKeyParams -> Signature -> Bytes -> Task x a
+verifyWithEcdsa hash (PublicKey (Key key _)) signature bytes =
     Gren.Kernel.Crypto.verifyWithEcdsa
         (digestAlgorithmToString hash)
         key
@@ -2074,8 +2074,8 @@ HMAC algorithm.
 This function produces no values. Instead, the `Task` succeeds if the passed 
 signature is valid and fails otherwise.
 -}
-verifyWithHmac : SecureContext -> Key HmacKey HmacKeyParams -> Signature -> Bytes -> Task x a
-verifyWithHmac _context (Key key _) signature bytes =
+verifyWithHmac : Key HmacKey HmacKeyParams -> Signature -> Bytes -> Task x a
+verifyWithHmac (Key key _) signature bytes =
     Gren.Kernel.Crypto.verifyWithHmac
         key
         signature
