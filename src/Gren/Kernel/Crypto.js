@@ -17,8 +17,8 @@ var crypto = function () {
 
 // Utils
 
-var _Crypto_hashFromString = function (__$hash) {
-    switch (__$hash) {
+var _Crypto_hashFromString = function (hash) {
+    switch (hash) {
         case "SHA-256":
             return __Crypto_Sha256;
         case "SHA-384":
@@ -28,8 +28,8 @@ var _Crypto_hashFromString = function (__$hash) {
     };
 };
 
-var _Crypto_extractableFromBool = function (__$extractable) {
-    if (__$extractable) {
+var _Crypto_extractableFromBool = function (extractable) {
+    if (extractable) {
         return __Crypto_CanBeExtracted;
     } else {
         return __Crypto_CannotBeExtracted;
@@ -38,53 +38,49 @@ var _Crypto_extractableFromBool = function (__$extractable) {
 
 // Key Construction
 
-var _Crypto_constructRsaKey = function (__$key) {
+var _Crypto_constructRsaKey = function (key) {
     var rsaKeyData = {
-        __$modulusLength: __$key.algorithm.modulusLength,
-        __$publicExponent: __$key.algorithm.publicExponent,
-        __$hash: _Crypto_hashFromString(__$key.algorithm.hash.name),
-        __$extractable: _Crypto_extractableFromBool(__$key.extractable)
+        __$modulusLength: key.algorithm.modulusLength,
+        __$publicExponent: key.algorithm.publicExponent,
+        __$hash: _Crypto_hashFromString(key.algorithm.hash.name),
+        __$extractable: _Crypto_extractableFromBool(key.extractable)
     };
-    return A2(__Crypto_Key, __$key, rsaKeyData);
+    return A2(__Crypto_Key, key, rsaKeyData);
 };
 
-var _Crypto_constructHmacKey = function (__$key) {
+var _Crypto_constructHmacKey = function (key) {
     var hmacKeyData = {
-        __$hash: _Crypto_hashFromString(__$key.algorithm.hash.name),
-        __$extractable: _Crypto_extractableFromBool(__$key.extractable)
+        __$hash: _Crypto_hashFromString(key.algorithm.hash.name),
+        __$extractable: _Crypto_extractableFromBool(key.extractable)
     };
-    if (__$key.algorithm.length) {
-        hmacKeyData.__$length = __Maybe_Just(__$key.algorithm.length);
+    if (key.algorithm.length) {
+        hmacKeyData.__$length = __Maybe_Just(key.algorithm.length);
     } else {
         hmacKeyData.__$length = __Maybe_Nothing
     }
-    return A2(__Crypto_Key, __$key, hmacKeyData);
+    return A2(__Crypto_Key, key, hmacKeyData);
 };
 
-var _Crypto_constructAesKey = function (__$key) {
+var _Crypto_constructAesKey = function (key) {
     var aesKeyData = {
-        __$extractable: _Crypto_extractableFromBool(__$key.extractable)
+        __$extractable: _Crypto_extractableFromBool(key.extractable)
     };
-    switch (__$key.algorithm.length) {
+    switch (key.algorithm.length) {
         case 128:
             aesKeyData.__$length = __Crypto_AesLength128
         case 192:
-            // Todo: I need to figure out how this works, given the cross-browser issues...
-            // (I believe this fails in Safari? Due to security concerns?)
-            // Fail in Gren when this is provided as a constructor? Fail here or in the 
-            // function for key import?
             aesKeyData.__$length = __Crypto_AesLength192
         case 256:
             aesKeyData.__$length = __Crypto_AesLength256
     }
-    return A2(__Crypto_Key, __$key, aesKeyData);
+    return A2(__Crypto_Key, key, aesKeyData);
 };
 
-var _Crypto_constructEcKey = function (__$key) {
+var _Crypto_constructEcKey = function (key) {
     var ecKeyData = {
-        __$extractable: _Crypto_extractableFromBool(__$key.extractable)
+        __$extractable: _Crypto_extractableFromBool(key.extractable)
     };
-    switch (__$key.algorithm.namedCurve) {
+    switch (key.algorithm.namedCurve) {
         case "P-256":
             ecKeyData.__$namedCurve = __Crypto_P256;
         case "P-384":
@@ -92,7 +88,7 @@ var _Crypto_constructEcKey = function (__$key) {
         case "P-521":
             ecKeyData.__$namedCurve = __Crypto_P521;
     }
-    return A2(__Crypto_Key, __$key, ecKeyData);
+    return A2(__Crypto_Key, key, ecKeyData);
 };
 
 // Random
