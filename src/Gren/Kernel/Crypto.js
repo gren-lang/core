@@ -139,7 +139,7 @@ var _Crypto_getContext = __Scheduler_binding(function (callback) {
     if (crypto.subtle) {
         return callback(__Scheduler_succeed(__Crypto_SecureContext));
     }
-    return callback(__Scheduler_fail);
+    return callback(__Scheduler_fail());
 });
 
 // Generate keys
@@ -161,7 +161,9 @@ var _Crypto_generateRsaKey = F6(function (name, modulusLength, publicExponent, h
                         __$privateKey: __Crypto_PrivateKey(_Crypto_constructRsaKey(key.privateKey))
                     }
                 ))
-            }).catch(function (err) { });
+            }).catch(function (err) {
+                return callback(__Scheduler_fail());
+            });
     });
 });
 
@@ -198,6 +200,9 @@ var _Crypto_generateEcKey = F4(function (name, namedCurve, extractable, permissi
                     }
                 ))
             })
+            .catch(function (err) {
+                return callback(__Scheduler_fail());
+            });
     })
 });
 
@@ -222,7 +227,7 @@ var _Crypto_generateHmacKey = F5(function (name, hash, length, extractable, perm
                 return callback(__Scheduler_succeed(_Crypto_constructHmacKey(key)))
             })
             .catch(function (err) {
-                return callback(__Scheduler_fail);
+                return callback(__Scheduler_fail());
             });
     });
 });
@@ -243,6 +248,7 @@ var _Crypto_exportKey = F2(function (format, key) {
                 };
             })
             .catch(function (err) {
+                return callback(__Scheduler_fail());
             });
     });
 });
