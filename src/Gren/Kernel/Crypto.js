@@ -264,7 +264,6 @@ var _Crypto_importRsaKey = F7(function (wrapper, format, keyData, algorithm, has
                 }
             })
             .catch(function (err) {
-                console.log(err);
                 return callback(__Scheduler_fail(__Crypto_ImportRsaKeyError));
             })
     })
@@ -416,7 +415,6 @@ var _Crypto_encryptWithAesGcm = F5(function (iv, additionalData, tagLength, key,
                 return callback(__Scheduler_succeed(new DataView(res)));
             })
             .catch(function (err) {
-                console.log(err);
                 return callback(__Scheduler_fail(__Crypto_AesGcmEncryptionError));
             });
     });
