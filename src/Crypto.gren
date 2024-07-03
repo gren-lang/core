@@ -3,7 +3,7 @@ module Crypto exposing
     , getRandomInt16Values, getRandomUInt16Values
     , getRandomInt32Values, getRandomUInt32Values
     , SecureContext, getSecureContext
-    , randomUuid
+    , randomUuidV4
     , AesKeyParams
     , Key, PublicKey, PrivateKey, KeyPair
     , Extractable(..)
@@ -101,7 +101,7 @@ the successfull completion of a `Task` returned by the `getSecureContext` functi
 
 ## Generate Random UUIDs
 
-@docs randomUuid
+@docs randomUuidV4
 
 ## Encryption & Decryption
 
@@ -357,8 +357,8 @@ import Gren.Kernel.Json
 
 {-| Generate a random UUID using the UUID v4 algorithm.
 -}
-randomUuid : SecureContext -> Task x String
-randomUuid _context =
+randomUuidV4 : SecureContext -> Task x String
+randomUuidV4 _context =
     Gren.Kernel.Crypto.randomUUID
 
 
