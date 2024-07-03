@@ -4,23 +4,37 @@ module Crypto exposing
     , getRandomInt32Values, getRandomUInt32Values
     , SecureContext, getSecureContext
     , randomUuidV4
-    , AesKeyParams
+    , RsaOaepParams
+    , RsaOaepEncryptionError(..), encryptWithRsaOaep
+    , RsaOaepDecryptionError(..), decryptWithRsaOaep
+    , AesCtrParams
+    , AesCtrEncryptionError(..), encryptWithAesCtr
+    , AesCtrDecryptionError(..), decryptWithAesCtr
+    , AesCbcParams
+    , AesCbcEncryptionError(..), encryptWithAesCbc
+    , AesCbcDecryptionError(..), decryptWithAesCbc
+    , AesGcmParams, AesGcmTagLength(..)
+    , AesGcmEncryptionError(..), encryptWithAesGcm
+    , AesGcmDecryptionError(..), decryptWithAesGcm
+    , Signature
+    , RsaSsaPkcs1V1_5SigningError(..), signWithRsaSsaPkcs1V1_5
+    , verifyWithRsaSsaPkcs1V1_5
+    , RsaPssSigningError(..), signWithRsaPss
+    , verifyWithRsaPss
+    , signWithEcdsa, verifyWithEcdsa
+    , signWithHmac, verifyWithHmac
+    , DigestAlgorithm(..), digest
     , Key, PublicKey, PrivateKey, KeyPair
     , Extractable(..)
-    , RsaKeyGenerationError(..)
+    , RsaKeyParams, RsaKeyGenerationError(..)
     , generateRsaOaepKeyPair, generateRsaPssKeyPair, generateRsaSsaPkcs1V1_5KeyPair
-    , AesLength(..)
-    , Signature
-    , RsaKeyParams
-    , RsaSsaPkcs1V1_5SigningError(..)
-    , RsaOaepParams, RsaOaepEncryptionError(..)
+    , AesKeyParams, AesLength(..)
     , generateAesCtrKey, generateAesCbcKey, generateAesGcmKey
-    , EcNamedCurve(..)
+    , EcKeyParams, EcNamedCurve(..)
     , generateEcdsaKeyPair
     , HmacKeyParams, HmacKeyGenerationError(..)
     , generateHmacKey
     , ExportKeyError(..)
-    , EcKeyParams
     , exportRsaOaepPublicKeyAsSpki, exportRsaOaepPublicKeyAsJwk
     , exportRsaOaepPrivateKeyAsPkcs8, exportRsaOaepPrivateKeyAsJwk
     , exportRsaPssPublicKeyAsSpki, exportRsaPssPublicKeyAsJwk
@@ -49,19 +63,6 @@ module Crypto exposing
     , importEcdsaPrivateKeyFromPkcs8, importEcdsaPrivateKeyFromSpki, importEcdsaPrivateKeyFromJwk
     , ImportHmacKeyError(..)
     , importHmacKeyFromJwk, importHmacKeyFromRaw
-    , DigestAlgorithm(..), digest
-    , RsaOaepDecryptionError(..)
-    , encryptWithRsaOaep, decryptWithRsaOaep
-    , AesCtrParams, AesCtrEncryptionError(..), AesCtrDecryptionError(..)
-    , encryptWithAesCtr, decryptWithAesCtr
-    , AesCbcParams, AesCbcEncryptionError(..), AesCbcDecryptionError(..)
-    , encryptWithAesCbc, decryptWithAesCbc
-    , AesGcmParams, AesGcmTagLength(..), AesGcmEncryptionError(..), AesGcmDecryptionError(..)
-    , encryptWithAesGcm, decryptWithAesGcm
-    , signWithRsaSsaPkcs1V1_5, verifyWithRsaSsaPkcs1V1_5
-    , RsaPssSigningError(..), signWithRsaPss, verifyWithRsaPss
-    , signWithEcdsa, verifyWithEcdsa
-    , signWithHmac, verifyWithHmac
     )
 
 
@@ -232,9 +233,7 @@ Generate keys to use with AES (Advanced Encryption Standard) algorithm.
 
 Generate keys to use with EC (Elliptic Curve) algorithm.
 
-@docs EcNamedCurve
-
-@docs EcKeyParams
+@docs EcKeyParams, EcNamedCurve
 
 @docs generateEcdsaKeyPair
 
