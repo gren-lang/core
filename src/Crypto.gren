@@ -19,8 +19,8 @@ module Crypto exposing
     , Signature
     , RsaSsaPkcs1V1_5SigningError(..), signWithRsaSsaPkcs1V1_5
     , verifyWithRsaSsaPkcs1V1_5
-    , RsaPssSigningError(..), signWithRsaPss
-    , verifyWithRsaPss
+    , RsaPssParams, RsaPssSigningError(..)
+    , signWithRsaPss, verifyWithRsaPss
     , signWithEcdsa, verifyWithEcdsa
     , signWithHmac, verifyWithHmac
     , DigestAlgorithm(..), digest
@@ -197,9 +197,9 @@ Sign and verify some `Bytes` with the RSA-PSS (Rivest, Shamir, and Adleman - Pro
 Scheme) algorithm. These functions require an RSA-PSS key. You can generate one with the 
 [`generateRsaPssKeyPair`](#generateRsaPssKeyPair) function.
 
-@docs RsaPssSigningError, signWithRsaPss
+@docs RsaPssParams, RsaPssSigningError
 
-@docs verifyWithRsaPss
+@docs signWithRsaPss, verifyWithRsaPss
 
 ### Sign & verify with the ECDSA algorithm
 
@@ -1548,7 +1548,7 @@ importHmacKeyFromRaw _context bytes hash passedLength extractable =
 -- ENCRYPT
 
 
-{-| The parameters needs to encrypt or decrypt with the RSA-OAEP algorithm. There's only
+{-| The parameters needed to encrypt or decrypt with the RSA-OAEP algorithm. There's only
 one parameter: a `label` consisting of some `Bytes`. The label is completely optional and 
 passing `Nothing` will not make the operation less secure.
 -}
@@ -1945,6 +1945,13 @@ signWithRsaSsaPkcs1V1_5 (PrivateKey (Key key _)) bytes =
         bytes
 
 
+{-| The parameters needed to sign or verify with the RSA-PSS algorithm.
+-}
+type alias RsaPssParams =
+    { salt : Int
+    }
+
+
 {-| Errors that can happen when signing using the [`signWithRsaPss`](#signWithRsaPss) function. There are 
 a few cases where this function can fail:
 
@@ -1963,8 +1970,8 @@ type RsaPssSigningError
 is just some `Bytes`). The `Signature` can be used with the cooresponding verification function 
 to verify that the passed `Bytes` were signed with the passed key.
 -}
-signWithRsaPss : Int -> PrivateKey RsaPssKey RsaKeyParams -> Bytes -> Task RsaPssSigningError Signature
-signWithRsaPss salt (PrivateKey (Key key { modulusLength, hash, extractable })) bytes =
+signWithRsaPss : RsaPssParams -> PrivateKey RsaPssKey RsaKeyParams -> Bytes -> Task RsaPssSigningError Signature
+signWithRsaPss { salt } (PrivateKey (Key key { modulusLength, hash, extractable })) bytes =
     let
         clampedSaltBytes =
             clamp 0 2147483647 salt
@@ -2044,8 +2051,8 @@ RSA-PSS algorithm.
 This function produces no values. Instead, the `Task` succeeds if the passed 
 signature is valid and fails otherwise.
 -}
-verifyWithRsaPss : Int -> PublicKey RsaPssKey RsaKeyParams -> Signature -> Bytes -> Task x a
-verifyWithRsaPss salt (PublicKey (Key key _)) signature bytes =
+verifyWithRsaPss : RsaPssParams -> PublicKey RsaPssKey RsaKeyParams -> Signature -> Bytes -> Task x a
+verifyWithRsaPss { salt } (PublicKey (Key key _)) signature bytes =
     Gren.Kernel.Crypto.verifyWithRsaPss
         salt
         key
