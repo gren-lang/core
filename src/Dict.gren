@@ -64,17 +64,10 @@ that lets you look up a `String` (such as user names) and find the associated
 
     users : Dict String User
     users =
-        Dict.fromArray
-            [ { key = "Alice"
-              , value = makeUser "Alice" 28 1.65
-              }
-            , { key = "Bob"
-              , value = makeUser "Bob" 19 1.82
-              }
-            , { key = "Chuck"
-              , value = makeUser "Chuck" 33 1.75
-              }
-            ]
+        Dict.empty
+            |> Dict.set "Alice" (makeUser "Alice" 28 1.65)
+            |> Dict.set "Bob" (makeUser "Bob" 19 1.82)
+            |> Dict.set "Chuck" (makeUser "Chuck" 33 1.75)
 
     type alias User =
         { name : String
@@ -105,7 +98,7 @@ empty =
 `Nothing`. This is useful when you are not sure if a key will be in the
 dictionary.
 
-    animals = fromArray [ ("Tom", Cat), ("Jerry", Mouse) ]
+    animals = Dict.empty |> Dict.set "Tom" Cat |> Dict.set "Jerry" Mouse
 
     get "Tom"   animals == Just Cat
     get "Jerry" animals == Just Mouse
