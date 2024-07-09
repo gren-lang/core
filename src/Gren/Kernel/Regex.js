@@ -73,12 +73,12 @@ var _Regex_replaceAtMost = F4(function (n, re, replacer, string) {
       var submatch = arguments[i];
       submatches[--i] = submatch ? __Maybe_Just(submatch) : __Maybe_Nothing;
     }
-    return {
+    return replacer({
       __$match: match,
       __$index: arguments[arguments.length - 2],
       __$number: count,
       __$submatches: submatches,
-    };
+    });
   }
   return string.replace(re, jsReplacer);
 });

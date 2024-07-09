@@ -101,7 +101,18 @@ function _Debug_toAnsiString(ansi, value) {
         _Debug_ctorColor(ansi, "Dict") +
         _Debug_fadeColor(ansi, ".fromArray") +
         " " +
-        _Debug_toAnsiString(ansi, A3(__Dict_foldl, F3(function (key, value, acc) { acc.push({ key: key, value: value }); return acc; }), [], value))
+        _Debug_toAnsiString(
+          ansi,
+          A3(
+            __Dict_foldl,
+            F3(function (key, value, acc) {
+              acc.push({ key: key, value: value });
+              return acc;
+            }),
+            [],
+            value
+          )
+        )
       );
     }
 

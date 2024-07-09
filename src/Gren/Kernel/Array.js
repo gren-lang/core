@@ -91,7 +91,7 @@ var _Array_filter = F2(function (func, array) {
 
 var _Array_flat = function (array) {
   return array.flat();
-}
+};
 
 var _Array_flatMap = F2(function (func, array) {
   return array.flatMap(func);

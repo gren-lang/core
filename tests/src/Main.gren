@@ -20,6 +20,7 @@ import Test.Result as Result
 import Test.Runner.Node exposing (Program, run)
 import Test.Set as Set
 import Test.String as String
+import Test.Regex as Regex
 
 
 main : Program
@@ -40,4 +41,5 @@ main =
             , String.tests
             , Maybe.tests
             , Math.tests
+            , Regex.tests
             ]
