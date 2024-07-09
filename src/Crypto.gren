@@ -554,11 +554,12 @@ type RsaKeyGenerationError
 Produces a `KeyPair` that can be used to encrypt data with [`encryptWithRsaOaep`](#encryptWithRsaOaep) 
 and decrypt data with [`decryptWithRsaOaep`](#decryptWithRsaOaep).
 -}
-generateRsaOaepKeyPair : SecureContext -> RsaKeyParams -> Task RsaKeyGenerationError (KeyPair RsaOaepKey RsaKeyParams)
-generateRsaOaepKeyPair _context =
+generateRsaOaepKeyPair : RsaKeyParams -> SecureContext -> Task RsaKeyGenerationError (KeyPair RsaOaepKey RsaKeyParams)
+generateRsaOaepKeyPair params _context =
     generateRsaKeyHelper 
         "RSA-OAEP" 
         [ "encrypt", "decrypt" ]
+        params
 
 
 {-| Generate a new key using the RSA-PSS algorithm.
@@ -566,11 +567,12 @@ generateRsaOaepKeyPair _context =
 Produces a `KeyPair` that can be used to sign data with [`signWithRsaPss`](#signWithRsaPss) 
 and verify data with [`verifyWithRsaPss`](#verifyWithRsaPss).
 -}
-generateRsaPssKeyPair : SecureContext -> RsaKeyParams -> Task RsaKeyGenerationError (KeyPair RsaPssKey RsaKeyParams)
-generateRsaPssKeyPair _context =
+generateRsaPssKeyPair : RsaKeyParams -> SecureContext -> Task RsaKeyGenerationError (KeyPair RsaPssKey RsaKeyParams)
+generateRsaPssKeyPair params _context =
     generateRsaKeyHelper 
         "RSA-PSS"
         [ "sign", "verify" ]
+        params
 
 
 {-| Generate a new key using the RSASSA-PKCS1-v1_5 algorithm.
@@ -579,11 +581,12 @@ Produces a `KeyPair` that can be used to sign data with
 [`signWithRsaSsaPkcs1V1_5`](#signWithRsaSsaPkcs1V1_5) and verify data with 
 [`verifyWithRsaSsaPkcs1V1_5`](#verifyWithRsaSsaPkcs1V1_5).
 -}
-generateRsaSsaPkcs1V1_5KeyPair : SecureContext -> RsaKeyParams -> Task RsaKeyGenerationError (KeyPair RsaSsaPkcs1V1_5Key RsaKeyParams)
-generateRsaSsaPkcs1V1_5KeyPair _context =
+generateRsaSsaPkcs1V1_5KeyPair : RsaKeyParams -> SecureContext -> Task RsaKeyGenerationError (KeyPair RsaSsaPkcs1V1_5Key RsaKeyParams)
+generateRsaSsaPkcs1V1_5KeyPair params _context =
     generateRsaKeyHelper 
         "RSASSA-PKCS1-v1_5"
         [ "sign", "verify" ]
+        params
 
 
 {-|-}
@@ -659,8 +662,8 @@ type AesLength
 Produces a `Key` that can be used to encrypt data with [`encryptWithAesCtr`](#encryptWithAesCtr) 
 and decrypt data with [`decryptWithAesCtr`](#decryptWithAesCtr).
 -}
-generateAesCtrKey : SecureContext -> AesKeyParams -> Task x (Key AesCtrKey AesKeyParams)
-generateAesCtrKey _context { length, extractable }=
+generateAesCtrKey : AesKeyParams -> SecureContext -> Task x (Key AesCtrKey AesKeyParams)
+generateAesCtrKey { length, extractable } _context =
     Gren.Kernel.Crypto.generateAesKey
         "AES-CTR"
         (aesLengthToInt length)
@@ -673,8 +676,8 @@ generateAesCtrKey _context { length, extractable }=
 Produces a `Key` that can be used to encrypt data with [`encryptWithAesCbc`](#encryptWithAesCbc) 
 and decrypt data with [`decryptWithAesCbc`](#decryptWithAesCbc).
 -}
-generateAesCbcKey : SecureContext -> AesKeyParams -> Task x (Key AesCbcKey AesKeyParams)
-generateAesCbcKey _context { length, extractable } =
+generateAesCbcKey : AesKeyParams -> SecureContext -> Task x (Key AesCbcKey AesKeyParams)
+generateAesCbcKey { length, extractable } _context =
     Gren.Kernel.Crypto.generateAesKey
         "AES-CBC"
         (aesLengthToInt length)
@@ -687,8 +690,8 @@ generateAesCbcKey _context { length, extractable } =
 Produces a `Key` that can be used to encrypt data with [`encryptWithAesGcm`](#encryptWithAesGcm) 
 and decrypt data with [`decryptWithAesGcm`](#decryptWithAesGcm).
 -}
-generateAesGcmKey : SecureContext -> AesKeyParams -> Task x (Key AesGcmKey AesKeyParams)
-generateAesGcmKey _context { length, extractable } =
+generateAesGcmKey : AesKeyParams -> SecureContext -> Task x (Key AesGcmKey AesKeyParams)
+generateAesGcmKey { length, extractable } _context =
     Gren.Kernel.Crypto.generateAesKey
         "AES-GCM"
         (aesLengthToInt length)
@@ -739,8 +742,8 @@ type EcNamedCurve
 Produces a `KeyPair` that can be used to sign data with [`signWithEcdsa`](#signWithEcdsa) 
 and verify data with [`verifyWithEcdsa`](#verifyWithEcdsa).
 -}
-generateEcdsaKeyPair : SecureContext -> EcKeyParams-> Task x (KeyPair EcdsaKey EcKeyParams)
-generateEcdsaKeyPair _context { namedCurve, extractable } =
+generateEcdsaKeyPair : EcKeyParams -> SecureContext -> Task x (KeyPair EcdsaKey EcKeyParams)
+generateEcdsaKeyPair { namedCurve, extractable } _context =
     Gren.Kernel.Crypto.generateEcKey
         "ECDSA"
         (ecNamedCurveToString namedCurve)
@@ -750,8 +753,8 @@ generateEcdsaKeyPair _context { namedCurve, extractable } =
 
 {-| Generate a new key using the ECDH algorithm.
 -}
-generateEcdhKeyPair : SecureContext -> EcKeyParams -> Task x (KeyPair EcdhKey EcKeyParams)
-generateEcdhKeyPair _context { namedCurve, extractable } =
+generateEcdhKeyPair : EcKeyParams -> SecureContext -> Task x (KeyPair EcdhKey EcKeyParams)
+generateEcdhKeyPair { namedCurve, extractable } _context =
     Gren.Kernel.Crypto.generateEcKey
         "ECDH"
         (ecNamedCurveToString namedCurve)
@@ -804,8 +807,8 @@ type alias HmacKeyParams =
 Produces a `Key` that can be used to sign data with [`signWithHmac`](#signWithHmac) 
 and verify data with [`verifyWithHmac`](#verifyWithHmac).
 -}
-generateHmacKey : SecureContext -> HmacKeyParams -> Task HmacKeyGenerationError (Key HmacKey HmacKeyParams)
-generateHmacKey _context { hash, length, extractable } =
+generateHmacKey : HmacKeyParams -> SecureContext -> Task HmacKeyGenerationError (Key HmacKey HmacKeyParams)
+generateHmacKey { hash, length, extractable } _context =
     case length of
         Just passedLength ->
             let
@@ -1080,8 +1083,8 @@ type ImportRsaKeyError
 
 
 {-|-}
-importRsaOaepPublicKeyFromJwk : SecureContext -> Json.Encode.Value -> ImportRsaKeyParams -> Extractable -> Task ImportRsaKeyError (PublicKey RsaOaepKey RsaKeyParams)
-importRsaOaepPublicKeyFromJwk _context jwk { hash } extractable =
+importRsaOaepPublicKeyFromJwk : Json.Encode.Value -> ImportRsaKeyParams -> Extractable -> SecureContext -> Task ImportRsaKeyError (PublicKey RsaOaepKey RsaKeyParams)
+importRsaOaepPublicKeyFromJwk jwk { hash } extractable _context =
     Gren.Kernel.Crypto.importRsaKey
         "public"
         "jwk"
@@ -1093,8 +1096,8 @@ importRsaOaepPublicKeyFromJwk _context jwk { hash } extractable =
 
 
 {-|-}
-importRsaOaepPublicKeyFromSpki : SecureContext -> Bytes -> ImportRsaKeyParams -> Extractable -> Task ImportRsaKeyError (PublicKey RsaOaepKey RsaKeyParams)
-importRsaOaepPublicKeyFromSpki _context bytes { hash } extractable =
+importRsaOaepPublicKeyFromSpki : Bytes -> ImportRsaKeyParams -> Extractable -> SecureContext -> Task ImportRsaKeyError (PublicKey RsaOaepKey RsaKeyParams)
+importRsaOaepPublicKeyFromSpki bytes { hash } extractable _context =
     Gren.Kernel.Crypto.importRsaKey
         "public"
         "spki"
@@ -1106,8 +1109,8 @@ importRsaOaepPublicKeyFromSpki _context bytes { hash } extractable =
 
 
 {-|-}
-importRsaPssPublicKeyFromJwk : SecureContext -> Json.Encode.Value -> ImportRsaKeyParams -> Extractable -> Task ImportRsaKeyError (PublicKey RsaPssKey RsaKeyParams)
-importRsaPssPublicKeyFromJwk _context jwk { hash } extractable =
+importRsaPssPublicKeyFromJwk : Json.Encode.Value -> ImportRsaKeyParams -> Extractable -> SecureContext -> Task ImportRsaKeyError (PublicKey RsaPssKey RsaKeyParams)
+importRsaPssPublicKeyFromJwk jwk { hash } extractable _context =
     Gren.Kernel.Crypto.importRsaKey
         "public"
         "jwk"
@@ -1119,8 +1122,8 @@ importRsaPssPublicKeyFromJwk _context jwk { hash } extractable =
 
 
 {-|-}
-importRsaPssPublicKeyFromSpki : SecureContext -> Bytes -> ImportRsaKeyParams -> Extractable -> Task ImportRsaKeyError (PublicKey RsaPssKey RsaKeyParams)
-importRsaPssPublicKeyFromSpki _context bytes { hash } extractable =
+importRsaPssPublicKeyFromSpki : Bytes -> ImportRsaKeyParams -> Extractable -> SecureContext -> Task ImportRsaKeyError (PublicKey RsaPssKey RsaKeyParams)
+importRsaPssPublicKeyFromSpki bytes { hash } extractable _context =
     Gren.Kernel.Crypto.importRsaKey
         "public"
         "spki"
@@ -1132,8 +1135,8 @@ importRsaPssPublicKeyFromSpki _context bytes { hash } extractable =
 
 
 {-|-}
-importRsaOaepPrivateKeyFromJwk : SecureContext -> Json.Encode.Value -> ImportRsaKeyParams -> Extractable -> Task ImportRsaKeyError (PrivateKey RsaOaepKey RsaKeyParams)
-importRsaOaepPrivateKeyFromJwk _context jwk { hash } extractable =
+importRsaOaepPrivateKeyFromJwk : Json.Encode.Value -> ImportRsaKeyParams -> Extractable -> SecureContext -> Task ImportRsaKeyError (PrivateKey RsaOaepKey RsaKeyParams)
+importRsaOaepPrivateKeyFromJwk jwk { hash } extractable _context =
     Gren.Kernel.Crypto.importRsaKey
         "private"
         "jwk"
@@ -1145,8 +1148,8 @@ importRsaOaepPrivateKeyFromJwk _context jwk { hash } extractable =
 
 
 {-|-}
-importRsaOaepPrivateKeyFromPkcs8 : SecureContext -> Bytes -> ImportRsaKeyParams -> Extractable -> Task ImportRsaKeyError (PrivateKey RsaOaepKey RsaKeyParams)
-importRsaOaepPrivateKeyFromPkcs8 _context bytes { hash } extractable =
+importRsaOaepPrivateKeyFromPkcs8 : Bytes -> ImportRsaKeyParams -> Extractable -> SecureContext -> Task ImportRsaKeyError (PrivateKey RsaOaepKey RsaKeyParams)
+importRsaOaepPrivateKeyFromPkcs8 bytes { hash } extractable _context =
     Gren.Kernel.Crypto.importRsaKey
         "private"
         "pkcs8"
@@ -1158,8 +1161,8 @@ importRsaOaepPrivateKeyFromPkcs8 _context bytes { hash } extractable =
 
 
 {-|-}
-importRsaPssPrivateKeyFromJwk : SecureContext -> Json.Encode.Value -> ImportRsaKeyParams -> Extractable -> Task ImportRsaKeyError (PrivateKey RsaPssKey RsaKeyParams)
-importRsaPssPrivateKeyFromJwk _context jwk { hash } extractable =
+importRsaPssPrivateKeyFromJwk : Json.Encode.Value -> ImportRsaKeyParams -> Extractable -> SecureContext -> Task ImportRsaKeyError (PrivateKey RsaPssKey RsaKeyParams)
+importRsaPssPrivateKeyFromJwk jwk { hash } extractable _context =
     Gren.Kernel.Crypto.importRsaKey
         "private"
         "jwk"
@@ -1171,8 +1174,8 @@ importRsaPssPrivateKeyFromJwk _context jwk { hash } extractable =
 
 
 {-|-}
-importRsaPssPrivateKeyFromPkcs8 : SecureContext -> Bytes -> ImportRsaKeyParams -> Extractable -> Task ImportRsaKeyError (PrivateKey RsaPssKey RsaKeyParams)
-importRsaPssPrivateKeyFromPkcs8 _context bytes { hash } extractable =
+importRsaPssPrivateKeyFromPkcs8 : Bytes -> ImportRsaKeyParams -> Extractable -> SecureContext -> Task ImportRsaKeyError (PrivateKey RsaPssKey RsaKeyParams)
+importRsaPssPrivateKeyFromPkcs8 bytes { hash } extractable _context =
     Gren.Kernel.Crypto.importRsaKey
         "private"
         "pkcs8"
@@ -1184,8 +1187,8 @@ importRsaPssPrivateKeyFromPkcs8 _context bytes { hash } extractable =
 
 
 {-|-}
-importRsaSsaPkcs1V1_5PublicKeyFromJwk : SecureContext -> Json.Encode.Value -> ImportRsaKeyParams -> Extractable -> Task ImportRsaKeyError (PrivateKey RsaSsaPkcs1V1_5Key RsaKeyParams)
-importRsaSsaPkcs1V1_5PublicKeyFromJwk _context jwk { hash } extractable =
+importRsaSsaPkcs1V1_5PublicKeyFromJwk : Json.Encode.Value -> ImportRsaKeyParams -> Extractable -> SecureContext -> Task ImportRsaKeyError (PrivateKey RsaSsaPkcs1V1_5Key RsaKeyParams)
+importRsaSsaPkcs1V1_5PublicKeyFromJwk jwk { hash } extractable _context =
     Gren.Kernel.Crypto.importRsaKey
         "public"
         "jwk"
@@ -1197,8 +1200,8 @@ importRsaSsaPkcs1V1_5PublicKeyFromJwk _context jwk { hash } extractable =
 
 
 {-|-}
-importRsaSsaPkcs1V1_5PublicKeyFromSpki : SecureContext -> Bytes -> ImportRsaKeyParams -> Extractable -> Task ImportRsaKeyError (PrivateKey RsaSsaPkcs1V1_5Key RsaKeyParams)
-importRsaSsaPkcs1V1_5PublicKeyFromSpki _context bytes { hash } extractable =
+importRsaSsaPkcs1V1_5PublicKeyFromSpki : Bytes -> ImportRsaKeyParams -> Extractable -> SecureContext -> Task ImportRsaKeyError (PrivateKey RsaSsaPkcs1V1_5Key RsaKeyParams)
+importRsaSsaPkcs1V1_5PublicKeyFromSpki bytes { hash } extractable _context =
     Gren.Kernel.Crypto.importRsaKey
         "public"
         "spki"
@@ -1210,8 +1213,8 @@ importRsaSsaPkcs1V1_5PublicKeyFromSpki _context bytes { hash } extractable =
 
 
 {-|-}
-importRsaSsaPkcs1V1_5PrivateKeyFromJwk : SecureContext -> Json.Encode.Value -> ImportRsaKeyParams -> Extractable -> Task ImportRsaKeyError (PrivateKey RsaSsaPkcs1V1_5Key RsaKeyParams)
-importRsaSsaPkcs1V1_5PrivateKeyFromJwk _context jwk { hash } extractable =
+importRsaSsaPkcs1V1_5PrivateKeyFromJwk : Json.Encode.Value -> ImportRsaKeyParams -> Extractable -> SecureContext -> Task ImportRsaKeyError (PrivateKey RsaSsaPkcs1V1_5Key RsaKeyParams)
+importRsaSsaPkcs1V1_5PrivateKeyFromJwk jwk { hash } extractable _context =
     Gren.Kernel.Crypto.importRsaKey
         "private"
         "jwk"
@@ -1223,8 +1226,8 @@ importRsaSsaPkcs1V1_5PrivateKeyFromJwk _context jwk { hash } extractable =
 
 
 {-|-}
-importRsaSsaPkcs1V1_5PrivateKeyFromPkcs8 : SecureContext -> Bytes -> ImportRsaKeyParams -> Extractable -> Task ImportRsaKeyError (PrivateKey RsaSsaPkcs1V1_5Key RsaKeyParams)
-importRsaSsaPkcs1V1_5PrivateKeyFromPkcs8 _context bytes { hash } extractable =
+importRsaSsaPkcs1V1_5PrivateKeyFromPkcs8 : Bytes -> ImportRsaKeyParams -> Extractable -> SecureContext -> Task ImportRsaKeyError (PrivateKey RsaSsaPkcs1V1_5Key RsaKeyParams)
+importRsaSsaPkcs1V1_5PrivateKeyFromPkcs8 bytes { hash } extractable _context =
     Gren.Kernel.Crypto.importRsaKey
         "private"
         "pkcs8"
@@ -1246,8 +1249,8 @@ type ImportAesKeyError
 
 
 {-|-}
-importAesCtrKeyFromRaw : SecureContext -> Bytes -> Extractable -> Task ImportAesKeyError (Key AesCtrKey AesKeyParams)
-importAesCtrKeyFromRaw _context bytes extractable =
+importAesCtrKeyFromRaw : Bytes -> Extractable -> SecureContext -> Task ImportAesKeyError (Key AesCtrKey AesKeyParams)
+importAesCtrKeyFromRaw bytes extractable _context =
     Gren.Kernel.Crypto.importAesKey
         "raw"
         bytes
@@ -1257,8 +1260,8 @@ importAesCtrKeyFromRaw _context bytes extractable =
 
 
 {-|-}
-importAesCtrKeyFromJwk : SecureContext -> Json.Encode.Value -> Extractable -> Task ImportAesKeyError (Key AesCtrKey AesKeyParams)
-importAesCtrKeyFromJwk _context jwk extractable =
+importAesCtrKeyFromJwk : Json.Encode.Value -> Extractable -> SecureContext -> Task ImportAesKeyError (Key AesCtrKey AesKeyParams)
+importAesCtrKeyFromJwk jwk extractable _context =
     Gren.Kernel.Crypto.importAesKey
         "jwk"
         (Gren.Kernel.Json.unwrap jwk)
@@ -1268,8 +1271,8 @@ importAesCtrKeyFromJwk _context jwk extractable =
 
 
 {-|-}
-importAesCbcKeyFromRaw : SecureContext -> Bytes -> Extractable -> Task ImportAesKeyError (Key AesCtrKey AesKeyParams)
-importAesCbcKeyFromRaw _context bytes extractable =
+importAesCbcKeyFromRaw : Bytes -> Extractable -> SecureContext ->  Task ImportAesKeyError (Key AesCtrKey AesKeyParams)
+importAesCbcKeyFromRaw bytes extractable _context =
     Gren.Kernel.Crypto.importAesKey
         "raw"
         bytes
@@ -1279,8 +1282,8 @@ importAesCbcKeyFromRaw _context bytes extractable =
 
 
 {-|-}
-importAesCbcKeyFromJwk : SecureContext -> Json.Encode.Value -> Extractable -> Task ImportAesKeyError (Key AesCtrKey AesKeyParams)
-importAesCbcKeyFromJwk _context jwk extractable =
+importAesCbcKeyFromJwk : Json.Encode.Value -> Extractable -> SecureContext -> Task ImportAesKeyError (Key AesCtrKey AesKeyParams)
+importAesCbcKeyFromJwk jwk extractable _context =
     Gren.Kernel.Crypto.importAesKey
         "jwk"
         (Gren.Kernel.Json.unwrap jwk)
@@ -1290,8 +1293,8 @@ importAesCbcKeyFromJwk _context jwk extractable =
 
 
 {-|-}
-importAesGcmKeyFromRaw : SecureContext -> Bytes -> Extractable -> Task ImportAesKeyError (Key AesCtrKey AesKeyParams)
-importAesGcmKeyFromRaw _context bytes extractable =
+importAesGcmKeyFromRaw : Bytes -> Extractable -> SecureContext -> Task ImportAesKeyError (Key AesCtrKey AesKeyParams)
+importAesGcmKeyFromRaw bytes extractable _context =
     Gren.Kernel.Crypto.importAesKey
         "raw"
         bytes
@@ -1301,8 +1304,8 @@ importAesGcmKeyFromRaw _context bytes extractable =
 
 
 {-|-}
-importAesGcmKeyFromJwk : SecureContext -> Json.Encode.Value -> Extractable -> Task ImportAesKeyError (Key AesCtrKey AesKeyParams)
-importAesGcmKeyFromJwk _context jwk extractable =
+importAesGcmKeyFromJwk : Json.Encode.Value -> Extractable -> SecureContext -> Task ImportAesKeyError (Key AesCtrKey AesKeyParams)
+importAesGcmKeyFromJwk jwk extractable _context =
     Gren.Kernel.Crypto.importAesKey
         "jwk"
         (Gren.Kernel.Json.unwrap jwk)
@@ -1324,8 +1327,8 @@ type ImportEcKeyError
 
 
 {-|-}
-importEcdsaPublicKeyFromRaw : SecureContext -> EcNamedCurve -> Bytes -> Extractable -> Task ImportEcKeyError (PublicKey EcdsaKey EcKeyParams)
-importEcdsaPublicKeyFromRaw _context namedCurve bytes extractable =
+importEcdsaPublicKeyFromRaw : EcNamedCurve -> Bytes -> Extractable -> SecureContext -> Task ImportEcKeyError (PublicKey EcdsaKey EcKeyParams)
+importEcdsaPublicKeyFromRaw namedCurve bytes extractable _context =
     Gren.Kernel.Crypto.importEcKey
         "public"
         "raw"
@@ -1337,8 +1340,8 @@ importEcdsaPublicKeyFromRaw _context namedCurve bytes extractable =
 
 
 {-|-}
-importEcdsaPublicKeyFromSpki : SecureContext -> EcNamedCurve -> Bytes -> Extractable -> Task ImportEcKeyError (PublicKey EcdsaKey EcKeyParams)
-importEcdsaPublicKeyFromSpki _context namedCurve bytes extractable =
+importEcdsaPublicKeyFromSpki : EcNamedCurve -> Bytes -> Extractable -> SecureContext -> Task ImportEcKeyError (PublicKey EcdsaKey EcKeyParams)
+importEcdsaPublicKeyFromSpki namedCurve bytes extractable _context =
     Gren.Kernel.Crypto.importEcKey
         "public"
         "spki"
@@ -1350,8 +1353,8 @@ importEcdsaPublicKeyFromSpki _context namedCurve bytes extractable =
 
 
 {-|-}
-importEcdsaPublicKeyFromJwk : SecureContext -> EcNamedCurve -> Json.Encode.Value -> Extractable -> Task ImportEcKeyError (PublicKey EcdsaKey EcKeyParams)
-importEcdsaPublicKeyFromJwk _context namedCurve jwk extractable =
+importEcdsaPublicKeyFromJwk : EcNamedCurve -> Json.Encode.Value -> Extractable -> SecureContext -> Task ImportEcKeyError (PublicKey EcdsaKey EcKeyParams)
+importEcdsaPublicKeyFromJwk namedCurve jwk extractable _context =
     Gren.Kernel.Crypto.importEcKey
         "public"
         "jwk"
@@ -1363,8 +1366,8 @@ importEcdsaPublicKeyFromJwk _context namedCurve jwk extractable =
 
 
 {-|-}
-importEcdhPublicKeyFromRaw : SecureContext -> EcNamedCurve -> Bytes -> Extractable -> Task ImportEcKeyError (PublicKey EcdhKey EcKeyParams)
-importEcdhPublicKeyFromRaw _context namedCurve bytes extractable =
+importEcdhPublicKeyFromRaw : EcNamedCurve -> Bytes -> Extractable -> SecureContext -> Task ImportEcKeyError (PublicKey EcdhKey EcKeyParams)
+importEcdhPublicKeyFromRaw namedCurve bytes extractable _context =
     Gren.Kernel.Crypto.importEcKey
         "public"
         "raw"
@@ -1376,8 +1379,8 @@ importEcdhPublicKeyFromRaw _context namedCurve bytes extractable =
 
 
 {-|-}
-importEcdhPublicKeyFromSpki : SecureContext -> EcNamedCurve -> Bytes -> Extractable -> Task ImportEcKeyError (PublicKey EcdhKey EcKeyParams)
-importEcdhPublicKeyFromSpki _context namedCurve bytes extractable =
+importEcdhPublicKeyFromSpki : EcNamedCurve -> Bytes -> Extractable -> SecureContext -> Task ImportEcKeyError (PublicKey EcdhKey EcKeyParams)
+importEcdhPublicKeyFromSpki namedCurve bytes extractable _context =
     Gren.Kernel.Crypto.importEcKey
         "public"
         "spki"
@@ -1389,8 +1392,8 @@ importEcdhPublicKeyFromSpki _context namedCurve bytes extractable =
 
 
 {-|-}
-importEcdhPublicKeyFromJwk : SecureContext -> EcNamedCurve -> Json.Encode.Value -> Extractable -> Task ImportEcKeyError (PublicKey EcdhKey EcKeyParams)
-importEcdhPublicKeyFromJwk _context namedCurve jwk extractable =
+importEcdhPublicKeyFromJwk : EcNamedCurve -> Json.Encode.Value -> Extractable -> SecureContext -> Task ImportEcKeyError (PublicKey EcdhKey EcKeyParams)
+importEcdhPublicKeyFromJwk namedCurve jwk extractable _context =
     Gren.Kernel.Crypto.importEcKey
         "public"
         "jwk"
@@ -1402,8 +1405,8 @@ importEcdhPublicKeyFromJwk _context namedCurve jwk extractable =
 
 
 {-|-}
-importEcdsaPrivateKeyFromPkcs8 : SecureContext -> EcNamedCurve -> Bytes -> Extractable -> Task ImportEcKeyError (PrivateKey EcdsaKey EcKeyParams)
-importEcdsaPrivateKeyFromPkcs8 _context namedCurve bytes extractable =
+importEcdsaPrivateKeyFromPkcs8 : EcNamedCurve -> Bytes -> Extractable -> SecureContext -> Task ImportEcKeyError (PrivateKey EcdsaKey EcKeyParams)
+importEcdsaPrivateKeyFromPkcs8 namedCurve bytes extractable _context =
     Gren.Kernel.Crypto.importEcKey
         "private"
         "pkcs8"
@@ -1415,8 +1418,8 @@ importEcdsaPrivateKeyFromPkcs8 _context namedCurve bytes extractable =
 
 
 {-|-}
-importEcdsaPrivateKeyFromSpki : SecureContext -> EcNamedCurve -> Bytes -> Extractable -> Task ImportEcKeyError (PrivateKey EcdsaKey EcKeyParams)
-importEcdsaPrivateKeyFromSpki _context namedCurve bytes extractable =
+importEcdsaPrivateKeyFromSpki : EcNamedCurve -> Bytes -> Extractable -> SecureContext -> Task ImportEcKeyError (PrivateKey EcdsaKey EcKeyParams)
+importEcdsaPrivateKeyFromSpki namedCurve bytes extractable _context =
     Gren.Kernel.Crypto.importEcKey
         "private"
         "spki"
@@ -1428,8 +1431,8 @@ importEcdsaPrivateKeyFromSpki _context namedCurve bytes extractable =
 
 
 {-|-}
-importEcdsaPrivateKeyFromJwk : SecureContext -> EcNamedCurve -> Json.Encode.Value -> Extractable -> Task ImportEcKeyError (PrivateKey EcdsaKey EcKeyParams)
-importEcdsaPrivateKeyFromJwk _context namedCurve jwk extractable =
+importEcdsaPrivateKeyFromJwk : EcNamedCurve -> Json.Encode.Value -> Extractable -> SecureContext -> Task ImportEcKeyError (PrivateKey EcdsaKey EcKeyParams)
+importEcdsaPrivateKeyFromJwk namedCurve jwk extractable _context =
     Gren.Kernel.Crypto.importEcKey
         "private"
         "jwk"
@@ -1441,8 +1444,8 @@ importEcdsaPrivateKeyFromJwk _context namedCurve jwk extractable =
 
 
 {-|-}
-importEcdhPrivateKeyFromPkcs8 : SecureContext -> EcNamedCurve -> Bytes -> Extractable -> Task ImportEcKeyError (PrivateKey EcdhKey EcKeyParams)
-importEcdhPrivateKeyFromPkcs8 _context namedCurve bytes extractable =
+importEcdhPrivateKeyFromPkcs8 : EcNamedCurve -> Bytes -> Extractable -> SecureContext -> Task ImportEcKeyError (PrivateKey EcdhKey EcKeyParams)
+importEcdhPrivateKeyFromPkcs8 namedCurve bytes extractable _context =
     Gren.Kernel.Crypto.importEcKey
         "private"
         "pkcs8"
@@ -1454,8 +1457,8 @@ importEcdhPrivateKeyFromPkcs8 _context namedCurve bytes extractable =
 
 
 {-|-}
-importEcdhPrivateKeyFromSpki : SecureContext -> EcNamedCurve -> Bytes -> Extractable -> Task ImportEcKeyError (PrivateKey EcdhKey EcKeyParams)
-importEcdhPrivateKeyFromSpki _context namedCurve bytes extractable =
+importEcdhPrivateKeyFromSpki : EcNamedCurve -> Bytes -> Extractable -> SecureContext -> Task ImportEcKeyError (PrivateKey EcdhKey EcKeyParams)
+importEcdhPrivateKeyFromSpki namedCurve bytes extractable _context =
     Gren.Kernel.Crypto.importEcKey
         "private"
         "spki"
@@ -1467,8 +1470,8 @@ importEcdhPrivateKeyFromSpki _context namedCurve bytes extractable =
 
 
 {-|-}
-importEcdhPrivateKeyFromJwk : SecureContext -> EcNamedCurve -> Json.Encode.Value -> Extractable -> Task ImportEcKeyError (PrivateKey EcdhKey EcKeyParams)
-importEcdhPrivateKeyFromJwk  _context namedCurve jwk extractable =
+importEcdhPrivateKeyFromJwk : EcNamedCurve -> Json.Encode.Value -> Extractable -> SecureContext -> Task ImportEcKeyError (PrivateKey EcdhKey EcKeyParams)
+importEcdhPrivateKeyFromJwk namedCurve jwk extractable _context =
     Gren.Kernel.Crypto.importEcKey
         "private"
         "jwk"
@@ -1495,8 +1498,8 @@ type ImportHmacKeyError
 
 
 {-|-}
-importHmacKeyFromJwk : SecureContext -> Json.Encode.Value -> DigestAlgorithm -> Maybe Int -> Extractable -> Task ImportHmacKeyError (Key HmacKey HmacKeyParams)
-importHmacKeyFromJwk _context jwk hash passedLength extractable =
+importHmacKeyFromJwk : Json.Encode.Value -> DigestAlgorithm -> Maybe Int -> Extractable -> SecureContext -> Task ImportHmacKeyError (Key HmacKey HmacKeyParams)
+importHmacKeyFromJwk jwk hash passedLength extractable _context =
     case passedLength of
         Just length ->
             Gren.Kernel.Crypto.importHmacKey
@@ -1520,8 +1523,8 @@ importHmacKeyFromJwk _context jwk hash passedLength extractable =
 
 
 {-|-}
-importHmacKeyFromRaw : SecureContext -> Bytes -> DigestAlgorithm -> Maybe Int -> Extractable -> Task ImportHmacKeyError (Key HmacKey HmacKeyParams)
-importHmacKeyFromRaw _context bytes hash passedLength extractable =
+importHmacKeyFromRaw : Bytes -> DigestAlgorithm -> Maybe Int -> Extractable -> SecureContext -> Task ImportHmacKeyError (Key HmacKey HmacKeyParams)
+importHmacKeyFromRaw bytes hash passedLength extractable _context =
     case passedLength of
         Just length ->
             Gren.Kernel.Crypto.importHmacKey
@@ -2107,8 +2110,8 @@ type DigestAlgorithm
 {-| Take some `Bytes` and create a hash from them using the passed `DigestAlgorithm`.
 This operation should always succeed.
 -}
-digest : SecureContext -> DigestAlgorithm -> Bytes -> Task x Bytes
-digest _context algorithm data =
+digest : DigestAlgorithm -> Bytes -> SecureContext -> Task x Bytes
+digest algorithm data _context =
     Gren.Kernel.Crypto.digest
         (digestAlgorithmToString algorithm)
         data
