@@ -177,8 +177,8 @@ toArray (Set_gren_builtin dict) =
 {-| Convert an array into a set, removing any duplicates.
 -}
 fromArray : Array comparable -> Set comparable
-fromArray list =
-    Array.foldl set empty list
+fromArray array =
+    Array.foldl set empty array
 
 
 {-| Fold over the values in a set, in order from lowest to highest.

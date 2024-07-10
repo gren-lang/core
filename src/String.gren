@@ -583,7 +583,7 @@ fromFloat =
 
 
 
--- LIST CONVERSIONS
+-- ARRAY CONVERSIONS
 
 
 {-| Convert a string to an array of characters.
