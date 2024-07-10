@@ -690,7 +690,7 @@ partition isGood dict =
 
 
 
--- LISTS
+-- ARRAYS
 
 
 {-| Get all of the keys in a dictionary, sorted from lowest to highest.
@@ -733,31 +733,31 @@ merge :
     -> result
 merge leftStep bothStep rightStep leftDict rightDict initialResult =
     let
-        stepState rKey rValue { list, result } =
-            case Array.popFirst list of
+        stepState rKey rValue { array, result } =
+            case Array.popFirst array of
                 Nothing ->
-                    { list = list
+                    { array = array
                     , result = rightStep rKey rValue result
                     }
 
                 Just { first = { key = lKey, value = lValue }, rest } ->
                     if lKey < rKey then
                         stepState rKey rValue 
-                            { list = rest
+                            { array = rest
                             , result = leftStep lKey lValue result
                             }
 
                     else if lKey > rKey then
-                        { list = list
+                        { array = array
                         , result = rightStep rKey rValue result
                         }
 
                     else
-                        { list = rest
+                        { array = rest
                         , result = bothStep lKey lValue rValue result
                         }
 
-        { list = leftovers, result = intermediateResult } =
-            foldl stepState { list = foldl (\key value array -> Array.pushLast { key = key, value = value } array) [] leftDict, result = initialResult } rightDict
+        { array = leftovers, result = intermediateResult } =
+            foldl stepState { array = foldl (\key value array -> Array.pushLast { key = key, value = value } array) [] leftDict, result = initialResult } rightDict
     in
     Array.foldl (\{ key, value } result -> leftStep key value result) intermediateResult leftovers

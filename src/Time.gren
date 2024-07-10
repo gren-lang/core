@@ -542,7 +542,7 @@ function is a stopgap that takes:
 
 1. A default offset in minutes. So `Etc/GMT-5` is `customZone (-5 * 60) []`
 and `Etc/GMT+9` is `customZone (9 * 60) []`.
-2. A list of exceptions containing their `start` time in "minutes since the Unix
+2. An array of exceptions containing their `start` time in "minutes since the Unix
 epoch" and their `offset` in "minutes from UTC"
 
 Human times will be based on the nearest `start`, falling back on the default

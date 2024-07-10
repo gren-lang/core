@@ -164,10 +164,10 @@ function _Platform_leaf(home) {
   };
 }
 
-function _Platform_batch(list) {
+function _Platform_batch(array) {
   return {
     $: __2_NODE,
-    __bags: list,
+    __bags: array,
   };
 }
 
