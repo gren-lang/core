@@ -267,7 +267,7 @@ lines =
 
 
 {-| Take a substring given a start and end index. Negative indexes
-are taken starting from the _end_ of the list.
+are taken starting from the _end_ of the array.
 
     slice 7 9 "snakes on a plane!" == "on"
 
@@ -586,7 +586,7 @@ fromFloat =
 -- LIST CONVERSIONS
 
 
-{-| Convert a string to a list of characters.
+{-| Convert a string to an array of characters.
 
     toArray "abc" == [ 'a', 'b', 'c' ]
 
@@ -598,7 +598,7 @@ toArray string =
     foldl Array.pushLast [] string
 
 
-{-| Convert a list of characters into a String. Can be useful if you
+{-| Convert an array of characters into a String. Can be useful if you
 want to create a string primarily by consing, perhaps for decoding
 something.
 
@@ -637,7 +637,7 @@ cons =
 
 
 {-| Split a non-empty string into its head and tail. This lets you
-pattern match on strings exactly as you would with lists.
+pattern match on strings exactly as you would with arrays.
 
     uncons "abc" == Just ( 'a', "bc" )
 

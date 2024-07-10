@@ -8,7 +8,7 @@ module Set exposing
     )
 
 {-| A set of unique values. The values can be any comparable type. This
-includes `Int`, `Float`, `Time`, `Char`, `String`, and tuples or lists
+includes `Int`, `Float`, `Time`, `Char`, `String`, and tuples or arrays
 of comparable types.
 
 Set, remove, and query operations all take _O(log n)_ time.
@@ -167,14 +167,14 @@ diff (Set_gren_builtin dict1) (Set_gren_builtin dict2) =
     Set_gren_builtin (Dict.diff dict1 dict2)
 
 
-{-| Convert a set into a list, sorted from lowest to highest.
+{-| Convert a set into an array, sorted from lowest to highest.
 -}
 toArray : Set a -> Array a
 toArray (Set_gren_builtin dict) =
     Dict.keys dict
 
 
-{-| Convert a list into a set, removing any duplicates.
+{-| Convert an array into a set, removing any duplicates.
 -}
 fromArray : Array comparable -> Set comparable
 fromArray list =

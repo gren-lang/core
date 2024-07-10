@@ -390,7 +390,7 @@ fail =
 
 If you are `Done`, you give the result of the whole `loop`. If you decide to
 `Loop` around again, you give a new state to work from. Maybe you need to add
-an item to a list? Or maybe you need to track some information about what you
+an item to an array? Or maybe you need to track some information about what you
 just saw?
 
 **Note:** It may be helpful to learn about [finite-state machines][fsm] to get
@@ -406,24 +406,24 @@ type Step state a
 
 
 {-| A decoder that can loop indefinitely. This can be helpful when parsing
-repeated structures, like a list:
+repeated structures, like an array:
 
     import Bytes exposing (Endianness(..))
     import Bytes.Decode as Decode exposing (..)
 
-    list : Decoder a -> Decoder (Array a)
-    list decoder =
+    array : Decoder a -> Decoder (Array a)
+    array decoder =
       unsignedInt32 BE
-        |> andThen (\len -> loop (len, []) (listStep decoder))
+        |> andThen (\len -> loop (len, []) (arrayStep decoder))
 
-    listStep : Decoder a -> { fst : Int, snd : Array a } -> Decoder (Step { fst Int, snd : Array a } (Array a))
-    listStep decoder (n, xs) =
+    arrayStep : Decoder a -> { fst : Int, snd : Array a } -> Decoder (Step { fst Int, snd : Array a } (Array a))
+    arrayStep decoder (n, xs) =
       if n <= 0 then
         succeed (Done xs)
       else
         map (\x -> Loop (n - 1, x :: xs)) decoder
 
-The `list` decoder first reads a 32-bit unsigned integer. That determines how
+The `array` decoder first reads a 32-bit unsigned integer. That determines how
 many items will be decoded. From there we use [`loop`](#loop) to track all the
 items we have parsed so far and figure out when to stop.
 -}

@@ -39,7 +39,7 @@ characters, strings and arrays of comparable things.
 @docs Bool, not, (&&), (||), xor
 
 
-## Append Strings and Lists
+## Append Strings and Arrays
 
 @docs (++)
 
@@ -152,12 +152,12 @@ can do things like this:
 
 You _cannot_ add an `Int` and a `Float` directly though. Use functions like
 [toFloat](#toFloat) or [round](#round) to convert both values to the same type.
-So if you needed to add a list length to a `Float` for some reason, you
+So if you needed to add a array length to a `Float` for some reason, you
 could say one of these:
 
-    3.14 + toFloat (List.length [ 1, 2, 3 ]) == 6.14
+    3.14 + toFloat (Array.length [ 1, 2, 3 ]) == 6.14
 
-    round 3.14 + List.length [ 1, 2, 3 ] == 6
+    round 3.14 + Array.length [ 1, 2, 3 ] == 6
 
 **Note:** Languages like Java and JavaScript automatically convert `Int` values
 to `Float` values when you mix and match. This can make it difficult to be sure
@@ -415,7 +415,7 @@ clamp low high number =
 
 
 {-| Compare any two comparable values. Comparable values include `String`,
-`Char`, `Int`, `Float`, or a list or tuple containing comparable values. These
+`Char`, `Int`, `Float`, or an array or tuple containing comparable values. These
 are also the only values that work as `Dict` keys or `Set` members.
 
     compare 3 4 == LT
@@ -532,7 +532,7 @@ xor =
 -- APPEND
 
 
-{-| Put two appendable things together. This includes strings and lists.
+{-| Put two appendable things together. This includes strings and arrays.
 
     "hello" ++ "world" == "helloworld"
 
