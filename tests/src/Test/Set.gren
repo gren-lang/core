@@ -255,21 +255,21 @@ diffTests =
 
 toArrayTests : Array Test
 toArrayTests =
-    [ test "returns empty list for empty set" <|
+    [ test "returns empty array for empty set" <|
         \{} -> Expect.equal [] (Set.toArray Set.empty)
-    , test "returns singleton list for singleton set" <|
+    , test "returns singleton array for singleton set" <|
         \{} -> Expect.equal [ 42 ] (Set.toArray set42)
-    , test "returns sorted list of set elements" <|
+    , test "returns sorted array of set elements" <|
         \{} -> Expect.equal (Array.range 1 100) (Set.toArray set1To100)
     ]
 
 
 fromArrayTests : Array Test
 fromArrayTests =
-    [ test "returns empty set for empty list" <|
+    [ test "returns empty set for empty array" <|
         \{} -> Expect.equal Set.empty (Set.fromArray [])
-    , test "returns singleton set for singleton list" <|
+    , test "returns singleton set for singleton array" <|
         \{} -> Expect.equal set42 (Set.fromArray [ 42 ])
-    , test "returns set with unique list elements" <|
+    , test "returns set with unique array elements" <|
         \{} -> Expect.equal set1To100 (Set.fromArray (Array.pushFirst 1 <| Array.range 1 100))
     ]
