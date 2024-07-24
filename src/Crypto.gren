@@ -1628,7 +1628,7 @@ with the [`generateAesCtrKey`](#generateAesCtrKey) function.
 encryptWithAesCtr : AesCtrParams -> Key AesCtrKey AesKeyParams -> Bytes -> Task AesCtrEncryptionError Bytes
 encryptWithAesCtr { counter, length } (Key key _) bytes =
     -- The counter must be exactly 16 bytes long
-    if Bytes.width counter == 16 then
+    if Bytes.length counter == 16 then
         Gren.Kernel.Crypto.encryptWithAesCtr
             counter
             (clamp 1 128 length)
@@ -1668,7 +1668,7 @@ with the [`generateAesCbcKey`](#generateAesCbcKey) function.
 -}
 encryptWithAesCbc : AesCbcParams -> Key AesCbcKey AesKeyParams -> Bytes -> Task AesCbcEncryptionError Bytes
 encryptWithAesCbc { iv } (Key key _) bytes =
-    if Bytes.width iv == 16 then
+    if Bytes.length iv == 16 then
         Gren.Kernel.Crypto.encryptWithAesCbc
             iv
             key
@@ -1725,7 +1725,7 @@ encryptWithAesGcm : AesGcmParams -> Key AesGcmKey AesKeyParams -> Bytes -> Task 
 encryptWithAesGcm { iv, additionalData, tagLength } (Key key _) bytes =
     let
         byteWidth =
-            Bytes.width iv
+            Bytes.length iv
     in
     if byteWidth <= 128 && byteWidth >= 12 then
         case { ad = additionalData, tl = tagLength } of
@@ -1816,7 +1816,7 @@ with the [`generateAesCtrKey`](#generateAesCtrKey) function.
 -}
 decryptWithAesCtr : AesCtrParams -> Key AesCtrKey AesKeyParams -> Bytes -> Task AesCtrDecryptionError Bytes
 decryptWithAesCtr { counter, length } (Key key _) bytes =
-    if Bytes.width counter == 16 then
+    if Bytes.length counter == 16 then
         Gren.Kernel.Crypto.decryptWithAesCtr
             counter
             (clamp 1 128 length)
@@ -1848,7 +1848,7 @@ type AesCbcDecryptionError
 -}
 decryptWithAesCbc : AesCbcParams -> Key AesCbcKey AesKeyParams -> Bytes -> Task AesCbcDecryptionError Bytes
 decryptWithAesCbc { iv } (Key key _) bytes = 
-    if Bytes.width iv == 16 then
+    if Bytes.length iv == 16 then
         Gren.Kernel.Crypto.decryptWithAesCbc
             iv
             key
@@ -1881,7 +1881,7 @@ decryptWithAesGcm : AesGcmParams -> Key AesGcmKey AesKeyParams -> Bytes -> Task 
 decryptWithAesGcm { iv, additionalData, tagLength } (Key key _) bytes =
     let
         byteWidth =
-            Bytes.width iv
+            Bytes.length iv
     in
     if byteWidth <= 128 && byteWidth >= 12 then
         case { ad = additionalData, tl = tagLength } of
