@@ -32,7 +32,7 @@ hexUpper =
 
 
 hex =
-    Array.prefix hexLower hexUpper |> Array.prefix dec
+    Array.prepend hexLower hexUpper |> Array.prepend dec
 
 
 lowerCodes =
@@ -48,8 +48,8 @@ decCodes =
 
 
 oneOf : Array a -> a -> Bool
-oneOf list e =
-    Array.member e list
+oneOf array e =
+    Array.member e array
 
 
 tests : Test

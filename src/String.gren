@@ -1,6 +1,6 @@
 module String exposing
     ( String, isEmpty, length, reverse, repeat, replace
-    , append, concat, split, join, words, lines
+    , prepend, append, split, join, words, lines
     , slice, left, right, dropLeft, dropRight
     , contains, startsWith, endsWith, indices
     , toInt, fromInt
@@ -19,7 +19,7 @@ are enclosed in `"double quotes"`.
 
 ## Building and Splitting
 
-@docs append, concat, split, join, words, lines
+@docs prepend, append, split, join, words, lines
 
 
 ## Get Substrings
@@ -194,25 +194,26 @@ replace before after string =
 -- BUILDING AND SPLITTING
 
 
-{-| Append two strings. You can also use [the `(++)` operator](Basics#++)
+{-| Combine two strings. You can also use [the `(++)` operator](Basics#++)
 to do this.
 
-    append "butter" "fly" == "butterfly"
+    prepend "butter" "fly" == "butterfly"
 
 -}
-append : String -> String -> String
-append =
+prepend : String -> String -> String
+prepend =
     Gren.Kernel.String.append
 
 
-{-| Concatenate many strings into one.
-
-    concat [ "never", "the", "less" ] == "nevertheless"
+{-| Append one string onto another. This is the same operation as [prepend](prepend),
+but with the arguments reversed.
+    
+    append "butter" "fly" == "flybutter"
 
 -}
-concat : Array String -> String
-concat strings =
-    join "" strings
+append : String -> String -> String
+append lhs rhs =
+    prepend rhs lhs
 
 
 {-| Split a string using a given separator.
@@ -266,7 +267,7 @@ lines =
 
 
 {-| Take a substring given a start and end index. Negative indexes
-are taken starting from the _end_ of the list.
+are taken starting from the _end_ of the array.
 
     slice 7 9 "snakes on a plane!" == "on"
 
@@ -582,10 +583,10 @@ fromFloat =
 
 
 
--- LIST CONVERSIONS
+-- ARRAY CONVERSIONS
 
 
-{-| Convert a string to a list of characters.
+{-| Convert a string to an array of characters.
 
     toArray "abc" == [ 'a', 'b', 'c' ]
 
@@ -597,7 +598,7 @@ toArray string =
     foldl Array.pushLast [] string
 
 
-{-| Convert a list of characters into a String. Can be useful if you
+{-| Convert an array of characters into a String. Can be useful if you
 want to create a string primarily by consing, perhaps for decoding
 something.
 
@@ -636,7 +637,7 @@ cons =
 
 
 {-| Split a non-empty string into its head and tail. This lets you
-pattern match on strings exactly as you would with lists.
+pattern match on strings exactly as you would with arrays.
 
     uncons "abc" == Just ( 'a', "bc" )
 

@@ -1,0 +1,23 @@
+module Test.Regex exposing (tests)
+
+import Basics exposing (..)
+import String.Regex as Regex exposing (Regex)
+import Expect
+import String
+import Test exposing (..)
+
+
+
+tests : Test
+tests =
+    describe "Regex Tests"
+        [ test "Regex.replace" <| \{} ->
+            Regex.replace vowels (\_ -> "_") "abc"
+                |> Expect.equal "_bc"
+        ]
+
+
+vowels : Regex
+vowels = 
+    Regex.fromString "[aeiou]"
+        |> Maybe.withDefault Regex.never

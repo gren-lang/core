@@ -1,22 +1,39 @@
 module Bytes exposing
   ( Bytes
-  , width
+  , empty
+  , isEmpty
+  , length
+  --
   , Endianness(..)
   , getHostEndianness
+  --
+  , fromString
+  , toString
+  --
+  , join
   )
 
 
 {-| Functions for working with sequences of bytes.
 
-@docs Bytes, width
+@docs Bytes, empty, isEmpty, length
 
 ## Endianness
 @docs Endianness, getHostEndianness
 
+## Strings
+@docs fromString, toString
+
+## Combine
+@docs join
+
 -}
 
 
+import Array exposing (Array)
 import Basics exposing (..)
+import Maybe exposing (Maybe)
+import String exposing (String)
 import Task exposing (Task)
 import Gren.Kernel.Bytes
 
@@ -67,16 +84,30 @@ Anyway, the point is that `Bytes` is a sequence of bytes!
 type Bytes = Bytes
 
 
-{-| Get the width of a sequence of bytes.
+{-| The sequence with exactly 0 bytes.
+-}
+empty : Bytes
+empty =
+  Gren.Kernel.Bytes.empty
 
-So if a sequence has four-hundred bytes, then `width bytes` would give back
+
+{-| Check if the given byte sequence has 0 bytes in it.
+-}
+isEmpty : Bytes -> Bool
+isEmpty bytes =
+  length bytes == 0
+
+
+{-| Get the length of a sequence of bytes.
+
+So if a sequence has four-hundred bytes, then `length bytes` would give back
 `400`. That may be 400 unsigned 8-bit integers, 100 signed 32-bit integers, or
 even a UTF-8 string. The content does not matter. This is just figuring out
 how many bytes there are!
 -}
-width : Bytes -> Int
-width =
-  Gren.Kernel.Bytes.width
+length : Bytes -> Int
+length =
+  Gren.Kernel.Bytes.length
 
 
 
@@ -136,3 +167,35 @@ type Endianness = LE | BE
 getHostEndianness : Task x Endianness
 getHostEndianness =
   Gren.Kernel.Bytes.getHostEndianness LE BE
+
+
+-- STRINGS
+
+
+{-| Convert a `String` to a `Bytes`. The resulting bytes will be in the
+UTF-8 encoding.
+
+Some characters take one byte, while others can take up to four. Read more
+about [UTF-8](https://en.wikipedia.org/wiki/UTF-8) to learn the details!
+-}
+fromString : String -> Bytes
+fromString =
+  Gren.Kernel.Bytes.fromString
+
+
+{-| Convert UTF-8 encoded `Bytes` to `String`. If the byte sequence isn't
+valid UTF-8, `Nothing` will be returned.
+-}
+toString : Bytes -> Maybe String
+toString =
+  Gren.Kernel.Bytes.toString
+
+
+-- COMBINE
+
+
+{-| Join all `Bytes` in an `Array` into a single `Bytes`.
+-}
+join : Array Bytes -> Bytes
+join =
+  Gren.Kernel.Bytes.join

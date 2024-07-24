@@ -35,7 +35,7 @@ tests =
                 , test "compare 'f' 'f'" <| \{} -> Expect.equal EQ (compare 'f' 'f')
                 , test "compare ['a'] ['b']" <| \{} -> Expect.equal LT (compare [ 'a' ] [ 'b' ])
                 , test "set equality" <| \{} -> Expect.equal (Set.fromArray [ 1, 2 ]) (Set.fromArray [ 2, 1 ])
-                , test "dict equality" <| \{} -> Expect.equal (Dict.fromArray [ { key = 1, value = 1 }, { key = 2, value = 2 } ]) (Dict.fromArray [ { key = 2, value = 2 }, { key = 1, value = 1 } ])
+                , test "dict equality" <| \{} -> Expect.equal (Dict.empty |> Dict.set 1 1 |> Dict.set 2 2) (Dict.empty |> Dict.set 2 2 |> Dict.set 1 1)
                 , test "char equality" <| \{} -> Expect.notEqual '0' '饑'
                 ]
 
@@ -49,9 +49,6 @@ tests =
                 , test "toString String single quote" <| \{} -> Expect.equal "\"not 'escaped'\"" (toString "not 'escaped'")
                 , test "toString String double quote" <| \{} -> Expect.equal "\"are \\\"escaped\\\"\"" (toString "are \"escaped\"")
                 , test "toString record" <| \{} -> Expect.equal "{ field = [0] }" (toString { field = [ 0 ] })
-
-                -- TODO
-                --, test "toString record, special case" <| \{} -> Expect.equal "{ ctor = [0] }" (toString { ctor = [ 0 ] })
                 ]
         
         booleanTests =
@@ -90,7 +87,6 @@ tests =
         higherOrderTests =
             describe "Higher Order Helpers"
                 [ test "identity 'c'" <| \{} -> Expect.equal 'c' (identity 'c')
-                , test "always 42 {}" <| \{} -> Expect.equal 42 (always 42 {})
                 , test "<|" <| \{} -> Expect.equal 9 (identity <| 3 + 6)
                 , test "|>" <| \{} -> Expect.equal 9 (3 + 6 |> identity)
                 , test "<<" <| \{} -> Expect.equal True (not << xor True <| True)

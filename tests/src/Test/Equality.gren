@@ -32,7 +32,7 @@ tests =
                 , test "ctor diff, special case" <| \{} -> Expect.equal True ({ ctor = Just 3 } /= { ctor = Nothing })
                 ]
 
-        listTests =
+        arrayTests =
             describe "Array equality"
                 [ fuzz2 (Fuzz.intRange 100 10000) (Fuzz.intRange 100 10000) "Simple comparison" <|
                     \size1 size2 ->
@@ -41,4 +41,4 @@ tests =
                             (Array.range 0 size1 == Array.range 0 size2)
                 ]
     in
-    describe "Equality Tests" [ diffTests, recordTests, listTests ]
+    describe "Equality Tests" [ diffTests, recordTests, arrayTests ]

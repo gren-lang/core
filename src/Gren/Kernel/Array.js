@@ -21,26 +21,26 @@ var _Array_initialize = F3(function (size, offset, func) {
 });
 
 var _Array_get = F2(function (index, array) {
-  if (index < 0 || index >= array.length) {
+  var value = array.at(index);
+
+  if (value === undefined) {
     return __Maybe_Nothing;
   }
 
-  return __Maybe_Just(array[index]);
+  return __Maybe_Just(value);
 });
 
 var _Array_set = F3(function (index, value, array) {
-  if (index < 0 || index >= array.length) {
+  try {
+    return array.with(index, value);
+  } catch (e) {
+    // assuming RangeError
     return array;
   }
-
-  var result = array.slice();
-  result[index] = value;
-
-  return result;
 });
 
 var _Array_push = F2(function (value, array) {
-  return array.concat([value]);
+  return array.concat(value);
 });
 
 var _Array_foldl = F3(function (func, acc, array) {
@@ -59,6 +59,22 @@ var _Array_foldr = F3(function (func, acc, array) {
   return acc;
 });
 
+var _Array_indexedFoldl = F3(function (func, acc, array) {
+  for (var i = 0; i < array.length; i++) {
+    acc = A3(func, i, array[i], acc);
+  }
+
+  return acc;
+});
+
+var _Array_indexedFoldr = F3(function (func, acc, array) {
+  for (var i = array.length - 1; i >= 0; i--) {
+    acc = A3(func, i, array[i], acc);
+  }
+
+  return acc;
+});
+
 var _Array_map = F2(function (func, array) {
   return array.map(func);
 });
@@ -67,6 +83,18 @@ var _Array_indexedMap = F2(function (func, array) {
   return array.map(function (value, index) {
     return A2(func, index, value);
   });
+});
+
+var _Array_filter = F2(function (func, array) {
+  return array.filter(func);
+});
+
+var _Array_flat = function (array) {
+  return array.flat();
+};
+
+var _Array_flatMap = F2(function (func, array) {
+  return array.flatMap(func);
 });
 
 var _Array_slice = F3(function (from, to, array) {
@@ -78,7 +106,7 @@ var _Array_append = F2(function (left, right) {
 });
 
 var _Array_reverse = function (array) {
-  return array.slice().reverse();
+  return array.toReversed();
 };
 
 var _Array_findFirst = F2(function (pred, array) {
@@ -128,19 +156,19 @@ var _Array_map3 = F4(function (fn, as, bs, cs) {
 });
 
 var _Array_sort = function (array) {
-  return array.slice().sort(function (a, b) {
+  return array.toSorted(function (a, b) {
     return __Utils_cmp(a, b);
   });
 };
 
 var _Array_sortBy = F2(function (fn, array) {
-  return array.slice().sort(function (a, b) {
+  return array.toSorted(function (a, b) {
     return __Utils_cmp(fn(a), fn(b));
   });
 });
 
 var _Array_sortWith = F2(function (fn, array) {
-  return array.slice().sort(function (a, b) {
+  return array.toSorted(function (a, b) {
     var ord = A2(fn, a, b);
     return ord === __Basics_EQ ? 0 : ord === __Basics_LT ? -1 : 1;
   });
