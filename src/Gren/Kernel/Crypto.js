@@ -158,7 +158,7 @@ var _Crypto_generateRsaKey = F6(function (name, modulusLength, publicExponent, h
                     }
                 ))
             }).catch(function (err) {
-                return callback(__Scheduler_fail());
+                throw "There was an unforseen error that occured when attempting to generation an RSA key. This shouldn't happen! Please file a ticket in the `gren-lang/core` Github repo (https://github.com/gren-lang/core)"
             });
     });
 });
@@ -197,7 +197,7 @@ var _Crypto_generateEcKey = F4(function (name, namedCurve, extractable, permissi
                 ))
             })
             .catch(function (err) {
-                return callback(__Scheduler_fail());
+                throw "There was an unforseen error that occured when attempting to generation an EC key. This shouldn't happen! Please file a ticket in the `gren-lang/core` Github repo (https://github.com/gren-lang/core)"
             });
     })
 });
@@ -223,7 +223,7 @@ var _Crypto_generateHmacKey = F5(function (name, hash, length, extractable, perm
                 return callback(__Scheduler_succeed(_Crypto_constructHmacKey(key)))
             })
             .catch(function (err) {
-                return callback(__Scheduler_fail());
+                throw "There was an unforseen error that occured when attempting to generation an HMAC key. This shouldn't happen! Please file a ticket in the `gren-lang/core` Github repo (https://github.com/gren-lang/core)"
             });
     });
 });
@@ -244,7 +244,7 @@ var _Crypto_exportKey = F2(function (format, key) {
                 };
             })
             .catch(function (err) {
-                return callback(__Scheduler_fail());
+                throw "There was an unforseen error that occured when exporting a key. This shouldn't happen! Please file a ticket in the `gren-lang/core` Github repo (https://github.com/gren-lang/core)"
             });
     });
 });
@@ -555,7 +555,7 @@ var _Crypto_signWithEcdsa = F3(function (hash, key, bytes) {
                 return callback(__Scheduler_succeed(new DataView(res)));
             })
             .catch(function (err) {
-                return callback(__Scheduler_fail());
+                throw "There was an unforseen error that occured when attempting to sign using the ECDSA algorithm. This shouldn't happen! Please file a ticket in the `gren-lang/core` Github repo (https://github.com/gren-lang/core)"
             });
     });
 });
@@ -571,7 +571,7 @@ var _Crypto_signWithHmac = F2(function (key, bytes) {
                 return callback(__Scheduler_succeed(new DataView(res)));
             })
             .catch(function (err) {
-                return callback(__Scheduler_fail());
+                throw "There was an unforseen error that occured when attempting to sign with the HMAC algorithm. This shouldn't happen! Please file a ticket in the `gren-lang/core` Github repo (https://github.com/gren-lang/core)"
             });
     });
 });
@@ -589,7 +589,7 @@ var _Crypto_verifyWithRsaSsaPkcs1V1_5 = F3(function (key, signature, bytes) {
                 return callback(__Scheduler_succeed());
             })
             .catch(function (err) {
-                return callback(__Scheduler_fail());
+                throw "There was an unforseen error that occured when attempting to verify with the RSA-SSA-PKCS v1.5 algorithm. This shouldn't happen! Please file a ticket in the `gren-lang/core` Github repo (https://github.com/gren-lang/core)"
             });
     });
 });
@@ -606,7 +606,7 @@ var _Crypto_verifyWithRsaPss = F4(function (saltLength, key, signature, bytes) {
                 return callback(__Scheduler_succeed());
             })
             .catch(function (err) {
-                return callback(__Scheduler_fail());
+                throw "There was an unforseen error that occured when attempting to verify with the RSA-PSS algorithm. This shouldn't happen! Please file a ticket in the `gren-lang/core` Github repo (https://github.com/gren-lang/core)"
             });
     });
 });
@@ -623,7 +623,7 @@ var _Crypto_verifyWithEcdsa = F4(function (hash, key, signature, bytes) {
                 return callback(__Scheduler_succeed(res));
             })
             .catch(function (err) {
-                return callback(__Scheduler_fail());
+                throw "There was an unforseen error that occured when attempting to verify with the ECDSA algorithm. This shouldn't happen! Please file a ticket in the `gren-lang/core` Github repo (https://github.com/gren-lang/core)"
             });
     });
 });
@@ -639,7 +639,7 @@ var _Crypto_verifyWithHmac = F3(function (key, signature, bytes) {
                 return callback(__Scheduler_succeed(res));
             })
             .catch(function (err) {
-                return callback(__Scheduler_fail());
+                throw "There was an unforseen error that occured when attempting to verify with the HMAC algorithm. This shouldn't happen! Please file a ticket in the `gren-lang/core` Github repo (https://github.com/gren-lang/core)"
             });
     });
 });
@@ -654,7 +654,7 @@ var _Crypto_digest = F2(function (algorithm, bytes) {
                 return callback(__Scheduler_succeed(new DataView(res)));
             })
             .catch(function (err) {
-                return callback(__Scheduler_fail());
+                throw "There was an unforseen error that occured when attempting to digest some bytes. This shouldn't happen! Please file a ticket in the `gren-lang/core` Github repo (https://github.com/gren-lang/core)"
             });
     });
 });
