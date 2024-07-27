@@ -2117,8 +2117,8 @@ type DigestAlgorithm
 {-| Take some `Bytes` and create a hash from them using the passed `DigestAlgorithm`.
 This operation should always succeed.
 -}
-digest : DigestAlgorithm -> Bytes -> SecureContext -> Task x Bytes
-digest algorithm data _context =
+digest : SecureContext -> DigestAlgorithm -> Bytes -> Task x Bytes
+digest _context algorithm data =
     Gren.Kernel.Crypto.digest
         (digestAlgorithmToString algorithm)
         data
