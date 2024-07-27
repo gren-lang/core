@@ -450,7 +450,7 @@ are running a version of `node` that does not support the Web Crypto APIs.
 While running this function on the `browser` platform, it will succeed if the
 application being run is [considered as being in a secure context](https://developer.mozilla.org/en-US/docs/Web/Security/Secure_Contexts).
 -}
-getSecureContext : Task x SecureContext
+getSecureContext : Task {} SecureContext
 getSecureContext =
     Gren.Kernel.Crypto.getContext
 

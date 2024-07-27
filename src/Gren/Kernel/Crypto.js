@@ -135,7 +135,7 @@ var _Crypto_getContext = __Scheduler_binding(function (callback) {
     if (_Crypto_impl.subtle) {
         return callback(__Scheduler_succeed(__Crypto_SecureContext));
     }
-    return callback(__Scheduler_fail());
+    return callback(__Scheduler_fail({}));
 });
 
 // Generate keys
