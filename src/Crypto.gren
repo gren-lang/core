@@ -350,7 +350,7 @@ for the Web Crypto API.
 
 
 import Array exposing ( Array )
-import Basics exposing ( toFloat, Never, Bool(..), Int, (>), (<), (<=), (>=), (==), (*), (^), (/), (/=), (|>), (&&) )
+import Basics exposing ( clamp, toFloat, Never, Bool(..), Int, (>), (<), (<=), (>=), (==), (*), (^), (/), (/=), (|>), (&&) )
 import Gren.Kernel.Crypto
 import String exposing ( String )
 import Task exposing ( Task )
@@ -2126,19 +2126,6 @@ digest algorithm data _context =
 
 
 -- UTILITIES
-
-
-{-|-}
-clamp : Int -> Int -> Int -> Int
-clamp min max number =
-    if number < min then
-        min
-
-    else if number > max then
-        max
-
-    else
-        number
 
 
 {-|-}
