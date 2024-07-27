@@ -8,7 +8,7 @@ import Bytes exposing (Bytes)
 
 */
 
-var crypto = function () {
+var _Crypto_impl = function () {
     if (typeof window === 'undefined') {
         return require('crypto');
     }
@@ -94,7 +94,7 @@ var _Crypto_constructEcKey = function (key) {
 // Random
 
 var _Crypto_randomUUID = __Scheduler_binding(function (callback) {
-    var randomUUID = crypto.randomUUID();
+    var randomUUID = _Crypto_impl.randomUUID();
     return callback(__Scheduler_succeed(randomUUID));
 });
 
@@ -123,7 +123,7 @@ var _Crypto_getRandomValues = F2(function (arrayLength, valueType) {
             array = new Int8Array(0);
             break;
     }
-    var randomValues = crypto.getRandomValues(array);
+    var randomValues = _Crypto_impl.getRandomValues(array);
     return __Scheduler_binding(function (callback) {
         return callback(__Scheduler_succeed(new DataView(randomValues.buffer)));
     })
@@ -132,7 +132,7 @@ var _Crypto_getRandomValues = F2(function (arrayLength, valueType) {
 // Context
 
 var _Crypto_getContext = __Scheduler_binding(function (callback) {
-    if (crypto.subtle) {
+    if (_Crypto_impl.subtle) {
         return callback(__Scheduler_succeed(__Crypto_SecureContext));
     }
     return callback(__Scheduler_fail());
@@ -148,7 +148,7 @@ var _Crypto_generateRsaKey = F6(function (name, modulusLength, publicExponent, h
         hash: hash
     }
     return __Scheduler_binding(function (callback) {
-        crypto.subtle
+        _Crypto_impl.subtle
             .generateKey(algorithm, extractable, permissions)
             .then(function (key) {
                 return callback(__Scheduler_succeed(
@@ -169,7 +169,7 @@ var _Crypto_generateAesKey = F4(function (name, length, extractable, permissions
         length: length
     }
     return __Scheduler_binding(function (callback) {
-        crypto.subtle
+        _Crypto_impl.subtle
             .generateKey(algorithm, extractable, permissions)
             .then(function (key) {
                 return callback(__Scheduler_succeed(_Crypto_constructAesKey(key)))
@@ -186,7 +186,7 @@ var _Crypto_generateEcKey = F4(function (name, namedCurve, extractable, permissi
         namedCurve: namedCurve
     }
     return __Scheduler_binding(function (callback) {
-        crypto.subtle
+        _Crypto_impl.subtle
             .generateKey(algorithm, extractable, permissions)
             .then(function (key) {
                 return callback(__Scheduler_succeed(
@@ -217,7 +217,7 @@ var _Crypto_generateHmacKey = F5(function (name, hash, length, extractable, perm
         }
     }
     return __Scheduler_binding(function (callback) {
-        crypto.subtle
+        _Crypto_impl.subtle
             .generateKey(algorithm, extractable, permissions)
             .then(function (key) {
                 return callback(__Scheduler_succeed(_Crypto_constructHmacKey(key)))
@@ -232,7 +232,7 @@ var _Crypto_generateHmacKey = F5(function (name, hash, length, extractable, perm
 
 var _Crypto_exportKey = F2(function (format, key) {
     return __Scheduler_binding(function (callback) {
-        crypto.subtle
+        _Crypto_impl.subtle
             .exportKey(format, key)
             .then(function (res) {
                 switch (format) {
@@ -253,7 +253,7 @@ var _Crypto_exportKey = F2(function (format, key) {
 
 var _Crypto_importRsaKey = F7(function (wrapper, format, keyData, algorithm, hash, extractable, keyUsages) {
     return __Scheduler_binding(function (callback) {
-        crypto.subtle
+        _Crypto_impl.subtle
             .importKey(format, keyData, { name: algorithm, hash: hash }, extractable, keyUsages)
             .then(function (key) {
                 switch (wrapper) {
@@ -273,7 +273,7 @@ var _Crypto_importRsaKey = F7(function (wrapper, format, keyData, algorithm, has
 
 var _Crypto_importAesKey = F5(function (format, keyData, algorithm, extractable, keyUsages) {
     return __Scheduler_binding(function (callback) {
-        crypto.subtle
+        _Crypto_impl.subtle
             .importKey(format, keyData, { name: algorithm }, extractable, keyUsages)
             .then(function (key) {
                 return callback(__Scheduler_succeed(_Crypto_constructAesKey(key)))
@@ -286,7 +286,7 @@ var _Crypto_importAesKey = F5(function (format, keyData, algorithm, extractable,
 
 var _Crypto_importEcKey = F7(function (wrapper, format, keyData, algorithm, namedCurve, extractable, keyUsages) {
     return __Scheduler_binding(function (callback) {
-        crypto.subtle
+        _Crypto_impl.subtle
             .importKey(
                 format,
                 keyData,
@@ -327,7 +327,7 @@ var _Crypto_importHmacKey = F7(function (format, keyData, algorithm, hash, lengt
         }
     }
     return __Scheduler_binding(function (callback) {
-        crypto.subtle
+        _Crypto_impl.subtle
             .importKey(format, keyData, algorithm, extractable, keyUsages)
             .then(function (key) {
                 return callback(__Scheduler_succeed(_Crypto_constructHmacKey(key)));
@@ -353,7 +353,7 @@ var _Crypto_encryptWithRsaOaep = F3(function (label, key, bytes) {
         }
     };
     return __Scheduler_binding(function (callback) {
-        crypto.subtle
+        _Crypto_impl.subtle
             .encrypt(algorithm, key, bytes)
             .then(function (res) {
                 return callback(__Scheduler_succeed(new DataView(res)));
@@ -371,7 +371,7 @@ var _Crypto_encryptWithAesCtr = F4(function (counter, length, key, bytes) {
         length: length
     };
     return __Scheduler_binding(function (callback) {
-        crypto.subtle
+        _Crypto_impl.subtle
             .encrypt(algorithm, key, bytes)
             .then(function (res) {
                 return callback(__Scheduler_succeed(new DataView(res)));
@@ -388,7 +388,7 @@ var _Crypto_encryptWithAesCbc = F3(function (iv, key, bytes) {
         iv: iv
     };
     return __Scheduler_binding(function (callback) {
-        crypto.subtle
+        _Crypto_impl.subtle
             .encrypt(algorithm, key, bytes)
             .then(function (res) {
                 return callback(__Scheduler_succeed(new DataView(res)));
@@ -411,7 +411,7 @@ var _Crypto_encryptWithAesGcm = F5(function (iv, additionalData, tagLength, key,
         algorithm.tagLength = tagLength;
     };
     return __Scheduler_binding(function (callback) {
-        crypto.subtle
+        _Crypto_impl.subtle
             .encrypt(algorithm, key, bytes)
             .then(function (res) {
                 return callback(__Scheduler_succeed(new DataView(res)));
@@ -437,7 +437,7 @@ var _Crypto_decryptWithRsaOaep = F3(function (label, key, bytes) {
         }
     };
     return __Scheduler_binding(function (callback) {
-        crypto.subtle
+        _Crypto_impl.subtle
             .decrypt(algorithm, key, bytes)
             .then(function (res) {
                 return callback(__Scheduler_succeed(new DataView(res)));
@@ -455,7 +455,7 @@ var _Crypto_decryptWithAesCtr = F4(function (counter, length, key, bytes) {
         length: length
     }
     return __Scheduler_binding(function (callback) {
-        crypto.subtle
+        _Crypto_impl.subtle
             .decrypt(algorithm, key, bytes)
             .then(function (res) {
                 return callback(__Scheduler_succeed(new DataView(res)));
@@ -472,7 +472,7 @@ var _Crypto_decryptWithAesCbc = F3(function (iv, key, bytes) {
         iv: iv
     };
     return __Scheduler_binding(function (callback) {
-        crypto.subtle
+        _Crypto_impl.subtle
             .decrypt(algorithm, key, bytes)
             .then(function (res) {
                 return callback(__Scheduler_succeed(new DataView(res)));
@@ -495,7 +495,7 @@ var _Crypto_decryptWithAesGcm = F5(function (iv, additionalData, tagLength, key,
         algorithm.tagLength = tagLength;
     };
     return __Scheduler_binding(function (callback) {
-        crypto.subtle
+        _Crypto_impl.subtle
             // For some reason, passing a DataView for encrypted bytes does not work on node
             // So, turned into Uint8Array to work on node _and_ browser platforms
             .decrypt(algorithm, key, new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength))
@@ -515,7 +515,7 @@ var _Crypto_signWithRsaSsaPkcs1V1_5 = F2(function (key, bytes) {
         name: "RSASSA-PKCS1-v1_5"
     }
     return __Scheduler_binding(function (callback) {
-        crypto.subtle
+        _Crypto_impl.subtle
             .sign(algorithm, key, bytes)
             .then(function (res) {
                 return callback(__Scheduler_succeed(new DataView(res)));
@@ -532,7 +532,7 @@ var _Crypto_signWithRsaPss = F3(function (saltLength, key, bytes) {
         saltLength: saltLength
     };
     return __Scheduler_binding(function (callback) {
-        crypto.subtle
+        _Crypto_impl.subtle
             .sign(algorithm, key, bytes)
             .then(function (res) {
                 return callback(__Scheduler_succeed(new DataView(res)));
@@ -549,7 +549,7 @@ var _Crypto_signWithEcdsa = F3(function (hash, key, bytes) {
         hash: hash
     };
     return __Scheduler_binding(function (callback) {
-        crypto.subtle
+        _Crypto_impl.subtle
             .sign(algorithm, key, bytes)
             .then(function (res) {
                 return callback(__Scheduler_succeed(new DataView(res)));
@@ -565,7 +565,7 @@ var _Crypto_signWithHmac = F2(function (key, bytes) {
         name: "HMAC"
     }
     return __Scheduler_binding(function (callback) {
-        crypto.subtle
+        _Crypto_impl.subtle
             .sign(algorithm, key, bytes)
             .then(function (res) {
                 return callback(__Scheduler_succeed(new DataView(res)));
@@ -583,7 +583,7 @@ var _Crypto_verifyWithRsaSsaPkcs1V1_5 = F3(function (key, signature, bytes) {
         name: "RSASSA-PKCS1-v1_5"
     };
     return __Scheduler_binding(function (callback) {
-        crypto.subtle
+        _Crypto_impl.subtle
             .verify(algorithm, key, signature, bytes)
             .then(function (res) {
                 return callback(__Scheduler_succeed());
@@ -600,7 +600,7 @@ var _Crypto_verifyWithRsaPss = F4(function (saltLength, key, signature, bytes) {
         saltLength: saltLength
     };
     return __Scheduler_binding(function (callback) {
-        crypto.subtle
+        _Crypto_impl.subtle
             .verify(algorithm, key, signature, bytes)
             .then(function (res) {
                 return callback(__Scheduler_succeed());
@@ -617,7 +617,7 @@ var _Crypto_verifyWithEcdsa = F4(function (hash, key, signature, bytes) {
         hash: hash
     };
     return __Scheduler_binding(function (callback) {
-        crypto.subtle
+        _Crypto_impl.subtle
             .verify(algorithm, key, signature, bytes)
             .then(function (res) {
                 return callback(__Scheduler_succeed(res));
@@ -633,7 +633,7 @@ var _Crypto_verifyWithHmac = F3(function (key, signature, bytes) {
         name: "HMAC"
     }
     return __Scheduler_binding(function (callback) {
-        crypto.subtle
+        _Crypto_impl.subtle
             .verify(algorithm, key, signature, bytes)
             .then(function (res) {
                 return callback(__Scheduler_succeed(res));
@@ -648,7 +648,7 @@ var _Crypto_verifyWithHmac = F3(function (key, signature, bytes) {
 
 var _Crypto_digest = F2(function (algorithm, bytes) {
     return __Scheduler_binding(function (callback) {
-        crypto.subtle
+        _Crypto_impl.subtle
             .digest(algorithm, bytes)
             .then(function (res) {
                 return callback(__Scheduler_succeed(new DataView(res)));
