@@ -312,17 +312,17 @@ var _Crypto_importEcKey = F7(function (wrapper, format, keyData, algorithm, name
     });
 });
 
-var _Crypto_importHmacKey = F7(function (format, keyData, algorithm, hash, length, extractable, keyUsages) {
+var _Crypto_importHmacKey = F7(function (format, keyData, passedAlgorithm, hash, length, extractable, keyUsages) {
     return __Scheduler_binding(function (callback) {
         var algorithm;
         if (length == "") {
             algorithm = {
-                name: algorithm,
+                name: passedAlgorithm,
                 hash: hash
             }
         } else {
             algorithm = {
-                name: algorithm,
+                name: passedAlgorithm,
                 hash: hash,
                 length: length
             }
