@@ -158,7 +158,7 @@ var _Crypto_generateRsaKey = F6(function (name, modulusLength, publicExponent, h
                     }
                 ))
             }).catch(function (err) {
-                throw "There was an unforseen error that occured when attempting to generation an RSA key. This shouldn't happen! Please file a ticket in the `gren-lang/core` Github repo (https://github.com/gren-lang/core)"
+                throw "There was an unforseen error that occured when attempting to generate an RSA key. This shouldn't happen! Please file a ticket in the `gren-lang/core` Github repo (https://github.com/gren-lang/core)"
             });
     });
 });
@@ -197,7 +197,7 @@ var _Crypto_generateEcKey = F4(function (name, namedCurve, extractable, permissi
                 ))
             })
             .catch(function (err) {
-                throw "There was an unforseen error that occured when attempting to generation an EC key. This shouldn't happen! Please file a ticket in the `gren-lang/core` Github repo (https://github.com/gren-lang/core)"
+                throw "There was an unforseen error that occured when attempting to generate an EC key. This shouldn't happen! Please file a ticket in the `gren-lang/core` Github repo (https://github.com/gren-lang/core)"
             });
     })
 });
@@ -223,7 +223,7 @@ var _Crypto_generateHmacKey = F5(function (name, hash, length, extractable, perm
                 return callback(__Scheduler_succeed(_Crypto_constructHmacKey(key)))
             })
             .catch(function (err) {
-                throw "There was an unforseen error that occured when attempting to generation an HMAC key. This shouldn't happen! Please file a ticket in the `gren-lang/core` Github repo (https://github.com/gren-lang/core)"
+                throw "There was an unforseen error that occured when attempting to generate an HMAC key. This shouldn't happen! Please file a ticket in the `gren-lang/core` Github repo (https://github.com/gren-lang/core)"
             });
     });
 });
