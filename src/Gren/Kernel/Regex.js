@@ -84,19 +84,7 @@ var _Regex_replaceAtMost = F4(function (n, re, replacer, string) {
 });
 
 var _Regex_splitAtMost = F3(function (n, re, str) {
-  var string = str;
-  var out = [];
-  var start = re.lastIndex;
-  var restoreLastIndex = re.lastIndex;
-  while (n--) {
-    var result = re.exec(string);
-    if (!result) break;
-    out.push(string.slice(start, result.index));
-    start = re.lastIndex;
-  }
-  out.push(string.slice(start));
-  re.lastIndex = restoreLastIndex;
-  return out;
+  return str.split(re, n);
 });
 
-var _Regex_infinity = Infinity;
+var _Regex_infinity = Number.MAX_SAFE_INTEGER;
