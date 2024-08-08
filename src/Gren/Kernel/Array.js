@@ -173,3 +173,49 @@ var _Array_sortWith = F2(function (fn, array) {
     return ord === __Basics_EQ ? 0 : ord === __Basics_LT ? -1 : 1;
   });
 });
+
+var _Array_emptyBuilder = function(capacity) {
+  return {
+    __$target: 0,
+    __$capacity: capacity,
+    __$finalized: false,
+    __$array: new Array(capacity)
+  };
+};
+
+var _Array_pushBuilder = F2(function(value, builder) {
+  var array = builder.__$array;
+
+  if (builder.__$finalized) {
+    array = array.slice();
+  } else {
+    builder.__$finalized = true;
+  }
+
+  if (builder.__$target < builder.__$capacity) {
+    array[builder.__$target] = value;
+  } else {
+    array.push(value);
+  }
+
+  return {
+    __$target: builder.__$target + 1,
+    __$capacity: builder.__$capacity,
+    __$finalized: false,
+    __$array: array
+  };
+});
+
+var _Array_fromBuilder = function(builder) {
+  var result = builder.__$array;
+  
+  if (builder.__$finalized) {
+    result = result.slice();    
+  } else {
+    builder.__$finalized = true;
+  }
+    
+  result.length = builder.__$target;
+  
+  return result;
+};

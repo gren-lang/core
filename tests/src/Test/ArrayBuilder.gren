@@ -1,0 +1,19 @@
+module Test.ArrayBuilder exposing (tests)
+
+import Array
+import Array.Builder as Builder
+import Basics exposing (..)
+import Expect
+import Test exposing (..)
+import Fuzz
+
+
+
+tests : Test
+tests =
+    describe "Array.Builder Tests"
+        [ fuzz Fuzz.int "An empty builder makes for an empty array, regardless of capacity" <| \capacity ->
+            Builder.empty capacity
+                |> Builder.toArray
+                |> Expect.equal []
+        ]

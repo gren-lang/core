@@ -1,0 +1,36 @@
+module Array.Builder exposing
+    ( Builder
+    , empty
+    , pushLast
+    , toArray
+    )
+
+
+import Array exposing (Array)
+import Basics exposing (Int, clamp)
+import Gren.Kernel.Array
+import Random
+
+
+-- NOTE: Actual implementation in kernel code
+type Builder a = Builder
+
+
+empty : Int -> Builder a
+empty capacity =
+    let
+        clampedCapacity =
+            clamp 0 Random.maxInt capacity
+    in
+    Gren.Kernel.Array.emptyBuilder clampedCapacity
+
+
+pushLast : a -> Builder a -> Builder a
+pushLast =
+    Gren.Kernel.Array.pushBuilder
+
+
+toArray : Builder a -> Array a
+toArray =
+    Gren.Kernel.Array.fromBuilder
+    

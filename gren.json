@@ -20,6 +20,7 @@
         ],
         "Collections": [
             "Array",
+            "Array.Builder",
             "Dict",
             "Set"
         ],
