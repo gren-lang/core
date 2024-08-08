@@ -174,16 +174,16 @@ var _Array_sortWith = F2(function (fn, array) {
   });
 });
 
-var _Array_emptyBuilder = function(capacity) {
+var _Array_emptyBuilder = function (capacity) {
   return {
     __$target: 0,
     __$capacity: capacity,
     __$finalized: false,
-    __$array: new Array(capacity)
+    __$array: new Array(capacity),
   };
 };
 
-var _Array_pushBuilder = F2(function(value, builder) {
+var _Array_pushBuilder = F2(function (value, builder) {
   var array = builder.__$array;
 
   if (builder.__$finalized) {
@@ -202,20 +202,20 @@ var _Array_pushBuilder = F2(function(value, builder) {
     __$target: builder.__$target + 1,
     __$capacity: builder.__$capacity,
     __$finalized: false,
-    __$array: array
+    __$array: array,
   };
 });
 
-var _Array_fromBuilder = function(builder) {
+var _Array_fromBuilder = function (builder) {
   var result = builder.__$array;
-  
+
   if (builder.__$finalized) {
-    result = result.slice();    
+    result = result.slice();
   } else {
     builder.__$finalized = true;
   }
-    
+
   result.length = builder.__$target;
-  
+
   return result;
 };
