@@ -15,5 +15,47 @@ tests =
         [ fuzz Fuzz.int "An empty builder makes for an empty array, regardless of capacity" <| \capacity ->
             Builder.empty capacity
                 |> Builder.toArray
-                |> Expect.equal []
+                |> Expect.equalArrays []
+        , test "Can build an array using builder API" <| \{} ->
+            Builder.empty 1
+                |> Builder.pushLast 1
+                |> Builder.pushLast 2
+                |> Builder.pushLast 3
+                |> Builder.toArray
+                |> Expect.equalArrays [ 1, 2, 3 ]
+        , test "Capacity doesn't limit what can be inserted into the builder" <| \{} ->
+            let
+                withCapacity =
+                    Builder.empty 2
+                        |> Builder.pushLast 1
+                        |> Builder.pushLast 2
+                        |> Builder.toArray
+
+                withoutCapacity =
+                    Builder.empty 1
+                        |> Builder.pushLast 1
+                        |> Builder.pushLast 2
+                        |> Builder.toArray
+            in
+            Expect.equalArrays withCapacity withoutCapacity
+        , test "Cannot detect mutation" <| \{} ->
+            let
+                empty =
+                    Builder.empty 0
+
+                first =
+                    Builder.pushLast "first" empty
+
+                second =
+                    Builder.pushLast "second" empty
+            in
+            Expect.all
+                [ .empty >> Expect.equalArrays []
+                , .first >> Expect.equalArrays [ "first" ]
+                , .second >> Expect.equalArrays [ "second" ]
+                ]
+                { empty = Builder.toArray empty
+                , first = Builder.toArray first
+                , second = Builder.toArray second
+                }
         ]

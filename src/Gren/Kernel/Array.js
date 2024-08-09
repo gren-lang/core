@@ -177,7 +177,6 @@ var _Array_sortWith = F2(function (fn, array) {
 var _Array_emptyBuilder = function (capacity) {
   return {
     __$target: 0,
-    __$capacity: capacity,
     __$finalized: false,
     __$array: new Array(capacity),
   };
@@ -188,11 +187,12 @@ var _Array_pushBuilder = F2(function (value, builder) {
 
   if (builder.__$finalized) {
     array = array.slice();
+    array.length = builder.__$target;
   } else {
     builder.__$finalized = true;
   }
 
-  if (builder.__$target < builder.__$capacity) {
+  if (builder.__$target < array.length) {
     array[builder.__$target] = value;
   } else {
     array.push(value);
@@ -200,7 +200,6 @@ var _Array_pushBuilder = F2(function (value, builder) {
 
   return {
     __$target: builder.__$target + 1,
-    __$capacity: builder.__$capacity,
     __$finalized: false,
     __$array: array,
   };
