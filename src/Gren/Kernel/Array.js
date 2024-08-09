@@ -41,7 +41,9 @@ var _Array_set = F3(function (index, value, array) {
 });
 
 var _Array_push = F2(function (value, array) {
-  return array.concat(value);
+  var newArray = Array.from(array);
+  newArray.push(value);
+  return newArray;
 });
 
 var _Array_foldl = F3(function (func, acc, array) {
@@ -191,7 +193,7 @@ var _Array_pushToBuilder = F2(function (value, builder) {
   var array = builder.__$array;
 
   if (builder.__$finalized) {
-    array = array.slice();
+    array = Array.from(array);
     array.length = builder.__$target;
   } else {
     builder.__$finalized = true;
@@ -220,7 +222,7 @@ var _Array_fromBuilder = function (builder) {
   var result = builder.__$array;
 
   if (builder.__$finalized) {
-    result = result.slice();
+    result = Array.from(result);
   } else {
     builder.__$finalized = true;
   }
