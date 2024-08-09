@@ -38,6 +38,10 @@ tests =
                         |> Builder.toArray
             in
             Expect.equalArrays correctCapacity wrongCapacity
+        , fuzz (Fuzz.array Fuzz.int) "Builder API is just a optimization, it's the same as using Array.pushLast" <| \array ->
+            Array.foldl (\val builder -> Builder.pushLast val builder) (Builder.empty 0) array
+                |> Builder.toArray
+                |> Expect.equalArrays array
         , test "Cannot detect mutation" <| \{} ->
             let
                 empty =
