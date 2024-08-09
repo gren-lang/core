@@ -141,6 +141,13 @@ function _Debug_toAnsiString(ansi, value) {
     return _Debug_internalColor(ansi, "<" + value.name + ">");
   }
 
+  if (
+    typeof _Array_Builder !== "undefined" &&
+    value instanceof _Array_Builder
+  ) {
+    return _Debug_internalColor(ansi, "<internals>");
+  }
+
   if (typeof value === "object") {
     var output = [];
     for (var key in value) {

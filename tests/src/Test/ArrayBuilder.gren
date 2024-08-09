@@ -62,4 +62,39 @@ tests =
                 , first = Builder.toArray first
                 , second = Builder.toArray second
                 }
+        , test "Cannot detect mutation after toArray" <| \{} ->
+            let
+                empty =
+                    Builder.empty 0
+
+                first =
+                    Builder.pushLast "first" empty
+
+                firstArray =
+                    Builder.toArray first
+
+                secondArray =
+                    first
+                        |> Builder.pushLast "second"
+                        |> Builder.toArray
+            in
+            Expect.all
+                [ .empty >> Expect.equalArrays []
+                , .first >> Expect.equalArrays [ "first" ]
+                , .second >> Expect.equalArrays [ "first", "second" ]
+                ]
+                { empty = Builder.toArray empty
+                , first = firstArray
+                , second = secondArray
+                }
+        , test "Cannot detect mutation with equality" <| \{} ->
+            let
+                empty =
+                    Builder.empty 0
+                
+                first = 
+                    empty 
+                        |> Builder.pushLast 1
+            in
+            Expect.equal empty (Builder.empty 0)
         ]

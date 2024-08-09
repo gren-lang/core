@@ -174,12 +174,16 @@ var _Array_sortWith = F2(function (fn, array) {
   });
 });
 
+class _Array_Builder {
+  constructor(target, finalized, array) {
+    this.__$target = target;
+    this.__$finalized = finalized;
+    this.__$array = array;
+  }
+}
+
 var _Array_emptyBuilder = function (capacity) {
-  return {
-    __$target: 0,
-    __$finalized: false,
-    __$array: new Array(capacity),
-  };
+  return new _Array_Builder(0, false, new Array(capacity));
 };
 
 var _Array_pushBuilder = F2(function (value, builder) {
@@ -198,11 +202,7 @@ var _Array_pushBuilder = F2(function (value, builder) {
     array.push(value);
   }
 
-  return {
-    __$target: builder.__$target + 1,
-    __$finalized: false,
-    __$array: array,
-  };
+  return new _Array_Builder(builder.__$target + 1, false, array);
 });
 
 var _Array_fromBuilder = function (builder) {

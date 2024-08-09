@@ -4,6 +4,7 @@ import Basics exposing (LT, EQ, GT)
 import Dict exposing (foldl)
 import Gren.Kernel.Debug exposing (crash)
 import Set exposing (toArray)
+import Gren.Kernel.Array exposing (fromBuilder)
 
 */
 
@@ -67,6 +68,11 @@ function _Utils_eqHelp(x, y, depth, stack) {
         return false;
       }
     }
+  }
+
+  if (x instanceof _Array_Builder) {
+    x = __Array_fromBuilder(x);
+    y = __Array_fromBuilder(y);
   }
 
   if (Array.isArray(x) && x.length !== y.length) {
