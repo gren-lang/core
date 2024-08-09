@@ -23,7 +23,8 @@ var _Array_initialize = F3(function (size, offset, func) {
 var _Array_get = F2(function (index, array) {
   var value = array.at(index);
 
-  if (value === undefined) {
+  // TODO: benchmark this vs bound checking
+  if (typeof value === "undefined") {
     return __Maybe_Nothing;
   }
 
