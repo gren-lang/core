@@ -54,14 +54,11 @@ tests =
                     Builder.pushLast "second" empty
             in
             Expect.all
-                [ .empty >> Expect.equalArrays []
-                , .first >> Expect.equalArrays [ "first" ]
-                , .second >> Expect.equalArrays [ "second" ]
+                [ \{} -> Expect.equalArrays [] (Builder.toArray empty)
+                , \{} -> Expect.equalArrays [ "first" ] (Builder.toArray first)
+                , \{} -> Expect.equalArrays [ "second" ] (Builder.toArray second)
                 ]
-                { empty = Builder.toArray empty
-                , first = Builder.toArray first
-                , second = Builder.toArray second
-                }
+                {}
         , test "Cannot detect mutation after toArray" <| \{} ->
             let
                 empty =
@@ -79,14 +76,11 @@ tests =
                         |> Builder.toArray
             in
             Expect.all
-                [ .empty >> Expect.equalArrays []
-                , .first >> Expect.equalArrays [ "first" ]
-                , .second >> Expect.equalArrays [ "first", "second" ]
+                [ \{} -> Expect.equalArrays [] (Builder.toArray empty)
+                , \{} -> Expect.equalArrays [ "first" ] firstArray
+                , \{} -> Expect.equalArrays [ "first", "second" ] secondArray
                 ]
-                { empty = Builder.toArray empty
-                , first = firstArray
-                , second = secondArray
-                }
+                {}
         , test "Cannot detect mutation with equality" <| \{} ->
             let
                 empty =
@@ -116,9 +110,9 @@ tests =
                     Builder.pushLast 3 init
             in
             Expect.all
-                [ .init >> Expect.equalArrays []
-                , .first >> Expect.equalArrays [ 1, 2 ]
-                , .second >> Expect.equalArrays [ 3 ]
+                [ \{} -> Expect.equalArrays [] (Builder.toArray init)
+                , \{} -> Expect.equalArrays [ 1, 2 ] (Builder.toArray first)
+                , \{} -> Expect.equalArrays [ 3 ] (Builder.toArray second)
                 ]
                 { init = Builder.toArray init
                 , first = Builder.toArray first
@@ -136,10 +130,8 @@ tests =
                         |> Builder.toArray
             in
             Expect.all
-                [ .array >> Expect.equalArrays [ 1, 2, 3 ]
-                , .built >> Expect.equalArrays [ 1, 2, 3, 4, 5 ]
+                [ \{} -> Expect.equalArrays [ 1, 2, 3 ] array
+                , \{} -> Expect.equalArrays [ 1, 2, 3, 4, 5 ] built
                 ]
-                { array = array
-                , built = built
-                }
+                {}
         ]
