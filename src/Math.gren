@@ -1,14 +1,19 @@
 module Math exposing
     ( round, floor, ceiling, truncate
-    , modBy, remainderBy, abs, sqrt, logBase, e
+    , modBy, remainderBy, abs, sqrt, logBase
+    , e, pi, maxSafeInteger, minSafeInteger, maxFloat, minFloat
     , degrees, radians, turns
-    , pi, cos, sin, tan, acos, asin, atan, atan2
+    , cos, sin, tan, acos, asin, atan, atan2
     )
 
 {-| Functions for doing math
 
+@docs round, floor, ceiling, truncate, modBy, remainderBy, abs, sqrt, logBase
 
-@docs round, floor, ceiling, truncate, modBy, remainderBy, abs, sqrt, logBase, e
+
+## Constants
+
+@docs e, pi, maxSafeInteger, minSafeInteger, maxFloat, minFloat
 
 
 ## Angles
@@ -18,7 +23,7 @@ module Math exposing
 
 ## Trigonometry
 
-@docs pi, cos, sin, tan, acos, asin, atan, atan2
+@docs cos, sin, tan, acos, asin, atan, atan2
 
 
 -}
@@ -214,14 +219,6 @@ logBase base number =
         (Gren.Kernel.Math.log number) / (Gren.Kernel.Math.log base)
 
 
-{-| An approximation of e.
--}
-e : Float
-e =
-    Gren.Kernel.Math.e
-
-
-
 -- ANGLES
 
 
@@ -255,8 +252,14 @@ turns angleInTurns =
     (2 * pi) * angleInTurns
 
 
+-- CONSTANTS
 
--- TRIGONOMETRY
+
+{-| An approximation of e.
+-}
+e : Float
+e =
+    Gren.Kernel.Math.e
 
 
 {-| An approximation of pi.
@@ -264,6 +267,39 @@ turns angleInTurns =
 pi : Float
 pi =
     Gren.Kernel.Math.pi
+
+
+{-| The largest integer value that can be exactly represented and compared in a JavaScript environment.
+Integers above this value may not work as you expect.
+-}
+maxSafeInteger : Int
+maxSafeInteger =
+    Gren.Kernel.Math.maxSafeInteger
+
+
+{-| The smallest integer value that can be exactly represented and compared in a JavaScript environment.
+Integers below this value may not work as you expect.
+-}
+minSafeInteger : Int
+minSafeInteger =
+    Gren.Kernel.Math.minSafeInteger
+
+
+{-| The largest `Float` value.
+-}
+maxFloat : Float
+maxFloat =
+    Gren.Kernel.Math.maxFloat
+
+
+{-| The smallest `Float` value.
+-}
+minFloat : Float
+minFloat =
+    -maxFloat
+
+
+-- TRIGONOMETRY
 
 
 {-| Figure out the cosine given an angle in radians.

@@ -20,10 +20,16 @@ var _Math_modBy = F2(function (modulus, x) {
     : answer;
 });
 
-// TRIGONOMETRY
+// CONSTANTS
 
 var _Math_pi = Math.PI;
 var _Math_e = Math.E;
+var _Math_maxSafeInteger = Number.MAX_SAFE_INTEGER;
+var _Math_minSafeInteger = Number.MIN_SAFE_INTEGER;
+var _Math_maxFloat = Number.MAX_VALUE;
+
+// TRIGONOMETRY
+
 var _Math_cos = Math.cos;
 var _Math_sin = Math.sin;
 var _Math_tan = Math.tan;
