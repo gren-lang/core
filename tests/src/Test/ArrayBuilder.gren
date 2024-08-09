@@ -17,7 +17,7 @@ tests =
                 |> Builder.toArray
                 |> Expect.equalArrays []
         , test "Can build an array using builder API" <| \{} ->
-            Builder.empty 1
+            Builder.empty 3
                 |> Builder.pushLast 1
                 |> Builder.pushLast 2
                 |> Builder.pushLast 3
@@ -25,19 +25,19 @@ tests =
                 |> Expect.equalArrays [ 1, 2, 3 ]
         , test "Capacity doesn't limit what can be inserted into the builder" <| \{} ->
             let
-                withCapacity =
+                correctCapacity =
                     Builder.empty 2
                         |> Builder.pushLast 1
                         |> Builder.pushLast 2
                         |> Builder.toArray
 
-                withoutCapacity =
+                wrongCapacity =
                     Builder.empty 1
                         |> Builder.pushLast 1
                         |> Builder.pushLast 2
                         |> Builder.toArray
             in
-            Expect.equalArrays withCapacity withoutCapacity
+            Expect.equalArrays correctCapacity wrongCapacity
         , test "Cannot detect mutation" <| \{} ->
             let
                 empty =
