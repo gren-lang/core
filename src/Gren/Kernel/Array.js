@@ -186,7 +186,7 @@ var _Array_emptyBuilder = function (capacity) {
   return new _Array_Builder(0, false, new Array(capacity));
 };
 
-var _Array_pushBuilder = F2(function (value, builder) {
+var _Array_pushToBuilder = F2(function (value, builder) {
   var array = builder.__$array;
 
   if (builder.__$finalized) {
@@ -204,6 +204,16 @@ var _Array_pushBuilder = F2(function (value, builder) {
 
   return new _Array_Builder(builder.__$target + 1, false, array);
 });
+
+var _Array_appendToBuilder = F2(function (array, builder) {
+  var newArray = _Array_fromBuilder(builder).concat(array);
+
+  return new _Array_Builder(newArray.length, false, newArray);
+});
+
+var _Array_toBuilder = function (array) {
+  return new _Array_Builder(array.length, true, array);
+};
 
 var _Array_fromBuilder = function (builder) {
   var result = builder.__$array;

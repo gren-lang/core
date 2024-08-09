@@ -1,7 +1,9 @@
 module Array.Builder exposing
     ( Builder
     , empty
+    , fromArray
     , pushLast
+    , append
     , toArray
     )
 
@@ -25,9 +27,19 @@ empty capacity =
     Gren.Kernel.Array.emptyBuilder clampedCapacity
 
 
+fromArray : Array a -> Builder a
+fromArray =
+    Gren.Kernel.Array.toBuilder
+
+
 pushLast : a -> Builder a -> Builder a
 pushLast =
-    Gren.Kernel.Array.pushBuilder
+    Gren.Kernel.Array.pushToBuilder
+
+
+append : Array a -> Builder a -> Builder a
+append =
+    Gren.Kernel.Array.appendToBuilder
 
 
 toArray : Builder a -> Array a
