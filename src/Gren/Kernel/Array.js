@@ -209,9 +209,11 @@ var _Array_pushToBuilder = F2(function (value, builder) {
 });
 
 var _Array_appendToBuilder = F2(function (array, builder) {
-  var newArray = _Array_fromBuilder(builder).concat(array);
+  for (var i = 0; i < array.length; i++) {
+    builder = _Array_pushToBuilder.f(array[i], builder);
+  }
 
-  return new _Array_Builder(newArray.length, false, newArray);
+  return builder;
 });
 
 var _Array_toBuilder = function (array) {
