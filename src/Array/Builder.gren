@@ -1,12 +1,17 @@
 module Array.Builder exposing
     ( Builder
-    , empty
-    , fromArray
-    , pushLast
-    , append
+    , empty, fromArray
+    , pushLast, append
     , toArray
     )
 
+{-| The functions in this module allows you to build an `Array` more efficiently.
+Unless you have a performance problem, it's recommended to stick with the functions
+in the `Array` module.
+
+@docs Builder, empty, fromArray, pushLast, append, toArray
+
+-}
 
 import Array exposing (Array)
 import Basics exposing (Int, clamp)
@@ -14,10 +19,24 @@ import Gren.Kernel.Array
 import Random
 
 
--- NOTE: Actual implementation in kernel code
-type Builder a = Builder
+{-| A `Builder` represents an `Array` under construction. The functionality
+of this type is intentionally limited. You can only create it, add elements to
+it and convert it to an `Array`. Any other operation is out of scope. In return,
+you get a faster way of building `Array`s.
+-}
+type Builder a =
+    -- NOTE: Actual implementation in kernel code
+    Builder
 
 
+{-| Creates a [Builder](#Builder) without any elements.
+
+The `Int` argument let's you specify the amount of elements you expect
+to end up in the final `Array`. Nothing bad happens if you pass a wrong
+value, but being exact gives you a tiny bit more performance.
+
+In other words: it's ok to pass `0`.
+-}
 empty : Int -> Builder a
 empty capacity =
     let
@@ -27,22 +46,29 @@ empty capacity =
     Gren.Kernel.Array.emptyBuilder clampedCapacity
 
 
+{-| Creates a [Builder](#Builder) based on an existing `Array`.
+-}
 fromArray : Array a -> Builder a
 fromArray =
     Gren.Kernel.Array.toBuilder
 
 
+{-| Add a single element to a [Builder](#Builder).
+-}
 pushLast : a -> Builder a -> Builder a
 pushLast =
     Gren.Kernel.Array.pushToBuilder
 
 
+{-| Adds the elements of an `Array` to the end of a [Builder](#Builder).
+-}
 append : Array a -> Builder a -> Builder a
 append =
     Gren.Kernel.Array.appendToBuilder
 
 
+{-| Converts a [Builder](#Builder) to an `Array`.
+-}
 toArray : Builder a -> Array a
 toArray =
     Gren.Kernel.Array.fromBuilder
-    
