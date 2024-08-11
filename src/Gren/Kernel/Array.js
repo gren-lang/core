@@ -40,9 +40,7 @@ var _Array_set = F3(function (index, value, array) {
 });
 
 var _Array_push = F2(function (value, array) {
-  var newArray = Array.from(array);
-  newArray.push(value);
-  return newArray;
+  return array.toSpliced(array.length, 0, value);
 });
 
 var _Array_foldl = F3(function (func, acc, array) {
