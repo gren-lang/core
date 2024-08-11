@@ -190,29 +190,31 @@ var _Array_emptyBuilder = function (capacity) {
 
 var _Array_pushToBuilder = F2(function (value, builder) {
   var array = builder.__$array;
+  var target = builder.__$target;
 
   if (builder.__$finalized) {
-    array = Array.from(array);
-    array.length = builder.__$target;
+    array = array.slice(0, target);
   } else {
     builder.__$finalized = true;
   }
 
-  if (builder.__$target < array.length) {
-    array[builder.__$target] = value;
+  if (target < array.length) {
+    array[target] = value;
   } else {
     array.push(value);
   }
 
-  return new _Array_Builder(builder.__$target + 1, false, array);
+  return new _Array_Builder(target + 1, false, array);
 });
 
 var _Array_appendToBuilder = F2(function (array, builder) {
+  var newArray = _Array_fromBuilder(builder);
+
   for (var i = 0; i < array.length; i++) {
-    builder = _Array_pushToBuilder.f(array[i], builder);
+    newArray.push(array[i]);
   }
 
-  return builder;
+  return new _Array_Builder(newArray.length, false, newArray);
 });
 
 var _Array_toBuilder = function (array) {
@@ -223,12 +225,11 @@ var _Array_fromBuilder = function (builder) {
   var result = builder.__$array;
 
   if (builder.__$finalized) {
-    result = Array.from(result);
+    result = result.slice(0, builder.__$target);
   } else {
     builder.__$finalized = true;
+    result.length = builder.__$target;
   }
-
-  result.length = builder.__$target;
 
   return result;
 };
