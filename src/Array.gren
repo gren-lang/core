@@ -3,7 +3,7 @@ module Array exposing
     , empty, singleton, initialize, repeat, range
     , map, indexedMap, foldl, foldr, indexedFoldl, indexedFoldr, filter, filterMap, reverse
     , isEmpty, length, get, findFirst, findLast, member, any, all, minimum, maximum
-    , set, setN, update, insert, insertN, remove, removeN, pushFirst, pushLast, splice
+    , set, setMany, update, insert, insertMany, remove, removeMany, pushFirst, pushLast, splice
     , prepend, append, flatten, flatMap, intersperse, map2, map3
     , first, last, slice, dropFirst, dropLast, takeFirst, takeLast, popFirst, popLast, partition
     , sort, sortBy, sortWith
@@ -29,7 +29,7 @@ functions to help you work with them.
 
 ## Modify
 
-@docs set, setN, update, insert, insertN, remove, removeN, pushFirst, pushLast, splice
+@docs set, setMany, update, insert, insertMany, remove, removeMany, pushFirst, pushLast, splice
 
 
 ## Combine
@@ -406,11 +406,11 @@ set =
 {-| This function works just like [set](#set) except it takes in an array of values to set, allowing you
 to replace several values at once.
 
-    setN 1 [ 0, 0 ] [ 1, 2, 3, 4 ] == [ 1, 0, 0, 4 ]
+    setMany 1 [ 0, 0 ] [ 1, 2, 3, 4 ] == [ 1, 0, 0, 4 ]
 
 -}
-setN : Int -> Array a -> Array a -> Array a
-setN index values array =
+setMany : Int -> Array a -> Array a -> Array a
+setMany index values array =
     splice index (length values) values array
 
 
@@ -444,11 +444,11 @@ insert index value array =
 {-| This function works just like [insert](#insert) but allows you to insert multiple
 values at once.
 
-    insertN 1 [ 0, 0 ] [ 1, 2, 3 ] == [ 1, 0, 0, 2, 3 ]
+    insertMany 1 [ 0, 0 ] [ 1, 2, 3 ] == [ 1, 0, 0, 2, 3 ]
 
 -}
-insertN : Int -> Array a -> Array a -> Array a
-insertN index values array =
+insertMany : Int -> Array a -> Array a -> Array a
+insertMany index values array =
     splice index 0 values array
 
 
@@ -459,7 +459,7 @@ insertN index values array =
 -}
 remove : Int -> Array a -> Array a
 remove index array =
-    removeN index 1 array
+    removeMany index 1 array
 
 
 {-| Remove an element from an array.
@@ -467,8 +467,8 @@ remove index array =
     remove 0 2 [ 1, 2, 3 ] == [ 3 ]
 
 -}
-removeN : Int -> Int -> Array a -> Array a
-removeN =
+removeMany : Int -> Int -> Array a -> Array a
+removeMany =
     Gren.Kernel.Array.splice0
 
 
