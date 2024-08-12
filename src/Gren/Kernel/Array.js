@@ -39,8 +39,16 @@ var _Array_set = F3(function (index, value, array) {
   }
 });
 
-var _Array_push = F2(function (value, array) {
-  return array.toSpliced(array.length, 0, value);
+var _Array_splice0 = F3(function (index, toRemove, array) {
+  return array.toSpliced(index, toRemove);
+});
+
+var _Array_splice1 = F4(function (index, toRemove, toAdd, array) {
+  return array.toSpliced(index, toRemove, toAdd);
+});
+
+var _Array_spliceN = F4(function (index, toRemove, toAdd, array) {
+  return array.toSpliced(index, toRemove, ...toAdd);
 });
 
 var _Array_foldl = F3(function (func, acc, array) {
