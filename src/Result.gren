@@ -1,15 +1,20 @@
 module Result exposing
     ( Result(..)
+    , hasValue, checkValue, firstOk, allOk
     , map, map2, map3, map4, map5
-    , andThen
-    , withDefault, toMaybe, fromMaybe, mapError
+    , andThen, onError
+    , withDefault, withDefaultLazy, toMaybe, fromMaybe, mapError
     )
 
 {-| A `Result` is the result of a computation that may fail. This is a great
 way to manage errors in Gren.
 
-
 @docs Result
+
+
+## Query
+
+@docs hasValue, checkValue, firstOk, allOk
 
 
 ## Mapping
@@ -19,17 +24,18 @@ way to manage errors in Gren.
 
 ## Chaining
 
-@docs andThen
+@docs andThen, onError
 
 
 ## Handling Errors
 
-@docs withDefault, toMaybe, fromMaybe, mapError
+@docs withDefault, withDefaultLazy, toMaybe, fromMaybe, mapError
 
 -}
 
-import Basics exposing (Bool(..))
+import Basics exposing (..)
 import Maybe exposing (Maybe(..))
+import Array exposing (Array)
 
 
 {-| A `Result` is either `Ok` meaning the computation succeeded, or it is an
@@ -38,6 +44,88 @@ import Maybe exposing (Maybe(..))
 type Result error value
     = Ok value
     | Err error
+
+
+{-| If the result is `Ok` check if the contained value matches the provided value.
+
+    Result.hasValue 123 (Ok 123) == True
+
+    Result.hasValue 123 (Ok 5) == False
+    
+    Result.hasValue 123 (Err "failed") == False
+
+-}
+hasValue : a -> Result x a -> Bool
+hasValue value result =
+    case result of
+        Ok a ->
+            a == value
+
+        Err _ ->
+            False
+
+
+{-| If the result is `Ok` check if the contained value passes the provided test.
+
+    Result.checkValue isOdd (Ok 5) == True
+
+    Result.checkValue isOdd (Ok 12) == False
+    
+    Result.checkValue isOdd (Err "failed") == False
+
+-}
+checkValue : (a -> Bool) -> Result x a -> Bool
+checkValue test result =
+    case result of
+        Ok a ->
+            test a 
+
+        Err _ ->
+            False
+
+
+{-| Returns the first `Ok` value in an `Array` of `Result`s.
+
+    Result.firstOk [ Ok 5, Err 0, Ok 10 ] == Just 5
+
+    Result.firstOk [ Err 0, Err 1 ] == Nothing
+
+-}
+firstOk : Array (Result x a) -> Maybe a
+firstOk array =
+    Array.findFirst isOk array
+        |> Maybe.andThen toMaybe
+
+
+{-| Convert an `Array` of `Result err ok` to `Result (Array err) (Array ok)`. You'll only
+receive an `Ok` if there are no `Err` values in the `Array`.
+
+    Result.allOk [ Ok 5, Err 0, Ok 10 ] == Err [ 0 ]
+
+    Result.allOk [ Ok 0, Ok 1 ] == Ok [ 0, 1 ]
+
+-}
+allOk : Array (Result err ok) -> Result (Array err) (Array ok)
+allOk array =
+    let
+        errors =
+            Array.filterMap errToMaybe array
+    in
+    if Array.length errors > 0 then
+        Err errors
+
+    else
+        Ok <| Array.filterMap toMaybe array
+
+
+errToMaybe : Result err ok -> Maybe err
+errToMaybe result =
+    case result of
+        Ok _ ->
+            Nothing
+
+        Err err ->
+            Just err
 
 
 {-| If the result is `Ok` return the value, but if the result is an `Err` then
@@ -56,6 +144,20 @@ withDefault def result =
 
         Err _ ->
             def
+
+
+{-| Same as [withDefault](#withDefault) but the default value is provided by a function.
+This let's you avoid computing the default value if it isn't necessary.
+
+-}
+withDefaultLazy : ({} -> a) -> Result x a -> a
+withDefaultLazy provider result =
+    case result of
+        Ok a ->
+            a
+
+        Err _ ->
+            provider {}
 
 
 {-| Apply a function to a result. If the result is `Ok`, it will be converted.
@@ -233,6 +335,25 @@ andThen callback result =
 
         Err msg ->
             Err msg
+
+
+{-| This is similar to [andThen](#andThen) but the callback is triggered when
+the `Result` is an `Err` value. This gives you the option of dealing with errors
+in a chain.
+
+    toInt "a"
+        |> onError (\_msg -> Ok 1) -- defaulting to first month of the year
+        |> andThen toValidMonth
+
+-}
+onError : (a -> Result b x) -> Result a x -> Result b x
+onError callback result =
+    case result of
+        Ok value ->
+            Ok value
+
+        Err err ->
+            callback err
 
 
 {-| Transform an `Err` value. For example, say the errors we get have too much
