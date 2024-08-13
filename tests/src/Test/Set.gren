@@ -14,6 +14,7 @@ tests =
         , describe "singleton" singletonTests
         , describe "set" setTests
         , describe "remove" removeTests
+        , describe "toggle" toggleTests
         , describe "isEmpty" isEmptyTests
         , describe "member" memberTests
         , describe "count" countTests
@@ -107,6 +108,17 @@ removeTests =
         \{} -> Expect.equal set42 (Set.remove -1 set42)
     , test "leaves set of 100 intact if it doesn't contain given element" <|
         \{} -> Expect.equal set1To100 (Set.remove -1 set1To100)
+    ]
+
+
+toggleTests : Array Test
+toggleTests =
+    [ test "toggling the same value twice is the same as not doing anything" <|
+        \{} -> Expect.equal set1To50 (Set.toggle 42 (Set.toggle 42 set1To50))
+    , test "toggle with non-existant value adds the value" <|
+        \{} -> Expect.equal (Set.remove 11 set1To50) (Set.toggle 11 set1To50)
+    , test "toggle with existing value removes it" <|
+        \{} -> Expect.equal (Set.set 99 set1To50) (Set.toggle 99 set1To50)
     ]
 
 
