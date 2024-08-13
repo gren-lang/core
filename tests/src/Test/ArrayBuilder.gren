@@ -114,10 +114,7 @@ tests =
                 , \{} -> Expect.equalArrays [ 1, 2 ] (Builder.toArray first)
                 , \{} -> Expect.equalArrays [ 3 ] (Builder.toArray second)
                 ]
-                { init = Builder.toArray init
-                , first = Builder.toArray first
-                , second = Builder.toArray second
-                }
+                {}
         , test "Builder.fromArray" <| \{} ->
             let
                 array =
