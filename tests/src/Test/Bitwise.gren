@@ -34,6 +34,11 @@ tests =
             [ test "complement a positive" <| \{} -> Expect.equal -9 (Bitwise.complement 8)
             , test "complement a negative" <| \{} -> Expect.equal 278 (Bitwise.complement -279)
             ]
+        , describe "countLeadingZeros"
+            [ test "0" <| \{} -> Expect.equal 32 (Bitwise.countLeadingZeros 0)
+            , test "1" <| \{} -> Expect.equal 31 (Bitwise.countLeadingZeros 1)
+            , test "0xFFFF" <| \{} -> Expect.equal 16 (Bitwise.countLeadingZeros 0xFFFF)
+            ]
         , describe "shiftLeftBy"
             [ test "8 |> shiftLeftBy 1 == 16" <| \{} -> Expect.equal 16 (8 |> Bitwise.shiftLeftBy 1)
             , test "8 |> shiftLeftby 2 == 32" <| \{} -> Expect.equal 32 (8 |> Bitwise.shiftLeftBy 2)

@@ -1,12 +1,12 @@
 module Bitwise exposing
-    ( and, or, xor, complement
+    ( and, or, xor, complement, countLeadingZeros
     , shiftLeftBy, shiftRightBy, shiftRightZfBy
     )
 
 {-| Functions for doing [bitwise operations](https://en.wikipedia.org/wiki/Bitwise_operation).
 
 
-@docs and, or, xor, complement
+@docs and, or, xor, complement, countLeadingZeros
 
 
 ## Bit Shifts
@@ -45,6 +45,17 @@ xor =
 complement : Int -> Int
 complement =
     Gren.Kernel.Bitwise.complement
+
+{-| Count the number of leading zero bits in an integer.
+
+    countLeadingZeros 0 == 32
+    countLeadingZeros 1 == 31
+    countLeadingZeros 0xFFFF == 16
+
+-}
+countLeadingZeros : Int -> Int
+countLeadingZeros =
+    Gren.Kernel.Bitwise.countLeadingZeros
 
 
 {-| Shift bits to the left by a given offset, filling new bits with zeros.
