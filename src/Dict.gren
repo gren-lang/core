@@ -1,6 +1,6 @@
 module Dict exposing
     ( Dict
-    , empty, singleton, set, update, remove
+    , empty, singleton, set, update, updateWithDefault, remove
     , isEmpty, count, get, member, first, last, findFirst, findLast, any, all
     , keys, values
     , map, foldl, foldr, filter, filterMap, partition
@@ -16,7 +16,7 @@ Set, remove, and query operations all take _O(log n)_ time.
 @docs Dict
 
 
-@docs empty, singleton, set, update, remove
+@docs empty, singleton, set, update, updateWithDefault, remove
 
 
 ## Query
@@ -532,6 +532,19 @@ update targetKey alter dictionary =
 
         Nothing ->
             remove targetKey dictionary
+
+
+{-| Same as [update](#update) but if the key doesn't exist in the dictionary, a default value
+is passed to the provided update function instead of a `Maybe`.
+-}
+updateWithDefault : comparable -> v -> (v -> v) -> Dict comparable v -> Dict comparable v
+updateWithDefault targetKey defaultValue alter dictionary =
+    case get targetKey dictionary of
+        Just value ->
+            set targetKey (alter value) dictionary
+
+        Nothing ->
+            set targetKey (alter defaultValue) dictionary
 
 
 {-| Create a dictionary with one key-value pair.
