@@ -145,7 +145,7 @@ function _Debug_toAnsiString(ansi, value) {
     typeof _Array_Builder !== "undefined" &&
     value instanceof _Array_Builder
   ) {
-    return _Debug_internalColor(ansi, "<internals>");
+    return _Debug_toAnsiString(ansi, value.__$array.slice(0, value.__$target));
   }
 
   if (typeof value === "object") {
