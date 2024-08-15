@@ -112,7 +112,7 @@ withDefault default maybe =
 a function. This is useful when computing the default value is expensive, as
 you can compute it only when it is required.
 
-In most cases you should use [withDefault](#withDefault) instead.
+In most cases you should use pattern matching or [withDefault](#withDefault) instead.
 
 -}
 withDefaultLazy : ({} -> a) -> Maybe a -> a
