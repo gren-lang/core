@@ -14,6 +14,18 @@ tests =
         [ test "Regex.replace" <| \{} ->
             Regex.replace vowels (\_ -> "_") "abc"
                 |> Expect.equal "_bc"
+        , test "Regex.split with never and empty string returns empty string" <| \{} ->
+            Regex.split Regex.never ""
+                |> Expect.equal [""]
+        , test "Regex.split with regex and empty string returns empty string" <| \{} ->
+            Regex.split vowels ""
+                |> Expect.equal [""]
+        , test "Regex.split works with word boundaries" <| \{} ->
+            Regex.split (Maybe.withDefault Regex.never (Regex.fromString "\\b")) "word-kebab"
+                |> Expect.equal ["word", "-", "kebab"]
+        , test "Regex.splitAtMost respects the limit" <| \{} ->
+            Regex.splitAtMost 2 (Maybe.withDefault Regex.never (Regex.fromString "\\b")) "word-kebab"
+                |> Expect.equal ["word", "-"]
         ]
 
 

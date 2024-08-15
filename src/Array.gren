@@ -3,7 +3,7 @@ module Array exposing
     , empty, singleton, initialize, repeat, range
     , map, indexedMap, foldl, foldr, indexedFoldl, indexedFoldr, filter, filterMap, reverse
     , isEmpty, length, get, findFirst, findLast, member, any, all, minimum, maximum
-    , set, update, pushFirst, pushLast
+    , set, setMany, update, insert, insertMany, remove, removeMany, pushFirst, pushLast, splice
     , prepend, append, flatten, flatMap, intersperse, map2, map3
     , first, last, slice, dropFirst, dropLast, takeFirst, takeLast, popFirst, popLast, partition
     , sort, sortBy, sortWith
@@ -13,7 +13,6 @@ module Array exposing
 functions to help you work with them.
 
 @docs Array
-
 
 @docs empty, singleton, initialize, repeat, range
 
@@ -30,7 +29,7 @@ functions to help you work with them.
 
 ## Modify
 
-@docs set, update, pushFirst, pushLast
+@docs set, setMany, update, insert, insertMany, remove, removeMany, pushFirst, pushLast, splice
 
 
 ## Combine
@@ -391,7 +390,7 @@ maximum array =
 -- MODIFY
 
 
-{-| Replaces the element at the given index, or returns the array unmodified if the index is out of bounds.
+{-| Replace the element at the given index, or return the array unmodified if the index is out of bounds.
 Passing a negative index means you want to replace an element counting backwards from the end of the array.
 
     set 1 10 [ 1, 2, 3 ] == [ 1, 10, 3 ]
@@ -402,6 +401,20 @@ Passing a negative index means you want to replace an element counting backwards
 set : Int -> a -> Array a -> Array a
 set =
     Gren.Kernel.Array.set
+
+
+{-| This function works just like [set](#set) except it takes in an array of values to set, allowing you
+to replace several values at once.
+
+If the provided index is out of bounds, elements will be added at the beginning (negative index) or at the
+end (positive index).
+
+    setMany 1 [ 0, 0 ] [ 1, 2, 3, 4 ] == [ 1, 0, 0, 4 ]
+
+-}
+setMany : Int -> Array a -> Array a -> Array a
+setMany index values array =
+    splice index (length values) values array
 
 
 {-| Update a value at the given index using a function. If the index is out of bounds, nothing happens.
@@ -420,6 +433,57 @@ update idx fn array =
             set idx (fn val) array
 
 
+{-| Insert a new value into the array at the given index. The value already at the
+given index, as well as all subsequent values, will be moved one space to the right.
+
+Passing a negative index means you want to replace an element counting backwards from the end of the array.
+
+If the provided index is out of bounds, the element will be added at the beginning (negative index) or at the
+end (positive index).
+
+    insert 1 0 [ 1, 2, 3 ] == [ 1, 0, 2, 3 ]
+
+-}
+insert : Int -> a -> Array a -> Array a
+insert index value array =
+    Gren.Kernel.Array.splice1 index 0 value array
+
+
+{-| This function works just like [insert](#insert) but allows you to insert multiple
+values at once.
+
+    insertMany 1 [ 0, 0 ] [ 1, 2, 3 ] == [ 1, 0, 0, 2, 3 ]
+
+-}
+insertMany : Int -> Array a -> Array a -> Array a
+insertMany index values array =
+    splice index 0 values array
+
+
+{-| Remove an element from an array.
+
+Passing a negative index means you want to replace an element counting backwards from the end of the array.
+
+If the index is out of bounds, no element will be removed.
+
+    remove 1 [ 1, 2, 3 ] == [ 1, 3 ]
+
+-}
+remove : Int -> Array a -> Array a
+remove index array =
+    removeMany index 1 array
+
+
+{-| This function works just like [remove](#remove), except it allows you to remove multiple elements at once.
+
+    remove 0 2 [ 1, 2, 3 ] == [ 3 ]
+
+-}
+removeMany : Int -> Int -> Array a -> Array a
+removeMany =
+    Gren.Kernel.Array.splice0
+
+
 {-| Add a value to the start of the array.
 
     pushFirst 1 []          == [ 1 ]
@@ -428,7 +492,7 @@ update idx fn array =
 -}
 pushFirst : a -> Array a -> Array a
 pushFirst value array =
-    prepend [ value ] array
+    Gren.Kernel.Array.splice1 0 0 value array
 
 
 {-| Add a value to the end of the array.
@@ -438,8 +502,28 @@ pushFirst value array =
 
 -}
 pushLast : a -> Array a -> Array a
-pushLast =
-    Gren.Kernel.Array.push
+pushLast value array =
+    Gren.Kernel.Array.splice1 (length array) 0 value array
+
+
+{-| Allows you to perform multiple modifications in a single operation. Splice takes an index
+where modifications will be performed, then allows you to remove a given number of elements and
+add new ones, starting from that index.
+
+Passing a negative index means you want to replace an element counting backwards from the end of the array.
+
+If the index is out of bounds, no elements will be removed but elements will be added at the
+beginning (negative index) or at the end (positive index).
+
+
+    splice 2 0 [ 0 ] [ 1, 2, 3 ] == [ 1, 2, 0, 3 ]
+    splice 2 1 [ 0 ] [ 1, 2, 3 ] == [ 1, 2, 0 ]
+    splice 2 1 [] [ 1, 2, 3 ] == [ 1, 2 ]
+
+-}
+splice : Int -> Int -> Array a -> Array a -> Array a
+splice =
+    Gren.Kernel.Array.spliceN
 
 
 -- COMBINE

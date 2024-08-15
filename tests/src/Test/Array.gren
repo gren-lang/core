@@ -11,10 +11,46 @@ import Test exposing (..)
 tests : Test
 tests =
     describe "Array Tests"
-        [ testArrayOfN 0
+        [ modifications
+        , testArrayOfN 0
         , testArrayOfN 1
         , testArrayOfN 2
         , testArrayOfN 5000
+        ]
+
+modifications : Test
+modifications =
+    describe "Modifications"
+        [ test "set" <| \{} ->
+            set 1 10 [ 1, 2, 3 ]
+                |> Expect.equalArrays [ 1, 10, 3]
+        , test "setMany" <| \{} ->
+             setMany 1 [ 0, 0 ] [ 1, 2, 3, 4 ]
+                |> Expect.equalArrays [ 1, 0, 0, 4 ]
+        , test "update" <| \{} ->
+            update 1 (\n -> n + 1) [ 1, 2, 3 ]
+                |> Expect.equalArrays [ 1, 3, 3 ]
+        , test "insert" <| \{} ->
+            insert 1 0 [ 1, 2, 3 ]
+                |> Expect.equalArrays [ 1, 0, 2, 3 ]
+        , test "insertMany" <| \{} ->
+            insertMany 1 [ 0, 0 ] [ 1, 2, 3 ]
+                |> Expect.equalArrays [ 1, 0, 0, 2, 3 ]
+        , test "remove" <| \{} ->
+            remove 1 [ 1, 2, 3 ]
+                |> Expect.equalArrays [ 1, 3 ]
+        , test "removeMany" <| \{} ->
+            removeMany 0 2 [ 1, 2, 3 ]
+                |> Expect.equalArrays [ 3 ]
+        , test "pushFirst" <| \{} ->
+             pushFirst 5 [ 1, 4, 9 ]
+                |> Expect.equalArrays [ 5, 1, 4, 9 ]
+        , test "pushLast" <| \{} ->
+             pushLast 5 [ 1, 4, 9 ]
+                |> Expect.equalArrays [ 1, 4, 9, 5 ]
+        , test "splice" <| \{} ->
+             splice 2 1 [ 0 ] [ 1, 2, 3 ]
+                |> Expect.equalArrays [ 1, 2, 0 ]
         ]
 
 
@@ -95,12 +131,14 @@ testArrayOfN n =
             , test "all+" <| \{} -> Expect.equal [] (dropFirst (n + 1) xs)
             ]
         , test "repeat" <| \{} -> Expect.equal (map (\x -> -1) xs) (repeat n -1)
-        , test "append" <| \{} -> Expect.equal (xsSum * 2) (prepend xs xs |> foldl (+) 0)
+        , test "prepend" <| \{} -> Expect.equal (xsSum * 2) (prepend xs xs |> foldl (+) 0)
+        , test "append" <| \{} -> Expect.equal (xsSum * 2) (append xs xs |> foldl (+) 0)
         , describe "update"
             [ test "in-bounds" <| \{} -> Expect.equal (update 1 (\i -> i + 1) [1, 2, 3]) [1, 3, 3]
             , test "out-of-bounds" <| \{} -> Expect.equal (update 10 (\i -> i + 1) [1, 2, 3]) [1, 2, 3]
             ]
         , test "pushFirst" <| \{} -> Expect.equal (prepend [ -1 ] xs) (Array.pushFirst -1 xs)
+        , test "pushLast" <| \{} -> Expect.equal (append [ -1 ] xs) (Array.pushLast -1 xs)
         , test "flatten" <| \{} -> Expect.equal (prepend xs (prepend zs xs)) (Array.flatten [ xs, zs, xs ])
         , test "intersperse" <|
             \{} ->

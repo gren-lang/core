@@ -18,6 +18,8 @@ function _Bitwise_complement(a) {
   return ~a;
 }
 
+var _Bitwise_countLeadingZeros = Math.clz32;
+
 var _Bitwise_shiftLeftBy = F2(function (offset, a) {
   return a << offset;
 });

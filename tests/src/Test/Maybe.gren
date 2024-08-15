@@ -4,19 +4,49 @@ import Basics exposing (..)
 import Expect
 import Maybe exposing (..)
 import Test exposing (..)
+import Math
+
+
+isOdd : Int -> Bool
+isOdd n =
+    Math.remainderBy 2 n /= 0
 
 
 tests : Test
 tests =
     describe "Maybe Tests"
-        [ describe "Common Helpers Tests"
-            [ describe "withDefault Tests"
+        [ describe "Query"
+            [ describe "hasValue"
+                [ test "True case" <|
+                    \{} -> Expect.equal True (Maybe.hasValue 5 (Just 5))
+                , test "False case" <|
+                    \{} -> Expect.equal False (Maybe.hasValue 5 (Just 3))
+                , test "Nothing" <|
+                    \{} -> Expect.equal False (Maybe.hasValue 5 Nothing)
+                ]
+            , describe "checkValue"
+                [ test "True case" <|
+                    \{} -> Expect.equal True (Maybe.checkValue isOdd (Just 5))
+                , test "False case" <|
+                    \{} -> Expect.equal False (Maybe.checkValue isOdd (Just 2))
+                , test "Nothing" <|
+                    \{} -> Expect.equal False (Maybe.checkValue isOdd Nothing)
+                ]
+            ]
+        , describe "Transform"
+            [ describe "withDefault"
                 [ test "no default used" <|
                     \{} -> Expect.equal 0 (Maybe.withDefault 5 (Just 0))
                 , test "default used" <|
                     \{} -> Expect.equal 5 (Maybe.withDefault 5 Nothing)
                 ]
-            , describe "map Tests"
+            , describe "withDefaultLazy"
+                [ test "no default used" <|
+                    \{} -> Expect.equal 0 (Maybe.withDefaultLazy (\{} -> 5) (Just 0))
+                , test "default used" <|
+                    \{} -> Expect.equal 5 (Maybe.withDefaultLazy (\{} -> 5) Nothing)
+                ]
+            , describe "map"
                 (let
                     f =
                         \n -> n + 1
@@ -33,7 +63,7 @@ tests =
                             (Maybe.map f Nothing)
                  ]
                 )
-            , describe "map2 Tests"
+            , describe "map2"
                 (let
                     f =
                         (+)
@@ -55,7 +85,7 @@ tests =
                             (Maybe.map2 f Nothing (Just 0))
                  ]
                 )
-            , describe "map3 Tests"
+            , describe "map3"
                 (let
                     f =
                         \a b c -> a + b + c
@@ -82,7 +112,7 @@ tests =
                             (Maybe.map3 f Nothing (Just 1) (Just 1))
                  ]
                 )
-            , describe "map4 Tests"
+            , describe "map4"
                 (let
                     f =
                         \a b c d -> a + b + c + d
@@ -114,7 +144,7 @@ tests =
                             (Maybe.map4 f Nothing (Just 1) (Just 1) (Just 1))
                  ]
                 )
-            , describe "map5 Tests"
+            , describe "map5"
                 (let
                     f =
                         \a b c d e -> a + b + c + d + e
@@ -151,9 +181,13 @@ tests =
                             (Maybe.map5 f Nothing (Just 1) (Just 1) (Just 1) (Just 1))
                  ]
                 )
-            ]
-        , describe "Chaining Maybes Tests"
-            [ describe "andThen Tests"
+            , describe "filter"
+                [ test "Success" <| \{} ->
+                    Expect.equal (Just 5) (Maybe.filter isOdd (Just 5))
+                , test "Failure" <| \{} ->
+                    Expect.equal Nothing (Maybe.filter isOdd (Just 4))
+                ]
+            , describe "andThen"
                 [ test "succeeding chain" <|
                     \{} ->
                         Expect.equal

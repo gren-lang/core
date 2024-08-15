@@ -32,6 +32,14 @@ tests =
                 , test "set replace" <| \{} -> Expect.equal (Dict.set "k" "vv" Dict.empty) (Dict.set "k" "vv" (Dict.singleton "k" "v"))
                 , test "update" <| \{} -> Expect.equal (Dict.set "k" "vv" Dict.empty) (Dict.update "k" (\v -> Just "vv") (Dict.singleton "k" "v"))
                 , test "update Nothing" <| \{} -> Expect.equal Dict.empty (Dict.update "k" (\v -> Nothing) (Dict.singleton "k" "v"))
+                , test "updateWithDefault" <| \{} -> 
+                    Expect.equal
+                        (Dict.set "k" [ "v" ] Dict.empty) 
+                        (Dict.updateWithDefault "k" [] (\vs -> Array.pushLast "v" vs) Dict.empty)
+                , test "updateWithDefault Nothing" <| \{} -> 
+                    Expect.equal
+                        (Dict.set "k" [ "v", "v" ] Dict.empty) 
+                        (Dict.updateWithDefault "k" [] (\vs -> Array.pushLast "v" vs) (Dict.singleton "k" ["v"]))
                 , test "remove" <| \{} -> Expect.equal Dict.empty (Dict.remove "k" (Dict.singleton "k" "v"))
                 , test "remove not found" <| \{} -> Expect.equal (Dict.singleton "k" "v") (Dict.remove "kk" (Dict.singleton "k" "v"))
                 ]

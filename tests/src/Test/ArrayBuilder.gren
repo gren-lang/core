@@ -1,0 +1,134 @@
+module Test.ArrayBuilder exposing (tests)
+
+import Array
+import Array.Builder as Builder
+import Basics exposing (..)
+import Expect
+import Test exposing (..)
+import Fuzz
+
+
+
+tests : Test
+tests =
+    describe "Array.Builder Tests"
+        [ fuzz Fuzz.int "An empty builder makes for an empty array, regardless of capacity" <| \capacity ->
+            Builder.empty capacity
+                |> Builder.toArray
+                |> Expect.equalArrays []
+        , test "Can build an array using builder API" <| \{} ->
+            Builder.empty 3
+                |> Builder.pushLast 1
+                |> Builder.pushLast 2
+                |> Builder.pushLast 3
+                |> Builder.toArray
+                |> Expect.equalArrays [ 1, 2, 3 ]
+        , test "Capacity doesn't limit what can be inserted into the builder" <| \{} ->
+            let
+                correctCapacity =
+                    Builder.empty 2
+                        |> Builder.pushLast 1
+                        |> Builder.pushLast 2
+                        |> Builder.toArray
+
+                wrongCapacity =
+                    Builder.empty 1
+                        |> Builder.pushLast 1
+                        |> Builder.pushLast 2
+                        |> Builder.toArray
+            in
+            Expect.equalArrays correctCapacity wrongCapacity
+        , fuzz (Fuzz.array Fuzz.int) "Builder API is just a optimization, it's the same as using Array.pushLast" <| \array ->
+            Array.foldl (\val builder -> Builder.pushLast val builder) (Builder.empty 0) array
+                |> Builder.toArray
+                |> Expect.equalArrays array
+        , test "Cannot detect mutation" <| \{} ->
+            let
+                empty =
+                    Builder.empty 0
+
+                first =
+                    Builder.pushLast "first" empty
+
+                second =
+                    Builder.pushLast "second" empty
+            in
+            Expect.all
+                [ \{} -> Expect.equalArrays [] (Builder.toArray empty)
+                , \{} -> Expect.equalArrays [ "first" ] (Builder.toArray first)
+                , \{} -> Expect.equalArrays [ "second" ] (Builder.toArray second)
+                ]
+                {}
+        , test "Cannot detect mutation after toArray" <| \{} ->
+            let
+                empty =
+                    Builder.empty 0
+
+                first =
+                    Builder.pushLast "first" empty
+
+                firstArray =
+                    Builder.toArray first
+
+                secondArray =
+                    first
+                        |> Builder.pushLast "second"
+                        |> Builder.toArray
+            in
+            Expect.all
+                [ \{} -> Expect.equalArrays [] (Builder.toArray empty)
+                , \{} -> Expect.equalArrays [ "first" ] firstArray
+                , \{} -> Expect.equalArrays [ "first", "second" ] secondArray
+                ]
+                {}
+        , test "Cannot detect mutation with equality" <| \{} ->
+            let
+                empty =
+                    Builder.empty 0
+                
+                first = 
+                    empty 
+                        |> Builder.pushLast 1
+            in
+            Expect.equal empty (Builder.empty 0)
+        , test "Builder.append" <| \{} ->
+            Builder.empty 0
+                |> Builder.pushLast 5
+                |> Builder.pushLast 4
+                |> Builder.append [ 3, 2, 1 ]
+                |> Builder.toArray
+                |> Expect.equalArrays [ 5, 4, 3, 2, 1 ]
+        , test "Cannot detect mutation with append" <| \{} ->
+            let
+                init =
+                    Builder.empty 0
+
+                first =
+                    Builder.append [ 1, 2 ] init
+
+                second =
+                    Builder.pushLast 3 init
+            in
+            Expect.all
+                [ \{} -> Expect.equalArrays [] (Builder.toArray init)
+                , \{} -> Expect.equalArrays [ 1, 2 ] (Builder.toArray first)
+                , \{} -> Expect.equalArrays [ 3 ] (Builder.toArray second)
+                ]
+                {}
+        , test "Builder.fromArray" <| \{} ->
+            let
+                array =
+                    [ 1, 2, 3 ]
+                
+                built =
+                    Builder.fromArray array
+                        |> Builder.pushLast 4
+                        |> Builder.pushLast 5
+                        |> Builder.toArray
+            in
+            Expect.all
+                [ \{} -> Expect.equalArrays [ 1, 2, 3 ] array
+                , \{} -> Expect.equalArrays [ 1, 2, 3, 4, 5 ] built
+                ]
+                {}
+        ]

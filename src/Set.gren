@@ -1,6 +1,6 @@
 module Set exposing
     ( Set
-    , empty, singleton, set, remove
+    , empty, singleton, set, remove, toggle
     , isEmpty, member, count, first, last, findFirst, findLast, any, all
     , union, intersect, diff
     , toArray, fromArray
@@ -17,7 +17,7 @@ Set, remove, and query operations all take _O(log n)_ time.
 @docs Set
 
 
-@docs empty, singleton, set, remove
+@docs empty, singleton, set, remove, toggle
 
 
 ## Query
@@ -42,7 +42,7 @@ Set, remove, and query operations all take _O(log n)_ time.
 -}
 
 import Array exposing (Array)
-import Basics exposing (Bool, Int)
+import Basics exposing (..)
 import Dict
 import Maybe exposing (Maybe(..))
 
@@ -80,6 +80,19 @@ set key (Set_gren_builtin dict) =
 remove : comparable -> Set comparable -> Set comparable
 remove key (Set_gren_builtin dict) =
     Set_gren_builtin (Dict.remove key dict)
+
+
+{-| Toggle a value in a set. If the value isn't in the set, it is added. If the
+value is in the set, it is removed.
+-}
+toggle : comparable -> Set comparable -> Set comparable
+toggle key (Set_gren_builtin dict) =
+    case Dict.get key dict of
+        Just _ ->
+            Set_gren_builtin <| Dict.remove key dict
+
+        Nothing ->
+            Set_gren_builtin <| Dict.set key {} dict
 
 
 {-| Determine if a set is empty.

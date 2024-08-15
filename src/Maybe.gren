@@ -1,28 +1,28 @@
 module Maybe exposing
     ( Maybe(..)
-    , withDefault, map, map2, map3, map4, map5
+    , hasValue, checkValue, filter
+    , withDefault, withDefaultLazy, map, map2, map3, map4, map5
     , andThen
     )
 
 {-| This library fills a bunch of important niches in Gren. A `Maybe` can help
 you with optional arguments, error handling, and records with optional fields.
 
-
 @docs Maybe
 
 
-## Common Helpers
+## Queries
 
-@docs withDefault, map, map2, map3, map4, map5
+@docs hasValue, checkValue, filter
 
 
-## Chaining Maybes
+## Transform
 
-@docs andThen
+@docs withDefault, withDefaultLazy, map, map2, map3, map4, map5, andThen
 
 -}
 
-import Basics exposing (Bool(..))
+import Basics exposing (..)
 
 
 {-| Represent values that may or may not exist. It can be useful if you have a
@@ -47,21 +47,55 @@ type Maybe a
     | Nothing
 
 
+{-| Checks to see if the [Maybe](#Maybe) is `Just`, and that the contained value
+equals a provided constant.
+
+    hasValue 5 (Just 5) == True
+
+    hasValue 5 (Just 3) == False
+
+    hasValue 5 Nothing == False
+
+-}
+hasValue : a -> Maybe a -> Bool
+hasValue value maybe =
+    case maybe of
+        Just contained ->
+            contained == value
+
+        Nothing ->
+            False
+
+
+{-| Checks to see if the [Maybe](#Maybe) is `Just`, and that the contained value
+passes the provided test.
+
+    checkValue isOdd (Just 5) == True
+
+    checkValue isOdd (Just 2) == False
+
+    checkValue isOdd Nothing == False
+
+-}
+checkValue : (a -> Bool) -> Maybe a -> Bool
+checkValue test maybe =
+    case maybe of
+        Just contained ->
+            test contained
+
+        Nothing ->
+            False
+
+
 {-| Provide a default value, turning an optional value into a normal
 value. This comes in handy when paired with functions like
 [`Dict.get`](Dict#get) which gives back a `Maybe`.
 
-    withDefault 100 (Just 42) -- 42
-
-    withDefault 100 Nothing -- 100
-
-    withDefault "unknown" (Dict.get "Tom" Dict.empty) -- "unknown"
-
-**Note:** This can be overused! Many cases are better handled by a `case`
-expression. And if you end up using `withDefault` a lot, it can be a good sign
-that a [custom type][ct] will clean your code up quite a bit!
-
-[ct]: https://guide.gren-lang.org/types/custom_types.html
+    withDefault 100 (Just 42) == 42
+    
+    withDefault 100 Nothing == 100
+    
+    withDefault "unknown" (Dict.get "Tom" Dict.empty) == "unknown"
 
 -}
 withDefault : a -> Maybe a -> a
@@ -72,6 +106,23 @@ withDefault default maybe =
 
         Nothing ->
             default
+
+
+{-| Same as [withDefault](#withDefault) but the default value is wrapped in
+a function. This is useful when computing the default value is expensive, as
+you can compute it only when it is required.
+
+In most cases you should use pattern matching or [withDefault](#withDefault) instead.
+
+-}
+withDefaultLazy : ({} -> a) -> Maybe a -> a
+withDefaultLazy default maybe =
+    case maybe of
+        Just value ->
+            value
+
+        Nothing ->
+            default {}
 
 
 {-| Transform a `Maybe` value with a given function:
@@ -201,6 +252,28 @@ map5 func ma mb mc md me =
 
                                         Just e ->
                                             Just (func a b c d e)
+
+
+{-| Returns `Nothing` if the contained value doesn't pass the given
+test.
+
+    filter isOdd (Just 5) == Just 5
+
+    filter isOdd (Just 2) == Nothing
+
+-}
+filter : (a -> Bool) -> Maybe a -> Maybe a
+filter test maybe =
+    case maybe of
+        Just contained ->
+            if test contained then
+                maybe
+
+            else
+                Nothing
+
+        Nothing ->
+            Nothing
 
 
 {-| Chain together many computations that may fail. It is helpful to see its
