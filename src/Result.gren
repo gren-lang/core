@@ -147,7 +147,7 @@ withDefault def result =
 
 
 {-| Same as [withDefault](#withDefault) but the default value is provided by a function.
-This let's you avoid computing the default value if it isn't necessary.
+This lets you avoid computing the default value if it isn't necessary.
 
 -}
 withDefaultLazy : ({} -> a) -> Result x a -> a

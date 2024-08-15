@@ -31,7 +31,7 @@ type Builder a =
 
 {-| Creates a [Builder](#Builder) without any elements.
 
-The `Int` argument let's you specify the amount of elements you expect
+The `Int` argument lets you specify the amount of elements you expect
 to end up in the final `Array`. Nothing bad happens if you pass a wrong
 value, but being exact gives you a tiny bit more performance.
 
