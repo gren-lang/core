@@ -476,6 +476,9 @@ remove index array =
 
 {-| This function works just like [remove](#remove), except it allows you to remove multiple elements at once.
 
+The first argument is the index from where to remove elements from, the second argument is the number of elements
+to remove.
+
     remove 0 2 [ 1, 2, 3 ] == [ 3 ]
 
 -}
@@ -507,12 +510,14 @@ pushLast value array =
 
 
 {-| Allows you to perform multiple modifications in a single operation. Splice takes an index
-where modifications will be performed, then allows you to remove a given number of elements and
-add new ones, starting from that index.
+as its first argument. This marks the point where modifications will be performed. The
+second argument is the number of elements to remove. The third argument is the elements that
+will be inserted. The argument order represents the order of modifications. Elements will be
+removed before new elements are inserted.
 
 Passing a negative index means you want to replace an element counting backwards from the end of the array.
 
-If the index is out of bounds, no elements will be removed but elements will be added at the
+If the index is out of bounds no elements will be removed, but elements will be added at the
 beginning (negative index) or at the end (positive index).
 
 
