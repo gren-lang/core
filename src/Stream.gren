@@ -1,0 +1,68 @@
+module Stream exposing (..)
+
+
+type ReadableStream reason value
+    = ReadableStream
+
+
+type WriteableStream reason value
+    = WriteableStream
+
+
+type alias StreamPair reason read write =
+    { readable : ReadableStream reason read
+    , writeable : WriteableStream reason write
+    }
+
+
+type Error reason
+    = Closed
+    | Cancelled reason
+    | Locked
+
+
+-- Generic
+
+
+pipeThrough : StreamPair reasonP in out -> ReadableStream reasonR in -> Task (Error reason) (ReadableStream reasonP out)
+
+pipeTo : WriteableStream reasonW in -> ReadableStream reasonR in -> Task (Error reason) {}
+
+
+type alias Transformer reason state in out =
+ (state -> in -> TransformAction reason state out)
+
+
+type TransformAction reason state value
+    = UpdateState state
+    | Send
+        { state : state
+        , send : value
+        }
+    | Close
+    | Cancel reason
+
+
+createTransformStream : Transformer reason state in out -> Task Never (StreamPair reason in out)
+
+
+-- Readable
+
+
+read : ReadableStream reason value -> Task (Error reason) value
+
+subscribe : ReadableStream reason value -> Sub (Result (Error reason) value)
+
+cancelReads : ReadableStream reason value -> Task Never {}
+
+closeReads : ReadableStream reason value -> Task Never {}
+
+
+-- Writeable
+
+
+write : WriteableStream reason value -> value -> Task Error (WriteableStream reason value)
+
+cancelWrites : WriteableStream reason value -> Task Never {}
+
+closeWrites : WriteableStream reason value -> Task Never {}

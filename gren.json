@@ -24,6 +24,9 @@
             "Dict",
             "Set"
         ],
+        "Streams": [
+            "Stream"
+        ],
         "Error Handling": [
             "Maybe",
             "Result"
