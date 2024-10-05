@@ -1,6 +1,10 @@
 module Stream exposing (..)
 
 
+import Gren.Kernel.Stream
+import Task exposing (Task)
+
+
 type ReadableStream reason value
     = ReadableStream
 
@@ -23,7 +27,7 @@ type Error reason
 
 -- Generic
 
-
+{-
 pipeThrough : StreamPair reasonP in out -> ReadableStream reasonR in -> Task (Error reason) (ReadableStream reasonP out)
 
 pipeTo : WriteableStream reasonW in -> ReadableStream reasonR in -> Task (Error reason) {}
@@ -47,22 +51,29 @@ createTransformStream : Transformer reason state in out -> Task Never (StreamPai
 
 
 -- Readable
-
+-}
 
 read : ReadableStream reason value -> Task (Error reason) value
+read =
+    Gren.Kernel.Stream.read
 
+{-
 subscribe : ReadableStream reason value -> Sub (Result (Error reason) value)
 
 cancelReads : ReadableStream reason value -> Task Never {}
 
 closeReads : ReadableStream reason value -> Task Never {}
-
+-}
 
 -- Writeable
 
 
-write : WriteableStream reason value -> value -> Task Error (WriteableStream reason value)
+write : value -> WriteableStream reason value -> Task (Error reason) {}
+write =
+    Gren.Kernel.Stream.write
 
+{-
 cancelWrites : WriteableStream reason value -> Task Never {}
 
 closeWrites : WriteableStream reason value -> Task Never {}
+-}
