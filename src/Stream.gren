@@ -2,6 +2,9 @@ module Stream exposing (..)
 
 
 import Gren.Kernel.Stream
+import Basics exposing ((<|), (++))
+import Bytes exposing (Bytes)
+import String exposing (String)
 import Task exposing (Task)
 
 
@@ -71,6 +74,17 @@ closeReads : ReadableStream reason value -> Task Never {}
 write : value -> WriteableStream reason value -> Task (Error reason) {}
 write =
     Gren.Kernel.Stream.write
+
+
+writeStringAsBytes : String -> WriteableStream reason Bytes -> Task (Error reason) {}
+writeStringAsBytes str stream =
+    write (Bytes.fromString str) stream
+
+
+writeLineAsBytes : String -> WriteableStream reason Bytes -> Task (Error reason) {}
+writeLineAsBytes str stream =
+    write (Bytes.fromString <| str ++ "\n") stream
+
 
 {-
 cancelWrites : WriteableStream reason value -> Task Never {}
