@@ -64,7 +64,7 @@ function _Debug_toAnsiString(ansi, value) {
   if (typeof value === "string") {
     return _Debug_stringColor(
       ansi,
-      '"' + _Debug_addSlashes(value, false) + '"'
+      '"' + _Debug_addSlashes(value, false) + '"',
     );
   }
 
@@ -110,8 +110,8 @@ function _Debug_toAnsiString(ansi, value) {
               return acc;
             }),
             [],
-            value
-          )
+            value,
+          ),
         )
       );
     }
@@ -155,7 +155,7 @@ function _Debug_toAnsiString(ansi, value) {
       output.push(
         _Debug_fadeColor(ansi, field) +
           " = " +
-          _Debug_toAnsiString(ansi, value[key])
+          _Debug_toAnsiString(ansi, value[key]),
       );
     }
     if (output.length === 0) {
@@ -215,7 +215,7 @@ function _Debug_toHexDigit(n) {
 
 function _Debug_crash__PROD(identifier) {
   throw new Error(
-    "https://github.com/gren-lang/core/blob/1.0.0/hints/" + identifier + ".md"
+    "https://github.com/gren-lang/core/blob/1.0.0/hints/" + identifier + ".md",
   );
 }
 
@@ -223,21 +223,21 @@ function _Debug_crash__DEBUG(identifier, fact1, fact2, fact3, fact4) {
   switch (identifier) {
     case 0:
       throw new Error(
-        'What node should I take over? In JavaScript I need something like:\n\n    Gren.Main.init({\n        node: document.getElementById("gren-node")\n    })\n\nYou need to do this with any Browser.sandbox or Browser.element program.'
+        'What node should I take over? In JavaScript I need something like:\n\n    Gren.Main.init({\n        node: document.getElementById("gren-node")\n    })\n\nYou need to do this with any Browser.sandbox or Browser.element program.',
       );
 
     case 1:
       throw new Error(
         "Browser.application programs cannot handle URLs like this:\n\n    " +
           document.location.href +
-          "\n\nWhat is the root? The root of your file system?"
+          "\n\nWhat is the root? The root of your file system?",
       );
 
     case 2:
       var jsonErrorString = fact1;
       throw new Error(
         "Problem with the flags given to your Gren program on initialization.\n\n" +
-          jsonErrorString
+          jsonErrorString,
       );
 
     case 3:
@@ -245,7 +245,7 @@ function _Debug_crash__DEBUG(identifier, fact1, fact2, fact3, fact4) {
       throw new Error(
         "There can only be one port named `" +
           portName +
-          "`, but your program has multiple."
+          "`, but your program has multiple.",
       );
 
     case 4:
@@ -255,12 +255,12 @@ function _Debug_crash__DEBUG(identifier, fact1, fact2, fact3, fact4) {
         "Trying to send an unexpected type of value through port `" +
           portName +
           "`:\n" +
-          problem
+          problem,
       );
 
     case 5:
       throw new Error(
-        'Trying to use `(==)` on functions.\nThere is no way to know if functions are "the same" in the Gren sense.\nRead more about this at https://package.gren-lang.org/packages/gren-lang/core/latest/Basics#== which describes why it is this way and what the better version will look like.'
+        'Trying to use `(==)` on functions.\nThere is no way to know if functions are "the same" in the Gren sense.\nRead more about this at https://package.gren-lang.org/packages/gren-lang/core/latest/Basics#== which describes why it is this way and what the better version will look like.',
       );
 
     case 6:
@@ -268,7 +268,7 @@ function _Debug_crash__DEBUG(identifier, fact1, fact2, fact3, fact4) {
       throw new Error(
         "Your page is loading multiple Gren scripts with a module named " +
           moduleName +
-          ". Maybe a duplicate script is getting loaded accidentally? If not, rename one of them so I know which is which!"
+          ". Maybe a duplicate script is getting loaded accidentally? If not, rename one of them so I know which is which!",
       );
 
     case 8:
@@ -281,7 +281,7 @@ function _Debug_crash__DEBUG(identifier, fact1, fact2, fact3, fact4) {
           "` " +
           _Debug_regionToString(region) +
           "\n\n" +
-          message
+          message,
       );
 
     case 9:
@@ -297,7 +297,7 @@ function _Debug_crash__DEBUG(identifier, fact1, fact2, fact3, fact4) {
           "\n\nIt received the following value:\n\n    " +
           _Debug_toString(value).replace("\n", "\n    ") +
           "\n\nBut the branch that handles it says:\n\n    " +
-          message.replace("\n", "\n    ")
+          message.replace("\n", "\n    "),
       );
 
     case 10:

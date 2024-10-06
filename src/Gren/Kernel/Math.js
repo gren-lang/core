@@ -16,8 +16,8 @@ var _Math_modBy = F2(function (modulus, x) {
   return modulus === 0
     ? __Debug_crash(11)
     : (answer > 0 && modulus < 0) || (answer < 0 && modulus > 0)
-    ? answer + modulus
-    : answer;
+      ? answer + modulus
+      : answer;
 });
 
 // CONSTANTS

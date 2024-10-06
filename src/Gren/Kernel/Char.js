@@ -17,12 +17,12 @@ function _Char_fromCode(code) {
     code < 0 || 0x10ffff < code
       ? "\uFFFD"
       : code <= 0xffff
-      ? String.fromCharCode(code)
-      : ((code -= 0x10000),
-        String.fromCharCode(
-          Math.floor(code / 0x400) + 0xd800,
-          (code % 0x400) + 0xdc00
-        ))
+        ? String.fromCharCode(code)
+        : ((code -= 0x10000),
+          String.fromCharCode(
+            Math.floor(code / 0x400) + 0xd800,
+            (code % 0x400) + 0xdc00,
+          )),
   );
 }
 

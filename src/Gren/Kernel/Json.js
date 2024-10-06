@@ -37,10 +37,10 @@ var _Json_decodeInt = _Json_decodePrim(function (value) {
   return typeof value !== "number"
     ? _Json_expecting("an INT", value)
     : Math.trunc(value) === value
-    ? __Result_Ok(value)
-    : isFinite(value) && !(value % 1)
-    ? __Result_Ok(value)
-    : _Json_expecting("an INT", value);
+      ? __Result_Ok(value)
+      : isFinite(value) && !(value % 1)
+        ? __Result_Ok(value)
+        : _Json_expecting("an INT", value);
 });
 
 var _Json_decodeBool = _Json_decodePrim(function (value) {
@@ -63,8 +63,8 @@ var _Json_decodeString = _Json_decodePrim(function (value) {
   return typeof value === "string"
     ? __Result_Ok(value)
     : value instanceof String
-    ? __Result_Ok(value + "")
-    : _Json_expecting("a STRING", value);
+      ? __Result_Ok(value + "")
+      : _Json_expecting("a STRING", value);
 });
 
 function _Json_decodeArray(decoder) {
@@ -166,8 +166,8 @@ var _Json_runOnString = F2(function (decoder, string) {
       A2(
         __Json_Failure,
         "This is not valid JSON! " + e.message,
-        _Json_wrap(string)
-      )
+        _Json_wrap(string),
+      ),
     );
   }
 });
@@ -197,7 +197,7 @@ function _Json_runHelp(decoder, value) {
       if (typeof value !== "object" || value === null || !(field in value)) {
         return _Json_expecting(
           "an OBJECT with a field named `" + field + "`",
-          value
+          value,
         );
       }
       var result = _Json_runHelp(decoder.__decoder, value[field]);
@@ -217,7 +217,7 @@ function _Json_runHelp(decoder, value) {
             " but only see " +
             value.length +
             " entries",
-          value
+          value,
         );
       }
       var result = _Json_runHelp(decoder.__decoder, value[index]);
@@ -304,7 +304,7 @@ function _Json_isArray(value) {
 
 function _Json_expecting(type, value) {
   return __Result_Err(
-    A2(__Json_Failure, "Expecting " + type, _Json_wrap(value))
+    A2(__Json_Failure, "Expecting " + type, _Json_wrap(value)),
   );
 }
 

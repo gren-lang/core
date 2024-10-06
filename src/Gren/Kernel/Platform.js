@@ -20,7 +20,7 @@ var _Platform_worker = F4(function (impl, flagDecoder, debugMetadata, args) {
     impl.__$subscriptions,
     function () {
       return function () {};
-    }
+    },
   );
 });
 
@@ -32,12 +32,12 @@ function _Platform_initialize(
   init,
   update,
   subscriptions,
-  stepperBuilder
+  stepperBuilder,
 ) {
   var result = A2(
     __Json_run,
     flagDecoder,
-    __Json_wrap(args ? args["flags"] : undefined)
+    __Json_wrap(args ? args["flags"] : undefined),
   );
   __Result_isOk(result) ||
     __Debug_crash(2 /**__DEBUG/, __Json_errorToString(result.a) /**/);
@@ -127,12 +127,12 @@ function _Platform_instantiateManager(info, sendToApp) {
         return cmdMap && subMap
           ? A4(onEffects, router, value.__cmds, value.__subs, state)
           : A3(onEffects, router, cmdMap ? value.__cmds : value.__subs, state);
-      })
+      }),
     );
   }
 
   return (router.__selfProcess = __Scheduler_rawSpawn(
-    A2(__Scheduler_andThen, loop, info.__init)
+    A2(__Scheduler_andThen, loop, info.__init),
   ));
 }
 
@@ -321,21 +321,19 @@ function _Platform_setupOutgoingPort(name) {
   var init = __Process_sleep(0);
 
   _Platform_effectManagers[name].__init = init;
-  _Platform_effectManagers[name].__onEffects = F3(function (
-    router,
-    cmdArray,
-    state
-  ) {
-    for (var idx = 0; idx < cmdArray.length; idx++) {
-      // grab a separate reference to subs in case unsubscribe is called
-      var currentSubs = subs;
-      var value = __Json_unwrap(converter(cmdArray[idx]));
-      for (var subIdx = 0; subIdx < currentSubs.length; subIdx++) {
-        currentSubs[subIdx](value);
+  _Platform_effectManagers[name].__onEffects = F3(
+    function (router, cmdArray, state) {
+      for (var idx = 0; idx < cmdArray.length; idx++) {
+        // grab a separate reference to subs in case unsubscribe is called
+        var currentSubs = subs;
+        var value = __Json_unwrap(converter(cmdArray[idx]));
+        for (var subIdx = 0; subIdx < currentSubs.length; subIdx++) {
+          currentSubs[subIdx](value);
+        }
       }
-    }
-    return init;
-  });
+      return init;
+    },
+  );
 
   // PUBLIC API
 
@@ -386,14 +384,12 @@ function _Platform_setupIncomingPort(name, sendToApp) {
   var init = __Scheduler_succeed(null);
 
   _Platform_effectManagers[name].__init = init;
-  _Platform_effectManagers[name].__onEffects = F3(function (
-    router,
-    subArray,
-    state
-  ) {
-    subs = subArray;
-    return init;
-  });
+  _Platform_effectManagers[name].__onEffects = F3(
+    function (router, subArray, state) {
+      subs = subArray;
+      return init;
+    },
+  );
 
   // PUBLIC API
 
@@ -447,7 +443,7 @@ function _Platform_mergeExportsDebug(moduleName, obj, exports) {
         : _Platform_mergeExportsDebug(
             moduleName + "." + name,
             obj[name],
-            exports[name]
+            exports[name],
           )
       : (obj[name] = exports[name]);
   }
