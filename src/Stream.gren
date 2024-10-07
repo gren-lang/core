@@ -2,29 +2,29 @@ module Stream exposing (..)
 
 
 import Gren.Kernel.Stream
-import Basics exposing ((<|), (++))
+import Basics exposing (Bool, (<|), (++))
 import Bytes exposing (Bytes)
 import String exposing (String)
 import Task exposing (Task)
 
 
-type ReadableStream reason value
-    = ReadableStream
+type Readable value
+    = Readable
 
 
-type WriteableStream reason value
-    = WriteableStream
+type Writeable value
+    = Writeable
 
 
-type alias StreamPair reason read write =
-    { readable : ReadableStream reason read
-    , writeable : WriteableStream reason write
+type alias Pair read write =
+    { readable : Readable read
+    , writeable : Writeable write
     }
 
 
-type Error reason
+type Error
     = Closed
-    | Cancelled reason
+    | Cancelled String
     | Locked
 
 
@@ -56,13 +56,18 @@ createTransformStream : Transformer reason state in out -> Task Never (StreamPai
 -- Readable
 -}
 
-read : ReadableStream reason value -> Task (Error reason) value
+
+type alias ReadResult value =
+    { streamClosed : Bool
+    , value : value
+    }
+
+
+read : Readable value -> Task Error (ReadResult value)
 read =
     Gren.Kernel.Stream.read
 
 {-
-subscribe : ReadableStream reason value -> Sub (Result (Error reason) value)
-
 cancelReads : ReadableStream reason value -> Task Never {}
 
 closeReads : ReadableStream reason value -> Task Never {}
@@ -71,17 +76,17 @@ closeReads : ReadableStream reason value -> Task Never {}
 -- Writeable
 
 
-write : value -> WriteableStream reason value -> Task (Error reason) {}
+write : value -> Writeable value -> Task Error {}
 write =
     Gren.Kernel.Stream.write
 
 
-writeStringAsBytes : String -> WriteableStream reason Bytes -> Task (Error reason) {}
+writeStringAsBytes : String -> Writeable Bytes -> Task Error {}
 writeStringAsBytes str stream =
     write (Bytes.fromString str) stream
 
 
-writeLineAsBytes : String -> WriteableStream reason Bytes -> Task (Error reason) {}
+writeLineAsBytes : String -> Writeable Bytes -> Task Error {}
 writeLineAsBytes str stream =
     write (Bytes.fromString <| str ++ "\n") stream
 
