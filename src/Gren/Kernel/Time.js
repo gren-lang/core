@@ -26,8 +26,8 @@ function _Time_here() {
   return __Scheduler_binding(function (callback) {
     callback(
       __Scheduler_succeed(
-        A2(__Time_customZone, -new Date().getTimezoneOffset(), [])
-      )
+        A2(__Time_customZone, -new Date().getTimezoneOffset(), []),
+      ),
     );
   });
 }

@@ -19,8 +19,8 @@ var _Bytes_getHostEndianness = F2(function (le, be) {
   return __Scheduler_binding(function (callback) {
     callback(
       __Scheduler_succeed(
-        new Uint8Array(new Uint32Array([1]))[0] === 1 ? le : be
-      )
+        new Uint8Array(new Uint32Array([1]))[0] === 1 ? le : be,
+      ),
     );
   });
 });
