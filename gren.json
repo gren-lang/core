@@ -4,7 +4,7 @@
     "name": "gren-lang/core",
     "summary": "Gren's core modules",
     "license": "BSD-3-Clause",
-    "version": "5.1.0",
+    "version": "5.1.1",
     "exposed-modules": {
         "Primitives": [
             "Basics",
