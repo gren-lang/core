@@ -1,4 +1,4 @@
 set -e
 
-gren make src/Main.gren
+npx gren make src/Main.gren
 node app
