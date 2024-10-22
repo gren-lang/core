@@ -51,7 +51,7 @@ function _Bytes_join(arrayOfBytes) {
   var result = new Uint8Array(requiredSize);
 
   for (var i = 0; i < arrayOfBytes.length; i++) {
-    var currentBytes = new UInt8Array(arrayOfBytes[i].buffer);
+    var currentBytes = new Uint8Array(arrayOfBytes[i].buffer);
     var currentByteLength = arrayOfBytes[i].byteLength;
 
     for (var j = 0; j < currentByteLength; j++) {
