@@ -1,8 +1,10 @@
 {
   "scripts": {
+    "build": "gren make",
     "prettier": "prettier -w **/*.js"
   },
   "devDependencies": {
+    "gren-lang": "^0.4.5",
     "prettier": "2.7.1"
   }
 }
