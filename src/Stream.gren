@@ -2,7 +2,7 @@ module Stream exposing (..)
 
 
 import Gren.Kernel.Stream
-import Basics exposing (Bool, (<|), (++))
+import Basics exposing (Bool, Int, (<|), (++), max)
 import Bytes exposing (Bytes)
 import String exposing (String)
 import Task exposing (Task)
@@ -101,6 +101,6 @@ type alias Pair data =
     }
 
 
-makePair : Task x (Pair data)
-makePair =
-    Gren.Kernel.Stream.makePair
+makePair : { readCapacity : Int, writeCapacity : Int } -> Task x (Pair data)
+makePair { readCapacity, writeCapacity } =
+    Gren.Kernel.Stream.makePair (max 0 readCapacity) (max 0 writeCapacity)
