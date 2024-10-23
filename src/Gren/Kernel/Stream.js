@@ -63,19 +63,24 @@ var _Stream_write = F2(function (value, stream) {
   });
 });
 
-var _Stream_makePair = F2(function (readCapacity, writeCapacity) {
-  return __Scheduler_binding(function (callback) {
-    const transformStream = new TransformStream(
-      {},
-      new CountQueuingStrategy({ highWaterMark: writeCapacity }),
-      new CountQueuingStrategy({ highWaterMark: readCapacity }),
-    );
+var _Stream_makeIdentityTransformation = F2(
+  function (readCapacity, writeCapacity) {
+    return __Scheduler_binding(function (callback) {
+      const transformStream = new TransformStream(
+        {},
+        new CountQueuingStrategy({ highWaterMark: writeCapacity }),
+        new CountQueuingStrategy({ highWaterMark: readCapacity }),
+      );
 
-    return callback(
-      __Scheduler_succeed({
-        __$readable: transformStream.readable,
-        __$writable: transformStream.writable,
-      }),
-    );
-  });
-});
+      return callback(__Scheduler_succeed(transformStream));
+    });
+  },
+);
+
+var _Stream_readable = function (transformStream) {
+  return transformStream.readable;
+};
+
+var _Stream_writable = function (transformStream) {
+  return transformStream.writable;
+};

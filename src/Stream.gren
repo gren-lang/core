@@ -95,12 +95,21 @@ closeWrites : WriteableStream reason value -> Task Never {}
 -- Pair
 
 
-type alias Pair data =
-    { readable : Readable data
-    , writable : Writeable data
-    }
+type Transformation read write =
+    -- Note: Implementation in kernel code
+    Transformation read write
 
 
-makePair : { readCapacity : Int, writeCapacity : Int } -> Task x (Pair data)
-makePair { readCapacity, writeCapacity } =
-    Gren.Kernel.Stream.makePair (max 0 readCapacity) (max 0 writeCapacity)
+makeIdentityTransformation : { readCapacity : Int, writeCapacity : Int } -> Task x (Transformation data data)
+makeIdentityTransformation { readCapacity, writeCapacity } =
+    Gren.Kernel.Stream.makeIdentityTransformation (max 0 readCapacity) (max 0 writeCapacity)
+
+
+readable : Transformation read write -> Readable read
+readable =
+    Gren.Kernel.Stream.readable
+
+
+writable : Transformation read write -> Writeable write
+writable =
+    Gren.Kernel.Stream.writable
