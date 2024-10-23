@@ -15,6 +15,14 @@ var _Stream_read = function (stream) {
     reader
       .read()
       .then(({ done, value }) => {
+        if (value instanceof Uint8Array) {
+          value = new DataView(
+            value.buffer,
+            value.byteOffset,
+            value.byteLength,
+          );
+        }
+
         callback(
           __Scheduler_succeed({ __$streamClosed: done, __$value: value }),
         );
@@ -35,6 +43,10 @@ var _Stream_write = F2(function (value, stream) {
       return callback(__Scheduler_fail(__Stream_Locked));
     }
 
+    if (value instanceof DataView) {
+      value = new Uint8Array(value.buffer, value.byteOffset, value.byteLength);
+    }
+
     const writer = stream.getWriter();
     writer
       .write(value)
@@ -49,4 +61,16 @@ var _Stream_write = F2(function (value, stream) {
         writer.releaseLock();
       });
   });
+});
+
+var _Stream_makePair = __Scheduler_binding(function (callback) {
+  const strategy = new CountQueuingStrategy({ highWaterMark: 3 });
+  const transformStream = new TransformStream({}, strategy, strategy);
+
+  return callback(
+    __Scheduler_succeed({
+      __$readable: transformStream.readable,
+      __$writable: transformStream.writable,
+    }),
+  );
 });

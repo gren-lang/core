@@ -16,12 +16,6 @@ type Writeable value
     = Writeable
 
 
-type alias Pair read write =
-    { readable : Readable read
-    , writeable : Writeable write
-    }
-
-
 type Error
     = Closed
     | Cancelled String
@@ -96,3 +90,17 @@ cancelWrites : WriteableStream reason value -> Task Never {}
 
 closeWrites : WriteableStream reason value -> Task Never {}
 -}
+
+
+-- Pair
+
+
+type alias Pair data =
+    { readable : Readable data
+    , writable : Writeable data
+    }
+
+
+makePair : Task x (Pair data)
+makePair =
+    Gren.Kernel.Stream.makePair

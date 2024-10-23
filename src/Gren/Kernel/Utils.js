@@ -68,6 +68,8 @@ function _Utils_eqHelp(x, y, depth, stack) {
         return false;
       }
     }
+
+    return true;
   }
 
   if (x instanceof _Array_Builder) {

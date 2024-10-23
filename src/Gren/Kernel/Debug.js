@@ -133,7 +133,7 @@ function _Debug_toAnsiString(ansi, value) {
     return _Debug_ctorColor(ansi, tag) + output;
   }
 
-  if (typeof DataView === "function" && value instanceof DataView) {
+  if (value instanceof DataView) {
     return _Debug_stringColor(ansi, "<" + value.byteLength + " bytes>");
   }
 
