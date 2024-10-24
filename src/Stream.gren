@@ -12,8 +12,8 @@ type Readable value
     = Readable
 
 
-type Writeable value
-    = Writeable
+type Writable value
+    = Writable
 
 
 type Error
@@ -24,12 +24,9 @@ type Error
 
 -- Generic
 
+
+
 {-
-pipeThrough : StreamPair reasonP in out -> ReadableStream reasonR in -> Task (Error reason) (ReadableStream reasonP out)
-
-pipeTo : WriteableStream reasonW in -> ReadableStream reasonR in -> Task (Error reason) {}
-
-
 type alias Transformer reason state in out =
  (state -> in -> TransformAction reason state out)
 
@@ -67,28 +64,28 @@ cancelReads : ReadableStream reason value -> Task Never {}
 closeReads : ReadableStream reason value -> Task Never {}
 -}
 
--- Writeable
+-- Writable
 
 
-write : value -> Writeable value -> Task Error {}
+write : value -> Writable value -> Task Error {}
 write =
     Gren.Kernel.Stream.write
 
 
-writeStringAsBytes : String -> Writeable Bytes -> Task Error {}
+writeStringAsBytes : String -> Writable Bytes -> Task Error {}
 writeStringAsBytes str stream =
     write (Bytes.fromString str) stream
 
 
-writeLineAsBytes : String -> Writeable Bytes -> Task Error {}
+writeLineAsBytes : String -> Writable Bytes -> Task Error {}
 writeLineAsBytes str stream =
     write (Bytes.fromString <| str ++ "\n") stream
 
 
 {-
-cancelWrites : WriteableStream reason value -> Task Never {}
+cancelWrites : WritableStream reason value -> Task Never {}
 
-closeWrites : WriteableStream reason value -> Task Never {}
+closeWrites : WritableStream reason value -> Task Never {}
 -}
 
 
@@ -98,6 +95,16 @@ closeWrites : WriteableStream reason value -> Task Never {}
 type Transformation read write =
     -- Note: Implementation in kernel code
     Transformation read write
+
+
+pipeThrough : Transformation input output -> Readable input -> Task Error (Readable output)
+pipeThrough =
+    Gren.Kernel.Stream.pipeThrough
+
+
+pipeTo : Writable data -> Readable data -> Task Error {}
+pipeTo =
+    Gren.Kernel.Stream.pipeTo
 
 
 makeIdentityTransformation : { readCapacity : Int, writeCapacity : Int } -> Task x (Transformation data data)
@@ -110,6 +117,6 @@ readable =
     Gren.Kernel.Stream.readable
 
 
-writable : Transformation read write -> Writeable write
+writable : Transformation read write -> Writable write
 writable =
     Gren.Kernel.Stream.writable

@@ -63,6 +63,20 @@ var _Stream_write = F2(function (value, stream) {
   });
 });
 
+var _Stream_pipeThrough = F2(function (transformer, readable) {
+  return __Scheduler_binding(function (callback) {
+    const transformedReader = readable.pipeThrough(transformer);
+    return callback(__Scheduler_succeed(transformedReader));
+  });
+});
+
+var _Stream_pipeTo = F2(function (writable, readable) {
+  return __Scheduler_binding(function (callback) {
+    readable.pipeTo(writable);
+    return callback(__Scheduler_succeed({}));
+  });
+});
+
 var _Stream_makeIdentityTransformation = F2(
   function (readCapacity, writeCapacity) {
     return __Scheduler_binding(function (callback) {
