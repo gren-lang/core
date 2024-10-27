@@ -98,3 +98,23 @@ var _Stream_readable = function (transformStream) {
 var _Stream_writable = function (transformStream) {
   return transformStream.writable;
 };
+
+var _Stream_textEncoder = __Scheduler_binding(function (callback) {
+  return callback(__Scheduler_succeed(new TextEncoderStream()));
+});
+
+var _Stream_textDecoder = __Scheduler_binding(function (callback) {
+  return callback(__Scheduler_succeed(new TextDecoderStream()));
+});
+
+var _Stream_compressor = function (algo) {
+  return __Scheduler_binding(function (callback) {
+    return callback(__Scheduler_succeed(new CompressionStream(algo)));
+  });
+};
+
+var _Stream_decompressor = function (algo) {
+  return __Scheduler_binding(function (callback) {
+    return callback(__Scheduler_succeed(new DecompressionStream(algo)));
+  });
+};
