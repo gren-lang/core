@@ -13,24 +13,29 @@ module Stream exposing
     , cancelWritable
     -- Transform
     , Transformation
-    , makeIdentityTransformation
+    , identityTransformation
+    , identityTransformationWithOptions
     , readable
     , writable
     , pipeThrough
+    , awaitAndPipeThrough
     , pipeTo
     -- Custom streams
     , textEncoder
     , textDecoder
-    , CompressionAlgorithm(..)
-    , compressor
-    , decompressor
+    , gzipCompression
+    , deflateCompression
+    , deflateRawCompression
+    , gzipDecompression
+    , deflateDecompression
+    , deflateRawDecompression
     )
 
 {-| Streams
 
 ## Readable Streams
 
-@docs Readable, Error, read, closeReadable, cancelReadable
+@docs Readable, Error, read, readBytesAsString, closeReadable, cancelReadable
 
 ## Writable Streams
 
@@ -38,16 +43,18 @@ module Stream exposing
 
 ## Transformation Streams
 
-@docs Transformation, makeIdentityTransformation, readable, writable, pipeThrough, pipeTo
+@docs Transformation, identityTransformation, identityTransformationWithOptions, readable, writable, pipeThrough, awaitAndPipeThrough, pipeTo
 
 ## Custom Transformation Streams
 
-@docs textEncoder, textDecoder, CompressionAlgorithm, compressor, decompressor
+@docs textEncoder, textDecoder, gzipCompression, deflateCompression, deflateRawCompression, gzipDecompression, deflateDecompression, deflateRawDecompression
+
 -}
 
 import Gren.Kernel.Stream
-import Basics exposing (Bool, Int, (<|), (++), max)
+import Basics exposing (Bool, Int, (<|), (|>), (++), max)
 import Bytes exposing (Bytes)
+import Maybe
 import String exposing (String)
 import Task exposing (Task)
 
@@ -69,30 +76,7 @@ type Error
     | Locked
 
 
--- Generic
-
-
-
-{-
-type alias Transformer reason state in out =
- (state -> in -> TransformAction reason state out)
-
-
-type TransformAction reason state value
-    = UpdateState state
-    | Send
-        { state : state
-        , send : value
-        }
-    | Close
-    | Cancel reason
-
-
-createTransformStream : Transformer reason state in out -> Task Never (StreamPair reason in out)
-
-
 -- Readable
--}
 
 
 {-|-}
@@ -102,13 +86,24 @@ read =
 
 
 {-|-}
-closeReadable : Readable value -> Task Error {}
-closeReadable =
-    Gren.Kernel.Stream.close
+readBytesAsString : Readable Bytes -> Task Error { streamClosed : Bool, value : String }
+readBytesAsString stream =
+    read stream
+        |> Task.map (\input ->
+            { streamClosed = input.streamClosed
+            , value = Maybe.withDefault "" <| Bytes.toString input.value
+            }
+        )
 
 
 {-|-}
-cancelReadable : String ->  Readable value -> Task Error {}
+closeReadable : Readable value -> Task Error {}
+closeReadable =
+    Gren.Kernel.Stream.closeReadable
+
+
+{-|-}
+cancelReadable : String -> Readable value -> Task Error {}
 cancelReadable =
     Gren.Kernel.Stream.cancel
 
@@ -137,7 +132,7 @@ writeLineAsBytes str stream =
 {-|-}
 closeWritable : Writable value -> Task Error {}
 closeWritable =
-    Gren.Kernel.Stream.close
+    Gren.Kernel.Stream.closeWritable
 
 
 {-|-}
@@ -146,8 +141,26 @@ cancelWritable =
     Gren.Kernel.Stream.cancel
 
 
--- Pair
+-- Transformation
 
+{-
+type alias Transformer reason state in out =
+ (state -> in -> TransformAction reason state out)
+
+
+type TransformAction reason state value
+    = UpdateState state
+    | Send
+        { state : state
+        , send : value
+        }
+    | Close
+    | Cancel reason
+
+
+createTransformStream : Transformer reason state in out -> Task Never (StreamPair reason in out)
+
+-}
 
 {-|-}
 type Transformation read write =
@@ -156,21 +169,15 @@ type Transformation read write =
 
 
 {-|-}
-pipeThrough : Transformation input output -> Readable input -> Task Error (Readable output)
-pipeThrough =
-    Gren.Kernel.Stream.pipeThrough
+identityTransformation : Task x (Transformation data data)
+identityTransformation =
+    Gren.Kernel.Stream.identityTransformation 0 0
 
 
 {-|-}
-pipeTo : Writable data -> Readable data -> Task Error {}
-pipeTo =
-    Gren.Kernel.Stream.pipeTo
-
-
-{-|-}
-makeIdentityTransformation : { readCapacity : Int, writeCapacity : Int } -> Task x (Transformation data data)
-makeIdentityTransformation { readCapacity, writeCapacity } =
-    Gren.Kernel.Stream.makeIdentityTransformation (max 0 readCapacity) (max 0 writeCapacity)
+identityTransformationWithOptions : { readCapacity : Int, writeCapacity : Int } -> Task x (Transformation data data)
+identityTransformationWithOptions { readCapacity, writeCapacity } =
+    Gren.Kernel.Stream.identityTransformation (max 0 readCapacity) (max 0 writeCapacity)
 
 
 {-|-}
@@ -185,7 +192,25 @@ writable =
     Gren.Kernel.Stream.writable
 
 
--- Custom Streams
+{-|-}
+pipeThrough : Transformation input output -> Readable input -> Task Error (Readable output)
+pipeThrough =
+    Gren.Kernel.Stream.pipeThrough
+
+
+{-|-}
+awaitAndPipeThrough : Task Error (Transformation input output) -> Readable input -> Task Error (Readable output)
+awaitAndPipeThrough builder source =
+    Task.andThen (\transformation -> pipeThrough transformation source) builder
+
+
+{-|-}
+pipeTo : Writable data -> Readable data -> Task Error {}
+pipeTo =
+    Gren.Kernel.Stream.pipeTo
+
+
+-- Built-in transformations
 
 
 {-|-}
@@ -201,32 +226,36 @@ textDecoder =
 
 
 {-|-}
-type CompressionAlgorithm
-    = Gzip
-    | Deflate
-    | DeflateRaw
-
-
-compressionAlgorithmToString : CompressionAlgorithm -> String
-compressionAlgorithmToString algo =
-    case algo of
-        Gzip ->
-            "gzip"
-
-        Deflate ->
-            "deflate"
-
-        DeflateRaw ->
-            "deflate-raw"
+gzipCompression : Task x (Transformation Bytes Bytes)
+gzipCompression =
+    Gren.Kernel.Stream.compressor "gzip"
 
 
 {-|-}
-compressor : CompressionAlgorithm -> Task x (Transformation Bytes Bytes)
-compressor algo =
-    Gren.Kernel.Stream.compressor (compressionAlgorithmToString algo)
+deflateCompression : Task x (Transformation Bytes Bytes)
+deflateCompression =
+    Gren.Kernel.Stream.compressor "deflate"
 
 
 {-|-}
-decompressor : CompressionAlgorithm -> Task x (Transformation Bytes Bytes)
-decompressor algo =
-    Gren.Kernel.Stream.decompressor (compressionAlgorithmToString algo)
+deflateRawCompression : Task x (Transformation Bytes Bytes)
+deflateRawCompression =
+    Gren.Kernel.Stream.compressor "deflate-raw"
+
+
+{-|-}
+gzipDecompression : Task x (Transformation Bytes Bytes)
+gzipDecompression =
+    Gren.Kernel.Stream.decompressor "gzip"
+
+
+{-|-}
+deflateDecompression : Task x (Transformation Bytes Bytes)
+deflateDecompression =
+    Gren.Kernel.Stream.decompressor "deflate"
+
+
+{-|-}
+deflateRawDecompression : Task x (Transformation Bytes Bytes)
+deflateRawDecompression =
+    Gren.Kernel.Stream.decompressor "deflate-raw"

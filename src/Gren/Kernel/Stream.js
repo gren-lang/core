@@ -63,6 +63,56 @@ var _Stream_write = F2(function (value, stream) {
   });
 });
 
+var _Stream_cancel = F2(function (reason, stream) {
+  return __Scheduler_binding(function (callback) {
+    stream.cancel(reason);
+  });
+});
+
+var _Stream_closeReadable = function (stream) {
+  return __Scheduler_binding(function (callback) {
+    if (stream.locked) {
+      return callback(__Scheduler_fail(__Stream_Locked));
+    }
+
+    const reader = stream.getReader();
+    reader
+      .close()
+      .then(() => {
+        callback(__Scheduler_succeed({}));
+      })
+      .catch((err) => {
+        console.log("ReadableStream err: ", err);
+        return callback(__Scheduler_fail(__Stream_Closed));
+      })
+      .finally(() => {
+        reader.releaseLock();
+      });
+  });
+};
+
+var _Stream_closeWritable = function (stream) {
+  return __Scheduler_binding(function (callback) {
+    if (stream.locked) {
+      return callback(__Scheduler_fail(__Stream_Locked));
+    }
+
+    const writer = stream.getReader();
+    writer
+      .close()
+      .then(() => {
+        callback(__Scheduler_succeed({}));
+      })
+      .catch((err) => {
+        console.log("WritableStream err: ", err);
+        return callback(__Scheduler_fail(__Stream_Closed));
+      })
+      .finally(() => {
+        writer.releaseLock();
+      });
+  });
+};
+
 var _Stream_pipeThrough = F2(function (transformer, readable) {
   return __Scheduler_binding(function (callback) {
     const transformedReader = readable.pipeThrough(transformer);
@@ -72,8 +122,9 @@ var _Stream_pipeThrough = F2(function (transformer, readable) {
 
 var _Stream_pipeTo = F2(function (writable, readable) {
   return __Scheduler_binding(function (callback) {
-    readable.pipeTo(writable);
-    return callback(__Scheduler_succeed({}));
+    readable.pipeTo(writable).then(() => {
+      callback(__Scheduler_succeed({}));
+    });
   });
 });
 
