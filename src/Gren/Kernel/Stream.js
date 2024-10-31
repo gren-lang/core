@@ -128,11 +128,74 @@ var _Stream_pipeTo = F2(function (writable, readable) {
   });
 });
 
-var _Stream_makeIdentityTransformation = F2(
-  function (readCapacity, writeCapacity) {
+var _Stream_identityTransformation = F2(function (readCapacity, writeCapacity) {
+  return __Scheduler_binding(function (callback) {
+    const transformStream = new TransformStream(
+      {},
+      new CountQueuingStrategy({ highWaterMark: writeCapacity }),
+      new CountQueuingStrategy({ highWaterMark: readCapacity }),
+    );
+
+    return callback(__Scheduler_succeed(transformStream));
+  });
+});
+
+var _Stream_customTransformation = F4(
+  function (toAction, initState, readCapacity, writeCapacity) {
     return __Scheduler_binding(function (callback) {
       const transformStream = new TransformStream(
-        {},
+        {
+          start() {
+            this.state = initState;
+          },
+          transform(chunk, controller) {
+            if (chunk instanceof Uint8Array) {
+              chunk = new DataView(
+                chunk.buffer,
+                chunk.byteOffset,
+                chunk.byteLength,
+              );
+            }
+
+            const action = A2(toAction, this.state, chunk);
+            switch (action.__$ctor) {
+              case "UpdateState":
+                this.state = action.__$state;
+                break;
+              case "Send":
+                this.state = action.__$state;
+                for (let value of action.__$send) {
+                  if (value instanceof DataView) {
+                    value = new Uint8Array(
+                      value.buffer,
+                      value.byteOffset,
+                      value.byteLength,
+                    );
+                  }
+
+                  controller.enqueue(value);
+                }
+                break;
+              case "Close":
+                for (let value of action.__$send) {
+                  if (value instanceof DataView) {
+                    value = new Uint8Array(
+                      value.buffer,
+                      value.byteOffset,
+                      value.byteLength,
+                    );
+                  }
+
+                  controller.enqueue(value);
+                }
+                controller.terminate();
+                break;
+              case "Cancel":
+                controller.error(action.__$cancelReason);
+                break;
+            }
+          },
+        },
         new CountQueuingStrategy({ highWaterMark: writeCapacity }),
         new CountQueuingStrategy({ highWaterMark: readCapacity }),
       );

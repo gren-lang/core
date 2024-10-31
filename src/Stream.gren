@@ -158,13 +158,13 @@ type Transformation read write =
 {-|-}
 identityTransformation : Task x (Transformation data data)
 identityTransformation =
-    identityTransformationWithOptions { readCapacity = 0, writeCapacity = 0 }
+    identityTransformationWithOptions { readCapacity = 1, writeCapacity = 1 }
 
 
 {-|-}
 identityTransformationWithOptions : { readCapacity : Int, writeCapacity : Int } -> Task x (Transformation data data)
 identityTransformationWithOptions { readCapacity, writeCapacity } =
-    Gren.Kernel.Stream.identityTransformation (max 0 readCapacity) (max 0 writeCapacity)
+    Gren.Kernel.Stream.identityTransformation (max 1 readCapacity) (max 1 writeCapacity)
 
 
 {-|-}
@@ -174,7 +174,7 @@ type CustomTransformationAction state value
         { state : state
         , send : Array value
         }
-    | Close
+    | Close (Array value)
     | Cancel String
 
 
@@ -186,8 +186,8 @@ customTransformation
 customTransformation fn initialState =
     customTransformationWithOptions fn
         { initialState = initialState
-        , readCapacity = 0
-        , writeCapacity = 0
+        , readCapacity = 1
+        , writeCapacity = 1
         }
 
 
@@ -203,8 +203,8 @@ customTransformationWithOptions fn { initialState, readCapacity, writeCapacity }
     Gren.Kernel.Stream.customTransformation
         (customTransformationActionWrapper fn)
         initialState
-        (max 0 readCapacity)
-        (max 0 writeCapacity)
+        (max 1 readCapacity)
+        (max 1 writeCapacity)
 
 
 customTransformationActionWrapper toAction =
@@ -224,10 +224,10 @@ customTransformationActionWrapper toAction =
                 , cancelReason = ""
                 }
             
-            Close ->
+            Close lastValues ->
                 { ctor = "Close"
                 , state = state
-                , send = []
+                , send = lastValues
                 , cancelReason = ""
                 }
             
