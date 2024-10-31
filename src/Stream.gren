@@ -2,6 +2,7 @@ module Stream exposing
     ( Readable
     , Error(..)
     , read
+    , readBytesAsString
     , closeReadable
     , cancelReadable
     -- Writable
@@ -15,6 +16,9 @@ module Stream exposing
     , Transformation
     , identityTransformation
     , identityTransformationWithOptions
+    , CustomTransformationAction(..)
+    , customTransformation
+    , customTransformationWithOptions
     , readable
     , writable
     , pipeThrough
@@ -43,7 +47,7 @@ module Stream exposing
 
 ## Transformation Streams
 
-@docs Transformation, identityTransformation, identityTransformationWithOptions, readable, writable, pipeThrough, awaitAndPipeThrough, pipeTo
+@docs Transformation, identityTransformation, identityTransformationWithOptions, CustomTransformationAction, customTransformation, customTransformationWithOptions, readable, writable, pipeThrough, awaitAndPipeThrough, pipeTo
 
 ## Custom Transformation Streams
 
@@ -51,12 +55,13 @@ module Stream exposing
 
 -}
 
-import Gren.Kernel.Stream
+import Array exposing (Array)
 import Basics exposing (Bool, Int, (<|), (|>), (++), max)
 import Bytes exposing (Bytes)
 import Maybe
 import String exposing (String)
 import Task exposing (Task)
+import Gren.Kernel.Stream
 
 
 {-|-}
@@ -143,24 +148,6 @@ cancelWritable =
 
 -- Transformation
 
-{-
-type alias Transformer reason state in out =
- (state -> in -> TransformAction reason state out)
-
-
-type TransformAction reason state value
-    = UpdateState state
-    | Send
-        { state : state
-        , send : value
-        }
-    | Close
-    | Cancel reason
-
-
-createTransformStream : Transformer reason state in out -> Task Never (StreamPair reason in out)
-
--}
 
 {-|-}
 type Transformation read write =
@@ -171,7 +158,7 @@ type Transformation read write =
 {-|-}
 identityTransformation : Task x (Transformation data data)
 identityTransformation =
-    Gren.Kernel.Stream.identityTransformation 0 0
+    identityTransformationWithOptions { readCapacity = 0, writeCapacity = 0 }
 
 
 {-|-}
@@ -179,6 +166,77 @@ identityTransformationWithOptions : { readCapacity : Int, writeCapacity : Int } 
 identityTransformationWithOptions { readCapacity, writeCapacity } =
     Gren.Kernel.Stream.identityTransformation (max 0 readCapacity) (max 0 writeCapacity)
 
+
+{-|-}
+type CustomTransformationAction state value
+    = UpdateState state
+    | Send
+        { state : state
+        , send : Array value
+        }
+    | Close
+    | Cancel String
+
+
+{-|-}
+customTransformation
+    : (state -> input -> CustomTransformationAction state output)
+    -> state
+    -> Task x (Transformation input output)
+customTransformation fn initialState =
+    customTransformationWithOptions fn
+        { initialState = initialState
+        , readCapacity = 0
+        , writeCapacity = 0
+        }
+
+
+{-|-}
+customTransformationWithOptions
+    : (state -> input -> CustomTransformationAction state output)
+    -> { initialState : state
+       , readCapacity : Int
+       , writeCapacity : Int
+       }
+    -> Task x (Transformation input output)
+customTransformationWithOptions fn { initialState, readCapacity, writeCapacity } =
+    Gren.Kernel.Stream.customTransformation
+        (customTransformationActionWrapper fn)
+        initialState
+        (max 0 readCapacity)
+        (max 0 writeCapacity)
+
+
+customTransformationActionWrapper toAction =
+    \state input ->
+        case toAction state input of
+            UpdateState newState ->
+                { ctor = "UpdateState"
+                , state = newState
+                , send = []
+                , cancelReason = ""
+                }
+            
+            Send { state = newState, send = sendValues } ->
+                { ctor = "Send"
+                , state = newState
+                , send = sendValues
+                , cancelReason = ""
+                }
+            
+            Close ->
+                { ctor = "Close"
+                , state = state
+                , send = []
+                , cancelReason = ""
+                }
+            
+            Cancel reason ->
+                { ctor = "Cancel"
+                , state = state
+                , send = []
+                , cancelReason = reason
+                }
 
 {-|-}
 readable : Transformation read write -> Readable read
