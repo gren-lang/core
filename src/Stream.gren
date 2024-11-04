@@ -35,7 +35,20 @@ module Stream exposing
     , deflateRawDecompression
     )
 
-{-| Streams
+{-| When moving a lot of data out and into memory, it's rare for the entire chunk of data to be moved
+in a single piece. When reading data from a file on disk, or when retrieving data from a remote web
+service, it's common to retrieve one chunk of data at a time and then reassemble those chunks when we
+have all the pieces. In most cases, this process is handled for you automaticly.
+
+However, it can be useful to operate on these chunks as they come in. If you're reading a compressed
+file from disk, decompressing the chunks as they come in allows you utilize the pause between receiving
+them, increasing the percieved performance of the operation. It also allows you to save memory by
+not having to store the entire compressed file in memory before beginning the decompression process.
+
+Streams is the abstraction that allows us to work on data that is in transit. They can also serve as
+a tool for communication between different parts of your code base.
+
+We have three kinds of streams: readable streams, writable streams, and transformation streams.
 
 ## Readable Streams
 
@@ -43,13 +56,18 @@ module Stream exposing
 
 ## Writable Streams
 
+
 @docs Writable, write, writeStringAsBytes, writeLineAsBytes, closeWritable, cancelWritable
 
 ## Transformation Streams
 
+A readable-writable stream pair. Whatever is written to the writable stream, can be retrieved from the readable stream.
+After data is written, and before it is placed on the readable stream, it goes through a transformation function. This function
+can alter the data, or even drop it entirely.
+
 @docs Transformation, identityTransformation, identityTransformationWithOptions, CustomTransformationAction, customTransformation, customTransformationWithOptions, readable, writable, pipeThrough, awaitAndPipeThrough, pipeTo
 
-## Custom Transformation Streams
+## Useful Transformation Streams
 
 @docs textEncoder, textDecoder, gzipCompression, deflateCompression, deflateRawCompression, gzipDecompression, deflateDecompression, deflateRawDecompression
 
@@ -64,17 +82,25 @@ import Task exposing (Task)
 import Gren.Kernel.Stream
 
 
-{-|-}
+{-| A source of data. You can only read data out of a Readable stream, not write data into it.
+-}
 type Readable value
     = Readable
 
 
-{-|-}
+{-| A destination for data. You can only write data into a Writable stream, not read data out of it.
+-}
 type Writable value
     = Writable
 
 
-{-|-}
+{-| Different kind of errors that can happen when operating on a stream.
+
+* Closed: The stream never accept/produce another value.
+* Cancelled: The stream has been terminated, possibly because something went wrong. The associated `String` contains a human readable error message.
+* Locked: The stream is already being read or written to. You might have to retry the operation.
+
+-}
 type Error
     = Closed
     | Cancelled String
@@ -84,13 +110,17 @@ type Error
 -- Readable
 
 
-{-|-}
+{-| Read a value off the stream. If `streamClosed` is `True`, then you've read the last value
+the stream will ever produce.
+-}
 read : Readable value -> Task Error { streamClosed : Bool, value : value }
 read =
     Gren.Kernel.Stream.read
 
 
-{-|-}
+{-| Reads `Bytes` off the stream and converts it into `String`. If the conversion into `String` fails,
+an empty value is returned.
+-}
 readBytesAsString : Readable Bytes -> Task Error { streamClosed : Bool, value : String }
 readBytesAsString stream =
     read stream
@@ -101,13 +131,19 @@ readBytesAsString stream =
         )
 
 
-{-|-}
+{-| Closes the stream. This is a way of indicating that you're done reading from the stream, so that the
+source of data on the other end can shut down. Some streams contain a buffer of data, it might still be
+possible to read values out of a closed stream if the buffer isn't empty.
+-}
 closeReadable : Readable value -> Task Error {}
 closeReadable =
     Gren.Kernel.Stream.closeReadable
 
 
-{-|-}
+{-| Cancels the stream. This indicates a fatal error, and the given `String` should explain in a human-readable
+way what that error is. If the stream contains a buffer, the buffer is dropped. It will not be possible to read
+another value out of this stream.
+-}
 cancelReadable : String -> Readable value -> Task Error {}
 cancelReadable =
     Gren.Kernel.Stream.cancel
@@ -116,31 +152,39 @@ cancelReadable =
 -- Writable
 
 
-{-|-}
+{-| Write a value into the stream. The returned `Task` will only succeed when the written value is accepted, meaning
+it is read from a [Readable](#Readable) stream, or stored in some stream buffer.
+-}
 write : value -> Writable value -> Task Error {}
 write =
     Gren.Kernel.Stream.write
 
 
-{-|-}
+{-| Converts the given `String` to `Bytes` and writes it to the stream.
+-}
 writeStringAsBytes : String -> Writable Bytes -> Task Error {}
 writeStringAsBytes str stream =
     write (Bytes.fromString str) stream
 
 
-{-|-}
+{-| Same as [writeStringAsBytes](#writeStringAsBytes) except a newline character is appended to the `String`
+before conversion.
+-}
 writeLineAsBytes : String -> Writable Bytes -> Task Error {}
 writeLineAsBytes str stream =
     write (Bytes.fromString <| str ++ "\n") stream
 
 
-{-|-}
+{-| Closes the stream. This indicates that no new values will be added to the stream after this point.
+-}
 closeWritable : Writable value -> Task Error {}
 closeWritable =
     Gren.Kernel.Stream.closeWritable
 
 
-{-|-}
+{-| Cancels the stream. This indicates a fatal error, and the given `String` should explain in a human-readable
+way what that error is. If the stream contains a buffer, the buffer is dropped.
+-}
 cancelWritable : String -> Writable value -> Task Error {}
 cancelWritable =
     Gren.Kernel.Stream.cancel
