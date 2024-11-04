@@ -51,7 +51,7 @@ var _Stream_write = F2(function (value, stream) {
     writer
       .write(value)
       .then(() => {
-        callback(__Scheduler_succeed({}));
+        callback(__Scheduler_succeed(stream));
       })
       .catch((err) => {
         console.log("WriteableStream err: ", err);

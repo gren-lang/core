@@ -155,14 +155,14 @@ cancelReadable =
 {-| Write a value into the stream. The returned `Task` will only succeed when the written value is accepted, meaning
 it is read from a [Readable](#Readable) stream, or stored in some stream buffer.
 -}
-write : value -> Writable value -> Task Error {}
+write : value -> Writable value -> Task Error (Writable value)
 write =
     Gren.Kernel.Stream.write
 
 
 {-| Converts the given `String` to `Bytes` and writes it to the stream.
 -}
-writeStringAsBytes : String -> Writable Bytes -> Task Error {}
+writeStringAsBytes : String -> Writable Bytes -> Task Error (Writable Bytes)
 writeStringAsBytes str stream =
     write (Bytes.fromString str) stream
 
@@ -170,7 +170,7 @@ writeStringAsBytes str stream =
 {-| Same as [writeStringAsBytes](#writeStringAsBytes) except a newline character is appended to the `String`
 before conversion.
 -}
-writeLineAsBytes : String -> Writable Bytes -> Task Error {}
+writeLineAsBytes : String -> Writable Bytes -> Task Error (Writable Bytes)
 writeLineAsBytes str stream =
     write (Bytes.fromString <| str ++ "\n") stream
 
