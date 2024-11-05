@@ -56,14 +56,9 @@ We have three kinds of streams: readable streams, writable streams, and transfor
 
 ## Writable Streams
 
-
 @docs Writable, write, writeStringAsBytes, writeLineAsBytes, closeWritable, cancelWritable
 
 ## Transformation Streams
-
-A readable-writable stream pair. Whatever is written to the writable stream, can be retrieved from the readable stream.
-After data is written, and before it is placed on the readable stream, it goes through a transformation function. This function
-can alter the data, or even drop it entirely.
 
 @docs Transformation, identityTransformation, identityTransformationWithOptions, CustomTransformationAction, customTransformation, customTransformationWithOptions, readable, writable, pipeThrough, awaitAndPipeThrough, pipeTo
 
@@ -193,25 +188,48 @@ cancelWritable =
 -- Transformation
 
 
-{-|-}
+{-| A readable-writable stream pair. Whatever is written to the writable stream, can be retrieved from the readable stream.
+After data is written, and before it is placed on the readable stream, it goes through a transformation function. This function
+can alter the data, or even drop it entirely.
+-}
 type Transformation read write =
     -- Note: Implementation in kernel code
     Transformation read write
 
 
-{-|-}
+{-| A [Transformation](#Transformation) that doesn't actually transform the data written to the writable stream.
+This can be useful as a communication primitive. You can pass the on the readable stream, allowing a one-way
+communication to some other part of your codebase.
+-}
 identityTransformation : Task x (Transformation data data)
 identityTransformation =
     identityTransformationWithOptions { readCapacity = 1, writeCapacity = 1 }
 
 
-{-|-}
+{-| Same as [identityTransformation](#identityTransformation), but allows you set the capacity of the streams.
+The capacity decides how many chunks a stream will store in its buffer. When a buffer is full, the stream will
+stop accepting new chunks until it has room.
+
+If you attempt to write to a [Writable](#Writable) stream with a full buffer, the write will only succeed when
+there's room in the buffer again. If the stream has a capacity of 0, the write will only succeed when the value
+has been read on the other end.
+
+Attempting to read from a [Readable](#Readable) stream with a full buffer will succeed instantly. If the buffer is
+empty or capacity is 0, the read will succeed once there's a value to be read.
+-}
 identityTransformationWithOptions : { readCapacity : Int, writeCapacity : Int } -> Task x (Transformation data data)
 identityTransformationWithOptions { readCapacity, writeCapacity } =
-    Gren.Kernel.Stream.identityTransformation (max 1 readCapacity) (max 1 writeCapacity)
+    Gren.Kernel.Stream.identityTransformation (max 0 readCapacity) (max 0 writeCapacity)
 
 
-{-|-}
+{-| When defining a custom [Transformation](#Transformation), you need to specify how the data coming in is handled.
+
+* UpdateState: Update the internal state of the [Transformation](#Transformation), no values are passed to the readable
+stream.
+* Send: Update the internal state and make chunks available for reading.
+* Close: Make the given chunks available for reading, and close the streams.
+* Cancel: Cancel both streams with a human-readable error message.
+-}
 type CustomTransformationAction state value
     = UpdateState state
     | Send
@@ -222,7 +240,9 @@ type CustomTransformationAction state value
     | Cancel String
 
 
-{-|-}
+{-| Create your very own [Transformation](#Transformation). The stream-pair holds state and is free to alter,
+batch, combine or even drop whatever data is coming in.
+-}
 customTransformation
     : (state -> input -> CustomTransformationAction state output)
     -> state
@@ -235,7 +255,8 @@ customTransformation fn initialState =
         }
 
 
-{-|-}
+{-| Same as [customTransformation](#customTransformation), except you can define the capacity for each stream.
+-}
 customTransformationWithOptions
     : (state -> input -> CustomTransformationAction state output)
     -> { initialState : state
@@ -247,8 +268,8 @@ customTransformationWithOptions fn { initialState, readCapacity, writeCapacity }
     Gren.Kernel.Stream.customTransformation
         (customTransformationActionWrapper fn)
         initialState
-        (max 1 readCapacity)
-        (max 1 writeCapacity)
+        (max 0 readCapacity)
+        (max 0 writeCapacity)
 
 
 customTransformationActionWrapper toAction =
@@ -282,31 +303,43 @@ customTransformationActionWrapper toAction =
                 , cancelReason = reason
                 }
 
-{-|-}
+{-| Retrieve the [Readable](#Readable) stream of a [Transformation](#Transformation).
+-}
 readable : Transformation read write -> Readable read
 readable =
     Gren.Kernel.Stream.readable
 
 
-{-|-}
+{-| Retrieve the [Writable](#Writable) stream of a [Transformation](#Transformation).
+-}
 writable : Transformation read write -> Writable write
 writable =
     Gren.Kernel.Stream.writable
 
 
-{-|-}
+{-| When data becomes available on a [Readable](#Readable) stream, immediatly write that data to
+the [Transformation](#Transformation). This will lock both streams, and closing one will close
+the other.
+
+On success, the [Readable](#Readable) stream of the [Transformation](#Transformation) is returned.
+-}
 pipeThrough : Transformation input output -> Readable input -> Task Error (Readable output)
 pipeThrough =
     Gren.Kernel.Stream.pipeThrough
 
 
-{-|-}
+{-| Same as [pipeThrough](#pipeThrough), except the [Transformation](#Transformation) is resolved from a
+`Task`.
+-}
 awaitAndPipeThrough : Task Error (Transformation input output) -> Readable input -> Task Error (Readable output)
 awaitAndPipeThrough builder source =
     Task.andThen (\transformation -> pipeThrough transformation source) builder
 
 
-{-|-}
+{-| When data becomes available on a [Readable](#Readable) stream, immediatly write that data to
+the [Writable](#Writable) stream. This will lock both streams, and closing one will close
+the other. The `Task` will resolve once the [Writable](#Writable) stream is closed.
+-}
 pipeTo : Writable data -> Readable data -> Task Error {}
 pipeTo =
     Gren.Kernel.Stream.pipeTo
@@ -315,49 +348,57 @@ pipeTo =
 -- Built-in transformations
 
 
-{-|-}
+{-| Transforms `String` to `Bytes`
+-}
 textEncoder : Task x (Transformation String Bytes)
 textEncoder =
     Gren.Kernel.Stream.textEncoder
 
 
-{-|-}
+{-| Transforms `Bytes` to `String`. If the conversion fails, the streams will be cancelled.
+-}
 textDecoder : Task x (Transformation Bytes String)
 textDecoder =
     Gren.Kernel.Stream.textDecoder
 
 
-{-|-}
+{-| Compress `Bytes` using the `gzip` algorithm.
+-}
 gzipCompression : Task x (Transformation Bytes Bytes)
 gzipCompression =
     Gren.Kernel.Stream.compressor "gzip"
 
 
-{-|-}
+{-| Compress `Bytes` using the `deflate` algorithm.
+-}
 deflateCompression : Task x (Transformation Bytes Bytes)
 deflateCompression =
     Gren.Kernel.Stream.compressor "deflate"
 
 
-{-|-}
+{-| Compress `Bytes` using the `deflate` algorithm, without leading headers.
+-}
 deflateRawCompression : Task x (Transformation Bytes Bytes)
 deflateRawCompression =
     Gren.Kernel.Stream.compressor "deflate-raw"
 
 
-{-|-}
+{-| Decompress `Bytes` using the `gzip` algorithm.
+-}
 gzipDecompression : Task x (Transformation Bytes Bytes)
 gzipDecompression =
     Gren.Kernel.Stream.decompressor "gzip"
 
 
-{-|-}
+{-| Decompress `Bytes` using the `deflate` algorithm.
+-}
 deflateDecompression : Task x (Transformation Bytes Bytes)
 deflateDecompression =
     Gren.Kernel.Stream.decompressor "deflate"
 
 
-{-|-}
+{-| Decompress `Bytes` using the `deflate` algorithm, without leading headers.
+-}
 deflateRawDecompression : Task x (Transformation Bytes Bytes)
 deflateRawDecompression =
     Gren.Kernel.Stream.decompressor "deflate-raw"
