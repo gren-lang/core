@@ -1,0 +1,404 @@
+module Stream exposing 
+    ( Readable
+    , Error(..)
+    , read
+    , readBytesAsString
+    , closeReadable
+    , cancelReadable
+    -- Writable
+    , Writable
+    , write
+    , writeStringAsBytes
+    , writeLineAsBytes
+    , closeWritable
+    , cancelWritable
+    -- Transform
+    , Transformation
+    , identityTransformation
+    , identityTransformationWithOptions
+    , CustomTransformationAction(..)
+    , customTransformation
+    , customTransformationWithOptions
+    , readable
+    , writable
+    , pipeThrough
+    , awaitAndPipeThrough
+    , pipeTo
+    -- Custom streams
+    , textEncoder
+    , textDecoder
+    , gzipCompression
+    , deflateCompression
+    , deflateRawCompression
+    , gzipDecompression
+    , deflateDecompression
+    , deflateRawDecompression
+    )
+
+{-| When moving a lot of data out and into memory, it's rare for the entire chunk of data to be moved
+in a single piece. When reading data from a file on disk, or when retrieving data from a remote web
+service, it's common to retrieve one chunk of data at a time and then reassemble those chunks when we
+have all the pieces. In most cases, this process is handled for you automaticly.
+
+However, it can be useful to operate on these chunks as they come in. If you're reading a compressed
+file from disk, decompressing the chunks as they come in allows you utilize the pause between receiving
+them, increasing the percieved performance of the operation. It also allows you to save memory by
+not having to store the entire compressed file in memory before beginning the decompression process.
+
+Streams is the abstraction that allows us to work on data that is in transit. They can also serve as
+a tool for communication between different parts of your code base.
+
+We have three kinds of streams: readable streams, writable streams, and transformation streams.
+
+## Readable Streams
+
+@docs Readable, Error, read, readBytesAsString, closeReadable, cancelReadable
+
+## Writable Streams
+
+@docs Writable, write, writeStringAsBytes, writeLineAsBytes, closeWritable, cancelWritable
+
+## Transformation Streams
+
+@docs Transformation, identityTransformation, identityTransformationWithOptions, CustomTransformationAction, customTransformation, customTransformationWithOptions, readable, writable, pipeThrough, awaitAndPipeThrough, pipeTo
+
+## Useful Transformation Streams
+
+@docs textEncoder, textDecoder, gzipCompression, deflateCompression, deflateRawCompression, gzipDecompression, deflateDecompression, deflateRawDecompression
+
+-}
+
+import Array exposing (Array)
+import Basics exposing (Bool, Int, (<|), (|>), (++), max)
+import Bytes exposing (Bytes)
+import Maybe exposing (Maybe)
+import String exposing (String)
+import Task exposing (Task)
+import Gren.Kernel.Stream
+
+
+{-| A source of data. You can only read data out of a Readable stream, not write data into it.
+-}
+type Readable value
+    = Readable
+
+
+{-| A destination for data. You can only write data into a Writable stream, not read data out of it.
+-}
+type Writable value
+    = Writable
+
+
+{-| Different kind of errors that can happen when operating on a stream.
+
+* Closed: The stream never accept/produce another value.
+* Cancelled: The stream has been terminated, possibly because something went wrong. The associated `String` contains a human readable error message.
+* Locked: The stream is already being read or written to. You might have to retry the operation.
+
+-}
+type Error
+    = Closed
+    | Cancelled String
+    | Locked
+
+
+-- Readable
+
+
+{-| Read a value off the stream. If `streamClosed` is `True`, then you've read the last value
+the stream will ever produce.
+-}
+read : Readable value -> Task Error { streamClosed : Bool, value : value }
+read =
+    Gren.Kernel.Stream.read
+
+
+{-| Reads `Bytes` off the stream and attempt to convert it into `String`.
+-}
+readBytesAsString : Readable Bytes -> Task Error { streamClosed : Bool, value : Maybe String }
+readBytesAsString stream =
+    read stream
+        |> Task.map (\input ->
+            { streamClosed = input.streamClosed
+            , value = Bytes.toString input.value
+            }
+        )
+
+
+{-| Closes the stream. This is a way of indicating that you're done reading from the stream, so that the
+source of data on the other end can shut down. Some streams contain a buffer of data, it might still be
+possible to read values out of a closed stream if the buffer isn't empty.
+-}
+closeReadable : Readable value -> Task Error {}
+closeReadable =
+    Gren.Kernel.Stream.closeReadable
+
+
+{-| Cancels the stream. This indicates a fatal error, and the given `String` should explain in a human-readable
+way what that error is. If the stream contains a buffer, the buffer is dropped. It will not be possible to read
+another value out of this stream.
+-}
+cancelReadable : String -> Readable value -> Task Error {}
+cancelReadable =
+    Gren.Kernel.Stream.cancel
+
+
+-- Writable
+
+
+{-| Write a value into the stream. The returned `Task` will only succeed when the written value is accepted, meaning
+it is read from a [Readable](#Readable) stream, or stored in some stream buffer.
+-}
+write : value -> Writable value -> Task Error (Writable value)
+write =
+    Gren.Kernel.Stream.write
+
+
+{-| Converts the given `String` to `Bytes` and writes it to the stream.
+-}
+writeStringAsBytes : String -> Writable Bytes -> Task Error (Writable Bytes)
+writeStringAsBytes str stream =
+    write (Bytes.fromString str) stream
+
+
+{-| Same as [writeStringAsBytes](#writeStringAsBytes) except a newline character is appended to the `String`
+before conversion.
+-}
+writeLineAsBytes : String -> Writable Bytes -> Task Error (Writable Bytes)
+writeLineAsBytes str stream =
+    write (Bytes.fromString <| str ++ "\n") stream
+
+
+{-| Closes the stream. This indicates that no new values will be added to the stream after this point.
+-}
+closeWritable : Writable value -> Task Error {}
+closeWritable =
+    Gren.Kernel.Stream.closeWritable
+
+
+{-| Cancels the stream. This indicates a fatal error, and the given `String` should explain in a human-readable
+way what that error is. If the stream contains a buffer, the buffer is dropped.
+-}
+cancelWritable : String -> Writable value -> Task Error {}
+cancelWritable =
+    Gren.Kernel.Stream.cancel
+
+
+-- Transformation
+
+
+{-| A readable-writable stream pair. Whatever is written to the writable stream, can be retrieved from the readable stream.
+After data is written, and before it is placed on the readable stream, it goes through a transformation function. This function
+can alter the data, or even drop it entirely.
+-}
+type Transformation read write =
+    -- Note: Implementation in kernel code
+    Transformation read write
+
+
+{-| A [Transformation](#Transformation) that doesn't actually transform the data written to the writable stream.
+This can be useful as a communication primitive. You can pass the on the readable stream, allowing a one-way
+communication to some other part of your codebase.
+-}
+identityTransformation : Task x (Transformation data data)
+identityTransformation =
+    identityTransformationWithOptions { readCapacity = 1, writeCapacity = 1 }
+
+
+{-| Same as [identityTransformation](#identityTransformation), but allows you set the capacity of the streams.
+The capacity decides how many chunks a stream will store in its buffer. When a buffer is full, the stream will
+stop accepting new chunks until it has room.
+
+If you attempt to write to a [Writable](#Writable) stream with a full buffer, the write will only succeed when
+there's room in the buffer again. If the stream has a capacity of 0, the write will only succeed when the value
+has been read on the other end.
+
+Attempting to read from a [Readable](#Readable) stream with a full buffer will succeed instantly. If the buffer is
+empty or capacity is 0, the read will succeed once there's a value to be read.
+-}
+identityTransformationWithOptions : { readCapacity : Int, writeCapacity : Int } -> Task x (Transformation data data)
+identityTransformationWithOptions { readCapacity, writeCapacity } =
+    Gren.Kernel.Stream.identityTransformation (max 0 readCapacity) (max 0 writeCapacity)
+
+
+{-| When defining a custom [Transformation](#Transformation), you need to specify how the data coming in is handled.
+
+* UpdateState: Update the internal state of the [Transformation](#Transformation), no values are passed to the readable
+stream.
+* Send: Update the internal state and make chunks available for reading.
+* Close: Make the given chunks available for reading, and close the streams.
+* Cancel: Cancel both streams with a human-readable error message.
+-}
+type CustomTransformationAction state value
+    = UpdateState state
+    | Send
+        { state : state
+        , send : Array value
+        }
+    | Close (Array value)
+    | Cancel String
+
+
+{-| Create your very own [Transformation](#Transformation). The stream-pair holds state and is free to alter,
+batch, combine or even drop whatever data is coming in.
+-}
+customTransformation
+    : (state -> input -> CustomTransformationAction state output)
+    -> state
+    -> Task x (Transformation input output)
+customTransformation fn initialState =
+    customTransformationWithOptions fn
+        { initialState = initialState
+        , readCapacity = 1
+        , writeCapacity = 1
+        }
+
+
+{-| Same as [customTransformation](#customTransformation), except you can define the capacity for each stream.
+-}
+customTransformationWithOptions
+    : (state -> input -> CustomTransformationAction state output)
+    -> { initialState : state
+       , readCapacity : Int
+       , writeCapacity : Int
+       }
+    -> Task x (Transformation input output)
+customTransformationWithOptions fn { initialState, readCapacity, writeCapacity } =
+    Gren.Kernel.Stream.customTransformation
+        (customTransformationActionWrapper fn)
+        initialState
+        (max 0 readCapacity)
+        (max 0 writeCapacity)
+
+
+customTransformationActionWrapper toAction =
+    \state input ->
+        case toAction state input of
+            UpdateState newState ->
+                { ctor = "UpdateState"
+                , state = newState
+                , send = []
+                , cancelReason = ""
+                }
+            
+            Send { state = newState, send = sendValues } ->
+                { ctor = "Send"
+                , state = newState
+                , send = sendValues
+                , cancelReason = ""
+                }
+            
+            Close lastValues ->
+                { ctor = "Close"
+                , state = state
+                , send = lastValues
+                , cancelReason = ""
+                }
+            
+            Cancel reason ->
+                { ctor = "Cancel"
+                , state = state
+                , send = []
+                , cancelReason = reason
+                }
+
+
+{-| Retrieve the [Readable](#Readable) stream of a [Transformation](#Transformation).
+-}
+readable : Transformation read write -> Readable read
+readable =
+    Gren.Kernel.Stream.readable
+
+
+{-| Retrieve the [Writable](#Writable) stream of a [Transformation](#Transformation).
+-}
+writable : Transformation read write -> Writable write
+writable =
+    Gren.Kernel.Stream.writable
+
+
+{-| When data becomes available on a [Readable](#Readable) stream, immediatly write that data to
+the [Transformation](#Transformation). This will lock both streams, and closing one will close
+the other.
+
+On success, the [Readable](#Readable) stream of the [Transformation](#Transformation) is returned.
+-}
+pipeThrough : Transformation input output -> Readable input -> Task Error (Readable output)
+pipeThrough =
+    Gren.Kernel.Stream.pipeThrough
+
+
+{-| Same as [pipeThrough](#pipeThrough), except the [Transformation](#Transformation) is resolved from a
+`Task`.
+-}
+awaitAndPipeThrough : Task Error (Transformation input output) -> Readable input -> Task Error (Readable output)
+awaitAndPipeThrough builder source =
+    Task.andThen (\transformation -> pipeThrough transformation source) builder
+
+
+{-| When data becomes available on a [Readable](#Readable) stream, immediatly write that data to
+the [Writable](#Writable) stream. This will lock both streams, and closing one will close
+the other. The `Task` will resolve once the [Writable](#Writable) stream is closed.
+-}
+pipeTo : Writable data -> Readable data -> Task Error {}
+pipeTo =
+    Gren.Kernel.Stream.pipeTo
+
+
+-- Built-in transformations
+
+
+{-| Transforms `String` to `Bytes`
+-}
+textEncoder : Task x (Transformation String Bytes)
+textEncoder =
+    Gren.Kernel.Stream.textEncoder
+
+
+{-| Transforms `Bytes` to `String`. If the conversion fails, the streams will be cancelled.
+-}
+textDecoder : Task x (Transformation Bytes String)
+textDecoder =
+    Gren.Kernel.Stream.textDecoder
+
+
+{-| Compress `Bytes` using the `gzip` algorithm.
+-}
+gzipCompression : Task x (Transformation Bytes Bytes)
+gzipCompression =
+    Gren.Kernel.Stream.compressor "gzip"
+
+
+{-| Compress `Bytes` using the `deflate` algorithm.
+-}
+deflateCompression : Task x (Transformation Bytes Bytes)
+deflateCompression =
+    Gren.Kernel.Stream.compressor "deflate"
+
+
+{-| Compress `Bytes` using the `deflate` algorithm, without leading headers.
+-}
+deflateRawCompression : Task x (Transformation Bytes Bytes)
+deflateRawCompression =
+    Gren.Kernel.Stream.compressor "deflate-raw"
+
+
+{-| Decompress `Bytes` using the `gzip` algorithm.
+-}
+gzipDecompression : Task x (Transformation Bytes Bytes)
+gzipDecompression =
+    Gren.Kernel.Stream.decompressor "gzip"
+
+
+{-| Decompress `Bytes` using the `deflate` algorithm.
+-}
+deflateDecompression : Task x (Transformation Bytes Bytes)
+deflateDecompression =
+    Gren.Kernel.Stream.decompressor "deflate"
+
+
+{-| Decompress `Bytes` using the `deflate` algorithm, without leading headers.
+-}
+deflateRawDecompression : Task x (Transformation Bytes Bytes)
+deflateRawDecompression =
+    Gren.Kernel.Stream.decompressor "deflate-raw"
