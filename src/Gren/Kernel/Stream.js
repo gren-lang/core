@@ -28,7 +28,6 @@ var _Stream_read = function (stream) {
         );
       })
       .catch((err) => {
-        console.log("ReadableStream err: ", err);
         return callback(__Scheduler_fail(__Stream_Closed));
       })
       .finally(() => {
@@ -54,7 +53,6 @@ var _Stream_write = F2(function (value, stream) {
         callback(__Scheduler_succeed(stream));
       })
       .catch((err) => {
-        console.log("WriteableStream err: ", err);
         return callback(__Scheduler_fail(__Stream_Closed));
       })
       .finally(() => {
