@@ -71,7 +71,7 @@ We have three kinds of streams: readable streams, writable streams, and transfor
 import Array exposing (Array)
 import Basics exposing (Bool, Int, (<|), (|>), (++), max)
 import Bytes exposing (Bytes)
-import Maybe
+import Maybe exposing (Maybe)
 import String exposing (String)
 import Task exposing (Task)
 import Gren.Kernel.Stream
@@ -113,15 +113,14 @@ read =
     Gren.Kernel.Stream.read
 
 
-{-| Reads `Bytes` off the stream and converts it into `String`. If the conversion into `String` fails,
-an empty value is returned.
+{-| Reads `Bytes` off the stream and attempt to convert it into `String`.
 -}
-readBytesAsString : Readable Bytes -> Task Error { streamClosed : Bool, value : String }
+readBytesAsString : Readable Bytes -> Task Error { streamClosed : Bool, value : Maybe String }
 readBytesAsString stream =
     read stream
         |> Task.map (\input ->
             { streamClosed = input.streamClosed
-            , value = Maybe.withDefault "" <| Bytes.toString input.value
+            , value = Bytes.toString input.value
             }
         )
 
@@ -302,6 +301,7 @@ customTransformationActionWrapper toAction =
                 , send = []
                 , cancelReason = reason
                 }
+
 
 {-| Retrieve the [Readable](#Readable) stream of a [Transformation](#Transformation).
 -}
