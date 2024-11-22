@@ -11,6 +11,14 @@ module Bitwise exposing
 
 ## Bit Shifts
 
+Note: The shift distance is effectively limited to 31.
+If you shift by `n`, only the lowest 5 bits of `n` will be used and the binary will be shifted by `n modBy 32`
+For example, the following two commands perform the same operation:
+
+    Bitwise.shiftLeftBy  1 10
+    Bitwise.shiftLeftBy 33 10
+
+
 @docs shiftLeftBy, shiftRightBy, shiftRightZfBy
 
 -}
