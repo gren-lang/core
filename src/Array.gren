@@ -197,6 +197,14 @@ filter : (a -> Bool) -> Array a -> Array a
 filter =
     Gren.Kernel.Array.filter
 
+{-| Same as `filter` but the test is also applied to the index of each element.
+
+    filter (\idx val -> idx + val > 4) [ 1, 2, 3, 4 ] == [ 3, 4 ]
+-}
+indexedFilter : (Int -> a -> Bool) -> Array a -> Array a
+indexedFilter =
+    Gren.Kernel.Array.indexedFilter
+
 
 {-| Filter out unwanted results of a map operation.
 

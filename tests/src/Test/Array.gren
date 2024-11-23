@@ -118,6 +118,11 @@ testArrayOfN n =
             , test "one" <| \{} -> Expect.equal [ n ] (Array.filter (\z -> z == n) zs)
             , test "all" <| \{} -> Expect.equal xs (Array.filter (\x -> x <= n) xs)
             ]
+        , describe "indexedFilter"
+            [ test "none" <| \{} -> Expect.equal [] (Array.indexedFilter (\idx x -> x + idx > 2 * n) xs)
+            , test "one" <| \{} -> Expect.equal [ 2 * n ] (Array.indexedFilter (\idx z -> z + idx == 2 * n) zs)
+            , test "all" <| \{} -> Expect.equal xs (Array.indexedFilter (\idx x -> x + idx <= 2 * n) xs)
+            ]
         , describe "take"
             [ test "none" <| \{} -> Expect.equal [] (takeFirst 0 xs)
             , test "some" <| \{} -> Expect.equal (Array.range 0 (n - 1)) (takeFirst n zs)
