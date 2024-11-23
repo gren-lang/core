@@ -5,14 +5,16 @@ module Bitwise exposing
 
 {-| Functions for doing [bitwise operations](https://en.wikipedia.org/wiki/Bitwise_operation).
 
+Bitwise operations only work on 32-bit integers.
+When an `Int` is passed to a bitwise operation, only the 32 least significant bits are used.
 
 @docs and, or, xor, complement, countLeadingZeros
 
 
 ## Bit Shifts
 
-Note: The shift distance is effectively limited to 31.
-If you shift by `n`, only the lowest 5 bits of `n` will be used and the binary will be shifted by `n modBy 32`
+Note: Because bitwise operations only work on 32-bit integers, the shift distance is effectively limited to 31.
+If you shift by `n`, only the lowest 5 bits of `n` will be used and the binary will be shifted by `modBy 32 n`.
 For example, the following two commands perform the same operation:
 
     Bitwise.shiftLeftBy  1 10
