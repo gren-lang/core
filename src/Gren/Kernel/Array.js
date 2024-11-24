@@ -97,6 +97,12 @@ var _Array_filter = F2(function (func, array) {
   return array.filter(func);
 });
 
+var _Array_indexedFilter = F2(function (func, array) {
+  return array.filter(function (value, index) {
+    return func(index, value);
+  });
+});
+
 var _Array_flat = function (array) {
   return array.flat();
 };
