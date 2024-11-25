@@ -105,7 +105,7 @@ See [`utc`](#utc) and [`here`](#here) to learn how to obtain `Zone` values.
 [iana]: https://www.iana.org/time-zones
 -}
 type Zone =
-  Zone Int (Array Era)
+  Zone { offset : Int, eras : (Array Era) }
 
 
 -- TODO: add this note back to `Zone` docs when it is true
@@ -138,7 +138,7 @@ time and it never shifts around based on political restructuring.
 -}
 utc : Zone
 utc =
-  Zone 0 []
+  Zone { offset = 0, eras = [] }
 
 
 {-| Produce a `Zone` based on the current UTC offset. You can use this to figure
@@ -315,7 +315,7 @@ toMillis _ time =
 
 
 toAdjustedMinutes : Zone -> Posix -> Int
-toAdjustedMinutes (Zone defaultOffset eras) time =
+toAdjustedMinutes (Zone { offset = defaultOffset, eras }) time =
   toAdjustedMinutesHelp defaultOffset (flooredDiv (posixToMillis time) 60000) eras
 
 
@@ -419,16 +419,16 @@ being much smoother for any moving visuals.
 -}
 every : Float -> (Posix -> msg) -> Sub msg
 every interval tagger =
-  subscription (Every interval tagger)
+  subscription (Every { interval = interval, toMessage = tagger })
 
 
 type MySub msg =
-  Every Float (Posix -> msg)
+  Every { interval : Float, toMessage : (Posix -> msg) }
 
 
 subMap : (a -> b) -> MySub a -> MySub b
-subMap f (Every interval tagger) =
-  Every interval (f << tagger)
+subMap f (Every { interval, toMessage = tagger }) =
+  Every { interval = interval, toMessage = (f << tagger) }
 
 
 
@@ -478,7 +478,7 @@ onEffects router subs {processes} =
 
 
 addMySub : MySub msg -> Taggers msg -> Taggers msg
-addMySub (Every interval tagger) state =
+addMySub (Every { interval, toMessage = tagger }) state =
   when Dict.get interval state is
     Nothing ->
       Dict.set interval [tagger] state
@@ -556,8 +556,8 @@ I am sure others would like to hear about it, and more experience reports will
 help me and the any potential TC39 proposal.
 -}
 customZone : Int -> Array { start : Int, offset : Int } -> Zone
-customZone =
-  Zone
+customZone offset eras =
+  Zone { offset = offset, eras = eras }
 
 
 {-| **Intended for package authors.**

@@ -682,9 +682,9 @@ In that case, you can work with a `Seed` of randomness and [`step`](#step) it
 forward by hand.
 -}
 type Seed
-    = Seed Int Int
-    -- the first Int is the state of the RNG and stepped with each random generation
-    -- the second state is the increment which corresponds to an independent RNG
+    = Seed { state : Int, increment : Int }
+    -- state of the RNG and stepped with each random generation
+    -- increment corresponds to an independent RNG
 
 
 -- step the RNG to produce the next seed
@@ -692,14 +692,14 @@ type Seed
 -- by 2^32, and add a magic addend. The addend can be varied to produce independent
 -- RNGs, so it is stored as part of the seed. It is given to the new seed unchanged.
 next : Seed -> Seed
-next (Seed state0 incr) =
+next (Seed { state = state0, increment = incr }) =
     -- The magic constant is from Numerical Recipes and is inlined for perf.
-    Seed (Bitwise.shiftRightZfBy 0 ((state0 * 1664525) + incr)) incr
+    Seed { state = (Bitwise.shiftRightZfBy 0 ((state0 * 1664525) + incr)), increment = incr }
 
 
 -- obtain a psuedorandom 32-bit integer from a seed
 peel : Seed -> Int
-peel (Seed state _) =
+peel (Seed { state }) =
     -- This is the RXS-M-SH version of PCG, see section 6.3.4 of the paper
     -- and line 184 of pcg_variants.h in the 0.94 (non-minimal) C implementation,
     -- the latter of which is the source of the magic constant.
@@ -800,13 +800,13 @@ initialSeed : Int -> Seed
 initialSeed x =
     let
         -- the default increment magic constant is taken from Numerical Recipes
-        (Seed state1 incr) =
-            next (Seed 0 1013904223)
+        (Seed { state = state1, increment = incr }) =
+            next (Seed { state = 0, increment = 1013904223 })
 
         state2 =
             Bitwise.shiftRightZfBy 0 (state1 + x)
     in
-        next (Seed state2 incr)
+        next (Seed { state = state2, increment = incr })
 
 
 {-| A generator that produces a seed that is independent of any other seed in
@@ -832,8 +832,7 @@ independentSeed =
                 Next make sure it is positive. Finally step it once before use.
                 --}
                 makeIndependentSeed state b c =
-                    next <| Seed state <|
-                        Bitwise.shiftRightZfBy 0 (Bitwise.or 1 (Bitwise.xor b c))
+                    next <| Seed { state = state, increment = Bitwise.shiftRightZfBy 0 (Bitwise.or 1 (Bitwise.xor b c)) }
             in
             step (map3 makeIndependentSeed gen gen gen) seed0
 

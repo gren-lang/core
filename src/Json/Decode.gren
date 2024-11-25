@@ -543,10 +543,10 @@ you could show the entire JSON object and show the part causing the failure in
 red.
 -}
 type Error
-    = Field String Error
-    | Index Int Error
+    = Field { name : String, error : Error }
+    | Index { index : Int, error : Error }
     | OneOf (Array Error)
-    | Failure String Value
+    | Failure { message : String, value : Value }
 
 
 {-| Convert a decoding error into a `String` that is nice for debugging.
@@ -574,7 +574,7 @@ errorToString error =
 errorToStringHelp : Error -> Array String -> String
 errorToStringHelp error context =
     when error is
-        Field f err ->
+        Field { name = f, error = err } ->
             let
                 isSimple =
                     when String.uncons f is
@@ -593,7 +593,7 @@ errorToStringHelp error context =
             in
             errorToStringHelp err ([ fieldName ] ++ context)
 
-        Index i err ->
+        Index { index = i, error = err } ->
             let
                 indexName =
                     "[" ++ String.fromInt i ++ "]"
@@ -630,7 +630,7 @@ errorToStringHelp error context =
                     in
                     String.join "\n\n" ([ introduction ] ++ Array.indexedMap errorOneOf errors)
 
-        Failure msg json ->
+        Failure { message = msg, value = json } ->
             let
                 introduction =
                     when context is

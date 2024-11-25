@@ -43,17 +43,22 @@ small building blocks and put them together into a more complex encoding.
 -}
 type Encoder
   = I8 Int
-  | I16 Endianness Int
-  | I32 Endianness Int
+  | I16 (WithEndian Int)
+  | I32 (WithEndian Int)
   | U8 Int
-  | U16 Endianness Int
-  | U32 Endianness Int
-  | F32 Endianness Float
-  | F64 Endianness Float
-  | Seq Int (Array Encoder)
-  | Utf8 Int String
+  | U16 (WithEndian Int)
+  | U32 (WithEndian Int)
+  | F32 (WithEndian Float)
+  | F64 (WithEndian Float)
+  | Seq { width : Int, items : Array Encoder }
+  | Utf8 { width : Int, string :  String }
   | Bytes Bytes
 
+
+type alias WithEndian number =
+  { endian : Endianness
+  , number : number
+  }
 
 
 -- ENCODE
@@ -103,44 +108,43 @@ encode =
 {-| Encode integers from `-128` to `127` in one byte.
 -}
 signedInt8 : Int -> Encoder
-signedInt8 =
-  I8
+signedInt8 n =
+  I8 n
 
 
 {-| Encode integers from `-32768` to `32767` in two bytes.
 -}
 signedInt16 : Endianness -> Int -> Encoder
-signedInt16 =
-  I16
+signedInt16 e n =
+  I16 { endian = e, number = n }
 
 
 {-| Encode integers from `-2147483648` to `2147483647` in four bytes.
 -}
 signedInt32 : Endianness -> Int -> Encoder
-signedInt32 =
-  I32
+signedInt32 e n =
+  I32 { endian = e, number = n }
 
 
 {-| Encode integers from `0` to `255` in one byte.
 -}
 unsignedInt8 : Int -> Encoder
-unsignedInt8 =
-  U8
+unsignedInt8 n =
+  U8 n
 
 
 {-| Encode integers from `0` to `65535` in two bytes.
 -}
 unsignedInt16 : Endianness -> Int -> Encoder
-unsignedInt16 =
-  U16
+unsignedInt16 e n =
+  U16 { endian = e, number = n }
 
 
 {-| Encode integers from `0` to `4294967295` in four bytes.
 -}
 unsignedInt32 : Endianness -> Int -> Encoder
-unsignedInt32 =
-  U32
-
+unsignedInt32 e n =
+  U32 { endian = e, number = n }
 
 
 -- FLOATS
@@ -149,15 +153,15 @@ unsignedInt32 =
 {-| Encode 32-bit floating point numbers in four bytes.
 -}
 float32 : Endianness -> Float -> Encoder
-float32 =
-  F32
+float32 e n =
+  F32 { endian = e, number = n }
 
 
 {-| Encode 64-bit floating point numbers in eight bytes.
 -}
 float64 : Endianness -> Float -> Encoder
-float64 =
-  F64
+float64 e n =
+  F64 { endian = e, number = n }
 
 
 
@@ -211,7 +215,7 @@ values for the position of a ball in 3D space, you could say:
 -}
 sequence : Array Encoder -> Encoder
 sequence builders =
-  Seq (getLengths 0 builders) builders
+  Seq { width = (getLengths 0 builders), items = builders }
 
 
 -- WRITE
@@ -221,15 +225,15 @@ write : Encoder -> Bytes -> Int -> Int
 write builder mb offset =
   when builder is
     I8    n -> Gren.Kernel.Bytes.write_i8  mb offset n
-    I16 e n -> Gren.Kernel.Bytes.write_i16 mb offset n (e == LE)
-    I32 e n -> Gren.Kernel.Bytes.write_i32 mb offset n (e == LE)
+    I16 { endian = e, number = n } -> Gren.Kernel.Bytes.write_i16 mb offset n (e == LE)
+    I32 { endian = e, number = n } -> Gren.Kernel.Bytes.write_i32 mb offset n (e == LE)
     U8    n -> Gren.Kernel.Bytes.write_u8  mb offset n
-    U16 e n -> Gren.Kernel.Bytes.write_u16 mb offset n (e == LE)
-    U32 e n -> Gren.Kernel.Bytes.write_u32 mb offset n (e == LE)
-    F32 e n -> Gren.Kernel.Bytes.write_f32 mb offset n (e == LE)
-    F64 e n -> Gren.Kernel.Bytes.write_f64 mb offset n (e == LE)
-    Seq _ bs -> writeSequence bs mb offset
-    Utf8 _ s -> Gren.Kernel.Bytes.write_string mb offset s
+    U16 { endian = e, number = n } -> Gren.Kernel.Bytes.write_u16 mb offset n (e == LE)
+    U32 { endian = e, number = n } -> Gren.Kernel.Bytes.write_u32 mb offset n (e == LE)
+    F32 { endian = e, number = n } -> Gren.Kernel.Bytes.write_f32 mb offset n (e == LE)
+    F64 { endian = e, number = n } -> Gren.Kernel.Bytes.write_f64 mb offset n (e == LE)
+    Seq { items = bs } -> writeSequence bs mb offset
+    Utf8 { string = s } -> Gren.Kernel.Bytes.write_string mb offset s
     Bytes bs -> Gren.Kernel.Bytes.write_bytes mb offset bs
 
 
@@ -249,16 +253,16 @@ writeSequence builders mb offset =
 getLength : Encoder -> Int
 getLength builder =
   when builder is
-    I8    _ -> 1
-    I16 _ _ -> 2
-    I32 _ _ -> 4
-    U8    _ -> 1
-    U16 _ _ -> 2
-    U32 _ _ -> 4
-    F32 _ _ -> 4
-    F64 _ _ -> 8
-    Seq w _ -> w
-    Utf8 w _ -> w
+    I8  _ -> 1
+    I16 _ -> 2
+    I32 _ -> 4
+    U8  _ -> 1
+    U16 _ -> 2
+    U32 _ -> 4
+    F32 _ -> 4
+    F64 _ -> 8
+    Seq { width = w } -> w
+    Utf8 { width = w } -> w
     Bytes bs -> Gren.Kernel.Bytes.length bs
 
 

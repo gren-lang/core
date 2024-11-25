@@ -471,7 +471,7 @@ type Extractable
 {-| A generated key.
 -}
 type Key key keyData
-    = Key key keyData
+    = Key { key : key, data : keyData }
 
 
 {-| A public key that is used for encrypting and verifying values. This key type, 
@@ -1036,7 +1036,7 @@ exportHmacKeyAsJwk =
 
 {-|-}
 exportKeyHelperV2 : String -> Key a b -> Task ExportKeyError c
-exportKeyHelperV2 keyType (Key key _) =
+exportKeyHelperV2 keyType (Key { key }) =
     Gren.Kernel.Crypto.exportKey keyType key
 
 
@@ -1581,7 +1581,7 @@ type RsaOaepEncryptionError
 key with the [`generateRsaOaepKeyPair`](#generateRsaOaepKeyPair) function.
 -}
 encryptWithRsaOaep : RsaOaepParams  -> PublicKey RsaOaepKey RsaKeyParams -> Bytes -> Task RsaOaepEncryptionError Bytes
-encryptWithRsaOaep { label } (PublicKey (Key key _)) bytes =
+encryptWithRsaOaep { label } (PublicKey (Key { key })) bytes =
     when label is
         Nothing ->
             Gren.Kernel.Crypto.encryptWithRsaOaep
@@ -1624,7 +1624,7 @@ type alias AesCtrParams =
 with the [`generateAesCtrKey`](#generateAesCtrKey) function.
 -}
 encryptWithAesCtr : AesCtrParams -> Key AesCtrKey AesKeyParams -> Bytes -> Task AesCtrEncryptionError Bytes
-encryptWithAesCtr { counter, length } (Key key _) bytes =
+encryptWithAesCtr { counter, length } (Key { key }) bytes =
     -- The counter must be exactly 16 bytes long
     if Bytes.length counter == 16 then
         Gren.Kernel.Crypto.encryptWithAesCtr
@@ -1665,7 +1665,7 @@ type alias AesCbcParams =
 with the [`generateAesCbcKey`](#generateAesCbcKey) function.
 -}
 encryptWithAesCbc : AesCbcParams -> Key AesCbcKey AesKeyParams -> Bytes -> Task AesCbcEncryptionError Bytes
-encryptWithAesCbc { iv } (Key key _) bytes =
+encryptWithAesCbc { iv } (Key { key }) bytes =
     if Bytes.length iv == 16 then
         Gren.Kernel.Crypto.encryptWithAesCbc
             iv
@@ -1720,7 +1720,7 @@ type AesGcmEncryptionError
 key with the [`generateAesGcmKey`](#generateAesGcmKey) function.
 -}
 encryptWithAesGcm : AesGcmParams -> Key AesGcmKey AesKeyParams -> Bytes -> Task AesGcmEncryptionError Bytes
-encryptWithAesGcm { iv, additionalData, tagLength } (Key key _) bytes =
+encryptWithAesGcm { iv, additionalData, tagLength } (Key { key }) bytes =
     let
         byteWidth =
             Bytes.length iv
@@ -1781,7 +1781,7 @@ type RsaOaepDecryptionError =
 [`generateRsaOaepKeyPair`](#generateRsaOaepKeyPair) function.
 -}
 decryptWithRsaOaep : RsaOaepParams -> PrivateKey RsaOaepKey RsaKeyParams -> Bytes -> Task RsaOaepDecryptionError Bytes
-decryptWithRsaOaep { label } (PrivateKey (Key privateKey _)) bytes =
+decryptWithRsaOaep { label } (PrivateKey (Key { key = privateKey })) bytes =
     when label is
         Nothing ->
             Gren.Kernel.Crypto.decryptWithRsaOaep
@@ -1813,7 +1813,7 @@ type AesCtrDecryptionError
 with the [`generateAesCtrKey`](#generateAesCtrKey) function.
 -}
 decryptWithAesCtr : AesCtrParams -> Key AesCtrKey AesKeyParams -> Bytes -> Task AesCtrDecryptionError Bytes
-decryptWithAesCtr { counter, length } (Key key _) bytes =
+decryptWithAesCtr { counter, length } (Key { key }) bytes =
     if Bytes.length counter == 16 then
         Gren.Kernel.Crypto.decryptWithAesCtr
             counter
@@ -1845,7 +1845,7 @@ type AesCbcDecryptionError
 [`generateAesCbcKey`](#generateAesCbcKey) function.
 -}
 decryptWithAesCbc : AesCbcParams -> Key AesCbcKey AesKeyParams -> Bytes -> Task AesCbcDecryptionError Bytes
-decryptWithAesCbc { iv } (Key key _) bytes = 
+decryptWithAesCbc { iv } (Key { key }) bytes = 
     if Bytes.length iv == 16 then
         Gren.Kernel.Crypto.decryptWithAesCbc
             iv
@@ -1876,7 +1876,7 @@ type AesGcmDecryptionError
 key with the [`generateAesGcmKey`](#generateAesGcmKey) function.
 -}
 decryptWithAesGcm : AesGcmParams -> Key AesGcmKey AesKeyParams -> Bytes -> Task AesGcmDecryptionError Bytes
-decryptWithAesGcm { iv, additionalData, tagLength } (Key key _) bytes =
+decryptWithAesGcm { iv, additionalData, tagLength } (Key { key }) bytes =
     let
         byteWidth =
             Bytes.length iv
@@ -1949,7 +1949,7 @@ is just some `Bytes`). The `Signature` can be used with the cooresponding verifi
 to verify that the passed `Bytes` were signed with the passed key.
 -}
 signWithRsaSsaPkcs1V1_5 : PrivateKey RsaSsaPkcs1V1_5Key RsaKeyParams -> Bytes -> Task RsaSsaPkcs1V1_5SigningError Signature
-signWithRsaSsaPkcs1V1_5 (PrivateKey (Key key _)) bytes =
+signWithRsaSsaPkcs1V1_5 (PrivateKey (Key { key })) bytes =
     Gren.Kernel.Crypto.signWithRsaSsaPkcs1V1_5 
         key 
         bytes
@@ -1981,7 +1981,7 @@ is just some `Bytes`). The `Signature` can be used with the cooresponding verifi
 to verify that the passed `Bytes` were signed with the passed key.
 -}
 signWithRsaPss : RsaPssParams -> PrivateKey RsaPssKey RsaKeyParams -> Bytes -> Task RsaPssSigningError Signature
-signWithRsaPss { salt } (PrivateKey (Key key { modulusLength, hash, extractable })) bytes =
+signWithRsaPss { salt } (PrivateKey (Key { key, data = { modulusLength, hash, extractable }})) bytes =
     let
         clampedSaltBytes =
             clamp 0 2147483647 salt
@@ -2017,7 +2017,7 @@ to verify that the passed `Bytes` were signed with the passed key.
 The returned `Task` should not fail. If it does, please file a ticket!
 -}
 signWithEcdsa : DigestAlgorithm -> PrivateKey EcdsaKey EcKeyParams -> Bytes -> Task x Signature
-signWithEcdsa hash (PrivateKey (Key key _)) bytes =
+signWithEcdsa hash (PrivateKey (Key { key })) bytes =
     Gren.Kernel.Crypto.signWithEcdsa
         (digestAlgorithmToString hash)
         key 
@@ -2031,7 +2031,7 @@ to verify that the passed `Bytes` were signed with the passed key.
 The returned `Task` should not fail. If it does, please file a ticket!
 -}
 signWithHmac : Key HmacKey HmacKeyParams -> Bytes -> Task x Signature
-signWithHmac (Key key _) bytes =
+signWithHmac (Key { key }) bytes =
     Gren.Kernel.Crypto.signWithHmac 
         key 
         bytes
@@ -2048,7 +2048,7 @@ This function produces no values. Instead, the `Task` succeeds if the passed
 signature is valid and fails otherwise.
 -}
 verifyWithRsaSsaPkcs1V1_5 : PublicKey RsaSsaPkcs1V1_5Key RsaKeyParams -> Signature -> Bytes -> Task x a
-verifyWithRsaSsaPkcs1V1_5 (PublicKey (Key key _)) signature bytes =
+verifyWithRsaSsaPkcs1V1_5 (PublicKey (Key { key })) signature bytes =
     Gren.Kernel.Crypto.verifyWithRsaSsaPkcs1V1_5
         key
         signature
@@ -2062,7 +2062,7 @@ This function produces no values. Instead, the `Task` succeeds if the passed
 signature is valid and fails otherwise.
 -}
 verifyWithRsaPss : RsaPssParams -> PublicKey RsaPssKey RsaKeyParams -> Signature -> Bytes -> Task x a
-verifyWithRsaPss { salt } (PublicKey (Key key _)) signature bytes =
+verifyWithRsaPss { salt } (PublicKey (Key { key })) signature bytes =
     Gren.Kernel.Crypto.verifyWithRsaPss
         salt
         key
@@ -2077,7 +2077,7 @@ This function produces no values. Instead, the `Task` succeeds if the passed
 signature is valid and fails otherwise.
 -}
 verifyWithEcdsa : DigestAlgorithm -> PublicKey EcdsaKey EcKeyParams -> Signature -> Bytes -> Task x a
-verifyWithEcdsa hash (PublicKey (Key key _)) signature bytes =
+verifyWithEcdsa hash (PublicKey (Key { key })) signature bytes =
     Gren.Kernel.Crypto.verifyWithEcdsa
         (digestAlgorithmToString hash)
         key
@@ -2092,7 +2092,7 @@ This function produces no values. Instead, the `Task` succeeds if the passed
 signature is valid and fails otherwise.
 -}
 verifyWithHmac : Key HmacKey HmacKeyParams -> Signature -> Bytes -> Task x a
-verifyWithHmac (Key key _) signature bytes =
+verifyWithHmac (Key { key }) signature bytes =
     Gren.Kernel.Crypto.verifyWithHmac
         key
         signature
