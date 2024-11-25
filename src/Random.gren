@@ -352,7 +352,7 @@ weighted first others =
 
 getByWeight : { weight : Float, value : a } -> Array { weight : Float, value : a } -> Float -> a
 getByWeight {weight = weight, value = value} others countdown =
-  case Array.popFirst others of
+  when Array.popFirst others is
     Nothing ->
       value
 
@@ -888,7 +888,7 @@ init =
 
 onEffects : Platform.Router msg Never -> Array (MyCmd msg) -> Seed -> Task Never Seed
 onEffects router commands seed =
-  case Array.popFirst commands of
+  when Array.popFirst commands is
     Nothing ->
       Task.succeed seed
 

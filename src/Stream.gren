@@ -279,7 +279,7 @@ customTransformationWithOptions fn { initialState, readCapacity, writeCapacity }
 
 customTransformationActionWrapper toAction =
     \state input ->
-        case toAction state input of
+        when toAction state input is
             UpdateState newState ->
                 { ctor = "UpdateState"
                 , state = newState

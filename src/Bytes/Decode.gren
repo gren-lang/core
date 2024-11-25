@@ -179,7 +179,7 @@ string n =
   bytes n
     |> andThen 
       (\bits ->
-        case Bytes.toString bits of
+        when Bytes.toString bits is
           Just str ->
             succeed str
 
@@ -357,7 +357,7 @@ decode custom types:
 
     toEncoder : Distance -> Encode.Encoder
     toEncoder distance =
-      case distance of
+      when distance is
         Yards n -> Encode.sequence [ Encode.unsignedInt8 0, Encode.float32 BE n ]
         Meters n -> Encode.sequence [ Encode.unsignedInt8 1, Encode.float32 BE n ]
 
@@ -368,7 +368,7 @@ decode custom types:
 
     pickDecoder : Int -> Decode.Decoder Distance
     pickDecoder tag =
-      case tag of
+      when tag is
         0 -> Decode.map Yards (Decode.float32 BE)
         1 -> Decode.map Meters (Decode.float32 BE)
         _ -> Decode.fail
@@ -438,7 +438,7 @@ loopHelp state callback bites offset =
     (Decoder decoder) = callback state
     new = decoder bites offset
   in
-  case new.value of
+  when new.value is
     Loop newState ->
       loopHelp newState callback bites new.offset
 

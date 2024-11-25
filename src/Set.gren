@@ -87,7 +87,7 @@ value is in the set, it is removed.
 -}
 toggle : comparable -> Set comparable -> Set comparable
 toggle key (Set_gren_builtin dict) =
-    case Dict.get key dict of
+    when Dict.get key dict is
         Just _ ->
             Set_gren_builtin <| Dict.remove key dict
 
@@ -253,7 +253,7 @@ filterMap : (comparable -> Maybe comparable2) -> Set comparable -> Set comparabl
 filterMap toMaybe coll =
     foldl
         (\old news ->
-            case toMaybe old of
+            when toMaybe old is
                 Just new ->
                     set new news
 

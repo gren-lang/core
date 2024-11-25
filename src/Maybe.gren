@@ -59,7 +59,7 @@ equals a provided constant.
 -}
 hasValue : a -> Maybe a -> Bool
 hasValue value maybe =
-    case maybe of
+    when maybe is
         Just contained ->
             contained == value
 
@@ -79,7 +79,7 @@ passes the provided test.
 -}
 checkValue : (a -> Bool) -> Maybe a -> Bool
 checkValue test maybe =
-    case maybe of
+    when maybe is
         Just contained ->
             test contained
 
@@ -100,7 +100,7 @@ value. This comes in handy when paired with functions like
 -}
 withDefault : a -> Maybe a -> a
 withDefault default maybe =
-    case maybe of
+    when maybe is
         Just value ->
             value
 
@@ -117,7 +117,7 @@ In most cases you should use pattern matching or [withDefault](#withDefault) ins
 -}
 withDefaultLazy : ({} -> a) -> Maybe a -> a
 withDefaultLazy default maybe =
-    case maybe of
+    when maybe is
         Just value ->
             value
 
@@ -138,7 +138,7 @@ withDefaultLazy default maybe =
 -}
 map : (a -> b) -> Maybe a -> Maybe b
 map f maybe =
-    case maybe of
+    when maybe is
         Just value ->
             Just (f value)
 
@@ -163,12 +163,12 @@ map f maybe =
 -}
 map2 : (a -> b -> value) -> Maybe a -> Maybe b -> Maybe value
 map2 func ma mb =
-    case ma of
+    when ma is
         Nothing ->
             Nothing
 
         Just a ->
-            case mb of
+            when mb is
                 Nothing ->
                     Nothing
 
@@ -179,17 +179,17 @@ map2 func ma mb =
 {-| -}
 map3 : (a -> b -> c -> value) -> Maybe a -> Maybe b -> Maybe c -> Maybe value
 map3 func ma mb mc =
-    case ma of
+    when ma is
         Nothing ->
             Nothing
 
         Just a ->
-            case mb of
+            when mb is
                 Nothing ->
                     Nothing
 
                 Just b ->
-                    case mc of
+                    when mc is
                         Nothing ->
                             Nothing
 
@@ -200,22 +200,22 @@ map3 func ma mb mc =
 {-| -}
 map4 : (a -> b -> c -> d -> value) -> Maybe a -> Maybe b -> Maybe c -> Maybe d -> Maybe value
 map4 func ma mb mc md =
-    case ma of
+    when ma is
         Nothing ->
             Nothing
 
         Just a ->
-            case mb of
+            when mb is
                 Nothing ->
                     Nothing
 
                 Just b ->
-                    case mc of
+                    when mc is
                         Nothing ->
                             Nothing
 
                         Just c ->
-                            case md of
+                            when md is
                                 Nothing ->
                                     Nothing
 
@@ -226,27 +226,27 @@ map4 func ma mb mc md =
 {-| -}
 map5 : (a -> b -> c -> d -> e -> value) -> Maybe a -> Maybe b -> Maybe c -> Maybe d -> Maybe e -> Maybe value
 map5 func ma mb mc md me =
-    case ma of
+    when ma is
         Nothing ->
             Nothing
 
         Just a ->
-            case mb of
+            when mb is
                 Nothing ->
                     Nothing
 
                 Just b ->
-                    case mc of
+                    when mc is
                         Nothing ->
                             Nothing
 
                         Just c ->
-                            case md of
+                            when md is
                                 Nothing ->
                                     Nothing
 
                                 Just d ->
-                                    case me of
+                                    when me is
                                         Nothing ->
                                             Nothing
 
@@ -264,7 +264,7 @@ test.
 -}
 filter : (a -> Bool) -> Maybe a -> Maybe a
 filter test maybe =
-    case maybe of
+    when maybe is
         Just contained ->
             if test contained then
                 maybe
@@ -281,7 +281,7 @@ definition:
 
     andThen : (a -> Maybe b) -> Maybe a -> Maybe b
     andThen callback maybe =
-        case maybe of
+        when maybe is
             Just value ->
                 callback value
 
@@ -312,7 +312,7 @@ again the chain of computations will result in `Nothing`.
 -}
 andThen : (a -> Maybe b) -> Maybe a -> Maybe b
 andThen callback maybeValue =
-    case maybeValue of
+    when maybeValue is
         Just value ->
             callback value
 
@@ -323,12 +323,12 @@ andThen callback maybeValue =
 
 -- FOR INTERNAL USE ONLY
 --
--- Use `case` expressions for this in Gren code!
+-- Use `when` expressions for this in Gren code!
 
 
 isJust : Maybe a -> Bool
 isJust maybe =
-    case maybe of
+    when maybe is
         Just _ ->
             True
 
@@ -338,7 +338,7 @@ isJust maybe =
 
 destruct : b -> (a -> b) -> Maybe a -> b
 destruct default func maybe =
-    case maybe of
+    when maybe is
         Just a ->
             func a
 

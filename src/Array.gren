@@ -216,7 +216,7 @@ filterMap : (a -> Maybe b) -> Array a -> Array b
 filterMap mapper array =
     flatMap
         (\v ->
-            case mapper v of
+            when mapper v is
                 Just newValue ->
                     [ newValue ]
 
@@ -301,7 +301,7 @@ findLast =
 -}
 member : a -> Array a -> Bool
 member value array =
-    case findFirst (\v -> v == value) array of
+    when findFirst (\v -> v == value) array is
         Just _ ->
             True
 
@@ -318,7 +318,7 @@ member value array =
 -}
 any : (a -> Bool) -> Array a -> Bool
 any fn array =
-    case findFirst fn array of
+    when findFirst fn array is
         Just _ ->
             True
 
@@ -335,7 +335,7 @@ any fn array =
 -}
 all : (a -> Bool) -> Array a -> Bool
 all fn array =
-    case findFirst (not << fn) array of
+    when findFirst (not << fn) array is
         Just _ ->
             False
 
@@ -351,7 +351,7 @@ all fn array =
 -}
 minimum : Array comparable -> Maybe comparable
 minimum array =
-    case first array of
+    when first array is
         Nothing ->
             Nothing
 
@@ -377,7 +377,7 @@ minimum array =
 -}
 maximum : Array comparable -> Maybe comparable
 maximum array =
-    case first array of
+    when first array is
         Nothing ->
             Nothing
 
@@ -433,7 +433,7 @@ setMany index values array =
 -}
 update : Int -> (a -> a) -> Array a -> Array a
 update idx fn array =
-    case get idx array of
+    when get idx array is
         Nothing ->
             array
 
@@ -594,7 +594,7 @@ flatMap =
 -}
 intersperse : a -> Array a -> Array a
 intersperse sep xs =
-    case popFirst xs of
+    when popFirst xs is
         Nothing ->
             []
 
@@ -716,7 +716,7 @@ takeLast n array =
 -}
 popFirst : Array a -> Maybe { first : a, rest : Array a }
 popFirst array =
-    case first array of
+    when first array is
         Just value ->
             Just
                 { first = value
@@ -734,7 +734,7 @@ popFirst array =
 -}
 popLast : Array a -> Maybe { last : a, initial : Array a }
 popLast array =
-    case last array of
+    when last array is
         Just value ->
             Just
                 { last = value
@@ -796,7 +796,7 @@ sortBy =
     sortWith flippedComparison [1,2,3,4,5] == [5,4,3,2,1]
 
     flippedComparison a b =
-        case compare a b of
+        when compare a b is
           LT -> GT
           EQ -> EQ
           GT -> LT

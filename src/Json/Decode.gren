@@ -260,7 +260,7 @@ oneOrMore toValue decoder =
 
 oneOrMoreHelp : (a -> Array a -> value) -> Array a -> Decoder value
 oneOrMoreHelp toValue xs =
-    case Array.get 0 xs of
+    when Array.get 0 xs is
         Nothing ->
             fail "a ARRAY with at least ONE element"
 
@@ -573,11 +573,11 @@ errorToString error =
 
 errorToStringHelp : Error -> Array String -> String
 errorToStringHelp error context =
-    case error of
+    when error is
         Field f err ->
             let
                 isSimple =
-                    case String.uncons f of
+                    when String.uncons f is
                         Nothing ->
                             False
 
@@ -601,10 +601,10 @@ errorToStringHelp error context =
             errorToStringHelp err ([ indexName ] ++ context)
 
         OneOf errors ->
-            case errors of
+            when errors is
                 [] ->
                     "Ran into a Json.Decode.oneOf with no possibilities"
-                        ++ (case context of
+                        ++ (when context is
                                 [] ->
                                     "!"
 
@@ -618,7 +618,7 @@ errorToStringHelp error context =
                 _ ->
                     let
                         starter =
-                            case context of
+                            when context is
                                 [] ->
                                     "Json.Decode.oneOf"
 
@@ -633,7 +633,7 @@ errorToStringHelp error context =
         Failure msg json ->
             let
                 introduction =
-                    case context of
+                    when context is
                         [] ->
                             "Problem with the given value:\n\n"
 
@@ -694,7 +694,7 @@ versioned data, you might do something like this:
 
     infoHelp : Int -> Decoder Info
     infoHelp version =
-        case version of
+        when version is
             4 ->
                 infoDecoder4
 

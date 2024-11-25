@@ -815,7 +815,7 @@ and verify data with [`verifyWithHmac`](#verifyWithHmac).
 -}
 generateHmacKey : HmacKeyParams -> SecureContext -> Task HmacKeyGenerationError (Key HmacKey HmacKeyParams)
 generateHmacKey { hash, length, extractable } _context =
-    case length of
+    when length is
         Just passedLength ->
             let
                 clampedLength =
@@ -1507,7 +1507,7 @@ type ImportHmacKeyError
 {-|-}
 importHmacKeyFromJwk : Json.Encode.Value -> DigestAlgorithm -> Maybe Int -> Extractable -> SecureContext -> Task ImportHmacKeyError (Key HmacKey HmacKeyParams)
 importHmacKeyFromJwk jwk hash passedLength extractable _context =
-    case passedLength of
+    when passedLength is
         Just length ->
             Gren.Kernel.Crypto.importHmacKey
                 "jwk"
@@ -1532,7 +1532,7 @@ importHmacKeyFromJwk jwk hash passedLength extractable _context =
 {-|-}
 importHmacKeyFromRaw : Bytes -> DigestAlgorithm -> Maybe Int -> Extractable -> SecureContext -> Task ImportHmacKeyError (Key HmacKey HmacKeyParams)
 importHmacKeyFromRaw bytes hash passedLength extractable _context =
-    case passedLength of
+    when passedLength is
         Just length ->
             Gren.Kernel.Crypto.importHmacKey
                 "raw"
@@ -1582,7 +1582,7 @@ key with the [`generateRsaOaepKeyPair`](#generateRsaOaepKeyPair) function.
 -}
 encryptWithRsaOaep : RsaOaepParams  -> PublicKey RsaOaepKey RsaKeyParams -> Bytes -> Task RsaOaepEncryptionError Bytes
 encryptWithRsaOaep { label } (PublicKey (Key key _)) bytes =
-    case label of
+    when label is
         Nothing ->
             Gren.Kernel.Crypto.encryptWithRsaOaep
                 ""
@@ -1726,7 +1726,7 @@ encryptWithAesGcm { iv, additionalData, tagLength } (Key key _) bytes =
             Bytes.length iv
     in
     if byteWidth <= 128 && byteWidth >= 12 then
-        case { ad = additionalData, tl = tagLength } of
+        when { ad = additionalData, tl = tagLength } is
             { ad = Nothing, tl = Nothing } ->
                 Gren.Kernel.Crypto.encryptWithAesGcm
                     iv
@@ -1782,7 +1782,7 @@ type RsaOaepDecryptionError =
 -}
 decryptWithRsaOaep : RsaOaepParams -> PrivateKey RsaOaepKey RsaKeyParams -> Bytes -> Task RsaOaepDecryptionError Bytes
 decryptWithRsaOaep { label } (PrivateKey (Key privateKey _)) bytes =
-    case label of
+    when label is
         Nothing ->
             Gren.Kernel.Crypto.decryptWithRsaOaep
                 ""
@@ -1882,7 +1882,7 @@ decryptWithAesGcm { iv, additionalData, tagLength } (Key key _) bytes =
             Bytes.length iv
     in
     if byteWidth <= 128 && byteWidth >= 12 then
-        case { ad = additionalData, tl = tagLength } of
+        when { ad = additionalData, tl = tagLength } is
             { ad = Nothing, tl = Nothing } ->
                 Gren.Kernel.Crypto.decryptWithAesGcm
                     iv
@@ -1990,7 +1990,7 @@ signWithRsaPss { salt } (PrivateKey (Key key { modulusLength, hash, extractable 
         created key. The `maxSalt` values ensures consistent behavior across platforms.
         -}
         maxSalt =
-            case hash of
+            when hash is
                 Sha256 ->
                     32
                 
@@ -2131,7 +2131,7 @@ digest _context algorithm data =
 {-|-}
 ecNamedCurveToString : EcNamedCurve -> String
 ecNamedCurveToString namedCurve =
-    case namedCurve of
+    when namedCurve is
         P256 ->
             "P-256"
 
@@ -2145,7 +2145,7 @@ ecNamedCurveToString namedCurve =
 {-|-}
 aesLengthToInt : AesLength -> Int
 aesLengthToInt length =
-    case length of
+    when length is
         AesLength128 ->
             128
 
@@ -2158,7 +2158,7 @@ aesLengthToInt length =
 
 {-|-}
 aesTagLengthToInt aesTagLength =
-    case aesTagLength of
+    when aesTagLength is
         AesGcmTagLength96 ->
             96
 
@@ -2178,7 +2178,7 @@ aesTagLengthToInt aesTagLength =
 {-|-}
 extractableToBool : Extractable -> Bool
 extractableToBool extractable =
-    case extractable of
+    when extractable is
         CanBeExtracted ->
             True
             
@@ -2189,7 +2189,7 @@ extractableToBool extractable =
 {-|-}
 digestAlgorithmToString : DigestAlgorithm -> String
 digestAlgorithmToString digestAlgorithm =
-    case digestAlgorithm of
+    when digestAlgorithm is
         Sha256 ->
             "SHA-256"
 
@@ -2203,7 +2203,7 @@ digestAlgorithmToString digestAlgorithm =
 {-|-}
 digestAlgorithmToBytes : DigestAlgorithm -> Int
 digestAlgorithmToBytes digestAlgorithm =
-    case digestAlgorithm of
+    when digestAlgorithm is
         Sha256 ->
             32
         

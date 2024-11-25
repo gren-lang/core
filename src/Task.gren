@@ -392,7 +392,7 @@ execute task =
 
 cmdMap : (a -> b) -> MyCmd a -> MyCmd b
 cmdMap tagger cmd =
-    case cmd of
+    when cmd is
         Perform task ->
             Perform (map tagger task)
 
@@ -422,7 +422,7 @@ onSelfMsg _ _ _ =
 
 spawnCmd : Platform.Router msg Never -> MyCmd msg -> Task x {}
 spawnCmd router cmd =
-    case cmd of
+    when cmd is
         Perform task ->
             Gren.Kernel.Scheduler.spawn
                 (task

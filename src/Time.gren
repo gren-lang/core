@@ -206,7 +206,7 @@ toYear zone time =
 -}
 toMonth : Zone -> Posix -> Month
 toMonth zone time =
-  case (toCivil (toAdjustedMinutes zone time)).month of
+  when (toCivil (toAdjustedMinutes zone time)).month is
     1  -> Jan
     2  -> Feb
     3  -> Mar
@@ -247,7 +247,7 @@ toDay zone time =
 -}
 toWeekday : Zone -> Posix -> Weekday
 toWeekday zone time =
-  case Math.modBy 7 (flooredDiv (toAdjustedMinutes zone time) (60 * 24)) of
+  when Math.modBy 7 (flooredDiv (toAdjustedMinutes zone time) (60 * 24)) is
     0 -> Thu
     1 -> Fri
     2 -> Sat
@@ -321,7 +321,7 @@ toAdjustedMinutes (Zone defaultOffset eras) time =
 
 toAdjustedMinutesHelp : Int -> Int -> Array Era -> Int
 toAdjustedMinutesHelp defaultOffset posixMinutes eras =
-  case Array.get 0 eras of
+  when Array.get 0 eras is
     Nothing ->
       posixMinutes + defaultOffset
 
@@ -365,7 +365,7 @@ can say:
 
     toJapaneseWeekday : Weekday -> String
     toJapaneseWeekday weekday =
-      case weekday of
+      when weekday is
         Mon -> "月"
         Tue -> "火"
         Wed -> "水"
@@ -383,7 +383,7 @@ can say:
 
     toDanishMonth : Month -> String
     toDanishMonth month =
-      case month of
+      when month is
         Jan -> "januar"
         Feb -> "februar"
         Mar -> "marts"
@@ -479,7 +479,7 @@ onEffects router subs {processes} =
 
 addMySub : MySub msg -> Taggers msg -> Taggers msg
 addMySub (Every interval tagger) state =
-  case Dict.get interval state of
+  when Dict.get interval state is
     Nothing ->
       Dict.set interval [tagger] state
 
@@ -489,7 +489,7 @@ addMySub (Every interval tagger) state =
 
 spawnHelp : Platform.Router msg Float -> Array Float -> Processes -> Task.Task x Processes
 spawnHelp router intervals processes =
-  case Array.get 0 intervals of
+  when Array.get 0 intervals is
     Nothing ->
       Task.succeed processes
 
@@ -510,7 +510,7 @@ spawnHelp router intervals processes =
 
 onSelfMsg : Platform.Router msg Float -> Float -> State msg -> Task Never (State msg)
 onSelfMsg router interval state =
-  case Dict.get interval state.taggers of
+  when Dict.get interval state.taggers is
     Nothing ->
       Task.succeed state
 

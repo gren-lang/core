@@ -219,7 +219,7 @@ sequence builders =
 
 write : Encoder -> Bytes -> Int -> Int
 write builder mb offset =
-  case builder of
+  when builder is
     I8    n -> Gren.Kernel.Bytes.write_i8  mb offset n
     I16 e n -> Gren.Kernel.Bytes.write_i16 mb offset n (e == LE)
     I32 e n -> Gren.Kernel.Bytes.write_i32 mb offset n (e == LE)
@@ -248,7 +248,7 @@ writeSequence builders mb offset =
 
 getLength : Encoder -> Int
 getLength builder =
-  case builder of
+  when builder is
     I8    _ -> 1
     I16 _ _ -> 2
     I32 _ _ -> 4
