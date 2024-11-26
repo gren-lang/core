@@ -87,17 +87,11 @@ var _Stream_closeWritable = function (stream) {
       return callback(__Scheduler_fail(__Stream_Locked));
     }
 
-    const writer = stream.getReader();
-    writer
-      .close()
-      .then(() => {
-        writer.releaseLock();
-        callback(__Scheduler_succeed({}));
-      })
-      .catch((err) => {
-        writer.releaseLock();
-        callback(__Scheduler_fail(__Stream_Closed));
-      });
+    const writer = stream.getWriter();
+    writer.close();
+    writer.releaseLock();
+
+    callback(__Scheduler_succeed({}));
   });
 };
 
