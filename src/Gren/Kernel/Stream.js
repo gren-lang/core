@@ -126,9 +126,8 @@ var _Stream_pipeTo = F2(function (writable, readable) {
       return callback(__Scheduler_fail(__Stream_Locked));
     }
 
-    readable.pipeTo(writable).then(() => {
-      callback(__Scheduler_succeed({}));
-    });
+    readable.pipeTo(writable);
+    callback(__Scheduler_succeed({}));
   });
 });
 
