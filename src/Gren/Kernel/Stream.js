@@ -47,16 +47,10 @@ var _Stream_write = F2(function (value, stream) {
     }
 
     const writer = stream.getWriter();
-    writer
-      .write(value)
-      .then(() => {
-        writer.releaseLock();
-        callback(__Scheduler_succeed(stream));
-      })
-      .catch((err) => {
-        writer.releaseLock();
-        callback(__Scheduler_fail(__Stream_Closed));
-      });
+    writer.write(value);
+    writer.releaseLock();
+
+    callback(__Scheduler_succeed(stream));
   });
 });
 
