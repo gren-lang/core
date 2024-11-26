@@ -15,6 +15,8 @@ var _Stream_read = function (stream) {
     reader
       .read()
       .then(({ done, value }) => {
+        reader.releaseLock();
+
         if (value instanceof Uint8Array) {
           value = new DataView(
             value.buffer,
@@ -28,10 +30,8 @@ var _Stream_read = function (stream) {
         );
       })
       .catch((err) => {
-        callback(__Scheduler_fail(__Stream_Closed));
-      })
-      .finally(() => {
         reader.releaseLock();
+        callback(__Scheduler_fail(__Stream_Closed));
       });
   });
 };
@@ -56,14 +56,14 @@ var _Stream_write = F2(function (value, stream) {
       .catch((err) => {
         writer.releaseLock();
         callback(__Scheduler_fail(__Stream_Closed));
-      })
-      .finally(() => {});
+      });
   });
 });
 
 var _Stream_cancel = F2(function (reason, stream) {
   return __Scheduler_binding(function (callback) {
     stream.cancel(reason);
+    callback(__Scheduler_succeed({}));
   });
 });
 
@@ -77,13 +77,12 @@ var _Stream_closeReadable = function (stream) {
     reader
       .close()
       .then(() => {
+        reader.releaseLock();
         callback(__Scheduler_succeed({}));
       })
       .catch((err) => {
-        callback(__Scheduler_fail(__Stream_Closed));
-      })
-      .finally(() => {
         reader.releaseLock();
+        callback(__Scheduler_fail(__Stream_Closed));
       });
   });
 };
@@ -98,13 +97,12 @@ var _Stream_closeWritable = function (stream) {
     writer
       .close()
       .then(() => {
+        writer.releaseLock();
         callback(__Scheduler_succeed({}));
       })
       .catch((err) => {
-        callback(__Scheduler_fail(__Stream_Closed));
-      })
-      .finally(() => {
         writer.releaseLock();
+        callback(__Scheduler_fail(__Stream_Closed));
       });
   });
 };
