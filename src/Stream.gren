@@ -1,6 +1,7 @@
 module Stream exposing 
     ( Readable
     , Error(..)
+    , fromArray
     , read
     , readBytesAsString
     , closeReadable
@@ -52,7 +53,7 @@ We have three kinds of streams: readable streams, writable streams, and transfor
 
 ## Readable Streams
 
-@docs Readable, Error, read, readBytesAsString, closeReadable, cancelReadable
+@docs Readable, Error, fromArray, read, readBytesAsString, closeReadable, cancelReadable
 
 ## Writable Streams
 
@@ -103,6 +104,26 @@ type Error
 
 
 -- Readable
+
+
+{-| Create a [Readable](#Readable) stream that delivers the values in the provided `Array` before
+closing.
+-}
+fromArray : Array a -> Task Error (Readable a)
+fromArray array =
+    identityTransformationWithOptions
+        { writeCapacity = Array.length array
+        , readCapacity = 1
+        }
+    |> Task.andThen
+        (\idStream ->
+            Array.foldl 
+                (\value stream -> Task.andThen (write value) stream)
+                (Task.succeed (writable idStream))
+                array
+                |> Task.andThen closeWritable
+                |> Task.map (\_ -> readable idStream)
+        )
 
 
 {-| Read a value off the stream. If `streamClosed` is `True`, then you've read the last value
