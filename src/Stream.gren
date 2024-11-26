@@ -112,7 +112,7 @@ closing.
 fromArray : Array a -> Task Error (Readable a)
 fromArray array =
     identityTransformationWithOptions
-        { writeCapacity = 0
+        { writeCapacity = 1
         , readCapacity = Array.length array
         }
     |> Task.andThen
