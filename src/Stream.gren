@@ -123,6 +123,8 @@ fromArray array =
                 array
                 |> Task.andThen closeWritable
                 |> Task.map (\_ -> readable idStream)
+                |> Task.andThen closeReadable
+                |> Task.map (\_ -> readable idStream)
         )
 
 
