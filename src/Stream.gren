@@ -113,7 +113,7 @@ fromArray : Array a -> Task Error (Readable a)
 fromArray array =
     identityTransformationWithOptions
         { writeCapacity = Array.length array
-        , readCapacity = 1
+        , readCapacity = Array.length array
         }
     |> Task.andThen
         (\idStream ->
