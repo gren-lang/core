@@ -202,7 +202,7 @@ function _Json_runHelp(decoder, value) {
       var result = _Json_runHelp(decoder.__decoder, value[field]);
       return __Result_isOk(result)
         ? result
-        : __Result_Err(__Json_Field({ __$name: field, __$error: result.a}));
+        : __Result_Err(__Json_Field({ __$name: field, __$error: result.a }));
 
     case __1_INDEX:
       var index = decoder.__index;
@@ -222,7 +222,7 @@ function _Json_runHelp(decoder, value) {
       var result = _Json_runHelp(decoder.__decoder, value[index]);
       return __Result_isOk(result)
         ? result
-        : __Result_Err(__Json_Index({ __$index: index, __$error: result.a}));
+        : __Result_Err(__Json_Index({ __$index: index, __$error: result.a }));
 
     case __1_KEY_VALUE:
       if (typeof value !== "object" || value === null || _Json_isArray(value)) {
@@ -234,7 +234,9 @@ function _Json_runHelp(decoder, value) {
         if (value.hasOwnProperty(key)) {
           var result = _Json_runHelp(decoder.__decoder, value[key]);
           if (!__Result_isOk(result)) {
-            return __Result_Err(__Json_Field({ __$name: key, __$error: result.a}));
+            return __Result_Err(
+              __Json_Field({ __$name: key, __$error: result.a }),
+            );
           }
           keyValuePairs.push({ __$key: key, __$value: result.a });
         }
@@ -274,7 +276,12 @@ function _Json_runHelp(decoder, value) {
       return __Result_Err(__Json_OneOf(errors));
 
     case __1_FAIL:
-      return __Result_Err(__Json_Failure({ __$message: decoder.__msg, __$value: _Json_wrap(value)}));
+      return __Result_Err(
+        __Json_Failure({
+          __$message: decoder.__msg,
+          __$value: _Json_wrap(value),
+        }),
+      );
 
     case __1_SUCCEED:
       return __Result_Ok(decoder.__msg);
@@ -287,7 +294,7 @@ function _Json_runArrayDecoder(decoder, value) {
   for (var i = 0; i < len; i++) {
     var result = _Json_runHelp(decoder, value[i]);
     if (!__Result_isOk(result)) {
-      return __Result_Err(__Json_Index({ __$index: i, __$error: result.a}));
+      return __Result_Err(__Json_Index({ __$index: i, __$error: result.a }));
     }
     array[i] = result.a;
   }
@@ -303,7 +310,10 @@ function _Json_isArray(value) {
 
 function _Json_expecting(type, value) {
   return __Result_Err(
-    __Json_Failure({ __$message: "Expecting " + type, __$value: _Json_wrap(value)}),
+    __Json_Failure({
+      __$message: "Expecting " + type,
+      __$value: _Json_wrap(value),
+    }),
   );
 }
 

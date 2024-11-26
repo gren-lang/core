@@ -4,7 +4,7 @@ module Array exposing
     , map, indexedMap, foldl, foldr, indexedFoldl, indexedFoldr, keepIf, mapAndKeepJust, reverse
     , isEmpty, length, get, findFirst, findLast, member, any, all, minimum, maximum
     , set, setMany, update, insert, insertMany, remove, removeMany, pushFirst, pushLast, splice
-    , prepend, append, flatten, flatMap, intersperse, map2, map3
+    , prepend, append, flatten, mapAndFlatten, intersperse, map2, map3
     , first, last, slice, dropFirst, dropLast, takeFirst, takeLast, popFirst, popLast, partition
     , sort, sortBy, sortWith
     )
@@ -34,7 +34,7 @@ functions to help you work with them.
 
 ## Combine
 
-@docs prepend, append, flatten, flatMap, intersperse, map2, map3
+@docs prepend, append, flatten, mapAndFlatten, intersperse, map2, map3
 
 
 ## Deconstruct
@@ -214,7 +214,7 @@ indexedKeepIf =
 -}
 mapAndKeepJust : (a -> Maybe b) -> Array a -> Array b
 mapAndKeepJust mapper array =
-    flatMap
+    mapAndFlatten
         (\v ->
             when mapper v is
                 Just newValue ->
@@ -579,11 +579,11 @@ flatten =
 
 {-| Map a given function onto an array, then flatten the resulting array.
 
-    flatMap f xs == flatten (map f xs)
+    mapAndFlatten f xs == flatten (map f xs)
 
 -}
-flatMap : (a -> Array b) -> Array a -> Array b
-flatMap =
+mapAndFlatten : (a -> Array b) -> Array a -> Array b
+mapAndFlatten =
     Gren.Kernel.Array.flatMap
 
 
@@ -599,7 +599,7 @@ intersperse sep xs =
             []
 
         Just { first = head, rest = tail } ->
-            pushFirst head <| flatMap (\val -> [ sep, val ]) tail
+            pushFirst head <| mapAndFlatten (\val -> [ sep, val ]) tail
 
 
 {-| Combine two arrays, combining them with the given function.
