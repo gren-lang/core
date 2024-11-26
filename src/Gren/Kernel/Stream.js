@@ -28,7 +28,7 @@ var _Stream_read = function (stream) {
         );
       })
       .catch((err) => {
-        return callback(__Scheduler_fail(__Stream_Closed));
+        callback(__Scheduler_fail(__Stream_Closed));
       })
       .finally(() => {
         reader.releaseLock();
@@ -50,14 +50,14 @@ var _Stream_write = F2(function (value, stream) {
     writer
       .write(value)
       .then(() => {
+        writer.releaseLock();
         callback(__Scheduler_succeed(stream));
       })
       .catch((err) => {
-        return callback(__Scheduler_fail(__Stream_Closed));
-      })
-      .finally(() => {
         writer.releaseLock();
-      });
+        callback(__Scheduler_fail(__Stream_Closed));
+      })
+      .finally(() => {});
   });
 });
 
@@ -80,8 +80,7 @@ var _Stream_closeReadable = function (stream) {
         callback(__Scheduler_succeed({}));
       })
       .catch((err) => {
-        console.log("ReadableStream err: ", err);
-        return callback(__Scheduler_fail(__Stream_Closed));
+        callback(__Scheduler_fail(__Stream_Closed));
       })
       .finally(() => {
         reader.releaseLock();
@@ -102,8 +101,7 @@ var _Stream_closeWritable = function (stream) {
         callback(__Scheduler_succeed({}));
       })
       .catch((err) => {
-        console.log("WritableStream err: ", err);
-        return callback(__Scheduler_fail(__Stream_Closed));
+        callback(__Scheduler_fail(__Stream_Closed));
       })
       .finally(() => {
         writer.releaseLock();
