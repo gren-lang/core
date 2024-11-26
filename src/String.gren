@@ -8,7 +8,7 @@ module String exposing
     , fromChar, cons, uncons
     , toArray, fromArray
     , toUpper, toLower, pad, padLeft, padRight, trim, trimLeft, trimRight
-    , map, filter, foldl, foldr, any, all
+    , map, keepIf, foldl, foldr, any, all
     )
 
 {-| A built-in representation for efficient string manipulation. String literals
@@ -60,7 +60,7 @@ Cosmetic operations such as padding with extra characters or trimming whitespace
 
 ## Higher-Order Functions
 
-@docs map, filter, foldl, foldr, any, all
+@docs map, keepIf, foldl, foldr, any, all
 
 -}
 
@@ -674,11 +674,11 @@ map =
 
 {-| Keep only the characters that pass the test.
 
-    filter isDigit "R2-D2" == "22"
+    keepIf isDigit "R2-D2" == "22"
 
 -}
-filter : (Char -> Bool) -> String -> String
-filter =
+keepIf : (Char -> Bool) -> String -> String
+keepIf =
     Gren.Kernel.String.filter
 
 

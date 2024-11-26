@@ -465,7 +465,7 @@ onEffects router subs {processes} =
             |> Dict.keys
 
     existingDict =
-        Dict.filter (\key _ -> Dict.member key newTaggers) processes
+        Dict.keepIf (\key _ -> Dict.member key newTaggers) processes
 
     killTask =
         Dict.diff processes newTaggers

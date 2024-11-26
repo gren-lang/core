@@ -4,7 +4,7 @@ module Set exposing
     , isEmpty, member, count, first, last, findFirst, findLast, any, all
     , union, intersect, diff
     , toArray, fromArray
-    , map, foldl, foldr, filter, filterMap, partition
+    , map, foldl, foldr, keepIf, mapAndKeepJust, partition
     )
 
 {-| A set of unique values. The values can be any comparable type. This
@@ -37,7 +37,7 @@ Set, remove, and query operations all take _O(log n)_ time.
 
 ## Transform
 
-@docs map, foldl, foldr, filter, filterMap, partition
+@docs map, foldl, foldr, keepIf, mapAndKeepJust, partition
 
 -}
 
@@ -225,17 +225,17 @@ map func coll =
 
     positives : Set Int
     positives =
-        Set.filter (\x -> x > 0) numbers
+        Set.keepIf (\x -> x > 0) numbers
 
     -- positives == Set.fromArray [1,2]
 
 -}
-filter : (comparable -> Bool) -> Set comparable -> Set comparable
-filter isGood (Set_gren_builtin dict) =
-    Set_gren_builtin (Dict.filter (\key _ -> isGood key) dict)
+keepIf : (comparable -> Bool) -> Set comparable -> Set comparable
+keepIf isGood (Set_gren_builtin dict) =
+    Set_gren_builtin (Dict.keepIf (\key _ -> isGood key) dict)
 
 
-{-| Filter out unwanted results of a map operation.
+{-| Remove unwanted results of a map operation.
     
     import Set
 
@@ -245,12 +245,12 @@ filter isGood (Set_gren_builtin dict) =
 
     numbers : Set Int
     numbers =
-        Set.filterMap String.toInt strings
+        Set.mapAndKeepJust String.toInt strings
 
     -- numbers == Set.fromArray [ 3, -5 ]
 -}
-filterMap : (comparable -> Maybe comparable2) -> Set comparable -> Set comparable2
-filterMap toMaybe coll =
+mapAndKeepJust : (comparable -> Maybe comparable2) -> Set comparable -> Set comparable2
+mapAndKeepJust toMaybe coll =
     foldl
         (\old news ->
             when toMaybe old is

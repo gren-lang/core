@@ -3,7 +3,7 @@ module Dict exposing
     , empty, singleton, set, update, updateWithDefault, remove
     , isEmpty, count, get, member, first, last, findFirst, findLast, any, all
     , keys, values
-    , map, foldl, foldr, filter, filterMap, partition
+    , map, foldl, foldr, keepIf, mapAndKeepJust, partition
     , union, intersect, diff, merge
     )
 
@@ -31,7 +31,7 @@ Set, remove, and query operations all take _O(log n)_ time.
 
 ## Transform
 
-@docs map, foldl, foldr, filter, filterMap, partition
+@docs map, foldl, foldr, keepIf, mapAndKeepJust, partition
 
 
 ## Combine
@@ -548,7 +548,7 @@ Preference is given to values in the first dictionary.
 -}
 intersect : Dict comparable v -> Dict comparable v -> Dict comparable v
 intersect t1 t2 =
-    filter (\k _ -> member k t2) t1
+    keepIf (\k _ -> member k t2) t1
 
 
 {-| Keep a key-value pair when its key does not appear in the second dictionary.
@@ -626,8 +626,8 @@ foldr func acc t =
 
 {-| Keep only the key-value pairs that pass the given test.
 -}
-filter : (comparable -> v -> Bool) -> Dict comparable v -> Dict comparable v
-filter isGood dict =
+keepIf : (comparable -> v -> Bool) -> Dict comparable v -> Dict comparable v
+keepIf isGood dict =
     foldl
         (\k v d ->
             if isGood k v then
@@ -640,10 +640,10 @@ filter isGood dict =
         dict
 
 
-{-| Filter out unwanted results of a map operation.
+{-| Remove unwanted results of a map operation.
 -}
-filterMap : (comparable -> v -> Maybe x) -> Dict comparable v -> Dict comparable x
-filterMap toMaybe dict =
+mapAndKeepJust : (comparable -> v -> Maybe x) -> Dict comparable v -> Dict comparable x
+mapAndKeepJust toMaybe dict =
     foldl
         (\k v d ->
             when toMaybe k v is

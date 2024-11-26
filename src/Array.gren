@@ -1,7 +1,7 @@
 module Array exposing
     ( Array
     , empty, singleton, initialize, repeat, range
-    , map, indexedMap, foldl, foldr, indexedFoldl, indexedFoldr, filter, filterMap, reverse
+    , map, indexedMap, foldl, foldr, indexedFoldl, indexedFoldr, keepIf, mapAndKeepJust, reverse
     , isEmpty, length, get, findFirst, findLast, member, any, all, minimum, maximum
     , set, setMany, update, insert, insertMany, remove, removeMany, pushFirst, pushLast, splice
     , prepend, append, flatten, flatMap, intersperse, map2, map3
@@ -19,7 +19,7 @@ functions to help you work with them.
 
 ## Transform
 
-@docs map, indexedMap, foldl, foldr, indexedFoldl, indexedFoldr, filter, filterMap, reverse
+@docs map, indexedMap, foldl, foldr, indexedFoldl, indexedFoldr, keepIf, mapAndKeepJust, reverse
 
 
 ## Query
@@ -190,30 +190,30 @@ indexedFoldr =
 
 {-| Keep values that pass the test.
 
-    filter (\n -> n < 3) [ 1, 2, 3, 4 ] == [ 1, 2 ]
+    keepIf (\n -> n < 3) [ 1, 2, 3, 4 ] == [ 1, 2 ]
 
 -}
-filter : (a -> Bool) -> Array a -> Array a
-filter =
+keepIf : (a -> Bool) -> Array a -> Array a
+keepIf =
     Gren.Kernel.Array.filter
 
-{-| Same as `filter` but the test is also applied to the index of each element.
+{-| Same as `keepIf` but the test is also applied to the index of each element.
 
-    filter (\idx val -> idx + val > 4) [ 1, 2, 3, 4 ] == [ 3, 4 ]
+    indexedKeepIf (\idx val -> idx + val > 4) [ 1, 2, 3, 4 ] == [ 3, 4 ]
 -}
-indexedFilter : (Int -> a -> Bool) -> Array a -> Array a
-indexedFilter =
+indexedKeepIf : (Int -> a -> Bool) -> Array a -> Array a
+indexedKeepIf =
     Gren.Kernel.Array.indexedFilter
 
 
-{-| Filter out unwanted results of a map operation.
+{-| Remove unwanted results of a map operation.
 
-    filterMap String.toInt [ "3", "not a number", "-5" ] == [ 3, -5 ]
-    filterMap identity [ Just 1, Nothing ] == [ 1 ]
+    mapAndKeepJust String.toInt [ "3", "not a number", "-5" ] == [ 3, -5 ]
+    mapAndKeepJust identity [ Just 1, Nothing ] == [ 1 ]
 
 -}
-filterMap : (a -> Maybe b) -> Array a -> Array b
-filterMap mapper array =
+mapAndKeepJust : (a -> Maybe b) -> Array a -> Array b
+mapAndKeepJust mapper array =
     flatMap
         (\v ->
             when mapper v is

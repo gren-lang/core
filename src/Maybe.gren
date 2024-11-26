@@ -1,6 +1,6 @@
 module Maybe exposing
     ( Maybe(..)
-    , hasValue, checkValue, filter
+    , hasValue, checkValue, keepIf
     , withDefault, withDefaultLazy, map, map2, map3, map4, map5
     , andThen
     )
@@ -13,7 +13,7 @@ you with optional arguments, error handling, and records with optional fields.
 
 ## Queries
 
-@docs hasValue, checkValue, filter
+@docs hasValue, checkValue, keepIf
 
 
 ## Transform
@@ -257,13 +257,13 @@ map5 func ma mb mc md me =
 {-| Returns `Nothing` if the contained value doesn't pass the given
 test.
 
-    filter isOdd (Just 5) == Just 5
+    keepIf isOdd (Just 5) == Just 5
 
-    filter isOdd (Just 2) == Nothing
+    keepIf isOdd (Just 2) == Nothing
 
 -}
-filter : (a -> Bool) -> Maybe a -> Maybe a
-filter test maybe =
+keepIf : (a -> Bool) -> Maybe a -> Maybe a
+keepIf test maybe =
     when maybe is
         Just contained ->
             if test contained then

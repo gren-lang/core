@@ -109,13 +109,13 @@ allOk : Array (Result err ok) -> Result (Array err) (Array ok)
 allOk array =
     let
         errors =
-            Array.filterMap errToMaybe array
+            Array.mapAndKeepJust errToMaybe array
     in
     if Array.length errors > 0 then
         Err errors
 
     else
-        Ok <| Array.filterMap toMaybe array
+        Ok <| Array.mapAndKeepJust toMaybe array
 
 
 errToMaybe : Result err ok -> Maybe err
