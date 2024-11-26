@@ -4,7 +4,6 @@ module Stream exposing
     , fromArray
     , read
     , readBytesAsString
-    , closeReadable
     , cancelReadable
     -- Writable
     , Writable
@@ -53,7 +52,7 @@ We have three kinds of streams: readable streams, writable streams, and transfor
 
 ## Readable Streams
 
-@docs Readable, Error, fromArray, read, readBytesAsString, closeReadable, cancelReadable
+@docs Readable, Error, fromArray, read, readBytesAsString, cancelReadable
 
 ## Writable Streams
 
@@ -123,38 +122,22 @@ fromArray array =
                 array
                 |> Task.andThen closeWritable
                 |> Task.map (\_ -> readable idStream)
-                |> Task.andThen closeReadable
-                |> Task.map (\_ -> readable idStream)
         )
 
 
-{-| Read a value off the stream. If `streamClosed` is `True`, then you've read the last value
-the stream will ever produce.
+{-| Read a value off the stream. The `Task` will not succeed until a value can be read.
 -}
-read : Readable value -> Task Error { streamClosed : Bool, value : value }
+read : Readable value -> Task Error value
 read =
     Gren.Kernel.Stream.read
 
 
 {-| Reads `Bytes` off the stream and attempt to convert it into `String`.
 -}
-readBytesAsString : Readable Bytes -> Task Error { streamClosed : Bool, value : Maybe String }
+readBytesAsString : Readable Bytes -> Task Error (Maybe String)
 readBytesAsString stream =
     read stream
-        |> Task.map (\input ->
-            { streamClosed = input.streamClosed
-            , value = Bytes.toString input.value
-            }
-        )
-
-
-{-| Closes the stream. This is a way of indicating that you're done reading from the stream, so that the
-source of data on the other end can shut down. Some streams contain a buffer of data, it might still be
-possible to read values out of a closed stream if the buffer isn't empty.
--}
-closeReadable : Readable value -> Task Error {}
-closeReadable =
-    Gren.Kernel.Stream.closeReadable
+        |> Task.map Bytes.toString
 
 
 {-| Cancels the stream. This indicates a fatal error, and the given `String` should explain in a human-readable
@@ -241,7 +224,7 @@ empty or capacity is 0, the read will succeed once there's a value to be read.
 -}
 identityTransformationWithOptions : { readCapacity : Int, writeCapacity : Int } -> Task x (Transformation data data)
 identityTransformationWithOptions { readCapacity, writeCapacity } =
-    Gren.Kernel.Stream.identityTransformation (max 0 readCapacity) (max 0 writeCapacity)
+    Gren.Kernel.Stream.identityTransformation (max 1 readCapacity) (max 1 writeCapacity)
 
 
 {-| When defining a custom [Transformation](#Transformation), you need to specify how the data coming in is handled.

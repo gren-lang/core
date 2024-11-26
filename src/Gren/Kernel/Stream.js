@@ -17,6 +17,10 @@ var _Stream_read = function (stream) {
       .then(({ done, value }) => {
         reader.releaseLock();
 
+        if (done) {
+          return callback(__Scheduler_fail(__Stream_Closed));
+        }
+
         if (value instanceof Uint8Array) {
           value = new DataView(
             value.buffer,
@@ -25,9 +29,7 @@ var _Stream_read = function (stream) {
           );
         }
 
-        callback(
-          __Scheduler_succeed({ __$streamClosed: done, __$value: value }),
-        );
+        callback(__Scheduler_succeed(value));
       })
       .catch((err) => {
         reader.releaseLock();
@@ -63,26 +65,6 @@ var _Stream_cancel = F2(function (reason, stream) {
     });
   });
 });
-
-var _Stream_closeReadable = function (stream) {
-  return __Scheduler_binding(function (callback) {
-    if (stream.locked) {
-      return callback(__Scheduler_fail(__Stream_Locked));
-    }
-
-    const reader = stream.getReader();
-    reader
-      .close()
-      .then(() => {
-        reader.releaseLock();
-        callback(__Scheduler_succeed({}));
-      })
-      .catch((err) => {
-        reader.releaseLock();
-        callback(__Scheduler_fail(__Stream_Closed));
-      });
-  });
-};
 
 var _Stream_closeWritable = function (stream) {
   return __Scheduler_binding(function (callback) {
