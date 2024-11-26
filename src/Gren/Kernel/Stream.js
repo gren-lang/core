@@ -15,6 +15,12 @@ var _Stream_read = function (stream) {
     reader
       .read()
       .then(({ done, value }) => {
+        reader.releaseLock();
+
+        if (done) {
+          return callback(__Scheduler_fail(__Stream_Closed));
+        }
+
         if (value instanceof Uint8Array) {
           value = new DataView(
             value.buffer,
@@ -23,15 +29,11 @@ var _Stream_read = function (stream) {
           );
         }
 
-        callback(
-          __Scheduler_succeed({ __$streamClosed: done, __$value: value }),
-        );
+        callback(__Scheduler_succeed(value));
       })
       .catch((err) => {
-        return callback(__Scheduler_fail(__Stream_Closed));
-      })
-      .finally(() => {
         reader.releaseLock();
+        callback(__Scheduler_fail(__Stream_Closed));
       });
   });
 };
@@ -47,47 +49,22 @@ var _Stream_write = F2(function (value, stream) {
     }
 
     const writer = stream.getWriter();
-    writer
-      .write(value)
-      .then(() => {
-        callback(__Scheduler_succeed(stream));
-      })
-      .catch((err) => {
-        return callback(__Scheduler_fail(__Stream_Closed));
-      })
-      .finally(() => {
-        writer.releaseLock();
-      });
+    writer.ready.then(() => {
+      writer.write(value);
+      writer.releaseLock();
+
+      callback(__Scheduler_succeed(stream));
+    });
   });
 });
 
 var _Stream_cancel = F2(function (reason, stream) {
   return __Scheduler_binding(function (callback) {
-    stream.cancel(reason);
+    stream.cancel(reason).then(() => {
+      callback(__Scheduler_succeed({}));
+    });
   });
 });
-
-var _Stream_closeReadable = function (stream) {
-  return __Scheduler_binding(function (callback) {
-    if (stream.locked) {
-      return callback(__Scheduler_fail(__Stream_Locked));
-    }
-
-    const reader = stream.getReader();
-    reader
-      .close()
-      .then(() => {
-        callback(__Scheduler_succeed({}));
-      })
-      .catch((err) => {
-        console.log("ReadableStream err: ", err);
-        return callback(__Scheduler_fail(__Stream_Closed));
-      })
-      .finally(() => {
-        reader.releaseLock();
-      });
-  });
-};
 
 var _Stream_closeWritable = function (stream) {
   return __Scheduler_binding(function (callback) {
@@ -95,24 +72,20 @@ var _Stream_closeWritable = function (stream) {
       return callback(__Scheduler_fail(__Stream_Locked));
     }
 
-    const writer = stream.getReader();
-    writer
-      .close()
-      .then(() => {
-        callback(__Scheduler_succeed({}));
-      })
-      .catch((err) => {
-        console.log("WritableStream err: ", err);
-        return callback(__Scheduler_fail(__Stream_Closed));
-      })
-      .finally(() => {
-        writer.releaseLock();
-      });
+    const writer = stream.getWriter();
+    writer.close();
+    writer.releaseLock();
+
+    callback(__Scheduler_succeed({}));
   });
 };
 
 var _Stream_pipeThrough = F2(function (transformer, readable) {
   return __Scheduler_binding(function (callback) {
+    if (readable.locked || transformer.writable.locked) {
+      return callback(__Scheduler_fail(__Stream_Locked));
+    }
+
     const transformedReader = readable.pipeThrough(transformer);
     return callback(__Scheduler_succeed(transformedReader));
   });
@@ -120,6 +93,10 @@ var _Stream_pipeThrough = F2(function (transformer, readable) {
 
 var _Stream_pipeTo = F2(function (writable, readable) {
   return __Scheduler_binding(function (callback) {
+    if (readable.locked || writable.locked) {
+      return callback(__Scheduler_fail(__Stream_Locked));
+    }
+
     readable.pipeTo(writable).then(() => {
       callback(__Scheduler_succeed({}));
     });
