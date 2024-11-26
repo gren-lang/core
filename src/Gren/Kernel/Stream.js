@@ -113,6 +113,10 @@ var _Stream_closeWritable = function (stream) {
 
 var _Stream_pipeThrough = F2(function (transformer, readable) {
   return __Scheduler_binding(function (callback) {
+    if (readable.locked || transformer.writable.locked) {
+      return callback(__Scheduler_fail(__Stream_Locked));
+    }
+
     const transformedReader = readable.pipeThrough(transformer);
     return callback(__Scheduler_succeed(transformedReader));
   });
@@ -120,6 +124,10 @@ var _Stream_pipeThrough = F2(function (transformer, readable) {
 
 var _Stream_pipeTo = F2(function (writable, readable) {
   return __Scheduler_binding(function (callback) {
+    if (readable.locked || writable.locked) {
+      return callback(__Scheduler_fail(__Stream_Locked));
+    }
+
     readable.pipeTo(writable).then(() => {
       callback(__Scheduler_succeed({}));
     });
