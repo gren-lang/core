@@ -58,8 +58,9 @@ var _Stream_write = F2(function (value, stream) {
 
 var _Stream_cancel = F2(function (reason, stream) {
   return __Scheduler_binding(function (callback) {
-    stream.cancel(reason);
-    callback(__Scheduler_succeed({}));
+    stream.cancel(reason).then(() => {
+      callback(__Scheduler_succeed({}));
+    });
   });
 });
 
