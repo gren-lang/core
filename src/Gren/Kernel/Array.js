@@ -128,7 +128,7 @@ var _Array_findFirst = F2(function (pred, array) {
     var element = array[i];
 
     if (pred(element)) {
-      return __Maybe_Just(element);
+      return __Maybe_Just({ __$index: i, __$value: element });
     }
   }
 
@@ -140,7 +140,7 @@ var _Array_findLast = F2(function (pred, array) {
     var element = array[i];
 
     if (pred(element)) {
-      return __Maybe_Just(element);
+      return __Maybe_Just({ __$index: i, __$value: element });
     }
   }
 

@@ -94,6 +94,7 @@ checkValue test result =
 firstOk : Array (Result x a) -> Maybe a
 firstOk array =
     Array.findFirst isOk array
+        |> Maybe.map .value
         |> Maybe.andThen toMaybe
 
 

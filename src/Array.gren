@@ -1,6 +1,6 @@
 module Array exposing
     ( Array
-    , empty, singleton, initialize, repeat, range
+    , singleton, initialize, repeat, range
     , map, indexedMap, foldl, foldr, indexedFoldl, indexedFoldr, keepIf, mapAndKeepJust, reverse
     , isEmpty, length, get, findFirst, findLast, member, any, all, minimum, maximum
     , set, setMany, update, insert, insertMany, remove, removeMany, pushFirst, pushLast, splice
@@ -14,7 +14,7 @@ functions to help you work with them.
 
 @docs Array
 
-@docs empty, singleton, initialize, repeat, range
+@docs singleton, initialize, repeat, range
 
 
 ## Transform
@@ -24,7 +24,7 @@ functions to help you work with them.
 
 ## Query
 
-@docs isEmpty, length, get, findFirst, findLast, member, any, all, minimum, maximum
+@docs isEmpty, length, get, first, last, findFirst, findLast, member, any, all, minimum, maximum
 
 
 ## Modify
@@ -39,7 +39,7 @@ functions to help you work with them.
 
 ## Deconstruct
 
-@docs slice, dropFirst, dropLast, takeFirst, takeLast, popFirst, popLast, first, last, partition
+@docs slice, takeFirst, takeLast, dropFirst, dropLast, popFirst, popLast, partition
 
 
 ## Sort
@@ -61,13 +61,6 @@ type Array a
 
 
 -- CREATE
-
-
-{-| An empty array.
--}
-empty : Array a
-empty =
-    []
 
 
 {-| Create an array containing a single value.
@@ -278,7 +271,7 @@ get =
     find (\n -> n > 0) [ -1, 0, 1, 2 ] == Just 1
 
 -}
-findFirst : (a -> Bool) -> Array a -> Maybe a
+findFirst : (a -> Bool) -> Array a -> Maybe { index : Int, value : a }
 findFirst =
     Gren.Kernel.Array.findFirst
 
@@ -288,7 +281,7 @@ findFirst =
     find (\n -> n > 0) [ -1, 0, 1, 2 ] == Just 2
 
 -}
-findLast : (a -> Bool) -> Array a -> Maybe a
+findLast : (a -> Bool) -> Array a -> Maybe { index : Int, value : a }
 findLast =
     Gren.Kernel.Array.findLast
 
@@ -764,7 +757,7 @@ partition fn array =
                 , falses = pushLast val falses
                 }
         )
-        { trues = empty, falses = empty }
+        { trues = [], falses = [] }
         array
 
 
