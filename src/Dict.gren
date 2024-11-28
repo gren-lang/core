@@ -3,7 +3,7 @@ module Dict exposing
     , empty, singleton, set, update, updateWithDefault, remove
     , isEmpty, count, get, member, first, last, findFirst, findLast, any, all
     , keys, values
-    , map, foldl, foldr, filter, filterMap, partition
+    , map, foldl, foldr, keepIf, mapAndKeepJust, partition
     , union, intersect, diff, merge
     )
 
@@ -31,7 +31,7 @@ Set, remove, and query operations all take _O(log n)_ time.
 
 ## Transform
 
-@docs map, foldl, foldr, filter, filterMap, partition
+@docs map, foldl, foldr, keepIf, mapAndKeepJust, partition
 
 
 ## Combine
@@ -83,7 +83,7 @@ that lets you look up a `String` (such as user names) and find the associated
         }
 -}
 type Dict k v
-    = RBNode_gren_builtin NColor k v (Dict k v) (Dict k v)
+    = RBNode_gren_builtin { color : NColor, key : k, value : v, left : (Dict k v), right : (Dict k v) }
     | RBEmpty_gren_builtin
 
 
@@ -92,6 +92,17 @@ type Dict k v
 empty : Dict k v
 empty =
     RBEmpty_gren_builtin
+
+
+node : NColor -> k -> v -> Dict k v -> Dict k v -> Dict k v
+node color key value left right =
+    RBNode_gren_builtin
+        { color = color
+        , key = key
+        , value = value
+        , left = left
+        , right = right
+        }
 
 
 {-| Get the value associated with a key. If the key is not found, return
@@ -107,12 +118,12 @@ dictionary.
 -}
 get : comparable -> Dict comparable v -> Maybe v
 get targetKey dict =
-    case dict of
+    when dict is
         RBEmpty_gren_builtin ->
             Nothing
 
-        RBNode_gren_builtin _ key value left right ->
-            case compare targetKey key of
+        RBNode_gren_builtin { key, value, left, right } ->
+            when compare targetKey key is
                 LT ->
                     get targetKey left
 
@@ -127,7 +138,7 @@ get targetKey dict =
 -}
 member : comparable -> Dict comparable v -> Bool
 member key dict =
-    case get key dict of
+    when get key dict is
         Just _ ->
             True
 
@@ -144,11 +155,11 @@ count dict =
 
 countHelp : Int -> Dict k v -> Int
 countHelp n dict =
-    case dict of
+    when dict is
         RBEmpty_gren_builtin ->
             n
 
-        RBNode_gren_builtin _ _ _ left right ->
+        RBNode_gren_builtin { left, right } ->
             countHelp (countHelp (n + 1) right) left
 
 
@@ -156,14 +167,14 @@ countHelp n dict =
 -}
 first : Dict k v -> Maybe { key : k, value : v }
 first dict =
-    case dict of
+    when dict is
         RBEmpty_gren_builtin ->
             Nothing
 
-        RBNode_gren_builtin _ k v RBEmpty_gren_builtin _ ->
-            Just { key = k, value = v }
+        RBNode_gren_builtin { key, value, left = RBEmpty_gren_builtin } ->
+            Just { key = key, value = value }
 
-        RBNode_gren_builtin _ _ _ left _ ->
+        RBNode_gren_builtin { left } ->
             first left
 
 
@@ -171,14 +182,14 @@ first dict =
 -}
 last : Dict k v -> Maybe { key : k, value : v }
 last dict =
-    case dict of
+    when dict is
         RBEmpty_gren_builtin ->
             Nothing
 
-        RBNode_gren_builtin _ k v _ RBEmpty_gren_builtin ->
-            Just { key = k, value = v }
+        RBNode_gren_builtin { key, value, right = RBEmpty_gren_builtin } ->
+            Just { key = key, value = value }
 
-        RBNode_gren_builtin _ _ _ _ right ->
+        RBNode_gren_builtin { right } ->
             last right
 
 
@@ -186,12 +197,12 @@ last dict =
 -}
 findFirst : (k -> v -> Bool) -> Dict k v -> Maybe { key : k, value : v }
 findFirst fn dict =
-    case dict of
+    when dict is
         RBEmpty_gren_builtin ->
             Nothing
 
-        RBNode_gren_builtin _ key value left right ->
-            case findFirst fn left of
+        RBNode_gren_builtin { key, value, left, right } ->
+            when findFirst fn left is
                 Nothing ->
                     if fn key value then
                         Just { key = key, value = value }
@@ -207,12 +218,12 @@ findFirst fn dict =
 -}
 findLast : (k -> v -> Bool) -> Dict k v -> Maybe { key : k, value : v }
 findLast fn dict =
-    case dict of
+    when dict is
         RBEmpty_gren_builtin ->
             Nothing
 
-        RBNode_gren_builtin _ key value left right ->
-            case findLast fn right of
+        RBNode_gren_builtin { key, value, left, right } ->
+            when findLast fn right is
                 Nothing ->
                     if fn key value then
                         Just { key = key, value = value }
@@ -228,7 +239,7 @@ findLast fn dict =
 -}
 any : (k -> v -> Bool) -> Dict k v -> Bool
 any fn dict =
-    case findFirst fn dict of
+    when findFirst fn dict is
         Just _ ->
             True
 
@@ -240,7 +251,7 @@ any fn dict =
 -}
 all : (k -> v -> Bool) -> Dict k v -> Bool
 all fn dict =
-    case findFirst (\key value -> not <| fn key value) dict of
+    when findFirst (\key value -> not <| fn key value) dict is
         Just _ ->
             False
 
@@ -255,11 +266,11 @@ all fn dict =
 -}
 isEmpty : Dict k v -> Bool
 isEmpty dict =
-    case dict of
+    when dict is
         RBEmpty_gren_builtin ->
             True
 
-        RBNode_gren_builtin _ _ _ _ _ ->
+        RBNode_gren_builtin _ ->
             False
 
 
@@ -267,11 +278,11 @@ isEmpty dict =
 If the key isn't already registered, the key-value pair will be inserted.
 -}
 set : comparable -> v -> Dict comparable v -> Dict comparable v
-set key value dict =
+set setKey setValue dict =
     -- Root node is always Black
-    case setHelp key value dict of
-        RBNode_gren_builtin Red k v l r ->
-            RBNode_gren_builtin Black k v l r
+    when setHelp setKey setValue dict is
+        RBNode_gren_builtin { color = Red, key, value, left, right } ->
+            node Black key value left right
 
         x ->
             x
@@ -279,19 +290,19 @@ set key value dict =
 
 setHelp : comparable -> v -> Dict comparable v -> Dict comparable v
 setHelp key value dict =
-    case dict of
+    when dict is
         RBEmpty_gren_builtin ->
             -- New nodes are always red. If it violates the rules, it will be fixed
             -- when balancing.
-            RBNode_gren_builtin Red key value RBEmpty_gren_builtin RBEmpty_gren_builtin
+            node Red key value RBEmpty_gren_builtin RBEmpty_gren_builtin
 
-        RBNode_gren_builtin nColor nKey nValue nLeft nRight ->
-            case compare key nKey of
+        RBNode_gren_builtin { color = nColor, key = nKey, value = nValue, left =  nLeft, right = nRight } ->
+            when compare key nKey is
                 LT ->
                     balance nColor nKey nValue (setHelp key value nLeft) nRight
 
                 EQ ->
-                    RBNode_gren_builtin nColor nKey value nLeft nRight
+                    node nColor nKey value nLeft nRight
 
                 GT ->
                     balance nColor nKey nValue nLeft (setHelp key value nRight)
@@ -299,32 +310,22 @@ setHelp key value dict =
 
 balance : NColor -> k -> v -> Dict k v -> Dict k v -> Dict k v
 balance color key value left right =
-    case right of
-        RBNode_gren_builtin Red rK rV rLeft rRight ->
-            case left of
-                RBNode_gren_builtin Red lK lV lLeft lRight ->
-                    RBNode_gren_builtin
-                        Red
-                        key
-                        value
-                        (RBNode_gren_builtin Black lK lV lLeft lRight)
-                        (RBNode_gren_builtin Black rK rV rLeft rRight)
+    when right is
+        RBNode_gren_builtin { color = Red, key = rK, value = rV, left = rLeft, right = rRight } ->
+            when left is
+                RBNode_gren_builtin { color = Red, key = lK, value = lV, left = lLeft, right = lRight } ->
+                    node Red key value (node Black lK lV lLeft lRight) (node Black rK rV rLeft rRight)
 
                 _ ->
-                    RBNode_gren_builtin color rK rV (RBNode_gren_builtin Red key value left rLeft) rRight
+                    node color rK rV (node Red key value left rLeft) rRight
 
         _ ->
-            case left of
-                RBNode_gren_builtin Red lK lV (RBNode_gren_builtin Red llK llV llLeft llRight) lRight ->
-                    RBNode_gren_builtin
-                        Red
-                        lK
-                        lV
-                        (RBNode_gren_builtin Black llK llV llLeft llRight)
-                        (RBNode_gren_builtin Black key value lRight right)
+            when left is
+                RBNode_gren_builtin { color = Red, key = lK, value = lV, left = RBNode_gren_builtin { color = Red, key = llK, value = llV, left = llLeft, right = llRight }, right = lRight } ->
+                    node Red lK lV (node Black llK llV llLeft llRight) (node Black key value lRight right)
 
                 _ ->
-                    RBNode_gren_builtin color key value left right
+                    node color key value left right
 
 
 {-| Remove a key-value pair from a dictionary. If the key is not found,
@@ -333,9 +334,9 @@ no changes are made.
 remove : comparable -> Dict comparable v -> Dict comparable v
 remove key dict =
     -- Root node is always Black
-    case removeHelp key dict of
-        RBNode_gren_builtin Red k v l r ->
-            RBNode_gren_builtin Black k v l r
+    when removeHelp key dict is
+        RBNode_gren_builtin { color = Red, key = nKey, value, left, right } ->
+            node Black nKey value left right
 
         x ->
             x
@@ -349,28 +350,28 @@ up again.
 -}
 removeHelp : comparable -> Dict comparable v -> Dict comparable v
 removeHelp targetKey dict =
-    case dict of
+    when dict is
         RBEmpty_gren_builtin ->
             RBEmpty_gren_builtin
 
-        RBNode_gren_builtin color key value left right ->
+        RBNode_gren_builtin { color, key, value, left, right } ->
             if targetKey < key then
-                case left of
-                    RBNode_gren_builtin Black _ _ lLeft _ ->
-                        case lLeft of
-                            RBNode_gren_builtin Red _ _ _ _ ->
-                                RBNode_gren_builtin color key value (removeHelp targetKey left) right
+                when left is
+                    RBNode_gren_builtin { color = Black, left = lLeft } ->
+                        when lLeft is
+                            RBNode_gren_builtin { color = Red } ->
+                                node color key value (removeHelp targetKey left) right
 
                             _ ->
-                                case moveRedLeft dict of
-                                    RBNode_gren_builtin nColor nKey nValue nLeft nRight ->
+                                when moveRedLeft dict is
+                                    RBNode_gren_builtin { color = nColor, key = nKey, value = nValue, left = nLeft, right = nRight } ->
                                         balance nColor nKey nValue (removeHelp targetKey nLeft) nRight
 
                                     RBEmpty_gren_builtin ->
                                         RBEmpty_gren_builtin
 
                     _ ->
-                        RBNode_gren_builtin color key value (removeHelp targetKey left) right
+                        node color key value (removeHelp targetKey left) right
 
             else
                 removeHelpEQGT targetKey (removeHelpPrepEQGT targetKey dict color key value left right)
@@ -378,21 +379,16 @@ removeHelp targetKey dict =
 
 removeHelpPrepEQGT : comparable -> Dict comparable v -> NColor -> comparable -> v -> Dict comparable v -> Dict comparable v -> Dict comparable v
 removeHelpPrepEQGT targetKey dict color key value left right =
-    case left of
-        RBNode_gren_builtin Red lK lV lLeft lRight ->
-            RBNode_gren_builtin
-                color
-                lK
-                lV
-                lLeft
-                (RBNode_gren_builtin Red key value lRight right)
+    when left is
+        RBNode_gren_builtin { color = Red, key = lK, value = lV, left = lLeft, right = lRight } ->
+            node color lK lV lLeft (node Red key value lRight right)
 
         _ ->
-            case right of
-                RBNode_gren_builtin Black _ _ (RBNode_gren_builtin Black _ _ _ _) _ ->
+            when right is
+                RBNode_gren_builtin { color = Black, left = RBNode_gren_builtin { color = Black } } ->
                     moveRedRight dict
 
-                RBNode_gren_builtin Black _ _ RBEmpty_gren_builtin _ ->
+                RBNode_gren_builtin { color = Black, left = RBEmpty_gren_builtin } ->
                     moveRedRight dict
 
                 _ ->
@@ -404,11 +400,11 @@ pair with the key-value pair of the left-most node on the right side (the closes
 -}
 removeHelpEQGT : comparable -> Dict comparable v -> Dict comparable v
 removeHelpEQGT targetKey dict =
-    case dict of
-        RBNode_gren_builtin color key value left right ->
+    when dict is
+        RBNode_gren_builtin { color, key, value, left, right } ->
             if targetKey == key then
-                case getMin right of
-                    RBNode_gren_builtin _ minKey minValue _ _ ->
+                when getMin right is
+                    RBNode_gren_builtin { key = minKey, value = minValue } ->
                         balance color minKey minValue left (removeMin right)
 
                     RBEmpty_gren_builtin ->
@@ -423,8 +419,8 @@ removeHelpEQGT targetKey dict =
 
 getMin : Dict k v -> Dict k v
 getMin dict =
-    case dict of
-        RBNode_gren_builtin _ _ _ ((RBNode_gren_builtin _ _ _ _ _) as left) _ ->
+    when dict is
+        RBNode_gren_builtin { left = ((RBNode_gren_builtin _) as left) } ->
             getMin left
 
         _ ->
@@ -433,24 +429,24 @@ getMin dict =
 
 removeMin : Dict k v -> Dict k v
 removeMin dict =
-    case dict of
-        RBNode_gren_builtin color key value ((RBNode_gren_builtin lColor _ _ lLeft _) as left) right ->
-            case lColor of
+    when dict is
+        RBNode_gren_builtin { color, key, value, left = ((RBNode_gren_builtin { color = lColor, left = lLeft }) as left), right } ->
+            when lColor is
                 Black ->
-                    case lLeft of
-                        RBNode_gren_builtin Red _ _ _ _ ->
-                            RBNode_gren_builtin color key value (removeMin left) right
+                    when lLeft is
+                        RBNode_gren_builtin { color = Red } ->
+                            node color key value (removeMin left) right
 
                         _ ->
-                            case moveRedLeft dict of
-                                RBNode_gren_builtin nColor nKey nValue nLeft nRight ->
+                            when moveRedLeft dict is
+                                RBNode_gren_builtin { color = nColor, key = nKey, value = nValue, left = nLeft, right = nRight } ->
                                     balance nColor nKey nValue (removeMin nLeft) nRight
 
                                 RBEmpty_gren_builtin ->
                                     RBEmpty_gren_builtin
 
                 _ ->
-                    RBNode_gren_builtin color key value (removeMin left) right
+                    node color key value (removeMin left) right
 
         _ ->
             RBEmpty_gren_builtin
@@ -458,32 +454,22 @@ removeMin dict =
 
 moveRedLeft : Dict k v -> Dict k v
 moveRedLeft dict =
-    case dict of
-        RBNode_gren_builtin clr k v (RBNode_gren_builtin lClr lK lV lLeft lRight) (RBNode_gren_builtin rClr rK rV ((RBNode_gren_builtin Red rlK rlV rlL rlR) as rLeft) rRight) ->
-            RBNode_gren_builtin
+    when dict is
+        RBNode_gren_builtin { color = clr, key = k, value = v, left = RBNode_gren_builtin { color = lClr, key = lK, value = lV, left = lLeft, right = lRight }, right = RBNode_gren_builtin { color = rClr, key = rK, value = rV, left = (RBNode_gren_builtin { color = Red, key = rlK, value = rlV, left = rlL, right = rlR }) as rLeft, right = rRight } } ->
+            node
                 Red
                 rlK
                 rlV
-                (RBNode_gren_builtin Black k v (RBNode_gren_builtin Red lK lV lLeft lRight) rlL)
-                (RBNode_gren_builtin Black rK rV rlR rRight)
+                (node Black k v (node Red lK lV lLeft lRight) rlL)
+                (node Black rK rV rlR rRight)
 
-        RBNode_gren_builtin clr k v (RBNode_gren_builtin lClr lK lV lLeft lRight) (RBNode_gren_builtin rClr rK rV rLeft rRight) ->
-            case clr of
-                Black ->
-                    RBNode_gren_builtin
-                        Black
-                        k
-                        v
-                        (RBNode_gren_builtin Red lK lV lLeft lRight)
-                        (RBNode_gren_builtin Red rK rV rLeft rRight)
-
-                Red ->
-                    RBNode_gren_builtin
-                        Black
-                        k
-                        v
-                        (RBNode_gren_builtin Red lK lV lLeft lRight)
-                        (RBNode_gren_builtin Red rK rV rLeft rRight)
+        RBNode_gren_builtin { color = clr, key = k, value = v, left = RBNode_gren_builtin { color = lClr, key = lK, value = lV, left = lLeft, right = lRight }, right = RBNode_gren_builtin { color = rClr, key = rK, value = rV, left = rLeft, right = rRight } } ->
+            node
+                Black
+                k
+                v
+                (node Red lK lV lLeft lRight)
+                (node Red rK rV rLeft rRight)
 
         _ ->
             dict
@@ -491,32 +477,22 @@ moveRedLeft dict =
 
 moveRedRight : Dict k v -> Dict k v
 moveRedRight dict =
-    case dict of
-        RBNode_gren_builtin clr k v (RBNode_gren_builtin lClr lK lV (RBNode_gren_builtin Red llK llV llLeft llRight) lRight) (RBNode_gren_builtin rClr rK rV rLeft rRight) ->
-            RBNode_gren_builtin
+    when dict is
+        RBNode_gren_builtin { color = clr, key = k, value = v, left = RBNode_gren_builtin { color = lClr, key = lK, value = lV, left = RBNode_gren_builtin { color = Red, key = llK, value = llV, left = llLeft, right = llRight }, right = lRight }, right = RBNode_gren_builtin { color = rClr, key = rK, value = rV, left = rLeft, right = rRight } } ->
+            node
                 Red
                 lK
                 lV
-                (RBNode_gren_builtin Black llK llV llLeft llRight)
-                (RBNode_gren_builtin Black k v lRight (RBNode_gren_builtin Red rK rV rLeft rRight))
+                (node Black llK llV llLeft llRight)
+                (node Black k v lRight (node Red rK rV rLeft rRight))
 
-        RBNode_gren_builtin clr k v (RBNode_gren_builtin lClr lK lV lLeft lRight) (RBNode_gren_builtin rClr rK rV rLeft rRight) ->
-            case clr of
-                Black ->
-                    RBNode_gren_builtin
-                        Black
-                        k
-                        v
-                        (RBNode_gren_builtin Red lK lV lLeft lRight)
-                        (RBNode_gren_builtin Red rK rV rLeft rRight)
-
-                Red ->
-                    RBNode_gren_builtin
-                        Black
-                        k
-                        v
-                        (RBNode_gren_builtin Red lK lV lLeft lRight)
-                        (RBNode_gren_builtin Red rK rV rLeft rRight)
+        RBNode_gren_builtin { color = clr, key = k, value = v, left = RBNode_gren_builtin { color = lClr, key = lK, value = lV, left = lLeft, right = lRight }, right = RBNode_gren_builtin { color = rClr, key = rK, value = rV, left = rLeft, right = rRight } } ->
+            node
+                Black
+                k
+                v
+                (node Red lK lV lLeft lRight)
+                (node Red rK rV rLeft rRight)
 
         _ ->
             dict
@@ -526,7 +502,7 @@ moveRedRight dict =
 -}
 update : comparable -> (Maybe v -> Maybe v) -> Dict comparable v -> Dict comparable v
 update targetKey alter dictionary =
-    case alter (get targetKey dictionary) of
+    when alter (get targetKey dictionary) is
         Just value ->
             set targetKey value dictionary
 
@@ -539,7 +515,7 @@ is passed to the provided update function instead of a `Maybe`.
 -}
 updateWithDefault : comparable -> v -> (v -> v) -> Dict comparable v -> Dict comparable v
 updateWithDefault targetKey defaultValue alter dictionary =
-    case get targetKey dictionary of
+    when get targetKey dictionary is
         Just value ->
             set targetKey (alter value) dictionary
 
@@ -552,7 +528,7 @@ updateWithDefault targetKey defaultValue alter dictionary =
 singleton : comparable -> v -> Dict comparable v
 singleton key value =
     -- Root node is always Black
-    RBNode_gren_builtin Black key value RBEmpty_gren_builtin RBEmpty_gren_builtin
+    node Black key value RBEmpty_gren_builtin RBEmpty_gren_builtin
 
 
 
@@ -572,7 +548,7 @@ Preference is given to values in the first dictionary.
 -}
 intersect : Dict comparable v -> Dict comparable v -> Dict comparable v
 intersect t1 t2 =
-    filter (\k _ -> member k t2) t1
+    keepIf (\k _ -> member k t2) t1
 
 
 {-| Keep a key-value pair when its key does not appear in the second dictionary.
@@ -590,12 +566,12 @@ diff t1 t2 =
 -}
 map : (k -> a -> b) -> Dict k a -> Dict k b
 map func dict =
-    case dict of
+    when dict is
         RBEmpty_gren_builtin ->
             RBEmpty_gren_builtin
 
-        RBNode_gren_builtin color key value left right ->
-            RBNode_gren_builtin color key (func key value) (map func left) (map func right)
+        RBNode_gren_builtin { color, key, value, left, right } ->
+            node color key (func key value) (map func left) (map func right)
 
 
 {-| Fold over the key-value pairs in a dictionary from lowest key to highest key.
@@ -615,11 +591,11 @@ map func dict =
 -}
 foldl : (k -> v -> b -> b) -> b -> Dict k v -> b
 foldl func acc dict =
-    case dict of
+    when dict is
         RBEmpty_gren_builtin ->
             acc
 
-        RBNode_gren_builtin _ key value left right ->
+        RBNode_gren_builtin { key, value, left, right } ->
             foldl func (func key value (foldl func acc left)) right
 
 
@@ -640,18 +616,18 @@ foldl func acc dict =
 -}
 foldr : (k -> v -> b -> b) -> b -> Dict k v -> b
 foldr func acc t =
-    case t of
+    when t is
         RBEmpty_gren_builtin ->
             acc
 
-        RBNode_gren_builtin _ key value left right ->
+        RBNode_gren_builtin { key, value, left, right } ->
             foldr func (func key value (foldr func acc right)) left
 
 
 {-| Keep only the key-value pairs that pass the given test.
 -}
-filter : (comparable -> v -> Bool) -> Dict comparable v -> Dict comparable v
-filter isGood dict =
+keepIf : (comparable -> v -> Bool) -> Dict comparable v -> Dict comparable v
+keepIf isGood dict =
     foldl
         (\k v d ->
             if isGood k v then
@@ -664,13 +640,13 @@ filter isGood dict =
         dict
 
 
-{-| Filter out unwanted results of a map operation.
+{-| Remove unwanted results of a map operation.
 -}
-filterMap : (comparable -> v -> Maybe x) -> Dict comparable v -> Dict comparable x
-filterMap toMaybe dict =
+mapAndKeepJust : (comparable -> v -> Maybe x) -> Dict comparable v -> Dict comparable x
+mapAndKeepJust toMaybe dict =
     foldl
         (\k v d ->
-            case toMaybe k v of
+            when toMaybe k v is
                 Just newValue ->
                     set k newValue d
 
@@ -747,7 +723,7 @@ merge :
 merge leftStep bothStep rightStep leftDict rightDict initialResult =
     let
         stepState rKey rValue { array, result } =
-            case Array.popFirst array of
+            when Array.popFirst array is
                 Nothing ->
                     { array = array
                     , result = rightStep rKey rValue result

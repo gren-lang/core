@@ -1,10 +1,10 @@
 module Array exposing
     ( Array
-    , empty, singleton, initialize, repeat, range
-    , map, indexedMap, foldl, foldr, indexedFoldl, indexedFoldr, filter, filterMap, reverse
+    , singleton, initialize, repeat, range
+    , map, indexedMap, foldl, foldr, indexedFoldl, indexedFoldr, keepIf, mapAndKeepJust, reverse
     , isEmpty, length, get, findFirst, findLast, member, any, all, minimum, maximum
     , set, setMany, update, insert, insertMany, remove, removeMany, pushFirst, pushLast, splice
-    , prepend, append, flatten, flatMap, intersperse, map2, map3
+    , prepend, append, flatten, mapAndFlatten, intersperse, map2, map3
     , first, last, slice, dropFirst, dropLast, takeFirst, takeLast, popFirst, popLast, partition
     , sort, sortBy, sortWith
     )
@@ -14,17 +14,17 @@ functions to help you work with them.
 
 @docs Array
 
-@docs empty, singleton, initialize, repeat, range
+@docs singleton, initialize, repeat, range
 
 
 ## Transform
 
-@docs map, indexedMap, foldl, foldr, indexedFoldl, indexedFoldr, filter, filterMap, reverse
+@docs map, indexedMap, foldl, foldr, indexedFoldl, indexedFoldr, keepIf, mapAndKeepJust, reverse
 
 
 ## Query
 
-@docs isEmpty, length, get, findFirst, findLast, member, any, all, minimum, maximum
+@docs isEmpty, length, get, first, last, findFirst, findLast, member, any, all, minimum, maximum
 
 
 ## Modify
@@ -34,12 +34,12 @@ functions to help you work with them.
 
 ## Combine
 
-@docs prepend, append, flatten, flatMap, intersperse, map2, map3
+@docs prepend, append, flatten, mapAndFlatten, intersperse, map2, map3
 
 
 ## Deconstruct
 
-@docs slice, dropFirst, dropLast, takeFirst, takeLast, popFirst, popLast, first, last, partition
+@docs slice, takeFirst, takeLast, dropFirst, dropLast, popFirst, popLast, partition
 
 
 ## Sort
@@ -61,13 +61,6 @@ type Array a
 
 
 -- CREATE
-
-
-{-| An empty array.
--}
-empty : Array a
-empty =
-    []
 
 
 {-| Create an array containing a single value.
@@ -190,33 +183,33 @@ indexedFoldr =
 
 {-| Keep values that pass the test.
 
-    filter (\n -> n < 3) [ 1, 2, 3, 4 ] == [ 1, 2 ]
+    keepIf (\n -> n < 3) [ 1, 2, 3, 4 ] == [ 1, 2 ]
 
 -}
-filter : (a -> Bool) -> Array a -> Array a
-filter =
+keepIf : (a -> Bool) -> Array a -> Array a
+keepIf =
     Gren.Kernel.Array.filter
 
-{-| Same as `filter` but the test is also applied to the index of each element.
+{-| Same as `keepIf` but the test is also applied to the index of each element.
 
-    filter (\idx val -> idx + val > 4) [ 1, 2, 3, 4 ] == [ 3, 4 ]
+    indexedKeepIf (\idx val -> idx + val > 4) [ 1, 2, 3, 4 ] == [ 3, 4 ]
 -}
-indexedFilter : (Int -> a -> Bool) -> Array a -> Array a
-indexedFilter =
+indexedKeepIf : (Int -> a -> Bool) -> Array a -> Array a
+indexedKeepIf =
     Gren.Kernel.Array.indexedFilter
 
 
-{-| Filter out unwanted results of a map operation.
+{-| Remove unwanted results of a map operation.
 
-    filterMap String.toInt [ "3", "not a number", "-5" ] == [ 3, -5 ]
-    filterMap identity [ Just 1, Nothing ] == [ 1 ]
+    mapAndKeepJust String.toInt [ "3", "not a number", "-5" ] == [ 3, -5 ]
+    mapAndKeepJust identity [ Just 1, Nothing ] == [ 1 ]
 
 -}
-filterMap : (a -> Maybe b) -> Array a -> Array b
-filterMap mapper array =
-    flatMap
+mapAndKeepJust : (a -> Maybe b) -> Array a -> Array b
+mapAndKeepJust mapper array =
+    mapAndFlatten
         (\v ->
-            case mapper v of
+            when mapper v is
                 Just newValue ->
                     [ newValue ]
 
@@ -278,7 +271,7 @@ get =
     find (\n -> n > 0) [ -1, 0, 1, 2 ] == Just 1
 
 -}
-findFirst : (a -> Bool) -> Array a -> Maybe a
+findFirst : (a -> Bool) -> Array a -> Maybe { index : Int, value : a }
 findFirst =
     Gren.Kernel.Array.findFirst
 
@@ -288,7 +281,7 @@ findFirst =
     find (\n -> n > 0) [ -1, 0, 1, 2 ] == Just 2
 
 -}
-findLast : (a -> Bool) -> Array a -> Maybe a
+findLast : (a -> Bool) -> Array a -> Maybe { index : Int, value : a }
 findLast =
     Gren.Kernel.Array.findLast
 
@@ -301,7 +294,7 @@ findLast =
 -}
 member : a -> Array a -> Bool
 member value array =
-    case findFirst (\v -> v == value) array of
+    when findFirst (\v -> v == value) array is
         Just _ ->
             True
 
@@ -318,7 +311,7 @@ member value array =
 -}
 any : (a -> Bool) -> Array a -> Bool
 any fn array =
-    case findFirst fn array of
+    when findFirst fn array is
         Just _ ->
             True
 
@@ -335,7 +328,7 @@ any fn array =
 -}
 all : (a -> Bool) -> Array a -> Bool
 all fn array =
-    case findFirst (not << fn) array of
+    when findFirst (not << fn) array is
         Just _ ->
             False
 
@@ -351,7 +344,7 @@ all fn array =
 -}
 minimum : Array comparable -> Maybe comparable
 minimum array =
-    case first array of
+    when first array is
         Nothing ->
             Nothing
 
@@ -377,7 +370,7 @@ minimum array =
 -}
 maximum : Array comparable -> Maybe comparable
 maximum array =
-    case first array of
+    when first array is
         Nothing ->
             Nothing
 
@@ -433,7 +426,7 @@ setMany index values array =
 -}
 update : Int -> (a -> a) -> Array a -> Array a
 update idx fn array =
-    case get idx array of
+    when get idx array is
         Nothing ->
             array
 
@@ -579,11 +572,11 @@ flatten =
 
 {-| Map a given function onto an array, then flatten the resulting array.
 
-    flatMap f xs == flatten (map f xs)
+    mapAndFlatten f xs == flatten (map f xs)
 
 -}
-flatMap : (a -> Array b) -> Array a -> Array b
-flatMap =
+mapAndFlatten : (a -> Array b) -> Array a -> Array b
+mapAndFlatten =
     Gren.Kernel.Array.flatMap
 
 
@@ -594,12 +587,12 @@ flatMap =
 -}
 intersperse : a -> Array a -> Array a
 intersperse sep xs =
-    case popFirst xs of
+    when popFirst xs is
         Nothing ->
             []
 
         Just { first = head, rest = tail } ->
-            pushFirst head <| flatMap (\val -> [ sep, val ]) tail
+            pushFirst head <| mapAndFlatten (\val -> [ sep, val ]) tail
 
 
 {-| Combine two arrays, combining them with the given function.
@@ -716,7 +709,7 @@ takeLast n array =
 -}
 popFirst : Array a -> Maybe { first : a, rest : Array a }
 popFirst array =
-    case first array of
+    when first array is
         Just value ->
             Just
                 { first = value
@@ -734,7 +727,7 @@ popFirst array =
 -}
 popLast : Array a -> Maybe { last : a, initial : Array a }
 popLast array =
-    case last array of
+    when last array is
         Just value ->
             Just
                 { last = value
@@ -764,7 +757,7 @@ partition fn array =
                 , falses = pushLast val falses
                 }
         )
-        { trues = empty, falses = empty }
+        { trues = [], falses = [] }
         array
 
 
@@ -796,7 +789,7 @@ sortBy =
     sortWith flippedComparison [1,2,3,4,5] == [5,4,3,2,1]
 
     flippedComparison a b =
-        case compare a b of
+        when compare a b is
           LT -> GT
           EQ -> EQ
           GT -> LT

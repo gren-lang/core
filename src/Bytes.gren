@@ -10,7 +10,7 @@ module Bytes exposing
   , fromString
   , toString
   --
-  , join
+  , flatten
   )
 
 
@@ -25,7 +25,7 @@ module Bytes exposing
 @docs fromString, toString
 
 ## Combine
-@docs join
+@docs flatten
 
 -}
 
@@ -194,8 +194,8 @@ toString =
 -- COMBINE
 
 
-{-| Join all `Bytes` in an `Array` into a single `Bytes`.
+{-| Flatten all `Bytes` in an `Array` into a single `Bytes`.
 -}
-join : Array Bytes -> Bytes
-join =
-  Gren.Kernel.Bytes.join
+flatten : Array Bytes -> Bytes
+flatten =
+  Gren.Kernel.Bytes.flatten

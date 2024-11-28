@@ -41,7 +41,7 @@ function _Bytes_toString(bytes) {
   }
 }
 
-function _Bytes_join(arrayOfBytes) {
+function _Bytes_flatten(arrayOfBytes) {
   var requiredSize = 0;
   for (var i = 0; i < arrayOfBytes.length; i++) {
     requiredSize += arrayOfBytes[i].byteLength;

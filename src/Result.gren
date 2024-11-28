@@ -57,7 +57,7 @@ type Result error value
 -}
 hasValue : a -> Result x a -> Bool
 hasValue value result =
-    case result of
+    when result is
         Ok a ->
             a == value
 
@@ -76,7 +76,7 @@ hasValue value result =
 -}
 checkValue : (a -> Bool) -> Result x a -> Bool
 checkValue test result =
-    case result of
+    when result is
         Ok a ->
             test a 
 
@@ -94,6 +94,7 @@ checkValue test result =
 firstOk : Array (Result x a) -> Maybe a
 firstOk array =
     Array.findFirst isOk array
+        |> Maybe.map .value
         |> Maybe.andThen toMaybe
 
 
@@ -109,18 +110,18 @@ allOk : Array (Result err ok) -> Result (Array err) (Array ok)
 allOk array =
     let
         errors =
-            Array.filterMap errToMaybe array
+            Array.mapAndKeepJust errToMaybe array
     in
     if Array.length errors > 0 then
         Err errors
 
     else
-        Ok <| Array.filterMap toMaybe array
+        Ok <| Array.mapAndKeepJust toMaybe array
 
 
 errToMaybe : Result err ok -> Maybe err
 errToMaybe result =
-    case result of
+    when result is
         Ok _ ->
             Nothing
 
@@ -138,7 +139,7 @@ return a given default value. The following examples try to parse integers.
 -}
 withDefault : a -> Result x a -> a
 withDefault def result =
-    case result of
+    when result is
         Ok a ->
             a
 
@@ -152,7 +153,7 @@ This lets you avoid computing the default value if it isn't necessary.
 -}
 withDefaultLazy : ({} -> a) -> Result x a -> a
 withDefaultLazy provider result =
-    case result of
+    when result is
         Ok a ->
             a
 
@@ -170,7 +171,7 @@ If the result is an `Err`, the same error value will propagate through.
 -}
 map : (a -> value) -> Result x a -> Result x value
 map func ra =
-    case ra of
+    when ra is
         Ok a ->
             Ok (func a)
 
@@ -195,12 +196,12 @@ to put them together quickly.
 -}
 map2 : (a -> b -> value) -> Result x a -> Result x b -> Result x value
 map2 func ra rb =
-    case ra of
+    when ra is
         Err x ->
             Err x
 
         Ok a ->
-            case rb of
+            when rb is
                 Err x ->
                     Err x
 
@@ -211,17 +212,17 @@ map2 func ra rb =
 {-| -}
 map3 : (a -> b -> c -> value) -> Result x a -> Result x b -> Result x c -> Result x value
 map3 func ra rb rc =
-    case ra of
+    when ra is
         Err x ->
             Err x
 
         Ok a ->
-            case rb of
+            when rb is
                 Err x ->
                     Err x
 
                 Ok b ->
-                    case rc of
+                    when rc is
                         Err x ->
                             Err x
 
@@ -232,22 +233,22 @@ map3 func ra rb rc =
 {-| -}
 map4 : (a -> b -> c -> d -> value) -> Result x a -> Result x b -> Result x c -> Result x d -> Result x value
 map4 func ra rb rc rd =
-    case ra of
+    when ra is
         Err x ->
             Err x
 
         Ok a ->
-            case rb of
+            when rb is
                 Err x ->
                     Err x
 
                 Ok b ->
-                    case rc of
+                    when rc is
                         Err x ->
                             Err x
 
                         Ok c ->
-                            case rd of
+                            when rd is
                                 Err x ->
                                     Err x
 
@@ -258,27 +259,27 @@ map4 func ra rb rc rd =
 {-| -}
 map5 : (a -> b -> c -> d -> e -> value) -> Result x a -> Result x b -> Result x c -> Result x d -> Result x e -> Result x value
 map5 func ra rb rc rd re =
-    case ra of
+    when ra is
         Err x ->
             Err x
 
         Ok a ->
-            case rb of
+            when rb is
                 Err x ->
                     Err x
 
                 Ok b ->
-                    case rc of
+                    when rc is
                         Err x ->
                             Err x
 
                         Ok c ->
-                            case rd of
+                            when rd is
                                 Err x ->
                                     Err x
 
                                 Ok d ->
-                                    case re of
+                                    when re is
                                         Err x ->
                                             Err x
 
@@ -291,7 +292,7 @@ to see its definition:
 
     andThen : (a -> Result e b) -> Result e a -> Result e b
     andThen callback result =
-        case result of
+        when result is
             Ok value ->
                 callback value
 
@@ -329,7 +330,7 @@ code.
 -}
 andThen : (a -> Result x b) -> Result x a -> Result x b
 andThen callback result =
-    case result of
+    when result is
         Ok value ->
             callback value
 
@@ -348,7 +349,7 @@ in a chain.
 -}
 onError : (a -> Result b x) -> Result a x -> Result b x
 onError callback result =
-    case result of
+    when result is
         Ok value ->
             Ok value
 
@@ -373,7 +374,7 @@ information:
 -}
 mapError : (x -> y) -> Result x a -> Result y a
 mapError f result =
-    case result of
+    when result is
         Ok v ->
             Ok v
 
@@ -393,7 +394,7 @@ you need to interact with some code that primarily uses maybes.
 -}
 toMaybe : Result x a -> Maybe a
 toMaybe result =
-    case result of
+    when result is
         Ok v ->
             Just v
 
@@ -413,7 +414,7 @@ uses `Results`.
 -}
 fromMaybe : x -> Maybe a -> Result x a
 fromMaybe err maybe =
-    case maybe of
+    when maybe is
         Just v ->
             Ok v
 
@@ -424,12 +425,12 @@ fromMaybe err maybe =
 
 -- FOR INTERNAL USE ONLY
 --
--- Use `case` expressions for this in Gren code!
+-- Use `when` expressions for this in Gren code!
 
 
 isOk : Result x a -> Bool
 isOk result =
-    case result of
+    when result is
         Ok _ ->
             True
 

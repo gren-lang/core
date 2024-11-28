@@ -1,20 +1,32 @@
 module String exposing
-    ( String, isEmpty, length, reverse, repeat, replace
+    ( String, isEmpty, count, reverse, repeat, replace
     , prepend, append, split, join, words, lines
-    , slice, left, right, dropLeft, dropRight
+    , slice, takeFirst, takeLast, dropFirst, dropLast
     , contains, startsWith, endsWith, indices
     , toInt, fromInt
     , toFloat, fromFloat
-    , fromChar, cons, uncons
+    , fromChar, pushFirst, pushLast, popFirst, popLast
     , toArray, fromArray
     , toUpper, toLower, pad, padLeft, padRight, trim, trimLeft, trimRight
-    , map, filter, foldl, foldr, any, all
+    , map, keepIf, foldl, foldr, any, all
+    , unitLength, getUnit, foldlUnits, foldrUnits
     )
 
-{-| A built-in representation for efficient string manipulation. String literals
-are enclosed in `"double quotes"`.
+{-| A built-in representation for efficient string manipulation. When it comes to strings,
+there are three concepts worth knowing about:
 
-@docs String, isEmpty, length, reverse, repeat, replace
+* Code units: represents the smallest primitive value of a string. In Gren,
+code units are represented by a 16-bit value. This is enough to store the most common
+characters in western languages (Latin, Greek, Cyrilic), but not all unicode characters.
+* Code points: represents a unicode character. Code points can be represented by one
+unit, or a pair of units.
+* Graphemes: represents a single visual glyph, like certain emojis or characters with
+accents.
+
+Unless otherwise noted, all functions in this module deal with code points.
+
+
+@docs String, isEmpty, count, reverse, repeat, replace
 
 
 ## Building and Splitting
@@ -24,12 +36,12 @@ are enclosed in `"double quotes"`.
 
 ## Get Substrings
 
-@docs slice, left, right, dropLeft, dropRight
+@docs slice, takeFirst, takeLast, dropFirst, dropLast
 
 
 ## Check for Substrings
 
-@docs contains, startsWith, endsWith, indices
+@docs contains, startsWith, endsWith, indexOf, lastIndexOf, indices
 
 
 ## Int Conversions
@@ -44,7 +56,7 @@ are enclosed in `"double quotes"`.
 
 ## Char Conversions
 
-@docs fromChar, cons, uncons
+@docs fromChar, pushFirst, pushLast, popFirst, popLast
 
 
 ## Array Conversions
@@ -60,7 +72,13 @@ Cosmetic operations such as padding with extra characters or trimming whitespace
 
 ## Higher-Order Functions
 
-@docs map, filter, foldl, foldr, any, all
+@docs map, keepIf, foldl, foldr, any, all
+
+## Char Units
+
+Functions that operates on units instead of code points.
+
+@docs unitLength, getUnit, foldlUnits, foldrUnits
 
 -}
 
@@ -78,7 +96,7 @@ import Result exposing (Result)
 -- STRINGS
 
 
-{-| A `String` is a chunk of text:
+{-| A `String` is a chunk of text. `String` literals are enclosed in `"double quotes"`.
 
     "Hello!"
 
@@ -126,16 +144,16 @@ isEmpty string =
     string == ""
 
 
-{-| Get the length of a string.
+{-| Count the number of characters in a string.
 
-    length "innumerable" == 11
+    count "innumerable" == 11
 
-    length "" == 0
+    count "" == 0
 
 -}
-length : String -> Int
-length =
-    Gren.Kernel.String.length
+count : String -> Int
+count string =
+    foldl (\_ num -> num + 1) 0 string
 
 
 {-| Reverse a string.
@@ -144,8 +162,10 @@ length =
 
 -}
 reverse : String -> String
-reverse =
-    Gren.Kernel.String.reverse
+reverse str =
+    toArray str
+        |> Array.reverse
+        |> fromArray
 
 
 {-| Repeat a string _n_ times.
@@ -154,22 +174,8 @@ reverse =
 
 -}
 repeat : Int -> String -> String
-repeat n chunk =
-    repeatHelp n chunk ""
-
-
-repeatHelp : Int -> String -> String -> String
-repeatHelp n chunk result =
-    if n <= 0 then
-        result
-
-    else
-        repeatHelp (Bitwise.shiftRightBy 1 n) (chunk ++ chunk) <|
-            if Bitwise.and n 1 == 0 then
-                result
-
-            else
-                result ++ chunk
+repeat =
+    Gren.Kernel.String.repeat
 
 
 {-| Replace all occurrences of some substring.
@@ -179,7 +185,7 @@ repeatHelp n chunk result =
     replace "," "/" "a,b,c,d,e" == "a/b/c/d/e"
 
 **Note:** If you need more advanced replacements, check out the
-[`gren-lang/parser`][parser] or [`String.Regex`][regex] package.
+[`gren-lang/parser`][parser] package or [`String.Regex`][regex] module.
 
 [parser]: /package/gren-lang/parser
 [regex]: String.Regex
@@ -216,10 +222,15 @@ append lhs rhs =
     prepend rhs lhs
 
 
-{-| Split a string using a given separator.
+{-| Split a string using a given separator. If the seperator doesn't appear,
+you will get an array containing the original string.
 
+    split "," "" == [""]
+    
+    split "," "cat" == ["cat"]
+    
     split "," "cat,dog,cow" == [ "cat", "dog", "cow" ]
-
+    
     split "/" "home/evan/Desktop/" == [ "home", "evan", "Desktop", "" ]
 
 -}
@@ -283,13 +294,16 @@ slice =
     Gren.Kernel.String.slice
 
 
-{-| Take _n_ characters from the left side of a string.
+{-| Make a new string using the first _n_ characters. If _n_ is larger than
+the length of the string, then the string is returned as is.
 
-    left 2 "Mulder" == "Mu"
+    takeFirst 2 "Mulder" == "Mu"
+
+    takeFirst 8 "Mulder" == "Mulder"
 
 -}
-left : Int -> String -> String
-left n string =
+takeFirst : Int -> String -> String
+takeFirst n string =
     if n < 1 then
         ""
 
@@ -297,41 +311,44 @@ left n string =
         slice 0 n string
 
 
-{-| Take _n_ characters from the right side of a string.
+{-| Make a new string using the last _n_ characters. If _n_ is larger than
+the length of the string, then the string is returned as is.
 
-    right 2 "Scully" == "ly"
+    takeLast 2 "Scully" == "ly"
+
+    takeLast 8 "Scully" == "Scully"
 
 -}
-right : Int -> String -> String
-right n string =
+takeLast : Int -> String -> String
+takeLast n string =
     if n < 1 then
         ""
 
     else
-        slice -n (length string) string
+        slice -n (unitLength string) string
 
 
-{-| Drop _n_ characters from the left side of a string.
+{-| Drop the first _n_ characters.
 
-    dropLeft 2 "The Lone Gunmen" == "e Lone Gunmen"
+    dropFirst 2 "The Lone Gunmen" == "e Lone Gunmen"
 
 -}
-dropLeft : Int -> String -> String
-dropLeft n string =
+dropFirst : Int -> String -> String
+dropFirst n string =
     if n < 1 then
         string
 
     else
-        slice n (length string) string
+        slice n (unitLength string) string
 
 
-{-| Drop _n_ characters from the right side of a string.
+{-| Drop the last _n_ characters.
 
-    dropRight 2 "Cigarette Smoking Man" == "Cigarette Smoking M"
+    dropLast 2 "Cigarette Smoking Man" == "Cigarette Smoking M"
 
 -}
-dropRight : Int -> String -> String
-dropRight n string =
+dropLast : Int -> String -> String
+dropLast n string =
     if n < 1 then
         string
 
@@ -379,6 +396,32 @@ startsWith =
 endsWith : String -> String -> Bool
 endsWith =
     Gren.Kernel.String.endsWith
+
+
+{-| Find the index of the first string within the second one, if it's there.
+
+    indexOf "the" "theory" == Just 0
+
+    indexOf "ory" "theory" == Just 3
+    
+    indexOf "a" "theory" == Nothing
+
+-}
+indexOf : String -> String -> Maybe Int
+indexOf =
+    Gren.Kernel.String.indexOf
+
+
+{-| Find the last index of the first string within the second one, if it's there.
+
+    lastIndexOf "abra" "abracadabra" == Just 7
+
+    lastIndexOf "barb" "abracadabra" == Nothing
+
+-}
+lastIndexOf : String -> String -> Maybe Int
+lastIndexOf =
+    Gren.Kernel.String.lastIndexOf
 
 
 {-| Get all of the indices for a substring in another string.
@@ -433,7 +476,7 @@ pad : Int -> Char -> String -> String
 pad n char string =
     let
         half =
-            Basics.toFloat (n - length string) / 2
+            Basics.toFloat (n - count string) / 2
     in
     repeat (ceiling half) (fromChar char) ++ string ++ repeat (floor half) (fromChar char)
 
@@ -449,7 +492,7 @@ pad n char string =
 -}
 padLeft : Int -> Char -> String -> String
 padLeft n char string =
-    repeat (n - length string) (fromChar char) ++ string
+    repeat (n - count string) (fromChar char) ++ string
 
 
 {-| Pad a string on the right until it has a given length.
@@ -463,7 +506,7 @@ padLeft n char string =
 -}
 padRight : Int -> Char -> String -> String
 padRight n char string =
-    string ++ repeat (n - length string) (fromChar char)
+    string ++ repeat (n - count string) (fromChar char)
 
 
 {-| Get rid of whitespace on both sides of a string.
@@ -598,10 +641,8 @@ toArray string =
     foldl Array.pushLast [] string
 
 
-{-| Convert an array of characters into a String. Can be useful if you
-want to create a string primarily by consing, perhaps for decoding
-something.
-
+{-| Convert an array of characters into a String.
+    
     fromArray [ 'a', 'b', 'c' ] == "abc"
 
     fromArray [ '🙈', '🙉', '🙊' ] == "🙈🙉🙊"
@@ -623,31 +664,53 @@ fromArray =
 -}
 fromChar : Char -> String
 fromChar char =
-    cons char ""
+    pushFirst char ""
 
 
 {-| Add a character to the beginning of a string.
 
-    cons 'T' "he truth is out there" == "The truth is out there"
+    pushFirst 'T' "he truth is out there" == "The truth is out there"
 
 -}
-cons : Char -> String -> String
-cons =
-    Gren.Kernel.String.cons
+pushFirst : Char -> String -> String
+pushFirst =
+    Gren.Kernel.String.pushFirst
 
 
-{-| Split a non-empty string into its head and tail. This lets you
+{-| Add a character to the end of a string.
+
+    pushLast 'T' "he truth is out there" == "he truth is out thereT"
+
+-}
+pushLast : Char -> String -> String
+pushLast =
+    Gren.Kernel.String.pushLast
+
+
+{-| Split a non-empty string into its first character and its remaining characters. This lets you
 pattern match on strings exactly as you would with arrays.
 
-    uncons "abc" == Just ( 'a', "bc" )
+    popFirst "abc" == Just { first = 'a', rest = "bc" }
 
-    uncons "" == Nothing
+    popFirst "" == Nothing
 
 -}
-uncons : String -> Maybe { first : Char, rest : String }
-uncons =
-    Gren.Kernel.String.uncons
+popFirst : String -> Maybe { first : Char, rest : String }
+popFirst =
+    Gren.Kernel.String.popFirst
 
+
+{-| Split a non-empty string into its last character and its remaining characters. This lets you
+pattern match on strings exactly as you would with arrays.
+
+    popLast "abc" == Just { first = 'c', rest = "ab" }
+
+    popLast "" == Nothing
+
+-}
+popLast : String -> Maybe { last : Char, rest : String }
+popLast =
+    Gren.Kernel.String.popLast
 
 
 -- HIGHER-ORDER FUNCTIONS
@@ -668,21 +731,35 @@ uncons =
 
 -}
 map : (Char -> Char) -> String -> String
-map =
-    Gren.Kernel.String.map
+map fn str =
+    foldl
+        (\char acc ->
+            pushLast (fn char) acc
+        )
+        ""
+        str
 
 
 {-| Keep only the characters that pass the test.
 
-    filter isDigit "R2-D2" == "22"
+    keepIf isDigit "R2-D2" == "22"
 
 -}
-filter : (Char -> Bool) -> String -> String
-filter =
-    Gren.Kernel.String.filter
+keepIf : (Char -> Bool) -> String -> String
+keepIf isGood str =
+    foldl
+        (\char acc ->
+            if isGood char then
+                pushLast char acc
+
+            else
+                acc
+        )
+        ""
+        str
 
 
-{-| Reduce a string from the left.
+{-| Reduce a string from the beginning.
 
     foldl cons "" "time" == "emit"
 
@@ -692,7 +769,7 @@ foldl =
     Gren.Kernel.String.foldl
 
 
-{-| Reduce a string from the right.
+{-| Reduce a string from the end.
 
     foldr cons "" "time" == "time"
 
@@ -730,5 +807,53 @@ any =
 
 -}
 all : (Char -> Bool) -> String -> Bool
-all =
-    Gren.Kernel.String.all
+all isGood str =
+    any (not << isGood) str
+
+
+-- UNITS
+
+
+{-| Get the number of character units in a string. As strings are, essentially,
+arrays of character units, this is a constant time operation.
+-}
+unitLength : String -> Int
+unitLength =
+    Gren.Kernel.String.unitLength
+
+
+{-| Retrieve the character unit at a given index, or `Nothing` if the index is out of bounds.
+A negative index uses the end of the string as the starting point.
+
+    getUnit 1 "abc" == Just 'a'
+    
+    getUnit 10 "abc" == Nothing
+    
+    getUnit -1 "abc" == Just 'c'
+
+-}
+getUnit : Int -> String -> Maybe Char
+getUnit =
+    Gren.Kernel.String.getUnit
+
+
+{-| Reduce a string from the beginning. The given function will receive character units instead
+of a code point, meaning that the provided `Char` could possibly represent one half of a full
+character.
+
+    foldlUnits pushFirst "" "time" == "emit"
+-}
+foldlUnits : (Char -> b -> b) -> b -> String -> b
+foldlUnits =
+    Gren.Kernel.String.foldlUnits
+
+
+{-| Reduce a string from the end. The given function will receive character units instead
+of a code point, meaning that the provided `Char` could possibly represent one half of a full
+character.
+
+    foldrUnits pushFirst "" "time" == "time"
+-}
+foldrUnits : (Char -> b -> b) -> b -> String -> b
+foldrUnits =
+    Gren.Kernel.String.foldrUnits

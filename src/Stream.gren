@@ -199,7 +199,7 @@ can alter the data, or even drop it entirely.
 -}
 type Transformation read write =
     -- Note: Implementation in kernel code
-    Transformation read write
+    Transformation
 
 
 {-| A [Transformation](#Transformation) that doesn't actually transform the data written to the writable stream.
@@ -279,7 +279,7 @@ customTransformationWithOptions fn { initialState, readCapacity, writeCapacity }
 
 customTransformationActionWrapper toAction =
     \state input ->
-        case toAction state input of
+        when toAction state input is
             UpdateState newState ->
                 { ctor = "UpdateState"
                 , state = newState
