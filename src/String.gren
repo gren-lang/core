@@ -165,7 +165,7 @@ repeat =
     replace "," "/" "a,b,c,d,e" == "a/b/c/d/e"
 
 **Note:** If you need more advanced replacements, check out the
-[`gren-lang/parser`][parser] or [`String.Regex`][regex] package.
+[`gren-lang/parser`][parser] package or [`String.Regex`][regex] module.
 
 [parser]: /package/gren-lang/parser
 [regex]: String.Regex
@@ -202,10 +202,15 @@ append lhs rhs =
     prepend rhs lhs
 
 
-{-| Split a string using a given separator.
+{-| Split a string using a given separator. If the seperator doesn't appear,
+you will get an array containing the original string.
 
+    split "," "" == [""]
+    
+    split "," "cat" == ["cat"]
+    
     split "," "cat,dog,cow" == [ "cat", "dog", "cow" ]
-
+    
     split "/" "home/evan/Desktop/" == [ "home", "evan", "Desktop", "" ]
 
 -}
