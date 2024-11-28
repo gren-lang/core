@@ -154,22 +154,8 @@ reverse =
 
 -}
 repeat : Int -> String -> String
-repeat n chunk =
-    repeatHelp n chunk ""
-
-
-repeatHelp : Int -> String -> String -> String
-repeatHelp n chunk result =
-    if n <= 0 then
-        result
-
-    else
-        repeatHelp (Bitwise.shiftRightBy 1 n) (chunk ++ chunk) <|
-            if Bitwise.and n 1 == 0 then
-                result
-
-            else
-                result ++ chunk
+repeat =
+    Gren.Kernel.String.repeat
 
 
 {-| Replace all occurrences of some substring.

@@ -51,7 +51,7 @@ var _String_filter = F2(function (isGood, str) {
   return arr.join("");
 });
 
-function _String_reverse(str) {
+var _String_reverse = function (str) {
   var len = str.length;
   var arr = new Array(len);
   var i = 0;
@@ -60,7 +60,19 @@ function _String_reverse(str) {
     i++;
   }
   return arr.join("");
-}
+};
+
+var _String_repeat = F2(function (num, chunk) {
+  try {
+    chunk.repeat(num);
+  } catch (error) {
+    if (error.name === "RangeError") {
+      return "";
+    } else {
+      throw error;
+    }
+  }
+});
 
 var _String_foldl = F3(function (func, state, string) {
   var len = string.length;
