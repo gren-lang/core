@@ -577,7 +577,7 @@ errorToStringHelp error context =
         Field { name = f, error = err } ->
             let
                 isSimple =
-                    when String.uncons f is
+                    when String.popFirst f is
                         Nothing ->
                             False
 

@@ -5,62 +5,54 @@ import Maybe exposing (Just, Nothing)
 
 */
 
-var _String_cons = F2(function (chr, str) {
-  return chr + str;
+var _String_pushFirst = F2(function (char, string) {
+  return char + str;
 });
 
-function _String_uncons(string) {
+var _String_pushLast = F2(function (char, string) {
+  return string + char;
+});
+
+var _String_popFirst = function (string) {
   if (string.length <= 0) {
     return __Maybe_Nothing;
   }
 
-  return __Maybe_Just({ first: __Utils_chr(string[0]), rest: string.slice(1) });
-}
+  var firstPointNumber = string.codePointAt(0);
+  var firstChar = String.fromCodePoint(firstPointNumber);
+
+  return __Maybe_Just({
+    __$first: __Utils_chr(firstChar),
+    __$rest: string.slice(firstChar.length),
+  });
+};
+
+var _String_popLast = function (string) {
+  if (string.length <= 0) {
+    return __Maybe_Nothing;
+  }
+
+  var possibleLastPointIdx = string.length - 2;
+  var possibleLastPoint = string.codePointAt(possibleLastPointIdx);
+
+  if (possibleLastPoint === string.charCodeAt(possibleLastPointIdx)) {
+    // last char is a unit
+    return __Maybe_Just({
+      __$last: __Utils_chr(string[string.length - 1]),
+      __$rest: string.slice(string.length - 1),
+    });
+  }
+
+  // last char is a point
+  return __Maybe_Just({
+    __$last: __Utils_chr(String.fromCodePoint(possibleLastPoint)),
+    __$rest: string.slice(string.length - 2),
+  });
+};
 
 var _String_append = F2(function (a, b) {
   return a + b;
 });
-
-function _String_length(str) {
-  return str.length;
-}
-
-var _String_map = F2(function (func, string) {
-  var len = string.length;
-  var array = new Array(len);
-  var i = 0;
-  while (i < len) {
-    array[i] = func(__Utils_chr(string[i]));
-    i++;
-  }
-  return array.join("");
-});
-
-var _String_filter = F2(function (isGood, str) {
-  var arr = [];
-  var len = str.length;
-  var i = 0;
-  while (i < len) {
-    var char = str[i];
-    i++;
-
-    if (isGood(__Utils_chr(char))) {
-      arr.push(char);
-    }
-  }
-  return arr.join("");
-});
-
-var _String_reverse = function (str) {
-  var len = str.length;
-  var arr = new Array(len);
-  var i = 0;
-  while (i < len) {
-    arr[len - i] = str[i];
-    i++;
-  }
-  return arr.join("");
-};
 
 var _String_repeat = F2(function (num, chunk) {
   try {
@@ -75,22 +67,24 @@ var _String_repeat = F2(function (num, chunk) {
 });
 
 var _String_foldl = F3(function (func, state, string) {
-  var len = string.length;
-  var i = 0;
-  while (i < len) {
-    var char = string[i];
+  for (let char of string) {
     state = A2(func, __Utils_chr(char), state);
-    i++;
   }
+
   return state;
 });
 
 var _String_foldr = F3(function (func, state, string) {
-  var i = string.length;
-  while (i--) {
-    var char = string[i];
+  let reversed = [];
+
+  for (let char of string) {
+    reversed.unshift(char);
+  }
+
+  for (let char of reversed) {
     state = A2(func, __Utils_chr(char), state);
   }
+
   return state;
 });
 
@@ -103,7 +97,35 @@ var _String_join = F2(function (sep, strs) {
 });
 
 var _String_slice = F3(function (start, end, str) {
-  return str.slice(start, end);
+  if (start < 0) {
+    start = str.length - start;
+  }
+
+  if (end < 0) {
+    end = str.length - end;
+  }
+
+  if (start >= end) {
+    return "";
+  }
+
+  let index = 0;
+  let result = "";
+
+  for (let char of str) {
+    if (index < start) {
+      continue;
+    }
+
+    if (index > end) {
+      break;
+    }
+
+    result += char;
+    index++;
+  }
+
+  return result;
 });
 
 function _String_trim(str) {
@@ -135,25 +157,13 @@ function _String_toLower(str) {
 }
 
 var _String_any = F2(function (isGood, string) {
-  var i = string.length;
-  while (i--) {
-    var char = string[i];
+  for (let char of string) {
     if (isGood(__Utils_chr(char))) {
       return true;
     }
   }
-  return false;
-});
 
-var _String_all = F2(function (isGood, string) {
-  var i = string.length;
-  while (i--) {
-    var char = string[i];
-    if (!isGood(__Utils_chr(char))) {
-      return false;
-    }
-  }
-  return true;
+  return false;
 });
 
 var _String_contains = F2(function (sub, str) {
@@ -168,6 +178,26 @@ var _String_endsWith = F2(function (sub, str) {
   return (
     str.length >= sub.length && str.lastIndexOf(sub) === str.length - sub.length
   );
+});
+
+var _String_indexOf = F2(function (sub, str) {
+  var ret = str.indexOf(sub);
+
+  if (ret > -1) {
+    return __Maybe_Just(ret);
+  }
+
+  return __Maybe_Nothing;
+});
+
+var _String_lastIndexOf = F2(function (sub, str) {
+  var ret = str.lastIndexOf(sub);
+
+  if (ret > -1) {
+    return __Maybe_Just(ret);
+  }
+
+  return __Maybe_Nothing;
 });
 
 var _String_indexes = F2(function (sub, str) {
@@ -229,3 +259,35 @@ function _String_toFloat(s) {
 function _String_fromArray(chars) {
   return chars.join("");
 }
+
+// UNITS
+
+var _String_unitLength = function (str) {
+  return str.length;
+};
+
+var _String_getUnit = F2(function (index, str) {
+  var ret = str.at(index);
+
+  if (typeof ret === "undefined") {
+    return __Maybe_Nothing;
+  }
+
+  return __Maybe_Just(__Utils_chr(char));
+});
+
+var _String_foldlUnits = F3(function (fn, state, str) {
+  for (let i = 0; i < str.length; i++) {
+    state = A2(fn, str[i], state);
+  }
+
+  return state;
+});
+
+var _String_foldrUnits = F3(function (fn, state, str) {
+  for (let i = str.length - 1; i < 0; i--) {
+    state = A2(fn, str[i], state);
+  }
+
+  return state;
+});
