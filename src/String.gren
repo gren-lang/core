@@ -1,13 +1,13 @@
 module String exposing
     ( String, isEmpty, length, reverse, repeat, replace
     , prepend, append, split, join, words, lines
-    , slice, left, right, dropLeft, dropRight
+    , slice, takeFirst, takeLast, dropFirst, dropLast
     , contains, startsWith, endsWith, indices
     , toInt, fromInt
     , toFloat, fromFloat
     , fromChar, cons, uncons
     , toArray, fromArray
-    , toUpper, toLower, pad, padLeft, padRight, trim, trimLeft, trimRight
+    , toUpper, toLower, pad, pad, padRight, trim, trimLeft, trimRight
     , map, keepIf, foldl, foldr, any, all
     )
 
@@ -24,7 +24,7 @@ are enclosed in `"double quotes"`.
 
 ## Get Substrings
 
-@docs slice, left, right, dropLeft, dropRight
+@docs slice, takeFirst, takeLast, dropFirst, dropLast
 
 
 ## Check for Substrings
@@ -274,13 +274,16 @@ slice =
     Gren.Kernel.String.slice
 
 
-{-| Take _n_ characters from the left side of a string.
+{-| Make a new string using the first _n_ characters. If _n_ is larger than
+the length of the string, then the string is returned as is.
 
-    left 2 "Mulder" == "Mu"
+    takeFirst 2 "Mulder" == "Mu"
+
+    takeFirst 8 "Mulder" == "Mulder"
 
 -}
-left : Int -> String -> String
-left n string =
+takeFirst : Int -> String -> String
+takeFirst n string =
     if n < 1 then
         ""
 
@@ -288,13 +291,16 @@ left n string =
         slice 0 n string
 
 
-{-| Take _n_ characters from the right side of a string.
+{-| Make a new string using the last _n_ characters. If _n_ is larger than
+the length of the string, then the string is returned as is.
 
-    right 2 "Scully" == "ly"
+    takeLast 2 "Scully" == "ly"
+
+    takeLast 8 "Scully" == "Scully"
 
 -}
-right : Int -> String -> String
-right n string =
+takeLast : Int -> String -> String
+takeLast n string =
     if n < 1 then
         ""
 
@@ -302,13 +308,13 @@ right n string =
         slice -n (length string) string
 
 
-{-| Drop _n_ characters from the left side of a string.
+{-| Drop the first _n_ characters.
 
-    dropLeft 2 "The Lone Gunmen" == "e Lone Gunmen"
+    dropFirst 2 "The Lone Gunmen" == "e Lone Gunmen"
 
 -}
-dropLeft : Int -> String -> String
-dropLeft n string =
+dropFirst : Int -> String -> String
+dropFirst n string =
     if n < 1 then
         string
 
@@ -316,13 +322,13 @@ dropLeft n string =
         slice n (length string) string
 
 
-{-| Drop _n_ characters from the right side of a string.
+{-| Drop the last _n_ characters.
 
-    dropRight 2 "Cigarette Smoking Man" == "Cigarette Smoking M"
+    dropLast 2 "Cigarette Smoking Man" == "Cigarette Smoking M"
 
 -}
-dropRight : Int -> String -> String
-dropRight n string =
+dropLast : Int -> String -> String
+dropLast n string =
     if n < 1 then
         string
 
@@ -673,7 +679,7 @@ keepIf =
     Gren.Kernel.String.filter
 
 
-{-| Reduce a string from the left.
+{-| Reduce a string from the beginning.
 
     foldl cons "" "time" == "emit"
 
@@ -683,7 +689,7 @@ foldl =
     Gren.Kernel.String.foldl
 
 
-{-| Reduce a string from the right.
+{-| Reduce a string from the end.
 
     foldr cons "" "time" == "time"
 
