@@ -33,6 +33,7 @@ var _Stream_read = function (stream) {
       })
       .catch((err) => {
         reader.releaseLock();
+        console.log('stream read', err)
         callback(__Scheduler_fail(__Stream_Closed));
       });
   });
