@@ -146,7 +146,7 @@ another value out of this stream.
 -}
 cancelReadable : String -> Readable value -> Task Error {}
 cancelReadable =
-    Gren.Kernel.Stream.cancel
+    Gren.Kernel.Stream.cancelReadable
 
 
 -- Writable
@@ -187,7 +187,7 @@ way what that error is. If the stream contains a buffer, the buffer is dropped.
 -}
 cancelWritable : String -> Writable value -> Task Error {}
 cancelWritable =
-    Gren.Kernel.Stream.cancel
+    Gren.Kernel.Stream.cancelWritable
 
 
 -- Transformation

@@ -58,9 +58,25 @@ var _Stream_write = F2(function (value, stream) {
   });
 });
 
-var _Stream_cancel = F2(function (reason, stream) {
+var _Stream_cancelReadable = F2(function (reason, stream) {
   return __Scheduler_binding(function (callback) {
+    if (stream.locked) {
+      return callback(__Scheduler_fail(__Stream_Locked));
+    }
+
     stream.cancel(reason).then(() => {
+      callback(__Scheduler_succeed({}));
+    });
+  });
+});
+
+var _Stream_cancelWritable = F2(function (reason, stream) {
+  return __Scheduler_binding(function (callback) {
+    if (stream.locked) {
+      return callback(__Scheduler_fail(__Stream_Locked));
+    }
+
+    stream.abort(reason).then(() => {
       callback(__Scheduler_succeed({}));
     });
   });
