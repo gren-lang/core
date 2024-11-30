@@ -33,8 +33,11 @@ var _Stream_read = function (stream) {
       })
       .catch((err) => {
         reader.releaseLock();
-        console.log('stream read: ', JSON.stringify(err))
-        callback(__Scheduler_fail(__Stream_Closed));
+        if (typeof err === "string") {
+          callback(__Scheduler_fail(__Stream_Cancelled(err)));
+        } else {
+          callback(__Scheduler_fail(__Stream_Closed));
+        }
       });
   });
 };
