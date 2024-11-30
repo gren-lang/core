@@ -1,6 +1,6 @@
 /*
 
-import Stream exposing (Locked, Closed)
+import Stream exposing (Locked, Closed, Cancelled)
 import Gren.Kernel.Scheduler exposing (binding, succeed, fail, rawSpawn)
 
 */
