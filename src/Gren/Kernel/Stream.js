@@ -33,16 +33,45 @@ var _Stream_read = function (stream) {
       })
       .catch((err) => {
         reader.releaseLock();
-        if (typeof err === "string") {
-          callback(__Scheduler_fail(__Stream_Cancelled(err)));
-        } else {
-          callback(__Scheduler_fail(__Stream_Closed));
-        }
+        callback(
+          __Scheduler_fail(
+            __Stream_Cancelled(typeof err === "string" ? err : ""),
+          ),
+        );
       });
   });
 };
 
 var _Stream_write = F2(function (value, stream) {
+  return __Scheduler_binding(function (callback) {
+    if (stream.locked) {
+      return callback(__Scheduler_fail(__Stream_Locked));
+    }
+
+    if (value instanceof DataView) {
+      value = new Uint8Array(value.buffer, value.byteOffset, value.byteLength);
+    }
+
+    const writer = stream.getWriter();
+    writer.ready
+      .then(() => {
+        writer.releaseLock();
+        return writer.write(value);
+      })
+      .then(() => {
+        callback(__Scheduler_succeed(stream));
+      })
+      .catch((err) => {
+        callback(
+          __Scheduler_fail(
+            __Stream_Cancelled(typeof err === "string" ? err : ""),
+          ),
+        );
+      });
+  });
+});
+
+var _Stream_enqueue = F2(function (value, stream) {
   return __Scheduler_binding(function (callback) {
     if (stream.locked) {
       return callback(__Scheduler_fail(__Stream_Locked));
@@ -117,9 +146,18 @@ var _Stream_pipeTo = F2(function (writable, readable) {
       return callback(__Scheduler_fail(__Stream_Locked));
     }
 
-    readable.pipeTo(writable).then(() => {
-      callback(__Scheduler_succeed({}));
-    });
+    readable
+      .pipeTo(writable)
+      .then(() => {
+        callback(__Scheduler_succeed({}));
+      })
+      .catch((err) => {
+        callback(
+          __Scheduler_fail(
+            __Stream_Cancelled(typeof err === "string" ? err : ""),
+          ),
+        );
+      });
   });
 });
 
