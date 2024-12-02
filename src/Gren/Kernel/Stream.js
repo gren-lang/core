@@ -55,8 +55,9 @@ var _Stream_write = F2(function (value, stream) {
     const writer = stream.getWriter();
     writer.ready
       .then(() => {
+        const writePromise = writer.write(value);
         writer.releaseLock();
-        return writer.write(value);
+        return writePromise;
       })
       .then(() => {
         callback(__Scheduler_succeed(stream));
