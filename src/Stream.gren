@@ -10,6 +10,7 @@ module Stream exposing
     , write
     , writeStringAsBytes
     , writeLineAsBytes
+    , enqueue
     , closeWritable
     , cancelWritable
     -- Transform
@@ -56,7 +57,7 @@ We have three kinds of streams: readable streams, writable streams, and transfor
 
 ## Writable Streams
 
-@docs Writable, write, writeStringAsBytes, writeLineAsBytes, closeWritable, cancelWritable
+@docs Writable, write, writeStringAsBytes, writeLineAsBytes, enqueue, closeWritable, cancelWritable
 
 ## Transformation Streams
 
@@ -117,7 +118,7 @@ fromArray array =
     |> Task.andThen
         (\idStream ->
             Array.foldl 
-                (\value stream -> Task.andThen (write value) stream)
+                (\value stream -> Task.andThen (enqueue value) stream)
                 (Task.succeed (writable idStream))
                 array
                 |> Task.andThen closeWritable
@@ -146,10 +147,11 @@ another value out of this stream.
 -}
 cancelReadable : String -> Readable value -> Task Error {}
 cancelReadable =
-    Gren.Kernel.Stream.cancel
+    Gren.Kernel.Stream.cancelReadable
 
 
 -- Writable
+
 
 
 {-| Write a value into the stream. The returned `Task` will only succeed when the written value is accepted, meaning
@@ -175,6 +177,20 @@ writeLineAsBytes str stream =
     write (Bytes.fromString <| str ++ "\n") stream
 
 
+{-| Queue a value to be written into the stream. The returned `Task` will succeed when the value is on the stream's buffer.
+
+The difference between this and [write](#write) is when the `Task` succeeds. Because the `Task` from this function
+succeeds once the value is in a buffer, we won't be able to detect if the stream is cancelled before the value is
+passed on to somewhere else. On the other hand, we can assume the `Task` succeeds as long as there is room in the
+buffer, even if someone isn't actively reading from the stream.
+
+In general you should prefer [write](#write), and reach for this function if you experience problems.
+-}
+enqueue : value -> Writable value -> Task Error (Writable value)
+enqueue =
+    Gren.Kernel.Stream.enqueue
+
+
 {-| Closes the stream. This indicates that no new values will be added to the stream after this point.
 -}
 closeWritable : Writable value -> Task Error {}
@@ -187,7 +203,7 @@ way what that error is. If the stream contains a buffer, the buffer is dropped.
 -}
 cancelWritable : String -> Writable value -> Task Error {}
 cancelWritable =
-    Gren.Kernel.Stream.cancel
+    Gren.Kernel.Stream.cancelWritable
 
 
 -- Transformation

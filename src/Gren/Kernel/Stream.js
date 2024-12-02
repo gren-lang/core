@@ -1,6 +1,6 @@
 /*
 
-import Stream exposing (Locked, Closed)
+import Stream exposing (Locked, Closed, Cancelled)
 import Gren.Kernel.Scheduler exposing (binding, succeed, fail, rawSpawn)
 
 */
@@ -33,12 +33,46 @@ var _Stream_read = function (stream) {
       })
       .catch((err) => {
         reader.releaseLock();
-        callback(__Scheduler_fail(__Stream_Closed));
+        callback(
+          __Scheduler_fail(
+            __Stream_Cancelled(typeof err === "string" ? err : ""),
+          ),
+        );
       });
   });
 };
 
 var _Stream_write = F2(function (value, stream) {
+  return __Scheduler_binding(function (callback) {
+    if (stream.locked) {
+      return callback(__Scheduler_fail(__Stream_Locked));
+    }
+
+    if (value instanceof DataView) {
+      value = new Uint8Array(value.buffer, value.byteOffset, value.byteLength);
+    }
+
+    const writer = stream.getWriter();
+    writer.ready
+      .then(() => {
+        const writePromise = writer.write(value);
+        writer.releaseLock();
+        return writePromise;
+      })
+      .then(() => {
+        callback(__Scheduler_succeed(stream));
+      })
+      .catch((err) => {
+        callback(
+          __Scheduler_fail(
+            __Stream_Cancelled(typeof err === "string" ? err : ""),
+          ),
+        );
+      });
+  });
+});
+
+var _Stream_enqueue = F2(function (value, stream) {
   return __Scheduler_binding(function (callback) {
     if (stream.locked) {
       return callback(__Scheduler_fail(__Stream_Locked));
@@ -58,9 +92,25 @@ var _Stream_write = F2(function (value, stream) {
   });
 });
 
-var _Stream_cancel = F2(function (reason, stream) {
+var _Stream_cancelReadable = F2(function (reason, stream) {
   return __Scheduler_binding(function (callback) {
+    if (stream.locked) {
+      return callback(__Scheduler_fail(__Stream_Locked));
+    }
+
     stream.cancel(reason).then(() => {
+      callback(__Scheduler_succeed({}));
+    });
+  });
+});
+
+var _Stream_cancelWritable = F2(function (reason, stream) {
+  return __Scheduler_binding(function (callback) {
+    if (stream.locked) {
+      return callback(__Scheduler_fail(__Stream_Locked));
+    }
+
+    stream.abort(reason).then(() => {
       callback(__Scheduler_succeed({}));
     });
   });
@@ -97,9 +147,18 @@ var _Stream_pipeTo = F2(function (writable, readable) {
       return callback(__Scheduler_fail(__Stream_Locked));
     }
 
-    readable.pipeTo(writable).then(() => {
-      callback(__Scheduler_succeed({}));
-    });
+    readable
+      .pipeTo(writable)
+      .then(() => {
+        callback(__Scheduler_succeed({}));
+      })
+      .catch((err) => {
+        callback(
+          __Scheduler_fail(
+            __Stream_Cancelled(typeof err === "string" ? err : ""),
+          ),
+        );
+      });
   });
 });
 
