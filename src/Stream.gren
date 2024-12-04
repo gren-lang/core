@@ -1,6 +1,5 @@
 module Stream exposing 
     ( Readable
-    , Error(..)
     , fromArray
     , read
     , readBytesAsString
@@ -13,6 +12,9 @@ module Stream exposing
     , enqueue
     , closeWritable
     , cancelWritable
+    -- Error Handling
+    , Error(..)
+    , errorToString
     -- Transform
     , Transformation
     , identityTransformation
@@ -53,11 +55,15 @@ We have three kinds of streams: readable streams, writable streams, and transfor
 
 ## Readable Streams
 
-@docs Readable, Error, fromArray, read, readBytesAsString, cancelReadable
+@docs Readable, fromArray, read, readBytesAsString, cancelReadable
 
 ## Writable Streams
 
 @docs Writable, write, writeStringAsBytes, writeLineAsBytes, enqueue, closeWritable, cancelWritable
+
+## Error Handling
+
+@docs Error, errorToString
 
 ## Transformation Streams
 
@@ -101,6 +107,24 @@ type Error
     = Closed
     | Cancelled String
     | Locked
+
+
+-- Error
+
+
+{-| Give a human readable description of an error.
+-}
+errorToString : Error -> String
+errorToString error =
+    when error is
+        Closed ->
+            "Closed"
+
+        Cancelled reason ->
+            "Cancelled: " ++ reason
+
+        Locked ->
+            "Locked"
 
 
 -- Readable
