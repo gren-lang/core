@@ -2,7 +2,7 @@ module String exposing
     ( String, isEmpty, count, reverse, repeat, replace
     , prepend, append, split, join, words, lines
     , slice, takeFirst, takeLast, dropFirst, dropLast
-    , contains, startsWith, endsWith, indices
+    , contains, startsWith, endsWith, firstIndexOf, lastIndexOf, indices
     , toInt, fromInt
     , toFloat, fromFloat
     , fromChar, pushFirst, pushLast, popFirst, popLast
@@ -41,7 +41,7 @@ Unless otherwise noted, all functions in this module deal with code points.
 
 ## Check for Substrings
 
-@docs contains, startsWith, endsWith, indexOf, lastIndexOf, indices
+@docs contains, startsWith, endsWith, firstIndexOf, lastIndexOf, indices
 
 
 ## Int Conversions
@@ -407,8 +407,8 @@ endsWith =
     indexOf "a" "theory" == Nothing
 
 -}
-indexOf : String -> String -> Maybe Int
-indexOf =
+firstIndexOf : String -> String -> Maybe Int
+firstIndexOf =
     Gren.Kernel.String.indexOf
 
 
