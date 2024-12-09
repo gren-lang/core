@@ -51,7 +51,6 @@ type Encoder
   | F32 (WithEndian Float)
   | F64 (WithEndian Float)
   | Seq { width : Int, items : Array Encoder }
-  | Utf8 { width : Int, string :  String }
   | Bytes Bytes
 
 
@@ -233,7 +232,6 @@ write builder mb offset =
     F32 { endian = e, number = n } -> Gren.Kernel.Bytes.write_f32 mb offset n (e == LE)
     F64 { endian = e, number = n } -> Gren.Kernel.Bytes.write_f64 mb offset n (e == LE)
     Seq { items = bs } -> writeSequence bs mb offset
-    Utf8 { string = s } -> Gren.Kernel.Bytes.write_string mb offset s
     Bytes bs -> Gren.Kernel.Bytes.write_bytes mb offset bs
 
 
@@ -262,7 +260,6 @@ getLength builder =
     F32 _ -> 4
     F64 _ -> 8
     Seq { width = w } -> w
-    Utf8 { width = w } -> w
     Bytes bs -> Gren.Kernel.Bytes.length bs
 
 
