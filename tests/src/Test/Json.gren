@@ -20,7 +20,7 @@ intTests : Test
 intTests =
     let
         testInt val str =
-            case Json.decodeString Json.int str of
+            when Json.decodeString Json.int str is
                 Ok _ ->
                     Expect.equal val True
 
@@ -69,7 +69,7 @@ customTests =
             Json.field "foo" Json.string |> Json.andThen (\_ -> Json.fail customErrorMessage)
 
         assertion =
-            case Json.decodeString myDecoder jsonString of
+            when Json.decodeString myDecoder jsonString is
                 Ok _ ->
                     Expect.fail "expected `customDecoder` to produce a value of type Err, but got Ok"
 

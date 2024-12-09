@@ -16,7 +16,7 @@ tests =
             describe "Simple Stuff"
                 [ test "is empty" <| \{} -> Expect.equal True (String.isEmpty "")
                 , test "is not empty" <| \{} -> Expect.equal True (not (String.isEmpty "the world"))
-                , test "length" <| \{} -> Expect.equal 11 (String.length "innumerable")
+                , test "count" <| \{} -> Expect.equal 11 (String.count "innumerable")
                 , test "endsWith" <| \{} -> Expect.equal True <| String.endsWith "ship" "spaceship"
                 , test "reverse" <| \{} -> Expect.equal "desserts" (String.reverse "stressed")
                 , test "repeat" <| \{} -> Expect.equal "hahaha" (String.repeat 3 "ha")
@@ -26,8 +26,8 @@ tests =
 
         combiningTests =
             describe "Combining Strings"
-                [ test "uncons non-empty" <| \{} -> Expect.equal (Just { first = 'a', rest = "bc" }) (String.uncons "abc")
-                , test "uncons empty" <| \{} -> Expect.equal Nothing (String.uncons "")
+                [ test "popFirst non-empty" <| \{} -> Expect.equal (Just { first = 'a', rest = "bc" }) (String.popFirst "abc")
+                , test "popFirst" <| \{} -> Expect.equal Nothing (String.popFirst "")
                 , test "prepend" <| \{} -> Expect.equal "butterfly" (String.prepend "butter" "fly")
                 , test "append 1" <| \{} -> Expect.equal "flybutter" (String.append "butter" "fly")
                 , test "append 2" <| \{} -> Expect.equal "butter" (String.append "butter" "")

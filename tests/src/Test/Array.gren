@@ -113,15 +113,15 @@ testArrayOfN n =
 
                 else
                     Expect.equal (Just n) (last xs)
-        , describe "filter"
-            [ test "none" <| \{} -> Expect.equal [] (Array.filter (\x -> x > n) xs)
-            , test "one" <| \{} -> Expect.equal [ n ] (Array.filter (\z -> z == n) zs)
-            , test "all" <| \{} -> Expect.equal xs (Array.filter (\x -> x <= n) xs)
+        , describe "keepIf"
+            [ test "none" <| \{} -> Expect.equal [] (Array.keepIf (\x -> x > n) xs)
+            , test "one" <| \{} -> Expect.equal [ n ] (Array.keepIf (\z -> z == n) zs)
+            , test "all" <| \{} -> Expect.equal xs (Array.keepIf (\x -> x <= n) xs)
             ]
-        , describe "indexedFilter"
-            [ test "none" <| \{} -> Expect.equal [] (Array.indexedFilter (\idx x -> x + idx > 2 * n) xs)
-            , test "one" <| \{} -> Expect.equal [ 2 * n ] (Array.indexedFilter (\idx z -> z + idx == 2 * n) zs)
-            , test "all" <| \{} -> Expect.equal xs (Array.indexedFilter (\idx x -> x + idx <= 2 * n) xs)
+        , describe "indexedKeepIf"
+            [ test "none" <| \{} -> Expect.equal [] (Array.indexedKeepIf (\idx x -> x + idx > 2 * n) xs)
+            , test "one" <| \{} -> Expect.equal [ n ] (Array.indexedKeepIf (\idx z -> z + idx == 2 * n) zs)
+            , test "all" <| \{} -> Expect.equal xs (Array.indexedKeepIf (\idx x -> x + idx <= 2 * n) xs)
             ]
         , describe "take"
             [ test "none" <| \{} -> Expect.equal [] (takeFirst 0 xs)
@@ -160,9 +160,9 @@ testArrayOfN n =
             , test "long first" <| \{} -> Expect.equal (map (\x -> x * 2 - 1) xs) (map2 (+) zs xs)
             , test "short first" <| \{} -> Expect.equal (map (\x -> x * 2 - 1) xs) (map2 (+) xs zs)
             ]
-        , describe "filterMap"
-            [ test "none" <| \{} -> Expect.equal [] (filterMap (\x -> Nothing) xs)
-            , test "all" <| \{} -> Expect.equal xsNeg (filterMap (\x -> Just -x) xs)
+        , describe "mapAndKeepJust"
+            [ test "none" <| \{} -> Expect.equal [] (mapAndKeepJust (\x -> Nothing) xs)
+            , test "all" <| \{} -> Expect.equal xsNeg (mapAndKeepJust (\x -> Just -x) xs)
             , let
                 halve x =
                     if Math.modBy 2 x == 0 then
@@ -171,11 +171,11 @@ testArrayOfN n =
                     else
                         Nothing
               in
-              test "some" <| \{} -> Expect.equal (Array.range 1 mid) (filterMap halve xs)
+              test "some" <| \{} -> Expect.equal (Array.range 1 mid) (mapAndKeepJust halve xs)
             ]
-        , describe "flatMap"
-            [ test "none" <| \{} -> Expect.equal [] (flatMap (\x -> []) xs)
-            , test "all" <| \{} -> Expect.equal xsNeg (flatMap (\x -> [ -x ]) xs)
+        , describe "mapAndFlatten"
+            [ test "none" <| \{} -> Expect.equal [] (mapAndFlatten (\x -> []) xs)
+            , test "all" <| \{} -> Expect.equal xsNeg (mapAndFlatten (\x -> [ -x ]) xs)
             ]
         , test "indexedMap" <| \{} -> Expect.equal (map2 (\i x -> { i = i, x = x }) zs xsNeg) (indexedMap (\i x -> { i = i, x = -x }) xs)
         , test "sum" <| \{} -> Expect.equal xsSum (Array.foldl (+) 0 xs)

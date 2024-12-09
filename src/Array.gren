@@ -1,7 +1,7 @@
 module Array exposing
     ( Array
     , singleton, initialize, repeat, range
-    , map, indexedMap, foldl, foldr, indexedFoldl, indexedFoldr, keepIf, mapAndKeepJust, reverse
+    , map, indexedMap, foldl, foldr, indexedFoldl, indexedFoldr, keepIf, indexedKeepIf, mapAndKeepJust, reverse
     , isEmpty, length, get, findFirst, findLast, member, any, all, minimum, maximum
     , set, setMany, update, insert, insertMany, remove, removeMany, pushFirst, pushLast, splice
     , prepend, append, flatten, mapAndFlatten, intersperse, map2, map3
@@ -19,7 +19,7 @@ functions to help you work with them.
 
 ## Transform
 
-@docs map, indexedMap, foldl, foldr, indexedFoldl, indexedFoldr, keepIf, mapAndKeepJust, reverse
+@docs map, indexedMap, foldl, foldr, indexedFoldl, indexedFoldr, keepIf, indexedKeepIf, mapAndKeepJust, reverse
 
 
 ## Query

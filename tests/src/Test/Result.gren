@@ -18,7 +18,7 @@ isEven n =
 
 toIntResult : String -> Result String Int
 toIntResult s =
-    case String.toInt s of
+    when String.toInt s is
         Just i ->
             Ok i
 

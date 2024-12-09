@@ -181,11 +181,11 @@ tests =
                             (Maybe.map5 f Nothing (Just 1) (Just 1) (Just 1) (Just 1))
                  ]
                 )
-            , describe "filter"
+            , describe "keepIf"
                 [ test "Success" <| \{} ->
-                    Expect.equal (Just 5) (Maybe.filter isOdd (Just 5))
+                    Expect.equal (Just 5) (Maybe.keepIf isOdd (Just 5))
                 , test "Failure" <| \{} ->
-                    Expect.equal Nothing (Maybe.filter isOdd (Just 4))
+                    Expect.equal Nothing (Maybe.keepIf isOdd (Just 4))
                 ]
             , describe "andThen"
                 [ test "succeeding chain" <|

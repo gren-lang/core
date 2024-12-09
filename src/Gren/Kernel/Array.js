@@ -99,7 +99,7 @@ var _Array_filter = F2(function (func, array) {
 
 var _Array_indexedFilter = F2(function (func, array) {
   return array.filter(function (value, index) {
-    return func(index, value);
+    return A2(func, index, value);
   });
 });
 

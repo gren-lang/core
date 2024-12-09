@@ -12,7 +12,7 @@ type Wrapper a
 
 caseUnderscore : Maybe number -> number
 caseUnderscore m_ =
-    case m_ of
+    when m_ is
         Just x ->
             x
 
@@ -22,7 +22,7 @@ caseUnderscore m_ =
 
 patternUnderscore : number
 patternUnderscore =
-    case Just 42 of
+    when Just 42 is
         Just x_ ->
             x_
 
@@ -41,7 +41,7 @@ letQualified =
 
 caseQualified : number
 caseQualified =
-    case Just 42 of
+    when Just 42 is
         Maybe.Just x ->
             x
 

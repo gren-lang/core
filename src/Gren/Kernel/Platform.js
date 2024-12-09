@@ -11,7 +11,7 @@ import Result exposing (isOk)
 
 // PROGRAMS
 
-var _Platform_worker = F4(function (impl, flagDecoder, debugMetadata, args) {
+var _Platform_worker = F3(function (impl, flagDecoder, args) {
   return _Platform_initialize(
     flagDecoder,
     args,

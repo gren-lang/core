@@ -72,9 +72,9 @@ tests =
 
         transformTests =
             describe "transform Tests"
-                [ test "filter" <| \{} -> Expect.equal (Dict.singleton "Tom" "cat") (Dict.filter (\k v -> k == "Tom") animals)
+                [ test "keepIf" <| \{} -> Expect.equal (Dict.singleton "Tom" "cat") (Dict.keepIf (\k v -> k == "Tom") animals)
                 , test "map" <| \{} -> Expect.equal (Dict.empty |> Dict.set "Tom" "tac" |> Dict.set "Jerry" "esuom") (Dict.map (\_ v -> String.reverse v) animals)
-                , test "filterMap" <| \{} -> Expect.equal (Dict.singleton "Tom" "tac") (Dict.filterMap (\k v -> if k == "Tom" then Just (String.reverse v) else Nothing) animals)
+                , test "mapAndKeepJust" <| \{} -> Expect.equal (Dict.singleton "Tom" "tac") (Dict.mapAndKeepJust (\k v -> if k == "Tom" then Just (String.reverse v) else Nothing) animals)
                 , test "partition" <| \{} -> Expect.equal { trues = Dict.singleton "Tom" "cat", falses = Dict.singleton "Jerry" "mouse" } (Dict.partition (\k v -> k == "Tom") animals)
                 ]
 

@@ -6,7 +6,7 @@ import Maybe exposing (Just, Nothing)
 */
 
 var _String_pushFirst = F2(function (char, string) {
-  return char + str;
+  return char + string;
 });
 
 var _String_pushLast = F2(function (char, string) {
@@ -56,7 +56,7 @@ var _String_append = F2(function (a, b) {
 
 var _String_repeat = F2(function (num, chunk) {
   try {
-    chunk.repeat(num);
+    return chunk.repeat(num);
   } catch (error) {
     if (error.name === "RangeError") {
       return "";
@@ -98,11 +98,11 @@ var _String_join = F2(function (sep, strs) {
 
 var _String_slice = F3(function (start, end, str) {
   if (start < 0) {
-    start = str.length - start;
+    start = str.length + start;
   }
 
   if (end < 0) {
-    end = str.length - end;
+    end = str.length + end;
   }
 
   if (start >= end) {
@@ -114,10 +114,11 @@ var _String_slice = F3(function (start, end, str) {
 
   for (let char of str) {
     if (index < start) {
+      index++;
       continue;
     }
 
-    if (index > end) {
+    if (index >= end) {
       break;
     }
 
