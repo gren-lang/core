@@ -808,7 +808,7 @@ any =
 -}
 all : (Char -> Bool) -> String -> Bool
 all isGood str =
-    any (not << isGood) str
+    not (any (not << isGood) str)
 
 
 -- UNITS

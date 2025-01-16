@@ -75,8 +75,15 @@ tests =
                 , badFloat "6.022.31"
                 ]
 
+        queryTests =
+            describe "String queries"
+                [ test "any true" <| \{} -> Expect.equal True (String.any Char.isDigit "one is 1")
+                , test "any false" <| \{} -> Expect.equal False (String.any Char.isDigit "one is one")
+                , test "all true" <| \{} -> Expect.equal True (String.all Char.isDigit "123")
+                , test "all false" <| \{} -> Expect.equal False (String.all Char.isDigit "1 2 3")
+                ]
     in
-    describe "String" [ simpleTests, combiningTests, intTests, floatTests ]
+    describe "String" [ simpleTests, combiningTests, intTests, floatTests, queryTests ]
 
 
 
