@@ -9,14 +9,15 @@ import Array exposing (..)
 import Maybe exposing (Maybe(..))
 import Test exposing (..)
 import Test.Runner.Effectful exposing (await, awaitError, run)
-import Task
+import Task exposing ( Task )
 import Crypto
-import Bytes
+import Bytes exposing ( Bytes )
 import Bytes.Decode
 
 
 {-| All tests on the node platform for the `Crypto` module
 -}
+tests : Test.Runner.Effectful.Test
 tests = 
     Test.Runner.Effectful.join
         (
@@ -37,6 +38,7 @@ tests =
 
 {-| Tests for all the random value generation functions
 -}
+randomValueTests : Array Test.Runner.Effectful.Test
 randomValueTests =
     randomValueTestsHelper 
         { label = "int8"
@@ -88,8 +90,20 @@ randomValueTests =
         }
 
 
+{-|-}
+type alias RandomValueTestsHelper x =
+    { label : String
+    , generator : Int -> Task x Bytes
+    , decoder : Bytes.Endianness -> Bytes.Decode.Decoder Int
+    , min : Int
+    , max : Int
+    , maximumPossibleValues : Int
+    }
+
+
 {-| A helper for generating tests for the random value functions.
 -}
+randomValueTestsHelper : RandomValueTestsHelper a -> Array Test.Runner.Effectful.Test
 randomValueTestsHelper { label, generator, decoder, min, max, maximumPossibleValues } =
     let
         withEndianess =
@@ -173,6 +187,7 @@ randomValueTestsHelper { label, generator, decoder, min, max, maximumPossibleVal
 
 
 {-|-}
+uuidTests : Array Test.Runner.Effectful.Test
 uuidTests =
     [ await 
         (Crypto.getSecureContext
@@ -213,6 +228,7 @@ uuidTests =
 
 
 {-|-}
+digestTests : Array Test.Runner.Effectful.Test
 digestTests =
     let
         testBytes =
