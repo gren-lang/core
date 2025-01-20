@@ -1,0 +1,199 @@
+module Test.Crypto exposing (tests)
+
+{-|-}
+
+import Basics exposing (..)
+import Math
+import Expect
+import Array exposing (..)
+import Maybe exposing (Maybe(..))
+import Test exposing (..)
+import Test.Runner.Effectful exposing (await, awaitError, run)
+import Task
+import Crypto
+import Bytes
+import Bytes.Decode
+
+
+{-| All tests on the node platform for the `Crypto` module
+-}
+tests = 
+    [ await Crypto.getSecureContext 
+        "Get secure context"
+        (\secureContext ->
+            test "`Crypto.getSecureContext` successfully runs and returns a value" 
+                (\_ ->
+                    Expect.equal True True
+                )
+        )
+    ] 
+        ++ digestTests
+        ++ randomValueTests
+
+
+{-| Tests for all the random value generation functions
+-}
+randomValueTests =
+    randomValueTestsHelper 
+        { label = "int8"
+        , generator = Crypto.getRandomInt8Values
+        , decoder = \_ -> Bytes.Decode.signedInt8
+        , min = -128
+        , max = 128
+        , maximumPossibleValues = 65536
+        }
+    ++ randomValueTestsHelper 
+        { label = "uint8"
+        , generator = Crypto.getRandomUInt8Values
+        , decoder = \_ -> Bytes.Decode.unsignedInt8
+        , min = 0
+        , max = 256
+        , maximumPossibleValues = 65536
+        }
+    ++ randomValueTestsHelper 
+        { label = "int16"
+        , generator = Crypto.getRandomInt16Values
+        , decoder = Bytes.Decode.signedInt16
+        , min = -32767
+        , max = 32767
+        , maximumPossibleValues = 32768
+        }
+    ++ randomValueTestsHelper 
+        { label = "uint16"
+        , generator = Crypto.getRandomUInt16Values
+        , decoder = Bytes.Decode.unsignedInt16
+        , min = 0
+        , max = 65535
+        , maximumPossibleValues = 32768
+        }
+    ++ randomValueTestsHelper 
+        { label = "int32"
+        , generator = Crypto.getRandomInt32Values
+        , decoder = Bytes.Decode.signedInt32
+        , min = -2147483648
+        , max = 2147483648
+        , maximumPossibleValues = 16384
+        }
+    ++ randomValueTestsHelper 
+        { label = "uint32"
+        , generator = Crypto.getRandomUInt32Values
+        , decoder = Bytes.Decode.unsignedInt32
+        , min = 0
+        , max = 4294967295
+        , maximumPossibleValues = 16384
+        }
+
+
+{-| A helper for generating tests for the random value functions.
+-}
+randomValueTestsHelper { label, generator, decoder, min, max, maximumPossibleValues } =
+    let
+        withEndianess =
+            Task.map2
+                (\endianness values -> 
+                    { endianness = endianness
+                    , values = values
+                    }
+                )
+                Bytes.getHostEndianness
+    in
+    [ await
+        (withEndianess (generator 1))
+        ("Generate a random " ++ label)
+        (\{ endianness, values } ->
+            test "Generated `Bytes` can be decoded and are within their expected value range"
+                (\_ ->
+                    when Bytes.Decode.decode (decoder endianness) values is
+                        Just num ->
+                            if num >= min && num <= max then
+                                Expect.pass
+                                
+                            else
+                                Expect.fail "Generated `Bytes` not within expected values"
+
+                        Nothing ->
+                            Expect.fail "Generated `Bytes` were not successfully decoded"
+                )
+        )
+    -- The test below tests the maximum number of values that can be produced and makes sure
+    -- it's correct. This test hangs up the test suite, so uncomment when needed with the
+    -- understanding it'll take a while.
+    -- , await
+    --     (withEndianess (generator 99999))
+    --     ("Generate the maximum possible values of " ++ label)
+    --     (\{ endianness, values } ->
+    --         let
+    --             maximumValues =
+    --                 maximumPossibleValues
+
+    --             arrayDecoder =
+    --                 Bytes.Decode.loop
+    --                     { valuesLeft = maximumValues
+    --                     , arr = []
+    --                     }
+    --                     (\{ valuesLeft, arr } ->
+    --                         if valuesLeft > 0 then
+    --                             decoder endianness
+    --                                 |> Bytes.Decode.map (\val ->
+    --                                     Bytes.Decode.Loop
+    --                                         { valuesLeft = valuesLeft - 1
+    --                                         , arr = Array.pushLast val arr
+    --                                         }
+    --                                 )
+
+    --                         else
+    --                             Bytes.Decode.Done arr
+    --                                 |> Bytes.Decode.succeed
+    --                     )
+    --         in
+    --         test "When passed a number greater than the maximum number of values that can be generated, generates the maxiumum number of values"
+    --             (\_ ->
+    --                 Bytes.Decode.decode arrayDecoder values
+    --                     |> Maybe.map Array.length
+    --                     |> Expect.equal (Just maximumValues)
+    --             )
+    --     )
+    , await
+        (withEndianess (generator -9))
+        ("Attempt to generate a negative number of values for " ++ label)
+        (\{ endianness, values } ->
+            test "When attempting to generate values with a negative number, returns 0 values" 
+                (\_ -> 
+                    Bytes.Decode.decode (decoder endianness) values
+                        |> Expect.equal Nothing
+                )
+        )
+    ]
+
+
+{-|-}
+digestTests =
+    let
+        testBytes =
+            Bytes.fromString "hi"
+        
+        digestTestHelper digestAlgorithm =
+            Crypto.getSecureContext
+                |> Task.andThen 
+                        (\secureContext -> 
+                            Crypto.digest secureContext digestAlgorithm testBytes
+                        )
+    in
+    [ await 
+        (digestTestHelper Crypto.Sha256)
+        "Generate a Sha256 hash from some `Bytes`" 
+        (\_ ->
+            test "Successfully generates a hash" (\_ ->
+                Expect.equal True True
+            )
+        )
+    , await 
+        (digestTestHelper Crypto.Sha512)
+        "Generate a Sha512 hash from some `Bytes`" 
+        (\_ ->
+            test "Successfully generates a hash" (\_ ->
+                Expect.equal True True
+            )
+        )
+    ]
+
