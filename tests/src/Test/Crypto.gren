@@ -31,6 +31,7 @@ tests =
             ] 
                 ++ digestTests
                 ++ randomValueTests
+                ++ uuidTests
         )
 
 
@@ -104,7 +105,8 @@ randomValueTestsHelper { label, generator, decoder, min, max, maximumPossibleVal
         (withEndianess (generator 1))
         ("Generate a random " ++ label)
         (\{ endianness, values } ->
-            test "Generated `Bytes` can be decoded and are within their expected value range"
+            test 
+                "Generated `Bytes` can be decoded and are within their expected value range"
                 (\_ ->
                     when Bytes.Decode.decode (decoder endianness) values is
                         Just num ->
@@ -160,11 +162,52 @@ randomValueTestsHelper { label, generator, decoder, min, max, maximumPossibleVal
         (withEndianess (generator -9))
         ("Attempt to generate a negative number of values for " ++ label)
         (\{ endianness, values } ->
-            test "When attempting to generate values with a negative number, returns 0 values" 
+            test 
+                "When attempting to generate values with a negative number, returns 0 values" 
                 (\_ -> 
                     Bytes.Decode.decode (decoder endianness) values
                         |> Expect.equal Nothing
                 )
+        )
+    ]
+
+
+{-|-}
+uuidTests =
+    [ await 
+        (Crypto.getSecureContext
+            |> Task.andThen Crypto.randomUuidV4
+        )
+        "Generate a random V4 UUID" 
+        (\randomUuid ->
+            describe "Tests for generated v4 UUIDs"
+                [ test 
+                    "Successfully generates string of the 36 characters"
+                    (\_ ->
+                        let
+                            expectedLength =
+                                36
+                        in
+                        if String.count randomUuid == expectedLength then
+                            Expect.pass
+                        
+                        else
+                            Expect.fail "The generated UUID was not equal to the expected 36 character"
+                    )
+                , test
+                    "The 15th character is a 4, indicating the generated id is a v4 UUID"
+                    (\_ ->
+                        let
+                            _ =
+                                Debug.log "hi" randomUuid
+                        in
+                        if String.slice 14 15 randomUuid == "4" then
+                            Expect.pass
+                        
+                        else
+                            Expect.fail "The generated UUID is not valid"
+                    )
+                ]
         )
     ]
 
