@@ -197,7 +197,7 @@ uuidTests =
         (\randomUuid ->
             describe "Tests for generated v4 UUIDs"
                 [ test 
-                    "Successfully generates string of the 36 characters"
+                    "Successfully generates string of 36 characters"
                     (\_ ->
                         let
                             expectedLength =
