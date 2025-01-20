@@ -18,17 +18,20 @@ import Bytes.Decode
 {-| All tests on the node platform for the `Crypto` module
 -}
 tests = 
-    [ await Crypto.getSecureContext 
-        "Get secure context"
-        (\secureContext ->
-            test "`Crypto.getSecureContext` successfully runs and returns a value" 
-                (\_ ->
-                    Expect.equal True True
+    Test.Runner.Effectful.join
+        (
+            [ await Crypto.getSecureContext 
+                "Get secure context"
+                (\secureContext ->
+                    test "`Crypto.getSecureContext` successfully runs and returns a value" 
+                        (\_ ->
+                            Expect.equal True True
+                        )
                 )
+            ] 
+                ++ digestTests
+                ++ randomValueTests
         )
-    ] 
-        ++ digestTests
-        ++ randomValueTests
 
 
 {-| Tests for all the random value generation functions

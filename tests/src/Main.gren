@@ -52,7 +52,7 @@ main_ =
 {-| A set of effectful tests that must be run in a different 
 `Program` type than the main tests
 -}
-main : Test.Runner.Effectful.Program
+main : Test.Runner.Effectful.Program a
 main =
     Test.Runner.Effectful.run <|
         Crypto.tests
