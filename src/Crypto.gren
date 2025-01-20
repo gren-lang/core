@@ -471,7 +471,10 @@ type Extractable
 {-| A generated key.
 -}
 type Key key keyData
-    = Key { key : key, data : keyData }
+    = Key 
+        { key : key
+        , data : keyData 
+        }
 
 
 {-| A public key that is used for encrypting and verifying values. This key type, 
