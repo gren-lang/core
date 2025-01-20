@@ -1,19 +1,20 @@
 {
-  "type": "application",
-  "platform": "node",
-  "source-directories": [ 
-    "src" 
-  ],
-  "gren-version": "0.5.2",
-  "dependencies": {
-    "direct": {
-      "gren-lang/node": "5.0.0",
-      "gren-lang/core": "local:..",
-      "gren-lang/test": "4.0.0",
-      "gren-lang/test-runner-node": "5.0.1"
-    },
-    "indirect": {
-      "gren-lang/url": "5.0.0"
+    "type": "application",
+    "platform": "node",
+    "source-directories": [
+        "src"
+    ],
+    "gren-version": "0.5.2",
+    "dependencies": {
+        "direct": {
+            "blaix/gren-effectful-tests-node": "2.0.0",
+            "gren-lang/core": "6.0.1",
+            "gren-lang/node": "5.0.0",
+            "gren-lang/test": "4.1.0",
+            "gren-lang/test-runner-node": "6.0.0"
+        },
+        "indirect": {
+            "gren-lang/url": "5.0.0"
+        }
     }
-  }
 }
