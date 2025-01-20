@@ -212,10 +212,6 @@ uuidTests =
                 , test
                     "The 15th character is a 4, indicating the generated id is a v4 UUID"
                     (\_ ->
-                        let
-                            _ =
-                                Debug.log "hi" randomUuid
-                        in
                         if String.slice 14 15 randomUuid == "4" then
                             Expect.pass
                         
