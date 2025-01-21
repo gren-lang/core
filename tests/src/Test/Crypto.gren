@@ -33,6 +33,7 @@ tests =
                 ++ digestTests
                 ++ randomValueTests
                 ++ uuidTests
+                ++ rsaKeyGenerationTests
         )
 
 
@@ -219,6 +220,138 @@ uuidTests =
                             Expect.fail "The generated UUID is not valid"
                     )
                 ]
+        )
+    ]
+
+
+{-| Key generation tests for RSA algorithms.
+
+The tests here are not comprehensive. For example, not every key generation function 
+is tested with all possible hash algorithms or modulus lengths. If there are any 
+specific errors found in the future, more tests can be added to increase coverage.
+-}
+rsaKeyGenerationTests : Array Test.Runner.Effectful.Test
+rsaKeyGenerationTests =
+    let
+        generateRsaOaepKey params =
+            Crypto.getSecureContext
+                |> Task.mapError (\_ -> Crypto.ModulusLengthNotDivisibleByEight)
+                |> Task.andThen (Crypto.generateRsaOaepKeyPair params)
+
+        generateRsaPssKey params =
+            Crypto.getSecureContext
+                |> Task.mapError (\_ -> Crypto.ModulusLengthNotDivisibleByEight)
+                |> Task.andThen (Crypto.generateRsaPssKeyPair params)
+    in
+    [ awaitError
+        (generateRsaOaepKey
+            { modulusLength = 2049
+            , hash = Crypto.Sha256
+            , extractable = Crypto.CanBeExtracted
+            }
+        )
+        "Attempting to generate an RSA-OAEP key pair when `modulusLength` is not divisible by 8"
+        (\_ ->
+            test
+                "When passed a `modulusLength` that is not divisible by 8, does not generate a RSA-OAEP key pair"
+                (\_ -> Expect.equal err Crypto.ModulusLengthNotDivisibleByEight)
+        )
+    , await
+        (generateRsaOaepKey
+            { modulusLength = 0
+            , hash = Crypto.Sha256
+            , extractable = Crypto.CanBeExtracted
+            }
+        )
+        "Attempting to generate an RSA-OAEP key pair when modulus length is lower than the minimum"
+        (\_ ->
+            test
+                "When generating an RSA-OAEP key pair with a modulus length lower than the minimum, still successfully generates the key pair"
+                (\_ -> Expect.pass)
+        )
+    , await
+        (generateRsaOaepKey
+            { modulusLength = 1234040
+            , hash = Crypto.Sha256
+            , extractable = Crypto.CanBeExtracted
+            }
+        )
+        "Attempting to generate an RSA-OAEP key pair when modulus length is higher than the maximum"
+        (\_ ->
+            test
+                "When generating an RSA-OAEP key pair with a modulus length higher than the maximum, still successfully generates the key pair"
+                (\_ -> Expect.pass)
+        )
+
+
+    -- Exporting private keys
+
+    , awaitError
+        (generateRsaOaepKey
+            { modulusLength = 2048
+            , hash = Crypto.Sha256
+            , extractable = Crypto.CannotBeExtracted
+            }
+            |> Task.mapError (\_ -> Crypto.KeyNotExportable)
+            |> Task.map .privateKey
+            |> Task.andThen Crypto.exportRsaOaepPrivateKeyAsJwk
+        )
+        "Attempting to generate and export a RSA-OAEP private key that cannot be exported"
+        (\err ->
+            test 
+                "Exporting an RSA-OAEP private key using SHA-256 and 2048 modulus length that cannot be exported fails" 
+                (\_ -> Expect.equal Crypto.KeyNotExportable err)
+        )
+    , await
+        (generateRsaOaepKey
+            { modulusLength = 2048
+            , hash = Crypto.Sha256
+            , extractable = Crypto.CanBeExtracted
+            }
+            |> Task.mapError (\_ -> Crypto.KeyNotExportable)
+            |> Task.map .privateKey
+            |> Task.andThen Crypto.exportRsaOaepPrivateKeyAsJwk
+        )
+        "Attempting to generate and export a RSA-OAEP private key that can be exported"
+        (\_ ->
+            test 
+                "Exporting an RSA-OAEP private key using SHA-256 and 2048 modulus length that can be exported succeeds" 
+                (\_ -> Expect.pass)
+        )
+    
+
+    -- Exporting public keys
+
+    , await
+        (generateRsaOaepKey
+            { modulusLength = 2048
+            , hash = Crypto.Sha256
+            , extractable = Crypto.CanBeExtracted
+            }
+            |> Task.mapError (\_ -> Crypto.KeyNotExportable)
+            |> Task.map .publicKey
+            |> Task.andThen Crypto.exportRsaOaepPublicKeyAsJwk
+        )
+        "Attempting to generate and export a RSA-OAEP public key that can be exported"
+        (\_ ->
+            test 
+                "Exporting a public key to JWK succeeds when the generated key was created as extractable" 
+                (\_ -> Expect.pass)
+        )
+    , await
+        (generateRsaOaepKey
+            { modulusLength = 2048
+            , hash = Crypto.Sha256
+            , extractable = Crypto.CannotBeExtracted
+            }
+            |> Task.mapError (\_ -> Crypto.KeyNotExportable)
+            |> Task.map .publicKey
+            |> Task.andThen Crypto.exportRsaOaepPublicKeyAsJwk
+        )
+        "Attempting to generate and export a RSA-OAEP pbulic key that cannot be exported"
+        (\_ ->
+            test "Exporting a public key to JWK succeeds even when the generated key was created as not extractable" 
+                (\_ -> Expect.pass)
         )
     ]
 
