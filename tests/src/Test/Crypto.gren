@@ -224,6 +224,53 @@ uuidTests =
     ]
 
 
+{-| All tests for encryption with all algorithms.
+-}
+encryptionTests : Array Test.Runner.Effectful.Test
+encryptionTests =
+    encryptWithRsaOaepTests
+
+
+{-|-}
+encryptWithRsaOaepTests : Array Test.Runner.Effectful.Test
+encryptWithRsaOaepTests =
+    [ await
+        (Crypto.getSecureContext
+            |> Task.mapError (\_ -> Crypto.ModulusLengthNotDivisibleByEight)
+            |> Task.andThen 
+                (Crypto.generateRsaOaepKeyPair
+                    { modulusLength = 2048
+                    , hash = Crypto.Sha256
+                    , extractable = Crypto.CanBeExtracted
+                    }
+                )
+            |> Task.mapError (\_ -> Crypto.RsaOaepEncryptionError)
+            |> Task.andThen (\{ publicKey, privateKey } ->
+                Crypto.encryptWithRsaOaep
+                    { label = Nothing
+                    }
+                    publicKey
+                    (Bytes.fromString "encryption test stirng")
+            )
+        )
+        "Attempting to generate an RSA-OAEP key pair and encrypting some bytes"
+        (\encryptedBits ->
+            test 
+                "testing" 
+                (\_ -> 
+                    Expect.pass
+                )
+        )
+    ]
+
+
+{-| All tests for decryption with all algorithms.
+-}
+decryptionTests : Array Test.Runner.Effectful.Test
+decryptionTests =
+    Debug.todo "Add tests for decryption"
+
+
 {-| Key generation tests for RSA algorithms.
 
 The tests here are not comprehensive. For example, not every key generation function 
