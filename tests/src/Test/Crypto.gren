@@ -251,7 +251,7 @@ rsaKeyGenerationTests =
             }
         )
         "Attempting to generate an RSA-OAEP key pair when `modulusLength` is not divisible by 8"
-        (\_ ->
+        (\err ->
             test
                 "When passed a `modulusLength` that is not divisible by 8, does not generate a RSA-OAEP key pair"
                 (\_ -> Expect.equal err Crypto.ModulusLengthNotDivisibleByEight)
