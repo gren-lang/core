@@ -733,6 +733,14 @@ digestTests =
             )
         )
     , await 
+        (digestTestHelper Crypto.Sha384)
+        "Generate a SHA-384 hash from some `Bytes`" 
+        (\_ ->
+            test "Successfully generates a hash" (\_ ->
+                Expect.equal True True
+            )
+        )
+    , await 
         (digestTestHelper Crypto.Sha512)
         "Generate a Sha512 hash from some `Bytes`" 
         (\_ ->
