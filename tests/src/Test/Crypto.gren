@@ -263,6 +263,46 @@ encryptWithRsaOaepTests =
                     Expect.pass
                 )
         )
+    , await
+        (Crypto.getSecureContext
+            |> Task.mapError (\_ -> Crypto.ModulusLengthNotDivisibleByEight)
+            |> Task.andThen 
+                (Crypto.generateRsaOaepKeyPair
+                    { modulusLength = 2048
+                    , hash = Crypto.Sha256
+                    , extractable = Crypto.CanBeExtracted
+                    }
+                )
+            |> Task.mapError (\_ -> Crypto.RsaOaepEncryptionError)
+            |> Task.andThen (\{ publicKey, privateKey } ->
+                Crypto.encryptWithRsaOaep
+                    { label = Nothing
+                    }
+                    publicKey
+                    (Bytes.fromString "encryption test string")
+                    |> Task.map (\encryptedBytes ->
+                        { privateKey = privateKey
+                        , encryptedBytes = encryptedBytes
+                        }
+                    )
+            )
+            |> Task.mapError (\_ -> Crypto.RsaOaepDecryptionError)
+            |> Task.andThen (\{ privateKey, encryptedBytes } ->
+                Crypto.decryptWithRsaOaep
+                    { label = Nothing
+                    }
+                    privateKey
+                    encryptedBytes
+            )
+        )
+        "Attempting to generate an RSA-OAEP key pair, encrypt some bytes, and then decrypt them"
+        (\encryptedThenDecryptedBytes ->
+            test
+                "The bytes encrypted with RSA-OAEP can be decrypted and equal"
+                (\_ ->
+                    Expect.equal encryptedThenDecryptedBytes (Bytes.fromString "encryption test string")
+                )
+        )
     ]
 
 
