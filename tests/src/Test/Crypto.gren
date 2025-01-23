@@ -137,44 +137,41 @@ randomValueTestsHelper { label, generator, decoder, min, max, maximumPossibleVal
                             Expect.fail "Generated `Bytes` were not successfully decoded"
                 )
         )
-    -- The test below tests the maximum number of values that can be produced and makes sure
-    -- it's correct. This test hangs up the test suite, so uncomment when needed with the
-    -- understanding it'll take a while.
-    -- , await
-    --     (withEndianess (generator 99999))
-    --     ("Generate the maximum possible values of " ++ label)
-    --     (\{ endianness, values } ->
-    --         let
-    --             maximumValues =
-    --                 maximumPossibleValues
+    , await
+        (withEndianess (generator 99999))
+        ("Generate the maximum possible values of " ++ label)
+        (\{ endianness, values } ->
+            let
+                maximumValues =
+                    maximumPossibleValues
 
-    --             arrayDecoder =
-    --                 Bytes.Decode.loop
-    --                     { valuesLeft = maximumValues
-    --                     , arr = []
-    --                     }
-    --                     (\{ valuesLeft, arr } ->
-    --                         if valuesLeft > 0 then
-    --                             decoder endianness
-    --                                 |> Bytes.Decode.map (\val ->
-    --                                     Bytes.Decode.Loop
-    --                                         { valuesLeft = valuesLeft - 1
-    --                                         , arr = Array.pushLast val arr
-    --                                         }
-    --                                 )
+                arrayDecoder =
+                    Bytes.Decode.loop
+                        { valuesLeft = maximumValues
+                        , arr = []
+                        }
+                        (\{ valuesLeft, arr } ->
+                            if valuesLeft > 0 then
+                                decoder endianness
+                                    |> Bytes.Decode.map (\val ->
+                                        Bytes.Decode.Loop
+                                            { valuesLeft = valuesLeft - 1
+                                            , arr = Array.pushLast val arr
+                                            }
+                                    )
 
-    --                         else
-    --                             Bytes.Decode.Done arr
-    --                                 |> Bytes.Decode.succeed
-    --                     )
-    --         in
-    --         test "When passed a number greater than the maximum number of values that can be generated, generates the maxiumum number of values"
-    --             (\_ ->
-    --                 Bytes.Decode.decode arrayDecoder values
-    --                     |> Maybe.map Array.length
-    --                     |> Expect.equal (Just maximumValues)
-    --             )
-    --     )
+                            else
+                                Bytes.Decode.Done arr
+                                    |> Bytes.Decode.succeed
+                        )
+            in
+            test "When passed a number greater than the maximum number of values that can be generated, generates the maxiumum number of values"
+                (\_ ->
+                    Bytes.Decode.decode arrayDecoder values
+                        |> Maybe.map Array.length
+                        |> Expect.equal (Just maximumValues)
+                )
+        )
     , await
         (withEndianess (generator -9))
         ("Attempt to generate a negative number of values for " ++ label)
