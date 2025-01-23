@@ -34,6 +34,7 @@ tests =
                 ++ randomValueTests
                 ++ uuidTests
                 ++ encryptionTests
+                ++ decryptionTests
                 ++ keyGenerationTests
                 ++ exportKeyTests
         )
@@ -233,73 +234,108 @@ encryptionTests =
 {-|-}
 encryptWithRsaOaepTests : Array Test.Runner.Effectful.Test
 encryptWithRsaOaepTests =
-    [ await
-        (Crypto.getSecureContext
-            |> Task.mapError (\_ -> Crypto.ModulusLengthNotDivisibleByEight)
-            |> Task.andThen 
-                (Crypto.generateRsaOaepKeyPair
-                    { modulusLength = 2048
-                    , hash = Crypto.Sha256
-                    , extractable = Crypto.CanBeExtracted
-                    }
-                )
-            |> Task.mapError (\_ -> Crypto.RsaOaepEncryptionError)
-            |> Task.andThen (\{ publicKey, privateKey } ->
-                Crypto.encryptWithRsaOaep
-                    { label = Nothing
-                    }
-                    publicKey
-                    (Bytes.fromString "encryption test stirng")
-            )
-        )
-        "Attempting to generate an RSA-OAEP key pair and encrypting some bytes"
-        (\encryptedBits ->
-            test 
-                "testing" 
-                (\_ -> 
-                    Expect.pass
-                )
-        )
-    , await
-        (Crypto.getSecureContext
-            |> Task.mapError (\_ -> Crypto.ModulusLengthNotDivisibleByEight)
-            |> Task.andThen 
-                (Crypto.generateRsaOaepKeyPair
-                    { modulusLength = 2048
-                    , hash = Crypto.Sha256
-                    , extractable = Crypto.CanBeExtracted
-                    }
-                )
-            |> Task.mapError (\_ -> Crypto.RsaOaepEncryptionError)
-            |> Task.andThen (\{ publicKey, privateKey } ->
-                Crypto.encryptWithRsaOaep
-                    { label = Nothing
-                    }
-                    publicKey
-                    (Bytes.fromString "encryption test string")
-                    |> Task.map (\encryptedBytes ->
-                        { privateKey = privateKey
-                        , encryptedBytes = encryptedBytes
-                        }
+    let
+        helper stringLabel { modulusLength, hash, label } =
+            await
+                (Crypto.getSecureContext
+                    |> Task.mapError (\_ -> Crypto.ModulusLengthNotDivisibleByEight)
+                    |> Task.andThen 
+                        (Crypto.generateRsaOaepKeyPair
+                            { modulusLength = modulusLength
+                            , hash = hash
+                            , extractable = Crypto.CanBeExtracted
+                            }
+                        )
+                    |> Task.mapError (\_ -> Crypto.RsaOaepEncryptionError)
+                    |> Task.andThen (\{ publicKey, privateKey } ->
+                        Crypto.encryptWithRsaOaep
+                            { label = Nothing
+                            }
+                            publicKey
+                            (Bytes.fromString "encryption test stirng")
                     )
-            )
-            |> Task.mapError (\_ -> Crypto.RsaOaepDecryptionError)
-            |> Task.andThen (\{ privateKey, encryptedBytes } ->
-                Crypto.decryptWithRsaOaep
-                    { label = Nothing
-                    }
-                    privateKey
-                    encryptedBytes
-            )
-        )
-        "Attempting to generate an RSA-OAEP key pair, encrypt some bytes, and then decrypt them"
-        (\encryptedThenDecryptedBytes ->
-            test
-                "The bytes encrypted with RSA-OAEP can be decrypted and equal"
-                (\_ ->
-                    Expect.equal encryptedThenDecryptedBytes (Bytes.fromString "encryption test string")
                 )
-        )
+                stringLabel
+                (\encryptedBits ->
+                    test 
+                        ("Test result: " ++ stringLabel)
+                        (\_ -> 
+                            Expect.pass
+                        )
+                )
+    in
+    [ helper
+        "Attempting to encrypt with RSA-OAP with SHA-256 hash with lowest possible modulus length"
+        { modulusLength = 2048
+        , hash = Crypto.Sha256
+        , label = Nothing
+        }
+    , helper
+        "Attempting to encrypt with RSA-OAP with SHA-384 hash with lowest possible modulus length"
+        { modulusLength = 2048
+        , hash = Crypto.Sha384
+        , label = Nothing
+        }
+    , helper
+        "Attempting to encrypt with RSA-OAP with SHA-512 hash with lowest possible modulus length"
+        { modulusLength = 2048
+        , hash = Crypto.Sha512
+        , label = Nothing
+        }
+    , helper
+        "Attempting to encrypt with RSA-OAP with SHA-256 hash and highest possible modulus length"
+        { modulusLength = 4096
+        , hash = Crypto.Sha256
+        , label = Nothing
+        }
+    , helper
+        "Attempting to encrypt with RSA-OAP with SHA-384 hash and highest possible modulus length"
+        { modulusLength = 4096
+        , hash = Crypto.Sha384
+        , label = Nothing
+        }
+    , helper
+        "Attempting to encrypt with RSA-OAP with SHA-512 hash and highest possible modulus length"
+        { modulusLength = 4096
+        , hash = Crypto.Sha512
+        , label = Nothing
+        }
+    , helper
+        "Attempting to encrypt with RSA-OAP with SHA-256 hash with lowest possible modulus length and a label"
+        { modulusLength = 2048
+        , hash = Crypto.Sha256
+        , label = Just (Bytes.fromString "label bytes")
+        }
+    , helper
+        "Attempting to encrypt with RSA-OAP with SHA-384 hash with lowest possible modulus length and a label"
+        { modulusLength = 2048
+        , hash = Crypto.Sha384
+        , label = Just (Bytes.fromString "label bytes")
+        }
+    , helper
+        "Attempting to encrypt with RSA-OAP with SHA-512 hash with lowest possible modulus length and a label"
+        { modulusLength = 2048
+        , hash = Crypto.Sha512
+        , label = Just (Bytes.fromString "label bytes")
+        }
+    , helper
+        "Attempting to encrypt with RSA-OAP with SHA-256 hash and highest possible modulus length and a label"
+        { modulusLength = 4096
+        , hash = Crypto.Sha256
+        , label = Just (Bytes.fromString "label bytes")
+        }
+    , helper
+        "Attempting to encrypt with RSA-OAP with SHA-384 hash and highest possible modulus length and a label"
+        { modulusLength = 4096
+        , hash = Crypto.Sha384
+        , label = Just (Bytes.fromString "label bytes")
+        }
+    , helper
+        "Attempting to encrypt with RSA-OAP with SHA-512 hash and highest possible modulus length and a label"
+        { modulusLength = 4096
+        , hash = Crypto.Sha512
+        , label = Just (Bytes.fromString "label bytes")
+        }
     ]
 
 
@@ -307,7 +343,203 @@ encryptWithRsaOaepTests =
 -}
 decryptionTests : Array Test.Runner.Effectful.Test
 decryptionTests =
-    Debug.todo "Add tests for decryption"
+    decryptWithRsaOaepTests
+
+
+{-|-}
+decryptWithRsaOaepTests : Array Test.Runner.Effectful.Test
+decryptWithRsaOaepTests =
+    let
+        bytesToEncryptThenDecrypt =
+            Bytes.fromString "encryption test string"
+
+        labelBytes =
+            Just <| Bytes.fromString "tst"
+
+        decryptTask { modulusLength, hash, encryptionLabel, decryptionLabel } =
+            Crypto.getSecureContext
+                |> Task.mapError (\_ -> Crypto.ModulusLengthNotDivisibleByEight)
+                |> Task.andThen 
+                    (Crypto.generateRsaOaepKeyPair
+                        { modulusLength = modulusLength
+                        , hash = hash
+                        , extractable = Crypto.CanBeExtracted
+                        }
+                    )
+                |> Task.mapError (\_ -> Crypto.RsaOaepEncryptionError)
+                |> Task.andThen (\{ publicKey, privateKey } ->
+                    Crypto.encryptWithRsaOaep
+                        { label = encryptionLabel
+                        }
+                        publicKey
+                        bytesToEncryptThenDecrypt
+                        |> Task.map 
+                            (\encryptedBytes ->
+                                { privateKey = privateKey
+                                , encryptedBytes = encryptedBytes
+                                }
+                            )
+                )
+                |> Task.mapError (\_ -> Crypto.RsaOaepDecryptionError)
+                |> Task.andThen (\{ privateKey, encryptedBytes } ->
+                    Crypto.decryptWithRsaOaep
+                        { label = decryptionLabel
+                        }
+                        privateKey
+                        encryptedBytes
+                )
+            
+        helper stringLabel params = 
+            await
+                (decryptTask params)
+                stringLabel
+                (\encryptedThenDecryptedBytes ->
+                    test
+                        ("Bytes that were encrypted then decrypted should equal: " ++ stringLabel)
+                        (\_ ->
+                            Expect.equal encryptedThenDecryptedBytes bytesToEncryptThenDecrypt
+                        )
+                )
+
+        failHelper stringLabel params =
+            awaitError
+                (decryptTask params)
+                stringLabel
+                (\_ ->
+                    test
+                        ("This test should fail: " ++ stringLabel)
+                        (\_ ->
+                            Expect.pass
+                        )
+                )
+    in
+    [ helper 
+        "Attempting to encrypt and decrypt with RSA-OAP with SHA-256 hash with lowest possible modulus length with equal encryption and decryption labels (Nothing)"
+        { modulusLength = 2048
+        , hash = Crypto.Sha256
+        , encryptionLabel = Nothing
+        , decryptionLabel = Nothing
+        }
+    , helper 
+        "Attempting to encrypt and decrypt with RSA-OAP with SHA-384 hash with lowest possible modulus length with equal encryption and decryption labels (Nothing)"
+        { modulusLength = 2048
+        , hash = Crypto.Sha384
+        , encryptionLabel = Nothing
+        , decryptionLabel = Nothing
+        }
+    , helper 
+        "Attempting to encrypt and decrypt with RSA-OAP with SHA-512 hash with lowest possible modulus length with equal encryption and decryption labels (Nothing)"
+        { modulusLength = 2048
+        , hash = Crypto.Sha512
+        , encryptionLabel = Nothing
+        , decryptionLabel = Nothing
+        }
+    , helper 
+        "Attempting to encrypt and decrypt with RSA-OAP with SHA-256 hash with highest possible modulus length with equal encryption and decryption labels (Nothing)"
+        { modulusLength = 4096
+        , hash = Crypto.Sha256
+        , encryptionLabel = Nothing
+        , decryptionLabel = Nothing
+        }
+    , helper 
+        "Attempting to encrypt and decrypt with RSA-OAP with SHA-384 hash with highest possible modulus length with equal encryption and decryption labels (Nothing)"
+        { modulusLength = 4096
+        , hash = Crypto.Sha384
+        , encryptionLabel = Nothing
+        , decryptionLabel = Nothing
+        }
+    , helper 
+        "Attempting to encrypt and decrypt with RSA-OAP with SHA-512 hash with lowhighestest possible modulus length with equal encryption and decryption labels (Nothing)"
+        { modulusLength = 4096
+        , hash = Crypto.Sha512
+        , encryptionLabel = Nothing
+        , decryptionLabel = Nothing
+        }
+    , helper 
+        "Attempting to encrypt and decrypt with RSA-OAP with SHA-256 hash with lowest possible modulus length with equal encryption and decryption labels (Just)"
+        { modulusLength = 2048
+        , hash = Crypto.Sha256
+        , encryptionLabel = labelBytes
+        , decryptionLabel = labelBytes
+        }
+    , helper 
+        "Attempting to encrypt and decrypt with RSA-OAP with SHA-384 hash with lowest possible modulus length with equal encryption and decryption labels (Just)"
+        { modulusLength = 2048
+        , hash = Crypto.Sha384
+        , encryptionLabel = labelBytes
+        , decryptionLabel = labelBytes
+        }
+    , helper 
+        "Attempting to encrypt and decrypt with RSA-OAP with SHA-512 hash with lowest possible modulus length with equal encryption and decryption labels (Just)"
+        { modulusLength = 2048
+        , hash = Crypto.Sha512
+        , encryptionLabel = labelBytes
+        , decryptionLabel = labelBytes
+        }
+    , helper 
+        "Attempting to encrypt and decrypt with RSA-OAP with SHA-256 hash with highest possible modulus length with equal encryption and decryption labels (Just)"
+        { modulusLength = 4096
+        , hash = Crypto.Sha256
+        , encryptionLabel = labelBytes
+        , decryptionLabel = labelBytes
+        }
+    , helper 
+        "Attempting to encrypt and decrypt with RSA-OAP with SHA-384 hash with highest possible modulus length with equal encryption and decryption labels (Just)"
+        { modulusLength = 4096
+        , hash = Crypto.Sha384
+        , encryptionLabel = labelBytes
+        , decryptionLabel = labelBytes
+        }
+    , helper 
+        "Attempting to encrypt and decrypt with RSA-OAP with SHA-512 hash with lowhighestest possible modulus length with equal encryption and decryption labels (Just)"
+        { modulusLength = 4096
+        , hash = Crypto.Sha512
+        , encryptionLabel = labelBytes
+        , decryptionLabel = labelBytes
+        }
+    , failHelper 
+        "Attempting to encrypt and decrypt with RSA-OAP with SHA-256 hash with lowest possible modulus length with unequal encryption and decryption labels"
+        { modulusLength = 2048
+        , hash = Crypto.Sha256
+        , encryptionLabel = labelBytes
+        , decryptionLabel = Nothing
+        }
+    , failHelper 
+        "Attempting to encrypt and decrypt with RSA-OAP with SHA-384 hash with lowest possible modulus length with unequal encryption and decryption labels"
+        { modulusLength = 2048
+        , hash = Crypto.Sha384
+        , encryptionLabel = labelBytes
+        , decryptionLabel = Nothing
+        }
+    , failHelper 
+        "Attempting to encrypt and decrypt with RSA-OAP with SHA-512 hash with lowest possible modulus length with unequal encryption and decryption labels"
+        { modulusLength = 2048
+        , hash = Crypto.Sha512
+        , encryptionLabel = labelBytes
+        , decryptionLabel = Nothing
+        }
+    , failHelper 
+        "Attempting to encrypt and decrypt with RSA-OAP with SHA-256 hash with highest possible modulus length with unequal encryption and decryption labels"
+        { modulusLength = 4096
+        , hash = Crypto.Sha256
+        , encryptionLabel = labelBytes
+        , decryptionLabel = Nothing
+        }
+    , failHelper 
+        "Attempting to encrypt and decrypt with RSA-OAP with SHA-384 hash with highest possible modulus length with unequal encryption and decryption labels"
+        { modulusLength = 4096
+        , hash = Crypto.Sha384
+        , encryptionLabel = labelBytes
+        , decryptionLabel = Nothing
+        }
+    , failHelper 
+        "Attempting to encrypt and decrypt with RSA-OAP with SHA-512 hash with lowhighestest possible modulus length with unequal encryption and decryption labels"
+        { modulusLength = 4096
+        , hash = Crypto.Sha512
+        , encryptionLabel = labelBytes
+        , decryptionLabel = Nothing
+        }
+    ]
 
 
 {-| All tests for key generation
