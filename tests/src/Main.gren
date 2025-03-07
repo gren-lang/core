@@ -2,6 +2,7 @@ module Main exposing (main)
 
 import Basics exposing (..)
 import Json.Decode exposing (Value)
+import Node
 import Platform.Cmd exposing (Cmd)
 import Task exposing (..)
 import Test exposing (..)
@@ -52,8 +53,9 @@ main_ =
 {-| A set of effectful tests that must be run in a different 
 `Program` type than the main tests
 -}
-main : Test.Runner.Effectful.Program a
+-- main : Test.Runner.Effectful.Program a
 main =
-    Test.Runner.Effectful.run <|
-        Crypto.tests
+    Node.defineSimpleProgram (\env ->
+        Test.Runner.Effectful.run env Crypto.tests
+    )
 
