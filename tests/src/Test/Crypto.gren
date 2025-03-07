@@ -46,6 +46,17 @@ tests =
 -- Random Value Tests
 
 
+{-|-}
+type alias RandomValueTestsHelper x =
+    { label : String
+    , generator : Int -> Task x Bytes
+    , decoder : Bytes.Endianness -> Bytes.Decode.Decoder Int
+    , min : Int
+    , max : Int
+    , maximumPossibleValues : Int
+    }
+
+
 {-| Tests for all the random value generation functions
 -}
 randomValueTests : Bytes.Endianness -> Test.Runner.Effectful.Test
@@ -106,17 +117,6 @@ randomValueTests endianness =
             , maximumPossibleValues = 16384
             }
         ]
-
-
-{-|-}
-type alias RandomValueTestsHelper x =
-    { label : String
-    , generator : Int -> Task x Bytes
-    , decoder : Bytes.Endianness -> Bytes.Decode.Decoder Int
-    , min : Int
-    , max : Int
-    , maximumPossibleValues : Int
-    }
 
 
 {-| A helper for generating tests for the random value functions.
@@ -237,63 +237,165 @@ uuidTests secureContext =
 
 {-|-}
 rsaOaepKeyTestHelper secureContext { label, modulusLength, hash } =
-    await 
-        (Crypto.generateRsaOaepKeyPair
-            { modulusLength = modulusLength
-            , hash = hash
-            , extractable = Crypto.CanBeExtracted
-            }
-            secureContext
-        )
-        ("test" ++ label)
-        (\{ publicKey, privateKey } ->
-            concat
-                [ await
-                    (Crypto.encryptWithRsaOaep
-                        { label = Nothing
-                        }
-                        publicKey
-                        (Bytes.fromString "encryption test string")
-                    )
-                    "Test encrypting a string with an RSA-OAEP public key and no label"
-                    (\encryptedBytes ->
-                        concat
-                            [ test "The resulting encrypted bytes do not match the original bytes"
+    -- Generate keys
+    -- Generate keys (errors)
+    -- Export keys
+    -- Export keys (errors)
+    -- Cryptographic action (encryption, etc.)
+    -- Cryptographic again (failure)
+    let
+        withLabel string =
+            label ++ ": " ++ string
+    in
+    concat
+        [ await
+            (Crypto.generateRsaOaepKeyPair
+                { modulusLength = modulusLength
+                , hash = hash
+                , extractable = Crypto.CannotBeExtracted
+                }
+                secureContext
+            )
+            (withLabel "Testing exporting when the generated keys are not exportable")
+            (\{ publicKey, privateKey } ->
+                concat
+                    [ await
+                        (Crypto.exportRsaOaepPublicKeyAsSpki publicKey)
+                        (withLabel "Exporting public RSA-OAEP key as SPKI when not exportable")
+                        (\exportedKey ->
+                            concat
+                                [ await
+                                    (Crypto.importRsaOaepPublicKeyFromSpki 
+                                        exportedKey
+                                        { hash = hash
+                                        }
+                                        Crypto.CanBeExtracted
+                                        secureContext
+                                    ) 
+                                    (withLabel "Importing a successfully extracted public key")
+                                    (\importedKey ->
+                                        test "frwgr"
+                                            (\_ ->
+                                                Expect.equal importedKey publicKey
+                                            )
+                                    )
+                                , await
+                                    (Crypto.importRsaOaepPublicKeyFromSpki 
+                                        exportedKey
+                                        { hash = 
+                                            when hash is
+                                                Crypto.Sha256 ->
+                                                    Crypto.Sha512
+
+                                                Crypto.Sha384 ->
+                                                    Crypto.Sha256
+
+                                                Crypto.Sha512 ->
+                                                    Crypto.Sha384
+                                        }
+                                        Crypto.CanBeExtracted
+                                        secureContext
+                                    ) 
+                                    (withLabel "Importing a successfully extracted public key with the wrong hash")
+                                    (\importedKey ->
+                                        test "The imported key does not equal the original key given the different hash used to generate it"
+                                            (\_ ->
+                                                Expect.notEqual importedKey publicKey
+                                            )
+                                    )
+                                , test (withLabel "Even when the genearted key is not exportable, the public key is")
+                                    (\_ ->
+                                        Expect.pass
+                                    )
+                                ]
+                        )
+                    , await
+                        (Crypto.exportRsaOaepPublicKeyAsJwk publicKey)
+                        (withLabel "Exporting public RSA-OAEP key as JWK when not exportable")
+                        (\_ ->
+                            test (withLabel "Even when the genearted key is not exportable, the public key is")
                                 (\_ ->
-                                    Expect.notEqual (Bytes.fromString "encryption test string") encryptedBytes
+                                    Expect.pass
                                 )
-                            , await
-                                (Crypto.decryptWithRsaOaep
-                                    { label = Nothing
-                                    }
-                                    privateKey
-                                    encryptedBytes
+                        )
+                    , awaitError
+                        (Crypto.exportRsaOaepPrivateKeyAsPkcs8 privateKey)
+                        (withLabel "Exporting private RSA-OAEP key as PKCS8 when not exportable")
+                        (\res ->
+                            test (withLabel "Fails")
+                                (\_ ->
+                                    Expect.equal res Crypto.KeyNotExportable
                                 )
-                                "Attempt to decrypt the encrypted bytes"
-                                (\decryptedBytes ->
-                                    test "Bytes that were encrypted and then decrypted with the same public/prviate key pair equal the origianl value"
-                                        (\_ ->
-                                            Expect.equal (Bytes.fromString "encryption test string") decryptedBytes
-                                        )
+                        )
+                    , awaitError
+                        (Crypto.exportRsaOaepPrivateKeyAsJwk privateKey)
+                        (withLabel "Exporting private RSA-OAEP key as JWK when not exportable")
+                        (\res ->
+                            test (withLabel "Fails")
+                                (\_ ->
+                                    Expect.equal res Crypto.KeyNotExportable
                                 )
-                            , awaitError
-                                (Crypto.decryptWithRsaOaep
-                                    { label = Just (Bytes.fromString "a")
-                                    }
-                                    privateKey
-                                    encryptedBytes
-                                )
-                                "When the label does not match the label given, fails"
-                                (\err -> 
-                                    test "The error equal the expected error" 
-                                        (\_ -> 
-                                            Expect.equal err Crypto.RsaOaepDecryptionError
-                                        )
-                                )
-                            ]
-                    )
-                ]
-        )
+                        ) 
+                    ]
+            )
+        , await 
+            (Crypto.generateRsaOaepKeyPair
+                { modulusLength = modulusLength
+                , hash = hash
+                , extractable = Crypto.CanBeExtracted
+                }
+                secureContext
+            )
+            ("Testing generating [...]" ++ label)
+            (\{ publicKey, privateKey } ->
+                concat
+                    [ await
+                        (Crypto.encryptWithRsaOaep
+                            { label = Nothing
+                            }
+                            publicKey
+                            (Bytes.fromString "encryption test string")
+                        )
+                        "Test encrypting a string with an RSA-OAEP public key and no label"
+                        (\encryptedBytes ->
+                            concat
+                                [ test "The resulting encrypted bytes do not match the original bytes"
+                                    (\_ ->
+                                        Expect.notEqual (Bytes.fromString "encryption test string") encryptedBytes
+                                    )
+                                , await
+                                    (Crypto.decryptWithRsaOaep
+                                        { label = Nothing
+                                        }
+                                        privateKey
+                                        encryptedBytes
+                                    )
+                                    "Attempt to decrypt the encrypted bytes"
+                                    (\decryptedBytes ->
+                                        test "Bytes that were encrypted and then decrypted with the same public/prviate key pair equal the origianl value"
+                                            (\_ ->
+                                                Expect.equal (Bytes.fromString "encryption test string") decryptedBytes
+                                            )
+                                    )
+                                , awaitError
+                                    (Crypto.decryptWithRsaOaep
+                                        { label = Just (Bytes.fromString "a")
+                                        }
+                                        privateKey
+                                        encryptedBytes
+                                    )
+                                    "When the label does not match the label given, fails"
+                                    (\err -> 
+                                        test "The error equal the expected error" 
+                                            (\_ -> 
+                                                Expect.equal err Crypto.RsaOaepDecryptionError
+                                            )
+                                    )
+                                ]
+                        )
+                    ]
+            )
+        ]
 
 
 -- {-| All tests for encryption with all algorithms.
