@@ -576,10 +576,26 @@ aesCtrTestsHelper secureContext label { aesLength } =
             )
             (withLabel "Generating a key that is marked as not extractable")
             (\key ->
-                test "testing"
-                    (\_ ->
-                        Expect.pass
-                    )
+                concat
+                    [ awaitError
+                        (Crypto.exportAesCtrKeyAsRaw key)
+                        "Exporting the generated key as RAW"
+                        (\err ->
+                            test "When exporting non-extractable key, fails with the correct error"
+                                (\_ ->
+                                    Expect.equal err Crypto.KeyNotExportable
+                                )
+                        )
+                    , awaitError
+                        (Crypto.exportAesCtrKeyAsJwk key)
+                        "Exporting the generated key as JWK"
+                        (\err ->
+                            test "When exporting non-extractable key, fails with the correct error"
+                                (\_ ->
+                                    Expect.equal err Crypto.KeyNotExportable
+                                )
+                        )
+                    ]
             )
         , await
             (Crypto.generateAesCtrKey
@@ -590,10 +606,105 @@ aesCtrTestsHelper secureContext label { aesLength } =
             )
             (withLabel "Generating a key that is marked as extractable")
             (\key ->
-                test "testing"
-                    (\_ ->
-                        Expect.pass
-                    )
+                let
+                    encryptionBytes =
+                        Bytes.fromString "encryption test string"
+                in
+                concat [
+                    await
+                        (Crypto.exportAesCtrKeyAsRaw key)
+                        "Exporting the generated key as RAW"
+                        (\exportedKey ->
+                            await
+                                (Crypto.importAesCtrKeyFromRaw
+                                    exportedKey
+                                    Crypto.CanBeExtracted
+                                    secureContext
+                                )
+                                "Importing the exported key"
+                                (\importedKey ->
+                                    test "When importing an exported key, the imported key matches the original"
+                                        (\_ ->
+                                            Expect.equal importedKey key
+                                        )
+                                )
+                        )
+                    , await
+                        (Crypto.exportAesCtrKeyAsJwk key)
+                        "Exporting the generated key as JWK"
+                        (\exportedKey ->
+                            await
+                                (Crypto.importAesCtrKeyFromJwk
+                                    exportedKey
+                                    Crypto.CanBeExtracted
+                                    secureContext
+                                )
+                                "Importing the exported key"
+                                (\importedKey ->
+                                    test "When importing an exported key, the imported key matches the original"
+                                        (\_ ->
+                                            Expect.equal importedKey key
+                                        )
+                                )
+                        )
+                    , await
+                        (Crypto.getRandomUInt32Values 4)
+                        "Generating 4 random int 32 values for use in the counter"
+                        (\counter ->
+                            await
+                                (Crypto.encryptWithAesCtr 
+                                    { counter = counter
+                                    , length = 22
+                                    }
+                                    key
+                                    encryptionBytes
+                                )
+                                "Encrypting some bytes"
+                                (\encryptedBytes ->
+                                    concat 
+                                        [ test "The encrypted bytes do not match the original bytes"
+                                            (\_ ->
+                                                Expect.notEqual encryptedBytes encryptionBytes
+                                            )
+                                        , await
+                                            (Crypto.decryptWithAesCtr
+                                                { counter = counter
+                                                , length = 22
+                                                }
+                                                key
+                                                encryptedBytes
+                                            )
+                                            "Decrypting the encrypted bytes with the same counter and length"
+                                            (\decryptedBytes ->
+                                                test "The decrypted bytes equal the original bytes"
+                                                    (\_ ->
+                                                        Expect.equal decryptedBytes encryptionBytes
+                                                    )
+                                            )
+                                        ]
+                                )
+                        )
+                    , await
+                        (Crypto.getRandomUInt32Values 2)
+                        "Generating enough int32 values for use in an invalid counter"
+                        (\counter ->
+                            awaitError
+                                (Crypto.encryptWithAesCtr 
+                                    { counter = counter
+                                    , length = 128
+                                    }
+                                    key
+                                    encryptionBytes
+                                )
+                                "Encrypting some bytes"
+                                (\err ->
+                                    test "Encryption fails with the correct error when the counter is wrong"
+                                        (\_ ->
+                                            Expect.equal err Crypto.AesCtrEncryptionErrorCounterTooLong
+                                        )
+                                )
+                        )
+                ]
             )
         ]
 
