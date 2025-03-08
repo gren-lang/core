@@ -284,12 +284,6 @@ rsaOaepKeyTests secureContext =
 
 {-|-}
 rsaOaepKeyTestHelper secureContext { label, encryptionLabel, modulusLength, hash } =
-    -- Generate keys
-    -- Generate keys (errors)
-    -- Export keys
-    -- Export keys (errors)
-    -- Cryptographic action (encryption, etc.)
-    -- Cryptographic again (failure)
     let
         withLabel string =
             label ++ ": " ++ string
