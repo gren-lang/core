@@ -25,6 +25,11 @@ tests =
                 concat 
                     [ uuidTests secureContext
                     , rsaOaepKeyTests secureContext
+                    , aesCtrTestsHelper 
+                        secureContext 
+                        "AES-CTR" 
+                        { aesLength = Crypto.AesLength128 
+                        }
                     ]
             )
         , await Bytes.getHostEndianness
@@ -553,6 +558,44 @@ rsaOaepKeyTestHelper secureContext { label, encryptionLabel, modulusLength, hash
 {-|-}
 aesCtrTests =
     Debug.todo "aesCtrTests"
+
+
+{-|-}
+aesCtrTestsHelper secureContext label { aesLength } =
+    let
+        withLabel string =
+            label ++ ": " ++ string
+    in
+    concat 
+        [ await
+            (Crypto.generateAesCtrKey
+                { length = aesLength
+                , extractable = Crypto.CannotBeExtracted 
+                }
+                secureContext
+            )
+            (withLabel "Generating a key that is marked as not extractable")
+            (\key ->
+                test "testing"
+                    (\_ ->
+                        Expect.pass
+                    )
+            )
+        , await
+            (Crypto.generateAesCtrKey
+                { length = aesLength
+                , extractable = Crypto.CanBeExtracted 
+                }
+                secureContext
+            )
+            (withLabel "Generating a key that is marked as extractable")
+            (\key ->
+                test "testing"
+                    (\_ ->
+                        Expect.pass
+                    )
+            )
+        ]
 
 
 
