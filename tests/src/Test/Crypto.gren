@@ -24,12 +24,7 @@ tests =
             (\secureContext ->
                 concat 
                     [ uuidTests secureContext
-                    , rsaOaepKeyTestHelper 
-                        secureContext
-                        { label = "hi"
-                        , modulusLength = 2048
-                        , hash = Crypto.Sha256
-                        }
+                    , rsaOaepKeyTests secureContext
                     ]
             )
         , await Bytes.getHostEndianness
@@ -236,7 +231,59 @@ uuidTests secureContext =
 
 
 {-|-}
-rsaOaepKeyTestHelper secureContext { label, modulusLength, hash } =
+rsaOaepKeyTests secureContext =
+    let
+        encryptionLabel =
+            Just (Bytes.fromString "a")
+    in
+    concat 
+        [ rsaOaepKeyTestHelper 
+            secureContext
+            { label = "Crypto.Sha256 + 2048"
+            , encryptionLabel = encryptionLabel
+            , modulusLength = 2048
+            , hash = Crypto.Sha256
+            }
+        , rsaOaepKeyTestHelper 
+            secureContext
+            { label = "Crypto.Sha384 + 2048"
+            , encryptionLabel = encryptionLabel
+            , modulusLength = 2048
+            , hash = Crypto.Sha384
+            }
+        , rsaOaepKeyTestHelper 
+            secureContext
+            { label = "Crypto.Sha512 + 2048"
+            , encryptionLabel = encryptionLabel
+            , modulusLength = 2048
+            , hash = Crypto.Sha512
+            }
+        , rsaOaepKeyTestHelper 
+            secureContext
+            { label = "Crypto.Sha256 + 4096"
+            , encryptionLabel = encryptionLabel
+            , modulusLength = 4096
+            , hash = Crypto.Sha256
+            }
+        , rsaOaepKeyTestHelper 
+            secureContext
+            { label = "Crypto.Sha384 + 4096"
+            , encryptionLabel = encryptionLabel
+            , modulusLength = 4096
+            , hash = Crypto.Sha384
+            }
+        , rsaOaepKeyTestHelper 
+            secureContext
+            { label = "Crypto.Sha512 + 4096"
+            , encryptionLabel = encryptionLabel
+            , modulusLength = 4096
+            , hash = Crypto.Sha512
+            }
+        ]
+
+
+{-|-}
+rsaOaepKeyTestHelper secureContext { label, encryptionLabel, modulusLength, hash } =
     -- Generate keys
     -- Generate keys (errors)
     -- Export keys
@@ -246,6 +293,84 @@ rsaOaepKeyTestHelper secureContext { label, modulusLength, hash } =
     let
         withLabel string =
             label ++ ": " ++ string
+
+        exportPublicKeyAsSpki label_ publicKey =
+            await
+                (Crypto.exportRsaOaepPublicKeyAsSpki publicKey)
+                (withLabel ("Exporting public key to SPKI " ++ label_))
+                (\exportedKey ->
+                    concat
+                        [ await
+                            (Crypto.importRsaOaepPublicKeyFromSpki 
+                                exportedKey
+                                { hash = hash
+                                }
+                                Crypto.CanBeExtracted
+                                secureContext
+                            ) 
+                            (withLabel "Importing a successfully extracted public key")
+                            (\importedKey ->
+                                test "The imported key matches the original key"
+                                    (\_ ->
+                                        Expect.equal importedKey publicKey
+                                    )
+                            )
+                        , await
+                            (Crypto.importRsaOaepPublicKeyFromSpki 
+                                exportedKey
+                                { hash = shuffleDigestAlgorithm hash
+                                }
+                                Crypto.CanBeExtracted
+                                secureContext
+                            ) 
+                            (withLabel "Importing a successfully extracted public key with the wrong hash")
+                            (\importedKey ->
+                                test "The imported key does not equal the original key given the different hash used to generate it"
+                                    (\_ ->
+                                        Expect.notEqual importedKey publicKey
+                                    )
+                            )
+                        ]
+                )
+
+        exportPublicKeyAsJwk label_ publicKey =
+            await
+                (Crypto.exportRsaOaepPublicKeyAsJwk publicKey)
+                (withLabel ("Exporting public key as JWK " ++ label_))
+                (\exportedKey ->
+                    concat
+                        [ await
+                            (Crypto.importRsaOaepPublicKeyFromJwk 
+                                exportedKey
+                                { hash = hash
+                                }
+                                Crypto.CanBeExtracted
+                                secureContext
+                            ) 
+                            (withLabel "Importing a successfully extracted public key")
+                            (\importedKey ->
+                                test "The imported key matches the original key"
+                                    (\_ ->
+                                        Expect.equal importedKey publicKey
+                                    )
+                            )
+                        , awaitError
+                            (Crypto.importRsaOaepPublicKeyFromJwk
+                                exportedKey
+                                { hash = shuffleDigestAlgorithm hash
+                                }
+                                Crypto.CanBeExtracted
+                                secureContext
+                            ) 
+                            (withLabel "Importing a successfully extracted public key with the wrong hash")
+                            (\err ->
+                                test "The import fails with the correct error"
+                                    (\_ ->
+                                        Expect.equal err Crypto.ImportRsaKeyError
+                                    )
+                            )
+                        ]
+                )
     in
     concat
         [ await
@@ -256,71 +381,14 @@ rsaOaepKeyTestHelper secureContext { label, modulusLength, hash } =
                 }
                 secureContext
             )
-            (withLabel "Testing exporting when the generated keys are not exportable")
+            (withLabel "Generating a key pair when that is marked as no extractable")
             (\{ publicKey, privateKey } ->
                 concat
-                    [ await
-                        (Crypto.exportRsaOaepPublicKeyAsSpki publicKey)
-                        (withLabel "Exporting public RSA-OAEP key as SPKI when not exportable")
-                        (\exportedKey ->
-                            concat
-                                [ await
-                                    (Crypto.importRsaOaepPublicKeyFromSpki 
-                                        exportedKey
-                                        { hash = hash
-                                        }
-                                        Crypto.CanBeExtracted
-                                        secureContext
-                                    ) 
-                                    (withLabel "Importing a successfully extracted public key")
-                                    (\importedKey ->
-                                        test "frwgr"
-                                            (\_ ->
-                                                Expect.equal importedKey publicKey
-                                            )
-                                    )
-                                , await
-                                    (Crypto.importRsaOaepPublicKeyFromSpki 
-                                        exportedKey
-                                        { hash = 
-                                            when hash is
-                                                Crypto.Sha256 ->
-                                                    Crypto.Sha512
-
-                                                Crypto.Sha384 ->
-                                                    Crypto.Sha256
-
-                                                Crypto.Sha512 ->
-                                                    Crypto.Sha384
-                                        }
-                                        Crypto.CanBeExtracted
-                                        secureContext
-                                    ) 
-                                    (withLabel "Importing a successfully extracted public key with the wrong hash")
-                                    (\importedKey ->
-                                        test "The imported key does not equal the original key given the different hash used to generate it"
-                                            (\_ ->
-                                                Expect.notEqual importedKey publicKey
-                                            )
-                                    )
-                                , test (withLabel "Even when the genearted key is not exportable, the public key is")
-                                    (\_ ->
-                                        Expect.pass
-                                    )
-                                ]
-                        )
-                    , await
-                        (Crypto.exportRsaOaepPublicKeyAsJwk publicKey)
-                        (withLabel "Exporting public RSA-OAEP key as JWK when not exportable")
-                        (\_ ->
-                            test (withLabel "Even when the genearted key is not exportable, the public key is")
-                                (\_ ->
-                                    Expect.pass
-                                )
-                        )
+                    [ exportPublicKeyAsSpki "When not extractable" publicKey
+                    , exportPublicKeyAsJwk "When not extractable" publicKey
                     , awaitError
                         (Crypto.exportRsaOaepPrivateKeyAsPkcs8 privateKey)
-                        (withLabel "Exporting private RSA-OAEP key as PKCS8 when not exportable")
+                        (withLabel "Exporting private RSA-OAEP key as PKCS8 when not extractable")
                         (\res ->
                             test (withLabel "Fails")
                                 (\_ ->
@@ -329,7 +397,7 @@ rsaOaepKeyTestHelper secureContext { label, modulusLength, hash } =
                         )
                     , awaitError
                         (Crypto.exportRsaOaepPrivateKeyAsJwk privateKey)
-                        (withLabel "Exporting private RSA-OAEP key as JWK when not exportable")
+                        (withLabel "Exporting private RSA-OAEP key as JWK when not extractable")
                         (\res ->
                             test (withLabel "Fails")
                                 (\_ ->
@@ -346,26 +414,106 @@ rsaOaepKeyTestHelper secureContext { label, modulusLength, hash } =
                 }
                 secureContext
             )
-            ("Testing generating [...]" ++ label)
+            (withLabel "Generating a key pair when that is marked as extractable")
             (\{ publicKey, privateKey } ->
+                let
+                    encryptionBytes =
+                        Bytes.fromString "encryption test string"
+                in
                 concat
-                    [ await
+                    [ exportPublicKeyAsSpki "When extractable" publicKey
+                    , exportPublicKeyAsJwk "When extractable" publicKey
+                    , await
+                        (Crypto.exportRsaOaepPrivateKeyAsPkcs8 privateKey)
+                        (withLabel "Exporting private RSA-OAEP key as PKCS8 when extractable")
+                        (\exportedKey ->
+                            concat 
+                                [ await
+                                    (Crypto.importRsaOaepPrivateKeyFromPkcs8 
+                                        exportedKey
+                                        { hash = hash
+                                        }
+                                        Crypto.CanBeExtracted
+                                        secureContext
+                                    ) 
+                                    (withLabel "Importing a successfully extracted private key")
+                                    (\importedKey ->
+                                        test "The imported key matches the original key"
+                                            (\_ ->
+                                                Expect.equal importedKey privateKey
+                                            )
+                                    )
+                                , await
+                                    (Crypto.importRsaOaepPrivateKeyFromPkcs8 
+                                        exportedKey
+                                        { hash = shuffleDigestAlgorithm hash
+                                        }
+                                        Crypto.CanBeExtracted
+                                        secureContext
+                                    ) 
+                                    (withLabel "Importing a successfully extracted private key with the wrong hash")
+                                    (\importedKey ->
+                                        test "The imported key does not match the original key"
+                                            (\_ ->
+                                                Expect.notEqual importedKey privateKey
+                                            )
+                                    )
+                                ]
+                        )
+                    , await
+                        (Crypto.exportRsaOaepPrivateKeyAsJwk privateKey)
+                        (withLabel "Exporting private RSA-OAEP key as JWK when extractable")
+                        (\exportedKey ->
+                            concat 
+                                [ await
+                                    (Crypto.importRsaOaepPrivateKeyFromJwk 
+                                        exportedKey
+                                        { hash = hash
+                                        }
+                                        Crypto.CanBeExtracted
+                                        secureContext
+                                    ) 
+                                    (withLabel "Importing a successfully extracted private key")
+                                    (\importedKey ->
+                                        test "The imported key matches the original key"
+                                            (\_ ->
+                                                Expect.equal importedKey privateKey
+                                            )
+                                    )
+                                , awaitError
+                                    (Crypto.importRsaOaepPrivateKeyFromJwk 
+                                        exportedKey
+                                        { hash = shuffleDigestAlgorithm hash
+                                        }
+                                        Crypto.CanBeExtracted
+                                        secureContext
+                                    ) 
+                                    (withLabel "Importing a successfully extracted private key with the wrong hash")
+                                    (\err ->
+                                        test "The error returned matches the expected error"
+                                            (\_ ->
+                                                Expect.equal err Crypto.ImportRsaKeyError
+                                            )
+                                    )
+                                ]
+                        )
+                    , await
                         (Crypto.encryptWithRsaOaep
-                            { label = Nothing
+                            { label = encryptionLabel
                             }
                             publicKey
-                            (Bytes.fromString "encryption test string")
+                            encryptionBytes
                         )
                         "Test encrypting a string with an RSA-OAEP public key and no label"
                         (\encryptedBytes ->
                             concat
                                 [ test "The resulting encrypted bytes do not match the original bytes"
                                     (\_ ->
-                                        Expect.notEqual (Bytes.fromString "encryption test string") encryptedBytes
+                                        Expect.notEqual encryptionBytes encryptedBytes
                                     )
                                 , await
                                     (Crypto.decryptWithRsaOaep
-                                        { label = Nothing
+                                        { label = encryptionLabel
                                         }
                                         privateKey
                                         encryptedBytes
@@ -374,12 +522,18 @@ rsaOaepKeyTestHelper secureContext { label, modulusLength, hash } =
                                     (\decryptedBytes ->
                                         test "Bytes that were encrypted and then decrypted with the same public/prviate key pair equal the origianl value"
                                             (\_ ->
-                                                Expect.equal (Bytes.fromString "encryption test string") decryptedBytes
+                                                Expect.equal encryptionBytes decryptedBytes
                                             )
                                     )
                                 , awaitError
                                     (Crypto.decryptWithRsaOaep
-                                        { label = Just (Bytes.fromString "a")
+                                        { label = 
+                                            when encryptionLabel is
+                                                Just _ ->
+                                                    Nothing
+                                                
+                                                Nothing ->
+                                                    Just encryptionBytes
                                         }
                                         privateKey
                                         encryptedBytes
@@ -398,529 +552,22 @@ rsaOaepKeyTestHelper secureContext { label, modulusLength, hash } =
         ]
 
 
--- {-| All tests for encryption with all algorithms.
--- -}
--- encryptionTests : Array Test.Runner.Effectful.Test
--- encryptionTests =
---     encryptWithRsaOaepTests
+
+-- Utilities
 
 
--- {-|-}
--- encryptWithRsaOaepTests : Array Test.Runner.Effectful.Test
--- encryptWithRsaOaepTests =
---     let
---         helper stringLabel { modulusLength, hash, label } =
---             await
---                 (Crypto.getSecureContext
---                     |> Task.mapError (\_ -> Crypto.ModulusLengthNotDivisibleByEight)
---                     |> Task.andThen 
---                         (Crypto.generateRsaOaepKeyPair
---                             { modulusLength = modulusLength
---                             , hash = hash
---                             , extractable = Crypto.CanBeExtracted
---                             }
---                         )
---                     |> Task.mapError (\_ -> Crypto.RsaOaepEncryptionError)
---                     |> Task.andThen (\{ publicKey, privateKey } ->
---                         Crypto.encryptWithRsaOaep
---                             { label = Nothing
---                             }
---                             publicKey
---                             (Bytes.fromString "encryption test stirng")
---                     )
---                 )
---                 stringLabel
---                 (\encryptedBits ->
---                     test 
---                         ("Test result: " ++ stringLabel)
---                         (\_ -> 
---                             Expect.pass
---                         )
---                 )
---     in
---     [ helper
---         "Attempting to encrypt with RSA-OAP with SHA-256 hash with lowest possible modulus length"
---         { modulusLength = 2048
---         , hash = Crypto.Sha256
---         , label = Nothing
---         }
---     , helper
---         "Attempting to encrypt with RSA-OAP with SHA-384 hash with lowest possible modulus length"
---         { modulusLength = 2048
---         , hash = Crypto.Sha384
---         , label = Nothing
---         }
---     , helper
---         "Attempting to encrypt with RSA-OAP with SHA-512 hash with lowest possible modulus length"
---         { modulusLength = 2048
---         , hash = Crypto.Sha512
---         , label = Nothing
---         }
---     , helper
---         "Attempting to encrypt with RSA-OAP with SHA-256 hash and highest possible modulus length"
---         { modulusLength = 4096
---         , hash = Crypto.Sha256
---         , label = Nothing
---         }
---     , helper
---         "Attempting to encrypt with RSA-OAP with SHA-384 hash and highest possible modulus length"
---         { modulusLength = 4096
---         , hash = Crypto.Sha384
---         , label = Nothing
---         }
---     , helper
---         "Attempting to encrypt with RSA-OAP with SHA-512 hash and highest possible modulus length"
---         { modulusLength = 4096
---         , hash = Crypto.Sha512
---         , label = Nothing
---         }
---     , helper
---         "Attempting to encrypt with RSA-OAP with SHA-256 hash with lowest possible modulus length and a label"
---         { modulusLength = 2048
---         , hash = Crypto.Sha256
---         , label = Just (Bytes.fromString "label bytes")
---         }
---     , helper
---         "Attempting to encrypt with RSA-OAP with SHA-384 hash with lowest possible modulus length and a label"
---         { modulusLength = 2048
---         , hash = Crypto.Sha384
---         , label = Just (Bytes.fromString "label bytes")
---         }
---     , helper
---         "Attempting to encrypt with RSA-OAP with SHA-512 hash with lowest possible modulus length and a label"
---         { modulusLength = 2048
---         , hash = Crypto.Sha512
---         , label = Just (Bytes.fromString "label bytes")
---         }
---     , helper
---         "Attempting to encrypt with RSA-OAP with SHA-256 hash and highest possible modulus length and a label"
---         { modulusLength = 4096
---         , hash = Crypto.Sha256
---         , label = Just (Bytes.fromString "label bytes")
---         }
---     , helper
---         "Attempting to encrypt with RSA-OAP with SHA-384 hash and highest possible modulus length and a label"
---         { modulusLength = 4096
---         , hash = Crypto.Sha384
---         , label = Just (Bytes.fromString "label bytes")
---         }
---     , helper
---         "Attempting to encrypt with RSA-OAP with SHA-512 hash and highest possible modulus length and a label"
---         { modulusLength = 4096
---         , hash = Crypto.Sha512
---         , label = Just (Bytes.fromString "label bytes")
---         }
---     ]
+{-| Change the passed `DigestAlgorithm` into another `DigestAlgorithm`.
 
+Used when testing algorithms that use different digest algorithms.
+-}
+shuffleDigestAlgorithm : Crypto.DigestAlgorithm -> Crypto.DigestAlgorithm
+shuffleDigestAlgorithm hash =
+    when hash is
+        Crypto.Sha256 ->
+            Crypto.Sha512
 
--- {-| All tests for decryption with all algorithms.
--- -}
--- decryptionTests : Array Test.Runner.Effectful.Test
--- decryptionTests =
---     decryptWithRsaOaepTests
+        Crypto.Sha384 ->
+            Crypto.Sha256
 
-
--- {-|-}
--- decryptWithRsaOaepTests : Array Test.Runner.Effectful.Test
--- decryptWithRsaOaepTests =
---     let
---         bytesToEncryptThenDecrypt =
---             Bytes.fromString "encryption test string"
-
---         labelBytes =
---             Just <| Bytes.fromString "tst"
-
---         decryptTask { modulusLength, hash, encryptionLabel, decryptionLabel } =
---             Crypto.getSecureContext
---                 |> Task.mapError (\_ -> Crypto.ModulusLengthNotDivisibleByEight)
---                 |> Task.andThen 
---                     (Crypto.generateRsaOaepKeyPair
---                         { modulusLength = modulusLength
---                         , hash = hash
---                         , extractable = Crypto.CanBeExtracted
---                         }
---                     )
---                 |> Task.mapError (\_ -> Crypto.RsaOaepEncryptionError)
---                 |> Task.andThen (\{ publicKey, privateKey } ->
---                     Crypto.encryptWithRsaOaep
---                         { label = encryptionLabel
---                         }
---                         publicKey
---                         bytesToEncryptThenDecrypt
---                         |> Task.map 
---                             (\encryptedBytes ->
---                                 { privateKey = privateKey
---                                 , encryptedBytes = encryptedBytes
---                                 }
---                             )
---                 )
---                 |> Task.mapError (\_ -> Crypto.RsaOaepDecryptionError)
---                 |> Task.andThen (\{ privateKey, encryptedBytes } ->
---                     Crypto.decryptWithRsaOaep
---                         { label = decryptionLabel
---                         }
---                         privateKey
---                         encryptedBytes
---                 )
-            
---         helper stringLabel params = 
---             await
---                 (decryptTask params)
---                 stringLabel
---                 (\encryptedThenDecryptedBytes ->
---                     test
---                         ("Bytes that were encrypted then decrypted should equal: " ++ stringLabel)
---                         (\_ ->
---                             Expect.equal encryptedThenDecryptedBytes bytesToEncryptThenDecrypt
---                         )
---                 )
-
---         failHelper stringLabel params =
---             awaitError
---                 (decryptTask params)
---                 stringLabel
---                 (\_ ->
---                     test
---                         ("This test should fail: " ++ stringLabel)
---                         (\_ ->
---                             Expect.pass
---                         )
---                 )
---     in
---     [ helper 
---         "Attempting to encrypt and decrypt with RSA-OAP with SHA-256 hash with lowest possible modulus length with equal encryption and decryption labels (Nothing)"
---         { modulusLength = 2048
---         , hash = Crypto.Sha256
---         , encryptionLabel = Nothing
---         , decryptionLabel = Nothing
---         }
---     , helper 
---         "Attempting to encrypt and decrypt with RSA-OAP with SHA-384 hash with lowest possible modulus length with equal encryption and decryption labels (Nothing)"
---         { modulusLength = 2048
---         , hash = Crypto.Sha384
---         , encryptionLabel = Nothing
---         , decryptionLabel = Nothing
---         }
---     , helper 
---         "Attempting to encrypt and decrypt with RSA-OAP with SHA-512 hash with lowest possible modulus length with equal encryption and decryption labels (Nothing)"
---         { modulusLength = 2048
---         , hash = Crypto.Sha512
---         , encryptionLabel = Nothing
---         , decryptionLabel = Nothing
---         }
---     , helper 
---         "Attempting to encrypt and decrypt with RSA-OAP with SHA-256 hash with highest possible modulus length with equal encryption and decryption labels (Nothing)"
---         { modulusLength = 4096
---         , hash = Crypto.Sha256
---         , encryptionLabel = Nothing
---         , decryptionLabel = Nothing
---         }
---     , helper 
---         "Attempting to encrypt and decrypt with RSA-OAP with SHA-384 hash with highest possible modulus length with equal encryption and decryption labels (Nothing)"
---         { modulusLength = 4096
---         , hash = Crypto.Sha384
---         , encryptionLabel = Nothing
---         , decryptionLabel = Nothing
---         }
---     , helper 
---         "Attempting to encrypt and decrypt with RSA-OAP with SHA-512 hash with lowhighestest possible modulus length with equal encryption and decryption labels (Nothing)"
---         { modulusLength = 4096
---         , hash = Crypto.Sha512
---         , encryptionLabel = Nothing
---         , decryptionLabel = Nothing
---         }
---     , helper 
---         "Attempting to encrypt and decrypt with RSA-OAP with SHA-256 hash with lowest possible modulus length with equal encryption and decryption labels (Just)"
---         { modulusLength = 2048
---         , hash = Crypto.Sha256
---         , encryptionLabel = labelBytes
---         , decryptionLabel = labelBytes
---         }
---     , helper 
---         "Attempting to encrypt and decrypt with RSA-OAP with SHA-384 hash with lowest possible modulus length with equal encryption and decryption labels (Just)"
---         { modulusLength = 2048
---         , hash = Crypto.Sha384
---         , encryptionLabel = labelBytes
---         , decryptionLabel = labelBytes
---         }
---     , helper 
---         "Attempting to encrypt and decrypt with RSA-OAP with SHA-512 hash with lowest possible modulus length with equal encryption and decryption labels (Just)"
---         { modulusLength = 2048
---         , hash = Crypto.Sha512
---         , encryptionLabel = labelBytes
---         , decryptionLabel = labelBytes
---         }
---     , helper 
---         "Attempting to encrypt and decrypt with RSA-OAP with SHA-256 hash with highest possible modulus length with equal encryption and decryption labels (Just)"
---         { modulusLength = 4096
---         , hash = Crypto.Sha256
---         , encryptionLabel = labelBytes
---         , decryptionLabel = labelBytes
---         }
---     , helper 
---         "Attempting to encrypt and decrypt with RSA-OAP with SHA-384 hash with highest possible modulus length with equal encryption and decryption labels (Just)"
---         { modulusLength = 4096
---         , hash = Crypto.Sha384
---         , encryptionLabel = labelBytes
---         , decryptionLabel = labelBytes
---         }
---     , helper 
---         "Attempting to encrypt and decrypt with RSA-OAP with SHA-512 hash with lowhighestest possible modulus length with equal encryption and decryption labels (Just)"
---         { modulusLength = 4096
---         , hash = Crypto.Sha512
---         , encryptionLabel = labelBytes
---         , decryptionLabel = labelBytes
---         }
---     , failHelper 
---         "Attempting to encrypt and decrypt with RSA-OAP with SHA-256 hash with lowest possible modulus length with unequal encryption and decryption labels"
---         { modulusLength = 2048
---         , hash = Crypto.Sha256
---         , encryptionLabel = labelBytes
---         , decryptionLabel = Nothing
---         }
---     , failHelper 
---         "Attempting to encrypt and decrypt with RSA-OAP with SHA-384 hash with lowest possible modulus length with unequal encryption and decryption labels"
---         { modulusLength = 2048
---         , hash = Crypto.Sha384
---         , encryptionLabel = labelBytes
---         , decryptionLabel = Nothing
---         }
---     , failHelper 
---         "Attempting to encrypt and decrypt with RSA-OAP with SHA-512 hash with lowest possible modulus length with unequal encryption and decryption labels"
---         { modulusLength = 2048
---         , hash = Crypto.Sha512
---         , encryptionLabel = labelBytes
---         , decryptionLabel = Nothing
---         }
---     , failHelper 
---         "Attempting to encrypt and decrypt with RSA-OAP with SHA-256 hash with highest possible modulus length with unequal encryption and decryption labels"
---         { modulusLength = 4096
---         , hash = Crypto.Sha256
---         , encryptionLabel = labelBytes
---         , decryptionLabel = Nothing
---         }
---     , failHelper 
---         "Attempting to encrypt and decrypt with RSA-OAP with SHA-384 hash with highest possible modulus length with unequal encryption and decryption labels"
---         { modulusLength = 4096
---         , hash = Crypto.Sha384
---         , encryptionLabel = labelBytes
---         , decryptionLabel = Nothing
---         }
---     , failHelper 
---         "Attempting to encrypt and decrypt with RSA-OAP with SHA-512 hash with lowhighestest possible modulus length with unequal encryption and decryption labels"
---         { modulusLength = 4096
---         , hash = Crypto.Sha512
---         , encryptionLabel = labelBytes
---         , decryptionLabel = Nothing
---         }
---     ]
-
-
--- {-| All tests for key generation
--- -}
--- keyGenerationTests : Array Test.Runner.Effectful.Test
--- keyGenerationTests =
---     rsaKeyGenerationTests
-
-
--- {-|-}
--- rsaKeyGenerationTests : Array Test.Runner.Effectful.Test
--- rsaKeyGenerationTests =
---     rsaOaepKeyGenerationTests
-
-
--- {-| Key generation tests for RSA algorithms.
-
--- The tests here are not comprehensive. For example, not every key generation function 
--- is tested with all possible hash algorithms or modulus lengths. If there are any 
--- specific errors found in the future, more tests can be added to increase coverage.
--- -}
--- rsaOaepKeyGenerationTests : Array Test.Runner.Effectful.Test
--- rsaOaepKeyGenerationTests =
---     let
---         generateRsaOaepKey params =
---             Crypto.getSecureContext
---                 |> Task.mapError (\_ -> Crypto.ModulusLengthNotDivisibleByEight)
---                 |> Task.andThen (Crypto.generateRsaOaepKeyPair params)
---     in
---     [ awaitError
---         (generateRsaOaepKey
---             { modulusLength = 2049
---             , hash = Crypto.Sha256
---             , extractable = Crypto.CanBeExtracted
---             }
---         )
---         "Attempting to generate an RSA-OAEP key pair when `modulusLength` is not divisible by 8"
---         (\err ->
---             test
---                 "When passed a `modulusLength` that is not divisible by 8, does not generate a RSA-OAEP key pair"
---                 (\_ -> Expect.equal err Crypto.ModulusLengthNotDivisibleByEight)
---         )
---     , await
---         (generateRsaOaepKey
---             { modulusLength = 0
---             , hash = Crypto.Sha256
---             , extractable = Crypto.CanBeExtracted
---             }
---         )
---         "Attempting to generate an RSA-OAEP key pair when modulus length is lower than the minimum"
---         (\_ ->
---             test
---                 "When generating an RSA-OAEP key pair with a modulus length lower than the minimum, still successfully generates the key pair"
---                 (\_ -> Expect.pass)
---         )
---     , await
---         (generateRsaOaepKey
---             { modulusLength = 1234040
---             , hash = Crypto.Sha256
---             , extractable = Crypto.CanBeExtracted
---             }
---         )
---         "Attempting to generate an RSA-OAEP key pair when modulus length is higher than the maximum"
---         (\_ ->
---             test
---                 "When generating an RSA-OAEP key pair with a modulus length higher than the maximum, still successfully generates the key pair"
---                 (\_ -> Expect.pass)
---         )
---     ]
-
-
--- {-|-}
--- exportKeyTests : Array Test.Runner.Effectful.Test
--- exportKeyTests =
---     exportRsaOaepKeyTests
-
-
--- {-|-}
--- exportRsaOaepKeyTests : Array Test.Runner.Effectful.Test
--- exportRsaOaepKeyTests = 
---     let
---         exportPublicKeys =
---             [ awaitError
---                 (Crypto.getSecureContext
---                     |> Task.mapError (\_ -> Crypto.ModulusLengthNotDivisibleByEight)
---                     |> Task.andThen 
---                         (Crypto.generateRsaOaepKeyPair
---                             { modulusLength = 2048
---                             , hash = Crypto.Sha256
---                             , extractable = Crypto.CannotBeExtracted
---                             }
---                         )
---                     |> Task.mapError (\_ -> Crypto.KeyNotExportable)
---                     |> Task.map .privateKey
---                     |> Task.andThen Crypto.exportRsaOaepPrivateKeyAsJwk
---                 )
---                 "Attempting to generate and export a RSA-OAEP private key that cannot be exported"
---                 (\err ->
---                     test 
---                         "Exporting an RSA-OAEP private key using SHA-256 and 2048 modulus length that cannot be exported fails" 
---                         (\_ -> Expect.equal Crypto.KeyNotExportable err)
---                 )
---             , await
---                 (Crypto.getSecureContext
---                     |> Task.mapError (\_ -> Crypto.ModulusLengthNotDivisibleByEight)
---                     |> Task.andThen 
---                         (Crypto.generateRsaOaepKeyPair
---                             { modulusLength = 2048
---                             , hash = Crypto.Sha256
---                             , extractable = Crypto.CanBeExtracted
---                             }
---                         )
---                     |> Task.mapError (\_ -> Crypto.KeyNotExportable)
---                     |> Task.map .privateKey
---                     |> Task.andThen Crypto.exportRsaOaepPrivateKeyAsJwk
---                 )
---                 "Attempting to generate and export a RSA-OAEP private key that can be exported"
---                 (\_ ->
---                     test 
---                         "Exporting an RSA-OAEP private key using SHA-256 and 2048 modulus length that can be exported succeeds" 
---                         (\_ -> Expect.pass)
---                 )
---             ]
-
---         exportPrivateKeys =
---             [ await
---                 (Crypto.getSecureContext
---                     |> Task.mapError (\_ -> Crypto.ModulusLengthNotDivisibleByEight)
---                     |> Task.andThen 
---                         (Crypto.generateRsaOaepKeyPair
---                             { modulusLength = 2048
---                             , hash = Crypto.Sha256
---                             , extractable = Crypto.CanBeExtracted
---                             }
---                         )
---                     |> Task.mapError (\_ -> Crypto.KeyNotExportable)
---                     |> Task.map .publicKey
---                     |> Task.andThen Crypto.exportRsaOaepPublicKeyAsJwk
---                 )
---                 "Attempting to generate and export a RSA-OAEP public key that can be exported"
---                 (\_ ->
---                     test 
---                         "Exporting a public key to JWK succeeds when the generated key was created as extractable" 
---                         (\_ -> Expect.pass)
---                 )
---             , await
---                 (Crypto.getSecureContext
---                     |> Task.mapError (\_ -> Crypto.ModulusLengthNotDivisibleByEight)
---                     |> Task.andThen 
---                         (Crypto.generateRsaOaepKeyPair
---                             { modulusLength = 2048
---                             , hash = Crypto.Sha256
---                             , extractable = Crypto.CannotBeExtracted
---                             }
---                         )
---                     |> Task.mapError (\_ -> Crypto.KeyNotExportable)
---                     |> Task.map .publicKey
---                     |> Task.andThen Crypto.exportRsaOaepPublicKeyAsJwk
---                 )
---                 "Attempting to generate and export a RSA-OAEP pbulic key that cannot be exported"
---                 (\_ ->
---                     test "Exporting a public key to JWK succeeds even when the generated key was created as not extractable" 
---                         (\_ -> Expect.pass)
---                 )
---             ]
---     in
---     exportPublicKeys
---         ++ exportPrivateKeys
-
-
--- {-|-}
--- digestTests : Array Test.Runner.Effectful.Test
--- digestTests =
---     let
---         testBytes =
---             Bytes.fromString "hi"
-        
---         digestTestHelper digestAlgorithm =
---             Crypto.getSecureContext
---                 |> Task.andThen 
---                         (\secureContext -> 
---                             Crypto.digest secureContext digestAlgorithm testBytes
---                         )
---     in
---     [ await 
---         (digestTestHelper Crypto.Sha256)
---         "Generate a Sha256 hash from some `Bytes`" 
---         (\_ ->
---             test "Successfully generates a hash" (\_ ->
---                 Expect.equal True True
---             )
---         )
---     , await 
---         (digestTestHelper Crypto.Sha384)
---         "Generate a SHA-384 hash from some `Bytes`" 
---         (\_ ->
---             test "Successfully generates a hash" (\_ ->
---                 Expect.equal True True
---             )
---         )
---     , await 
---         (digestTestHelper Crypto.Sha512)
---         "Generate a Sha512 hash from some `Bytes`" 
---         (\_ ->
---             test "Successfully generates a hash" (\_ ->
---                 Expect.equal True True
---             )
---         )
---     ]
-
+        Crypto.Sha512 ->
+            Crypto.Sha384
