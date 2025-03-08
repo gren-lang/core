@@ -1,7 +1,6 @@
 .gren
+tests/app
 tests/.gren
-tests/test.js
-node_modules/
 *.dat
 doc*.json
 *~
