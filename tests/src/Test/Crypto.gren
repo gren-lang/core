@@ -25,11 +25,7 @@ tests =
                 concat 
                     [ uuidTests secureContext
                     , rsaOaepKeyTests secureContext
-                    , aesCtrTestsHelper 
-                        secureContext 
-                        "AES-CTR" 
-                        { aesLength = Crypto.AesLength128 
-                        }
+                    , aesCtrTests secureContext
                     ]
             )
         , await Bytes.getHostEndianness
@@ -555,13 +551,74 @@ rsaOaepKeyTestHelper secureContext { label, encryptionLabel, modulusLength, hash
 -- AES-CTR Tests
 
 
-{-|-}
-aesCtrTests =
-    Debug.todo "aesCtrTests"
+{-| All the tests for the AES-CTR algorithm.
+
+These tests cover all possible `AesCtrLength` values with varying used when 
+encrypting values. The passed length should not affect the outcome of the 
+test, given the value is always clamped to what is acceptable, but want to
+have some tests to make sure that remains true.
+-}
+aesCtrTests secureContext =
+    concat
+        [ aesCtrTestsHelper 
+            secureContext 
+            "AesLength128 - length 128" 
+            { aesLength = Crypto.AesLength128 
+            , encryptionLength = 128
+            }
+        , aesCtrTestsHelper 
+            secureContext 
+            "AesLength192 - length 128" 
+            { aesLength = Crypto.AesLength192 
+            , encryptionLength = 128
+            }
+        , aesCtrTestsHelper 
+            secureContext 
+            "AesLength256 - length 128" 
+            { aesLength = Crypto.AesLength256 
+            , encryptionLength = 128
+            }
+        , aesCtrTestsHelper 
+            secureContext 
+            "AesLength128 - length 13040313" 
+            { aesLength = Crypto.AesLength128 
+            , encryptionLength = 13040313
+            }
+        , aesCtrTestsHelper 
+            secureContext 
+            "AesLength192 - length 13040313" 
+            { aesLength = Crypto.AesLength192 
+            , encryptionLength = 13040313
+            }
+        , aesCtrTestsHelper 
+            secureContext 
+            "AesLength256 - length 13040313" 
+            { aesLength = Crypto.AesLength256 
+            , encryptionLength = 13040313
+            }
+        , aesCtrTestsHelper 
+            secureContext 
+            "AesLength128 - length 1" 
+            { aesLength = Crypto.AesLength128 
+            , encryptionLength = 1
+            }
+        , aesCtrTestsHelper 
+            secureContext 
+            "AesLength192 - length 1" 
+            { aesLength = Crypto.AesLength192 
+            , encryptionLength = 1
+            }
+        , aesCtrTestsHelper 
+            secureContext 
+            "AesLength256 - length 1" 
+            { aesLength = Crypto.AesLength256 
+            , encryptionLength = 1
+            }
+        ]
 
 
 {-|-}
-aesCtrTestsHelper secureContext label { aesLength } =
+aesCtrTestsHelper secureContext label { aesLength, encryptionLength } =
     let
         withLabel string =
             label ++ ": " ++ string
@@ -649,49 +706,71 @@ aesCtrTestsHelper secureContext label { aesLength } =
                         )
                     , await
                         (Crypto.getRandomUInt32Values 4)
-                        "Generating 4 random int 32 values for use in the counter"
+                        "Generating 16 bytes of randomness for use as the counter"
                         (\counter ->
-                            await
+                            concat 
+                                [ await
+                                    (Crypto.encryptWithAesCtr 
+                                        { counter = counter
+                                        , length = encryptionLength
+                                        }
+                                        key
+                                        encryptionBytes
+                                    )
+                                    "Encrypting some bytes"
+                                    (\encryptedBytes ->
+                                        concat 
+                                            [ test "The encrypted bytes do not match the original bytes"
+                                                (\_ ->
+                                                    Expect.notEqual encryptedBytes encryptionBytes
+                                                )
+                                            , await
+                                                (Crypto.decryptWithAesCtr
+                                                    { counter = counter
+                                                    , length = encryptionLength
+                                                    }
+                                                    key
+                                                    encryptedBytes
+                                                )
+                                                "Decrypting the encrypted bytes with the same counter and length"
+                                                (\decryptedBytes ->
+                                                    test "The decrypted bytes equal the original bytes"
+                                                        (\_ ->
+                                                            Expect.equal decryptedBytes encryptionBytes
+                                                        )
+                                                )
+                                            ]
+                                    )
+                                ]
+                        )
+                    , await
+                        (Crypto.getRandomUInt32Values 16)
+                        "Generating more than 16 bytes of data for the counter"
+                        (\counter ->
+                            awaitError
                                 (Crypto.encryptWithAesCtr 
                                     { counter = counter
-                                    , length = 22
+                                    , length = encryptionLength
                                     }
                                     key
                                     encryptionBytes
                                 )
                                 "Encrypting some bytes"
-                                (\encryptedBytes ->
-                                    concat 
-                                        [ test "The encrypted bytes do not match the original bytes"
-                                            (\_ ->
-                                                Expect.notEqual encryptedBytes encryptionBytes
-                                            )
-                                        , await
-                                            (Crypto.decryptWithAesCtr
-                                                { counter = counter
-                                                , length = 22
-                                                }
-                                                key
-                                                encryptedBytes
-                                            )
-                                            "Decrypting the encrypted bytes with the same counter and length"
-                                            (\decryptedBytes ->
-                                                test "The decrypted bytes equal the original bytes"
-                                                    (\_ ->
-                                                        Expect.equal decryptedBytes encryptionBytes
-                                                    )
-                                            )
-                                        ]
+                                (\err ->
+                                    test "Encryption fails with the correct error when the counter is wrong"
+                                        (\_ ->
+                                            Expect.equal err Crypto.AesCtrEncryptionErrorCounterTooLong
+                                        )
                                 )
                         )
                     , await
-                        (Crypto.getRandomUInt32Values 2)
-                        "Generating enough int32 values for use in an invalid counter"
+                        (Crypto.getRandomUInt32Values 1)
+                        "Generating less than 16 bytes for the counter"
                         (\counter ->
                             awaitError
                                 (Crypto.encryptWithAesCtr 
                                     { counter = counter
-                                    , length = 128
+                                    , length = encryptionLength
                                     }
                                     key
                                     encryptionBytes
