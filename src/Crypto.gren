@@ -1833,8 +1833,6 @@ function. There are a few cases where this function can fail:
 
 - The passed `Bytes` are unable to be decrypted for whatever reason. This is captured by 
 `AesCbcDecryptionError`.
-- The passed `iv` does not match the `iv` used when the data was encrypted. This is captured by
-`AesCbcDecryptionError`.
 - When the passed `iv` in `AesCbcParams` is greater or less than than the required 16 bytes. This is 
 captured by `AesCtrDecryptionErrorIvTooLong`
 - Any unknown or unexpected errors are captured by `AesCtrDecryptionError`.
@@ -1846,6 +1844,9 @@ type AesCbcDecryptionError
 
 {-| Decrypt some `Bytes` with a `Key AesCbcKey`. You can generate the apporpriate key with the 
 [`generateAesCbcKey`](#generateAesCbcKey) function.
+
+It's important to use the same `iv` value when encrypting and decrypting. Using a different `iv` 
+value will succeed, but the resulting `Bytes` will not match the `Bytes` originally encrypted.
 -}
 decryptWithAesCbc : AesCbcParams -> Key AesCbcKey AesKeyParams -> Bytes -> Task AesCbcDecryptionError Bytes
 decryptWithAesCbc { iv } (Key { key }) bytes = 
