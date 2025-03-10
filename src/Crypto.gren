@@ -1292,7 +1292,7 @@ importAesCbcKeyFromRaw bytes extractable _context =
 
 
 {-|-}
-importAesCbcKeyFromJwk : Json.Encode.Value -> Extractable -> SecureContext -> Task ImportAesKeyError (Key AesCtrKey AesKeyParams)
+importAesCbcKeyFromJwk : Json.Encode.Value -> Extractable -> SecureContext -> Task ImportAesKeyError (Key AesCbcKey AesKeyParams)
 importAesCbcKeyFromJwk jwk extractable _context =
     Gren.Kernel.Crypto.importAesKey
         "jwk"
@@ -1303,7 +1303,7 @@ importAesCbcKeyFromJwk jwk extractable _context =
 
 
 {-|-}
-importAesGcmKeyFromRaw : Bytes -> Extractable -> SecureContext -> Task ImportAesKeyError (Key AesCtrKey AesKeyParams)
+importAesGcmKeyFromRaw : Bytes -> Extractable -> SecureContext -> Task ImportAesKeyError (Key AesGcmKey AesKeyParams)
 importAesGcmKeyFromRaw bytes extractable _context =
     Gren.Kernel.Crypto.importAesKey
         "raw"
@@ -1314,7 +1314,7 @@ importAesGcmKeyFromRaw bytes extractable _context =
 
 
 {-|-}
-importAesGcmKeyFromJwk : Json.Encode.Value -> Extractable -> SecureContext -> Task ImportAesKeyError (Key AesCtrKey AesKeyParams)
+importAesGcmKeyFromJwk : Json.Encode.Value -> Extractable -> SecureContext -> Task ImportAesKeyError (Key AesGcmKey AesKeyParams)
 importAesGcmKeyFromJwk jwk extractable _context =
     Gren.Kernel.Crypto.importAesKey
         "jwk"
