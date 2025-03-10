@@ -1281,7 +1281,7 @@ importAesCtrKeyFromJwk jwk extractable _context =
 
 
 {-|-}
-importAesCbcKeyFromRaw : Bytes -> Extractable -> SecureContext ->  Task ImportAesKeyError (Key AesCtrKey AesKeyParams)
+importAesCbcKeyFromRaw : Bytes -> Extractable -> SecureContext ->  Task ImportAesKeyError (Key AesCbcKey AesKeyParams)
 importAesCbcKeyFromRaw bytes extractable _context =
     Gren.Kernel.Crypto.importAesKey
         "raw"
