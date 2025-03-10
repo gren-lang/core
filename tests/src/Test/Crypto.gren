@@ -796,24 +796,26 @@ aesCtrTestsHelper secureContext label { aesLength, encryptionLength } =
 {-|-}
 aesCbcTests secureContext =
     concat 
-        [ await
-            (Crypto.getRandomUInt32Values 4)
-            "Generating 16 bytes for the iv value"
-            (\ivBytes ->
-                concat
-                    [ aesCbcTestHelper 
-                        secureContext 
-                        "AES-CTR : AesLength128" 
-                        { aesLength = Crypto.AesLength128 
-                        , iv = ivBytes
-                        }
-                    ]
-            )
+        [ aesCbcTestHelper 
+            secureContext 
+            "AES-CBC : AesLength128" 
+            { aesLength = Crypto.AesLength128
+            }
+        , aesCbcTestHelper 
+            secureContext 
+            "AES-CBC : AesLength192" 
+            { aesLength = Crypto.AesLength192
+            }
+        , aesCbcTestHelper 
+            secureContext 
+            "AES-CBC : AesLength256" 
+            { aesLength = Crypto.AesLength256
+            }
         ]
 
 
 {-|-}
-aesCbcTestHelper secureContext label { aesLength, iv } =
+aesCbcTestHelper secureContext label { aesLength } =
     let
         withLabel string =
             label ++ ": " ++ string
@@ -845,6 +847,190 @@ aesCbcTestHelper secureContext label { aesLength, iv } =
                             test "When exporting non-extractable key, fails with the correct error"
                                 (\_ ->
                                     Expect.equal err Crypto.KeyNotExportable
+                                )
+                        )
+                    ]
+            )
+        , await
+            (Crypto.generateAesCbcKey
+                { length = aesLength
+                , extractable = Crypto.CanBeExtracted 
+                }
+                secureContext
+            )
+            (withLabel "Generating a key that is marked as extractable")
+            (\key ->
+                let
+                    encryptionBytes =
+                        Bytes.fromString "encryption test string"
+                in
+                concat 
+                    [ await
+                        (Crypto.exportAesCbcKeyAsRaw key)
+                        "Exporting the generated key as RAW"
+                        (\exportedKey ->
+                            await
+                                (Crypto.importAesCbcKeyFromRaw
+                                    exportedKey
+                                    Crypto.CanBeExtracted
+                                    secureContext
+                                )
+                                "Importing the exported key"
+                                (\importedKey ->
+                                    test "When importing an exported key, the imported key matches the original"
+                                        (\_ ->
+                                            Expect.equal importedKey key
+                                        )
+                                )
+                        )
+                    , await
+                        (Crypto.exportAesCbcKeyAsJwk key)
+                        "Exporting the generated key as JWK"
+                        (\exportedKey ->
+                            await
+                                (Crypto.importAesCbcKeyFromJwk
+                                    exportedKey
+                                    Crypto.CanBeExtracted
+                                    secureContext
+                                )
+                                "Importing the exported key"
+                                (\importedKey ->
+                                    test "When importing an exported key, the imported key matches the original"
+                                        (\_ ->
+                                            Expect.equal importedKey key
+                                        )
+                                )
+                        )
+                    , await
+                        (Crypto.getRandomUInt32Values 4)
+                        "Generating 16 bytes for the iv value"
+                        (\generatedBytes ->
+                            concat 
+                                [ await
+                                    (Crypto.encryptWithAesCbc 
+                                        { iv = generatedBytes
+                                        }
+                                        key
+                                        encryptionBytes
+                                    )
+                                    "Encrypting some bytes"
+                                    (\encryptedBytes ->
+                                        concat 
+                                            [ test "The encrypted bytes do not match the original bytes"
+                                                (\_ ->
+                                                    Expect.notEqual encryptedBytes encryptionBytes
+                                                )
+                                            , await
+                                                (Crypto.decryptWithAesCbc
+                                                    { iv = generatedBytes
+                                                    }
+                                                    key
+                                                    encryptedBytes
+                                                )
+                                                "Decrypting the encrypted bytes with the same iv"
+                                                (\decryptedBytes ->
+                                                    test "The decrypted bytes equal the original bytes"
+                                                        (\_ ->
+                                                            Expect.equal decryptedBytes encryptionBytes
+                                                        )
+                                                )
+                                            , await
+                                                (Crypto.getRandomUInt32Values 4)
+                                                "Generating 16 different bytes for the iv"
+                                                (\generatedNewBytes ->
+                                                    await
+                                                        (Crypto.decryptWithAesCbc
+                                                            { iv = generatedNewBytes
+                                                            }
+                                                            key
+                                                            encryptedBytes
+                                                        )
+                                                        "Decrypting the encrypted bytes with a different iv than used to encrypt"
+                                                        (\decryptedBytes ->
+                                                            test "When the decryption bytes are different than encryption bytes, the original bytes do not match the decrypted bytes"
+                                                                (\_ ->
+                                                                    Expect.notEqual decryptedBytes encryptedBytes
+                                                                )
+                                                        )
+                                                )
+                                            , await
+                                                (Crypto.getRandomUInt32Values 8)
+                                                "Generating too many bytes for the iv value"
+                                                (\generatedTooMayBytes ->
+                                                    awaitError
+                                                        (Crypto.decryptWithAesCbc
+                                                            { iv = generatedTooMayBytes
+                                                            }
+                                                            key
+                                                            encryptedBytes
+                                                        )
+                                                        "Decrypting the encrypted bytes with not enough bytes for the iv"
+                                                        (\err ->
+                                                            test "When decrypting without enough bytes, produces the correct error"
+                                                                (\_ ->
+                                                                    Expect.equal err Crypto.AesCtrDecryptionErrorIvTooLong
+                                                                )
+                                                        )
+                                                )
+                                            , await
+                                                (Crypto.getRandomUInt32Values 2)
+                                                "Generating too little bytes for the iv value"
+                                                (\generatdTooLittleBytes ->
+                                                    awaitError
+                                                        (Crypto.decryptWithAesCbc
+                                                            { iv = generatdTooLittleBytes
+                                                            }
+                                                            key
+                                                            encryptedBytes
+                                                        )
+                                                        "Decrypting the encrypted bytes with too many bytes for the iv"
+                                                        (\err ->
+                                                            test "When decrypting with too many bytes, produces the correct error"
+                                                                (\_ ->
+                                                                    Expect.equal err Crypto.AesCtrDecryptionErrorIvTooLong
+                                                                )
+                                                        )
+                                                )
+                                            ]
+                                    )
+                                ]
+                        )
+                    , await
+                        (Crypto.getRandomUInt32Values 8)
+                        "Generating too many bytes of data for the iv value"
+                        (\generatedBytes ->
+                            awaitError
+                                (Crypto.encryptWithAesCbc 
+                                    { iv = generatedBytes
+                                    }
+                                    key
+                                    encryptionBytes
+                                )
+                                "Encrypting some bytes"
+                                (\err ->
+                                    test "Encryption fails with the correct error when the iv is wrong"
+                                        (\_ ->
+                                            Expect.equal err Crypto.AesCbcEncryptionErrorIvTooLong
+                                        )
+                                )
+                        )
+                    , await
+                        (Crypto.getRandomUInt32Values 2)
+                        "Generating too little bytes of data for the iv value"
+                        (\generatedBytes ->
+                            awaitError
+                                (Crypto.encryptWithAesCbc 
+                                    { iv = generatedBytes
+                                    }
+                                    key
+                                    encryptionBytes
+                                )
+                                "Encrypting some bytes"
+                                (\err ->
+                                    test "Encryption fails with the correct error when the iv is wrong"
+                                        (\_ ->
+                                            Expect.equal err Crypto.AesCbcEncryptionErrorIvTooLong
+                                        )
                                 )
                         )
                     ]
