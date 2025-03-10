@@ -26,6 +26,7 @@ tests =
                     [ uuidTests secureContext
                     , rsaOaepKeyTests secureContext
                     , aesCtrTests secureContext
+                    , aesCbcTests secureContext
                     ]
             )
         , await Bytes.getHostEndianness
@@ -793,8 +794,62 @@ aesCtrTestsHelper secureContext label { aesLength, encryptionLength } =
 
 
 {-|-}
-aesCbcTests =
-    Debug.todo "aesCbcTests"
+aesCbcTests secureContext =
+    concat 
+        [ await
+            (Crypto.getRandomUInt32Values 4)
+            "Generating 16 bytes for the iv value"
+            (\ivBytes ->
+                concat
+                    [ aesCbcTestHelper 
+                        secureContext 
+                        "AES-CTR : AesLength128" 
+                        { aesLength = Crypto.AesLength128 
+                        , iv = ivBytes
+                        }
+                    ]
+            )
+        ]
+
+
+{-|-}
+aesCbcTestHelper secureContext label { aesLength, iv } =
+    let
+        withLabel string =
+            label ++ ": " ++ string
+    in
+    concat
+        [ await
+            (Crypto.generateAesCbcKey
+                { length = aesLength
+                , extractable = Crypto.CannotBeExtracted 
+                }
+                secureContext
+            )
+            (withLabel "Generating a key that is marked as not extractable")
+            (\key ->
+                concat
+                    [ awaitError
+                        (Crypto.exportAesCbcKeyAsRaw key)
+                        "Exporting the generated key as RAW"
+                        (\err ->
+                            test "When exporting non-extractable key, fails with the correct error"
+                                (\_ ->
+                                    Expect.equal err Crypto.KeyNotExportable
+                                )
+                        )
+                    , awaitError
+                        (Crypto.exportAesCbcKeyAsJwk key)
+                        "Exporting the generated key as JWK"
+                        (\err ->
+                            test "When exporting non-extractable key, fails with the correct error"
+                                (\_ ->
+                                    Expect.equal err Crypto.KeyNotExportable
+                                )
+                        )
+                    ]
+            )
+        ]
 
 
 
