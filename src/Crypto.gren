@@ -1895,7 +1895,7 @@ decryptWithAesGcm { iv, additionalData, tagLength } (Key { key }) bytes =
                     key
                     bytes
             
-            { ad = Just ad, tl = Nothing} ->
+            { ad = Just ad, tl = Nothing } ->
                 Gren.Kernel.Crypto.decryptWithAesGcm
                     iv
                     ad
