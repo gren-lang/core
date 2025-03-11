@@ -7,7 +7,7 @@ import Math
 import Expect
 import Array exposing (..)
 import Maybe exposing (Maybe(..))
-import Test.Runner.Effectful exposing (describe, concat, test, await, awaitError, run)
+import Test.Runner.Effectful exposing (fuzz, describe, concat, test, await, awaitError, run)
 import Task exposing ( Task )
 import Crypto
 import Bytes exposing ( Bytes )
@@ -27,6 +27,7 @@ tests =
                     , rsaOaepKeyTests secureContext
                     , aesCtrTests secureContext
                     , aesCbcTests secureContext
+                    , aesGcmTests secureContext
                     ]
             )
         , await Bytes.getHostEndianness
@@ -1043,8 +1044,388 @@ aesCbcTestHelper secureContext label { aesLength } =
 
 
 {-|-}
-aesGcmTests =
-    Debug.todo "aesGcmTests"
+aesGcmTests secureContext =
+    concat
+        [ aesGcmTestsHelper
+            secureContext 
+            "AES-GCM : AesLength128" 
+            { aesLength = Crypto.AesLength128
+            , tagLength = Nothing
+            }
+        , aesGcmTestsHelper
+            secureContext 
+            "AES-GCM : AesLength128 AesGcmTagLength96" 
+            { aesLength = Crypto.AesLength128
+            , tagLength = Just Crypto.AesGcmTagLength96
+            }
+        , aesGcmTestsHelper
+            secureContext 
+            "AES-GCM : AesLength128, AesGcmTagLength104" 
+            { aesLength = Crypto.AesLength128
+            , tagLength = Just Crypto.AesGcmTagLength104
+            }
+        , aesGcmTestsHelper
+            secureContext 
+            "AES-GCM : AesLength128 AesGcmTagLength112" 
+            { aesLength = Crypto.AesLength128
+            , tagLength = Just Crypto.AesGcmTagLength112
+            }
+        , aesGcmTestsHelper
+            secureContext 
+            "AES-GCM : AesLength128 AesGcmTagLength120" 
+            { aesLength = Crypto.AesLength128
+            , tagLength = Just Crypto.AesGcmTagLength120
+            }
+        , aesGcmTestsHelper
+            secureContext 
+            "AES-GCM : AesLength128 AesGcmTagLength128" 
+            { aesLength = Crypto.AesLength128
+            , tagLength = Just Crypto.AesGcmTagLength128
+            }
+        , aesGcmTestsHelper 
+            secureContext 
+            "AES-GCM : AesLength192" 
+            { aesLength = Crypto.AesLength192
+            , tagLength = Nothing
+            }
+        , aesGcmTestsHelper 
+            secureContext 
+            "AES-GCM : AesLength192 AesGcmTagLength96" 
+            { aesLength = Crypto.AesLength192
+            , tagLength = Just Crypto.AesGcmTagLength96
+            }
+        , aesGcmTestsHelper 
+            secureContext 
+            "AES-GCM : AesLength192 AesGcmTagLength104" 
+            { aesLength = Crypto.AesLength192
+            , tagLength = Just Crypto.AesGcmTagLength104
+            }
+        , aesGcmTestsHelper 
+            secureContext 
+            "AES-GCM : AesLength192 AesGcmTagLength112" 
+            { aesLength = Crypto.AesLength192
+            , tagLength = Just Crypto.AesGcmTagLength112
+            }
+        , aesGcmTestsHelper 
+            secureContext 
+            "AES-GCM : AesLength192 AesGcmTagLength120" 
+            { aesLength = Crypto.AesLength192
+            , tagLength = Just Crypto.AesGcmTagLength120
+            }
+        , aesGcmTestsHelper 
+            secureContext 
+            "AES-GCM : AesLength192 AesGcmTagLength128" 
+            { aesLength = Crypto.AesLength192
+            , tagLength = Just Crypto.AesGcmTagLength128
+            }
+        , aesGcmTestsHelper 
+            secureContext 
+            "AES-GCM : AesLength256" 
+            { aesLength = Crypto.AesLength256
+            , tagLength = Nothing
+            }
+        , aesGcmTestsHelper 
+            secureContext 
+            "AES-GCM : AesLength256 AesGcmTagLength96" 
+            { aesLength = Crypto.AesLength256
+            , tagLength = Just Crypto.AesGcmTagLength96
+            }
+        , aesGcmTestsHelper 
+            secureContext 
+            "AES-GCM : AesLength256 AesGcmTagLength104" 
+            { aesLength = Crypto.AesLength256
+            , tagLength = Just Crypto.AesGcmTagLength104
+            }
+        , aesGcmTestsHelper 
+            secureContext 
+            "AES-GCM : AesLength256 AesGcmTagLength112" 
+            { aesLength = Crypto.AesLength256
+            , tagLength = Just Crypto.AesGcmTagLength112
+            }
+        , aesGcmTestsHelper 
+            secureContext 
+            "AES-GCM : AesLength256 AesGcmTagLength120" 
+            { aesLength = Crypto.AesLength256
+            , tagLength = Just Crypto.AesGcmTagLength120
+            }
+        , aesGcmTestsHelper 
+            secureContext 
+            "AES-GCM : AesLength256 AesGcmTagLength128" 
+            { aesLength = Crypto.AesLength256
+            , tagLength = Just Crypto.AesGcmTagLength128
+            }
+        ]
+
+
+{-|-}
+aesGcmTestsHelper secureContext label { aesLength, tagLength } =
+    let
+        withLabel string =
+            label ++ ": " ++ string
+    in
+    concat 
+        [ await
+            (Crypto.generateAesGcmKey
+                { length = aesLength
+                , extractable = Crypto.CannotBeExtracted 
+                }
+                secureContext
+            )
+            (withLabel "Generating a key that is marked as not extractable")
+            (\key ->
+                concat
+                    [ awaitError
+                        (Crypto.exportAesGcmKeyAsRaw key)
+                        "Exporting the generated key as RAW"
+                        (\err ->
+                            test "When exporting non-extractable key, fails with the correct error"
+                                (\_ ->
+                                    Expect.equal err Crypto.KeyNotExportable
+                                )
+                        )
+                    , awaitError
+                        (Crypto.exportAesGcmKeyAsJwk key)
+                        "Exporting the generated key as JWK"
+                        (\err ->
+                            test "When exporting non-extractable key, fails with the correct error"
+                                (\_ ->
+                                    Expect.equal err Crypto.KeyNotExportable
+                                )
+                        )
+                    ]
+            )
+        , await
+            (Crypto.generateAesGcmKey
+                { length = aesLength
+                , extractable = Crypto.CanBeExtracted 
+                }
+                secureContext
+            )
+            (withLabel "Generating a key that is marked as extractable")
+            (\key ->
+                let
+                    encryptionBytes =
+                        Bytes.fromString "encryption test string that is longer..."
+                in
+                concat
+                    [ await
+                        (Crypto.exportAesGcmKeyAsRaw key)
+                        "Exporting the generated key as RAW"
+                        (\exportedKey ->
+                            await
+                                (Crypto.importAesGcmKeyFromRaw
+                                    exportedKey
+                                    Crypto.CanBeExtracted
+                                    secureContext
+                                )
+                                "Importing the exported key"
+                                (\importedKey ->
+                                    test "When importing an exported key, the imported key matches the original"
+                                        (\_ ->
+                                            Expect.equal importedKey key
+                                        )
+                                )
+                        )
+                    , await
+                        (Crypto.exportAesGcmKeyAsJwk key)
+                        "Exporting the generated key as JWK"
+                        (\exportedKey ->
+                            await
+                                (Crypto.importAesGcmKeyFromJwk
+                                    exportedKey
+                                    Crypto.CanBeExtracted
+                                    secureContext
+                                )
+                                "Importing the exported key"
+                                (\importedKey ->
+                                    test "When importing an exported key, the imported key matches the original"
+                                        (\_ ->
+                                            Expect.equal importedKey key
+                                        )
+                                )
+                        )
+                    -- Can, in the future, fuzz the bytes generated to test random values between 12 and 132 bytes
+                    , await
+                        (Crypto.getRandomUInt32Values 32)
+                        "Generating 128 bytes for the iv value"
+                        (\generatedBytes ->
+                            concat
+                                [ await
+                                    (Crypto.encryptWithAesGcm 
+                                        { iv = generatedBytes
+                                        , tagLength = tagLength
+                                        , additionalData = Nothing
+                                        }
+                                        key
+                                        encryptionBytes
+                                    )
+                                    "Encrypting some bytes without additional data"
+                                    (\encryptedBytes ->
+                                        concat
+                                            [ await
+                                                (Crypto.decryptWithAesGcm 
+                                                    { iv = generatedBytes
+                                                    , tagLength = tagLength
+                                                    , additionalData = Nothing
+                                                    }
+                                                    key
+                                                    encryptedBytes
+                                                )
+                                                "Decrypting the bytes with the same additional data"
+                                                (\decryptedBytes ->
+                                                    test "The decrypted bytes are equal to the original bytes"
+                                                        (\_ ->
+                                                            Expect.equal encryptionBytes decryptedBytes
+                                                        )
+                                                )
+                                            , await
+                                                (Crypto.getRandomUInt32Values 32)
+                                                "Generating different additional data"
+                                                    (\differentAdditionalData ->
+                                                        awaitError
+                                                            (Crypto.decryptWithAesGcm 
+                                                                { iv = generatedBytes
+                                                                , tagLength = tagLength
+                                                                , additionalData = Just differentAdditionalData
+                                                                }
+                                                                key
+                                                                encryptedBytes
+                                                            )
+                                                            "Decrypting the bytes with the different additional data"
+                                                            (\err ->
+                                                                test "The error equals the expected error"
+                                                                    (\_ ->
+                                                                        Expect.equal err Crypto.AesGcmDecryptionError
+                                                                    )
+                                                            )
+                                                    )
+                                            ]
+                                    )
+                                ]
+                        )
+                    , await
+                        (Crypto.getRandomUInt32Values 200)
+                        "Generating too many bytes of data for the iv value"
+                        (\generatedBytes ->
+                            concat
+                                [ awaitError
+                                    (Crypto.encryptWithAesGcm 
+                                        { iv = generatedBytes
+                                        , tagLength = tagLength
+                                        , additionalData = Nothing
+                                        }
+                                        key
+                                        encryptionBytes
+                                    )
+                                    "Encrypting some bytes without additional data with "
+                                    (\err ->
+                                        test "Encryption fails with the correct error when the iv is wrong"
+                                            (\_ ->
+                                                Expect.equal err Crypto.AesGcmEncryptionErrorInvalidIvByteLegth
+                                            )
+                                    )
+                                , awaitError
+                                    (Crypto.encryptWithAesGcm 
+                                        { iv = generatedBytes
+                                        , tagLength = tagLength
+                                        , additionalData = Just generatedBytes
+                                        }
+                                        key
+                                        encryptionBytes
+                                    )
+                                    "Encrypting some bytes with additional data"
+                                    (\err ->
+                                        test "Encryption fails with the correct error when the iv is wrong"
+                                            (\_ ->
+                                                Expect.equal err Crypto.AesGcmEncryptionErrorInvalidIvByteLegth
+                                            )
+                                    )
+                                , await
+                                    (Crypto.getRandomUInt32Values 5)
+                                    "Generating different additional data..."
+                                    (\differentAdditionalData ->
+                                        awaitError
+                                            (Crypto.encryptWithAesGcm 
+                                                { iv = generatedBytes
+                                                , tagLength = tagLength
+                                                , additionalData = Just differentAdditionalData
+                                                }
+                                                key
+                                                encryptionBytes
+                                            )
+                                            "Encrypting some bytes with additional data that's different..."
+                                            (\err ->
+                                                test "Encryption fails with the correct error when the iv is wrong"
+                                                    (\_ ->
+                                                        Expect.equal err Crypto.AesGcmEncryptionErrorInvalidIvByteLegth
+                                                    )
+                                            )
+                                    )
+                                ]
+                        )
+                    , await
+                        (Crypto.getRandomUInt32Values 2)
+                        "Generating too little bytes of data for the iv value"
+                        (\generatedBytes ->
+                            concat
+                                [ awaitError
+                                    (Crypto.encryptWithAesGcm 
+                                        { iv = generatedBytes
+                                        , tagLength = tagLength
+                                        , additionalData = Nothing
+                                        }
+                                        key
+                                        encryptionBytes
+                                    )
+                                    "Encrypting some bytes without additional data"
+                                    (\err ->
+                                        test "Encryption fails with the correct error when the iv is wrong"
+                                            (\_ ->
+                                                Expect.equal err Crypto.AesGcmEncryptionErrorInvalidIvByteLegth
+                                            )
+                                    )
+                                , awaitError
+                                    (Crypto.encryptWithAesGcm 
+                                        { iv = generatedBytes
+                                        , tagLength = tagLength
+                                        , additionalData = Just generatedBytes
+                                        }
+                                        key
+                                        encryptionBytes
+                                    )
+                                    "Encrypting some bytes with additional data"
+                                    (\err ->
+                                        test "Encryption fails with the correct error when the iv is wrong"
+                                            (\_ ->
+                                                Expect.equal err Crypto.AesGcmEncryptionErrorInvalidIvByteLegth
+                                            )
+                                    )
+                                , await
+                                    (Crypto.getRandomUInt32Values 5)
+                                    "Generating different additional data"
+                                    (\differentAdditionalData ->
+                                        awaitError
+                                            (Crypto.encryptWithAesGcm 
+                                                { iv = generatedBytes
+                                                , tagLength = tagLength
+                                                , additionalData = Just differentAdditionalData
+                                                }
+                                                key
+                                                encryptionBytes
+                                            )
+                                            "Encrypting some bytes with additional data that's different"
+                                            (\err ->
+                                                test "Encryption fails with the correct error when the iv is wrong"
+                                                    (\_ ->
+                                                        Expect.equal err Crypto.AesGcmEncryptionErrorInvalidIvByteLegth
+                                                    )
+                                            )
+                                    )
+                                ]
+                        )
+                    ]
+            )
+        ]
 
 
 
