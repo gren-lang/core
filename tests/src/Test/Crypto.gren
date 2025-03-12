@@ -28,6 +28,7 @@ tests =
                     , aesCtrTests secureContext
                     , aesCbcTests secureContext
                     , aesGcmTests secureContext
+                    , rsaSsaPkcs1V1_5KeyTests secureContext
                     ]
             )
         , await Bytes.getHostEndianness
@@ -1433,8 +1434,306 @@ aesGcmTestsHelper secureContext label { aesLength, tagLength } =
 
 
 {-|-}
-rsaSsaPkcs1V1_5KeyTests =
-    Debug.todo "rsaSsaPkcs1V1_5KeyTests"
+rsaSsaPkcs1V1_5KeyTests secureContext =
+    let
+        encryptionLabel =
+            Just (Bytes.fromString "a")
+
+        helper =
+            rsaSsaPkcs1V1_5KeyTestsHelper secureContext
+    in
+    concat
+        [ helper
+            "Crypto.Sha256 + 2048"
+            { encryptionLabel = encryptionLabel
+            , modulusLength = 2048
+            , hash = Crypto.Sha256
+            }
+        , helper
+            "Crypto.Sha384 + 2048"
+            { encryptionLabel = encryptionLabel
+            , modulusLength = 2048
+            , hash = Crypto.Sha384
+            }
+        , helper
+            "Crypto.Sha512 + 2048"
+            { encryptionLabel = encryptionLabel
+            , modulusLength = 2048
+            , hash = Crypto.Sha512
+            }
+        , helper
+            "Crypto.Sha256 + 4096"
+            { encryptionLabel = encryptionLabel
+            , modulusLength = 4096
+            , hash = Crypto.Sha256
+            }
+        , helper
+            "Crypto.Sha384 + 4096"
+            { encryptionLabel = encryptionLabel
+            , modulusLength = 4096
+            , hash = Crypto.Sha384
+            }
+        , helper
+            "Crypto.Sha512 + 4096"
+            { encryptionLabel = encryptionLabel
+            , modulusLength = 4096
+            , hash = Crypto.Sha512
+            }
+        ]
+
+
+{-|-}
+rsaSsaPkcs1V1_5KeyTestsHelper secureContext label { encryptionLabel, modulusLength, hash } =
+    let
+        withLabel string =
+            label ++ ": " ++ string
+    in
+    concat
+        [ await
+            (Crypto.generateRsaSsaPkcs1V1_5KeyPair
+                { modulusLength = modulusLength
+                , hash = hash
+                , extractable = Crypto.CannotBeExtracted
+                }
+                secureContext
+            )
+            (withLabel "Generating non-extractable RSA-SSA-PKCS1v1 key pair")
+            (\{ publicKey, privateKey } ->
+                concat
+                    [ await
+                        (Crypto.exportRsaSsaPkcs1V1_5PublicKeyAsSpki publicKey)
+                        "Exporting the generated public key as SPKI"
+                        (\exportedPublicKey ->
+                            await
+                                (Crypto.importRsaSsaPkcs1V1_5PublicKeyFromSpki 
+                                    exportedPublicKey
+                                    { hash = hash
+                                    }
+                                    Crypto.CanBeExtracted
+                                    secureContext
+                                )
+                                "Importing the exported key with the same hash"
+                                (\importedKey ->
+                                    test "When importing the key with the same hash, succeeds"
+                                        (\_ ->
+                                            Expect.equal importedKey publicKey
+                                        )
+                                )
+                        )
+                    , await
+                        (Crypto.exportRsaSsaPkcs1V1_5PublicKeyAsJwk publicKey)
+                        "Exporting the generated public key as JWK"
+                        (\exportedPublicKey ->
+                            concat
+                                [ await
+                                    (Crypto.importRsaSsaPkcs1V1_5PublicKeyFromJwk
+                                        exportedPublicKey
+                                        { hash = hash
+                                        }
+                                        Crypto.CanBeExtracted
+                                        secureContext
+                                    )
+                                    "Importing the exported key with the same hash"
+                                    (\importedKey ->
+                                        test "When importing the key with the same hash, succeeds"
+                                            (\_ ->
+                                                Expect.equal importedKey publicKey
+                                            )
+                                    )
+                                , awaitError
+                                    (Crypto.importRsaSsaPkcs1V1_5PublicKeyFromJwk
+                                        exportedPublicKey
+                                        { hash = shuffleDigestAlgorithm hash
+                                        }
+                                        Crypto.CanBeExtracted
+                                        secureContext
+                                    )
+                                    "Importing the exported key with a different hash"
+                                    (\err ->
+                                        test "When importing a JWK key with a different hash"
+                                            (\_ ->
+                                                Expect.equal err Crypto.ImportRsaKeyError
+                                            )
+                                    )
+                                ]
+                        )
+                    , awaitError
+                        (Crypto.exportRsaSsaPkcs1V1_5PrivateKeyAsPkcs8 privateKey)
+                        "Exporting the generated private key as PKCS8"
+                        (\err ->
+                            test "When exporting non-extractable private key, fails with the correct error"
+                                (\_ ->
+                                    Expect.equal err Crypto.KeyNotExportable
+                                )
+                        )
+                    , awaitError
+                        (Crypto.exportRsaSsaPkcs1V1_5PrivateKeyAsJwk privateKey)
+                        "Exporting the generated private key as JWK"
+                        (\err ->
+                            test "When exporting non-extractable private key, fails with the correct error"
+                                (\_ ->
+                                    Expect.equal err Crypto.KeyNotExportable
+                                )
+                        )
+                    ]
+            )
+        , await
+            (Crypto.generateRsaSsaPkcs1V1_5KeyPair
+                { modulusLength = modulusLength
+                , hash = hash
+                , extractable = Crypto.CanBeExtracted
+                }
+                secureContext
+            )
+            (withLabel "Generating extractable RSA-SSA-PKCS1v1 key pair")
+            (\{ publicKey, privateKey } ->
+                let
+                    bytesToSign =
+                        Bytes.fromString "hello"
+                in
+                concat
+                    [ await
+                        (Crypto.exportRsaSsaPkcs1V1_5PublicKeyAsSpki publicKey)
+                        "Exporting the generated public key as SPKI"
+                        (\exportedPublicKey ->
+                            await
+                                (Crypto.importRsaSsaPkcs1V1_5PublicKeyFromSpki 
+                                    exportedPublicKey
+                                    { hash = hash
+                                    }
+                                    Crypto.CanBeExtracted
+                                    secureContext
+                                )
+                                "Importing the exported key with the same hash"
+                                (\importedKey ->
+                                    test "When importing the key with the same hash, succeeds"
+                                        (\_ ->
+                                            Expect.equal importedKey publicKey
+                                        )
+                                )
+                        )
+                    , await
+                        (Crypto.exportRsaSsaPkcs1V1_5PublicKeyAsJwk publicKey)
+                        "Exporting the generated public key as JWK"
+                        (\exportedPublicKey ->
+                            concat
+                                [ await
+                                    (Crypto.importRsaSsaPkcs1V1_5PublicKeyFromJwk
+                                        exportedPublicKey
+                                        { hash = hash
+                                        }
+                                        Crypto.CanBeExtracted
+                                        secureContext
+                                    )
+                                    "Importing the exported key with the same hash"
+                                    (\importedKey ->
+                                        test "When importing the key with the same hash, succeeds"
+                                            (\_ ->
+                                                Expect.equal importedKey publicKey
+                                            )
+                                    )
+                                , awaitError
+                                    (Crypto.importRsaSsaPkcs1V1_5PublicKeyFromJwk
+                                        exportedPublicKey
+                                        { hash = shuffleDigestAlgorithm hash
+                                        }
+                                        Crypto.CanBeExtracted
+                                        secureContext
+                                    )
+                                    "Importing the exported key with a different hash"
+                                    (\err ->
+                                        test "When importing a JWK key with a different hash"
+                                            (\_ ->
+                                                Expect.equal err Crypto.ImportRsaKeyError
+                                            )
+                                    )
+                                ]
+                        )
+                    , await
+                        (Crypto.exportRsaSsaPkcs1V1_5PrivateKeyAsPkcs8 privateKey)
+                        "Exporting the generated private key as PKCS8"
+                        (\exportedPrivateKey ->
+                            await
+                                (Crypto.importRsaSsaPkcs1V1_5PrivateKeyFromPkcs8
+                                    exportedPrivateKey
+                                    { hash = hash
+                                    }
+                                    Crypto.CanBeExtracted
+                                    secureContext
+                                )
+                                "Importing the exported key with the same hash"
+                                (\importedKey ->
+                                    test "When importing the key with the same hash, succeeds"
+                                        (\_ ->
+                                            Expect.equal importedKey privateKey
+                                        )
+                                )
+                        )
+                    , await
+                        (Crypto.exportRsaSsaPkcs1V1_5PrivateKeyAsJwk privateKey)
+                        "Exporting the generated private key as JWK"
+                        (\exportedPrivateKey ->
+                            concat
+                                [ await
+                                    (Crypto.importRsaSsaPkcs1V1_5PrivateKeyFromJwk
+                                        exportedPrivateKey
+                                        { hash = hash
+                                        }
+                                        Crypto.CanBeExtracted
+                                        secureContext
+                                    )
+                                    "Importing the exported key with the same hash"
+                                    (\importedKey ->
+                                        test "When importing the key with the same hash, succeeds"
+                                            (\_ ->
+                                                Expect.equal importedKey privateKey
+                                            )
+                                    )
+                                , awaitError
+                                    (Crypto.importRsaSsaPkcs1V1_5PrivateKeyFromJwk
+                                        exportedPrivateKey
+                                        { hash = shuffleDigestAlgorithm hash
+                                        }
+                                        Crypto.CanBeExtracted
+                                        secureContext
+                                    )
+                                    "Importing the exported key with a different hash"
+                                    (\err ->
+                                        test "When importing a JWK key with a different hash"
+                                            (\_ ->
+                                                Expect.equal err Crypto.ImportRsaKeyError
+                                            )
+                                    )
+                                ]
+                        )
+                    , await
+                        (Crypto.signWithRsaSsaPkcs1V1_5 privateKey bytesToSign)
+                        "Sign some bytes"
+                        (\signature ->
+                            concat
+                                [ await
+                                    (Crypto.verifyWithRsaSsaPkcs1V1_5 publicKey signature bytesToSign)
+                                    "Verifying signed bytes"
+                                    (\_ ->
+                                        test "Succeeds when bytes that are being verified were the same as what was signed"
+                                            (\_ ->
+                                                Expect.pass
+                                            )
+                                    )
+                                , awaitError
+                                    (Crypto.verifyWithRsaSsaPkcs1V1_5 publicKey signature (Bytes.fromString "some other bytes"))
+                                    "Verifying bytes that were not signed"
+                                    (\_ ->
+                                        test "Fails when bytes that are being verified are different than what was signed"
+                                            (\_ ->
+                                                Expect.pass
+                                            )
+                                    )
+                                ]
+                        )
+                    ]
+            )
+        ]
 
 
 
