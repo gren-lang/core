@@ -29,6 +29,7 @@ tests =
                     , aesCbcTests secureContext
                     , aesGcmTests secureContext
                     , rsaSsaPkcs1V1_5KeyTests secureContext
+                    , digestTests secureContext
                     ]
             )
         , await Bytes.getHostEndianness
@@ -1764,12 +1765,62 @@ hmacTests =
 
 
 
--- SHA Tests
+-- Digest Tests
 
 
 {-|-}
-shaTests =
-    Debug.todo "shaTests"
+digestTests secureContext =
+    let
+        helper =
+            digestTestsHelper secureContext
+    in
+    concat
+        [ helper "Crypto.Sha256" Crypto.Sha256
+        , helper "Crypto.Sha384" Crypto.Sha384
+        , helper "Crypto.Sha512" Crypto.Sha512
+        ]
+
+
+{-|-}
+digestTestsHelper secureContext label digestAlgorithm =
+    let
+        bytesToHash =
+            Bytes.fromString "Test bytes"
+
+        withLabel string =
+            label ++ ": " ++ string
+    in
+    concat
+        [ await
+            (Crypto.digest secureContext digestAlgorithm bytesToHash)
+            (withLabel "Hashing some bytes")
+            (\hash ->
+                concat 
+                    [ test "The hashed bytes do not equal the original bytes"
+                        (\_ ->
+                            Expect.notEqual hash bytesToHash
+                        )
+                    , await 
+                        (Crypto.digest secureContext digestAlgorithm bytesToHash)
+                        "Hashing the same bytes again"
+                        (\secondHash ->
+                            test "Hashing the same bytes again produces the same hash"
+                                (\_ ->
+                                    Expect.equal hash secondHash
+                                )
+                        )
+                    , await
+                        (Crypto.digest secureContext (shuffleDigestAlgorithm digestAlgorithm) bytesToHash)
+                        "Hashing the same bytes with a different digest algorithm"
+                        (\hashWithDifferentAlgorithm ->
+                            test "The same bytes hashed with a different algorithm do not produce the same hash"
+                                (\_ ->
+                                    Expect.notEqual hashWithDifferentAlgorithm hash
+                                )
+                        )
+                    ]
+            )
+        ]
 
 
 
