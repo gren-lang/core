@@ -29,6 +29,7 @@ tests =
                     , aesCbcTests secureContext
                     , aesGcmTests secureContext
                     , rsaSsaPkcs1V1_5KeyTests secureContext
+                    , hmacTests secureContext
                     , digestTests secureContext
                     ]
             )
@@ -1760,8 +1761,187 @@ ecdsaTests =
 
 
 {-|-}
-hmacTests =
-    Debug.todo "hmacTests"
+hmacTests secureContext =
+    let
+        helper =
+            generateHmacTestsHelper secureContext
+    in
+    concat
+        [ helper "HMAC - No length - SHA256"
+            { length = Nothing
+            , digestAlgorithm = Crypto.Sha256
+            }
+        , helper "HMAC - No length - SHA384"
+            { length = Nothing
+            , digestAlgorithm = Crypto.Sha384
+            }
+        , helper "HMAC - No length - SHA512"
+            { length = Nothing
+            , digestAlgorithm = Crypto.Sha512
+            }
+        , helper "HMAC - Small length - SHA256"
+            { length = Just 8
+            , digestAlgorithm = Crypto.Sha256
+            }
+        , helper "HMAC - Small length - SHA384"
+            { length = Just 8
+            , digestAlgorithm = Crypto.Sha384
+            }
+        , helper "HMAC - Small length - SHA512"
+            { length = Just 8
+            , digestAlgorithm = Crypto.Sha512
+            }
+        , helper "HMAC - Large length - SHA256"
+            { length = Just 2048
+            , digestAlgorithm = Crypto.Sha256
+            }
+        , helper "HMAC - SmLargeall length - SHA384"
+            { length = Just 2048
+            , digestAlgorithm = Crypto.Sha384
+            }
+        , helper "HMAC - Large length - SHA512"
+            { length = Just 2048
+            , digestAlgorithm = Crypto.Sha512
+            }
+        , awaitError
+            (Crypto.generateHmacKey 
+                { length = Just 12
+                , hash = Crypto.Sha256
+                , extractable = Crypto.CanBeExtracted
+                }
+                secureContext
+            )
+            "Generate an HMAC key with a length of 12"
+            (\err ->
+                test "When HMAC key is not divisible by 8, produces correct error"
+                    (\_ ->
+                        Expect.equal err Crypto.HmacLengthNotDivisibleByEight
+                    )
+            )
+        ]
+
+
+{-}-}
+generateHmacTestsHelper secureContext label { length, digestAlgorithm } =
+    let
+        withLabel string =
+            label ++ ": " ++ string
+    in
+    concat
+        [ await
+            (Crypto.generateHmacKey 
+                { length = length
+                , hash = digestAlgorithm
+                , extractable = Crypto.CannotBeExtracted
+                }
+                secureContext
+            )
+            (withLabel "Generating an HMAC key that cannot be extracted")
+            (\key ->
+                concat
+                    [ awaitError
+                        (Crypto.exportHmacKeyAsRaw key)
+                        "Exporting key as RAW"
+                        (\err ->
+                            test "When exporting key that isn't exportable, generates the correct error"
+                                (\_ ->
+                                    Expect.equal err Crypto.KeyNotExportable
+                                )
+                        )
+                    , awaitError
+                        (Crypto.exportHmacKeyAsJwk key)
+                        "Exporting key as JWK"
+                        (\err ->
+                            test "When exporting key that isn't exportable, generates the correct error"
+                                (\_ ->
+                                    Expect.equal err Crypto.KeyNotExportable
+                                )
+                        )
+                    ]
+            )
+        , await
+            (Crypto.generateHmacKey 
+                { length = length
+                , hash = digestAlgorithm
+                , extractable = Crypto.CanBeExtracted
+                }
+                secureContext
+            )
+            (withLabel "Generating an HMAC key that can be extracted")
+            (\key ->
+                let
+                    bytesToSign =
+                        Bytes.fromString "hello"
+                in
+                concat
+                    [ await
+                        (Crypto.exportHmacKeyAsRaw key)
+                        "Exporting key as RAW"
+                        (\exportedKey ->
+                            await 
+                                (Crypto.importHmacKeyFromRaw 
+                                    exportedKey
+                                    digestAlgorithm
+                                    length
+                                    Crypto.CanBeExtracted
+                                    secureContext
+                                )
+                                "Importing the key"
+                                (\importedKey ->
+                                    test "The imported key matches the original key"
+                                        (\_ ->
+                                            Expect.equal importedKey key
+                                        )
+                                )
+                        )
+                    , await
+                        (Crypto.exportHmacKeyAsJwk key)
+                        "Exporting key as JWK"
+                        (\exportedKey ->
+                            await 
+                                (Crypto.importHmacKeyFromJwk
+                                    exportedKey
+                                    digestAlgorithm
+                                    length
+                                    Crypto.CanBeExtracted
+                                    secureContext
+                                )
+                                "Importing the key"
+                                (\importedKey ->
+                                    test "The imported key matches the original key"
+                                        (\_ ->
+                                            Expect.equal importedKey key
+                                        )
+                                )
+                        )
+                    , await
+                        (Crypto.signWithHmac key bytesToSign)
+                        "Signing some bytes"
+                        (\signature ->
+                            concat
+                                [ await
+                                    (Crypto.verifyWithHmac key signature bytesToSign)
+                                    "Verifying bytes"
+                                    (\_ ->
+                                        test "Verifying bytes with the right signature succeeds"
+                                            (\_ ->
+                                                Expect.pass
+                                            )
+                                    )
+                                , awaitError
+                                    (Crypto.verifyWithHmac key signature (Bytes.fromString "different bytes"))
+                                    "Verifying different bytes"
+                                    (\_ ->
+                                        test "Verifying different bytes fails as expected"
+                                            (\_ ->
+                                                Expect.pass
+                                            )
+                                    )
+                                ]
+                        )
+                    ]
+            )
+        ]
 
 
 

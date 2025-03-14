@@ -730,7 +730,10 @@ var _Crypto_verifyWithHmac = F3(function (key, signature, bytes) {
     _Crypto_impl.subtle
       .verify(algorithm, key, signature, bytes)
       .then(function (res) {
-        return callback(__Scheduler_succeed(res));
+        if (res) {
+          return callback(__Scheduler_succeed());
+        }
+        return callback(__Scheduler_fail());
       })
       .catch(function (err) {
         throw "There was an unforseen error that occured when attempting to verify with the HMAC algorithm. This shouldn't happen! Please file a ticket in the `gren-lang/core` Github repo (https://github.com/gren-lang/core)";

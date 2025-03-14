@@ -786,7 +786,7 @@ type HmacKey =
 Errors that can happen when enerating a key for use with the HMAC algorithm. 
 There's a single case where this function can fail:
 
-- When the passed `modulusLength` is not divisible by 8, as is required by the 
+- When the passed `length` is not divisible by 8, as is required by the 
 algorithm. This is captured by `HmacLengthNotDivisibleByEight`.
 -}
 type HmacKeyGenerationError
