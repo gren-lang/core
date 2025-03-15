@@ -45,9 +45,9 @@ var _Crypto_constructRsaKey = function (key) {
     __$hash: _Crypto_hashFromString(key.algorithm.hash.name),
     __$extractable: _Crypto_extractableFromBool(key.extractable),
   };
-  return __Crypto_Key({ 
-    __$key: key, 
-    __$data: rsaKeyData
+  return __Crypto_Key({
+    __$key: key,
+    __$data: rsaKeyData,
   });
 };
 
@@ -61,9 +61,9 @@ var _Crypto_constructHmacKey = function (key) {
   } else {
     hmacKeyData.__$length = __Maybe_Nothing;
   }
-  return __Crypto_Key({ 
-    __$key: key, 
-    __$data: hmacKeyData
+  return __Crypto_Key({
+    __$key: key,
+    __$data: hmacKeyData,
   });
 };
 
@@ -79,9 +79,9 @@ var _Crypto_constructAesKey = function (key) {
     case 256:
       aesKeyData.__$length = __Crypto_AesLength256;
   }
-  return __Crypto_Key({ 
-    __$key : key, 
-    __$data : aesKeyData 
+  return __Crypto_Key({
+    __$key: key,
+    __$data: aesKeyData,
   });
 };
 
@@ -97,9 +97,9 @@ var _Crypto_constructEcKey = function (key) {
     case "P-521":
       ecKeyData.__$namedCurve = __Crypto_P521;
   }
-  return __Crypto_Key({ 
-    __$key: key, 
-    __$data: ecKeyData
+  return __Crypto_Key({
+    __$key: key,
+    __$data: ecKeyData,
   });
 };
 
