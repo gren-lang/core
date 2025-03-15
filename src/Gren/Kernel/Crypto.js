@@ -714,7 +714,10 @@ var _Crypto_verifyWithEcdsa = F4(function (hash, key, signature, bytes) {
     _Crypto_impl.subtle
       .verify(algorithm, key, signature, bytes)
       .then(function (res) {
-        return callback(__Scheduler_succeed(res));
+        if (res) {
+          return callback(__Scheduler_succeed());
+        }
+        return callback(__Scheduler_fail());
       })
       .catch(function (err) {
         throw "There was an unforseen error that occured when attempting to verify with the ECDSA algorithm. This shouldn't happen! Please file a ticket in the `gren-lang/core` Github repo (https://github.com/gren-lang/core)";

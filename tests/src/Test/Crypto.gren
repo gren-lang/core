@@ -30,6 +30,7 @@ tests =
                     , aesGcmTests secureContext
                     , rsaSsaPkcs1V1_5KeyTests secureContext
                     , hmacTests secureContext
+                    , ecdsaTests secureContext
                     , digestTests secureContext
                     ]
             )
@@ -1752,8 +1753,433 @@ rsaPssTests =
 
 
 {-|-}
-ecdsaTests =
-    Debug.todo "ecdsaTests"
+ecdsaTests secureContext =
+    concat
+        [ ecdsaTestsHelper
+            secureContext
+            "P256 named curve, SHA256"
+            { namedCurve = Crypto.P256
+            , digestAlgorithm = Crypto.Sha256
+            }
+        , ecdsaTestsHelper
+            secureContext
+            "P256 named curve, SHA384"
+            { namedCurve = Crypto.P256
+            , digestAlgorithm = Crypto.Sha384
+            }
+        , ecdsaTestsHelper
+            secureContext
+            "P256 named curve, SHA512"
+            { namedCurve = Crypto.P256
+            , digestAlgorithm = Crypto.Sha512
+            }
+        , ecdsaTestsHelper
+            secureContext
+            "P384 named curve, SHA256"
+            { namedCurve = Crypto.P384
+            , digestAlgorithm = Crypto.Sha256
+            }
+        , ecdsaTestsHelper
+            secureContext
+            "P384 named curve, SHA384"
+            { namedCurve = Crypto.P384
+            , digestAlgorithm = Crypto.Sha384
+            }
+        , ecdsaTestsHelper
+            secureContext
+            "P384 named curve, SHA512"
+            { namedCurve = Crypto.P384
+            , digestAlgorithm = Crypto.Sha512
+            }
+        , ecdsaTestsHelper
+            secureContext
+            "P521 named curve, SHA256"
+            { namedCurve = Crypto.P521
+            , digestAlgorithm = Crypto.Sha256
+            }
+        , ecdsaTestsHelper
+            secureContext
+            "P521 named curve, SHA384"
+            { namedCurve = Crypto.P521
+            , digestAlgorithm = Crypto.Sha384
+            }
+        , ecdsaTestsHelper
+            secureContext
+            "P521 named curve, SHA512"
+            { namedCurve = Crypto.P521
+            , digestAlgorithm = Crypto.Sha512
+            }
+        ]
+
+
+{-|-}
+ecdsaTestsHelper secureContext label { namedCurve, digestAlgorithm } =
+    let
+        withLabel string =
+            label ++ ": " ++ string
+    in
+    concat
+        [ await
+            (Crypto.generateEcdsaKeyPair
+                { namedCurve = namedCurve 
+                , extractable = Crypto.CannotBeExtracted
+                }
+                secureContext
+            )
+            (withLabel "Generating a key that cannot be extracted")
+            (\{ publicKey, privateKey } ->
+                concat
+                    [ await
+                        (Crypto.exportEcdsaPublicKeyAsRaw publicKey)
+                        "Exporting public ECDSA key as RAW when not extractable"
+                        (\exportedKey ->
+                            concat
+                                [ await
+                                    (Crypto.importEcdsaPublicKeyFromRaw
+                                        namedCurve
+                                        exportedKey
+                                        Crypto.CanBeExtracted
+                                        secureContext
+                                    )
+                                    "Importing the exported key with the same named curve"
+                                    (\importedKey ->
+                                        test "Imported key equals the original key"
+                                            (\_ ->
+                                                Expect.equal importedKey publicKey
+                                            )
+                                    )
+                                , awaitError
+                                    (Crypto.importEcdsaPublicKeyFromRaw
+                                        (shuffleNamedCurve namedCurve)
+                                        exportedKey
+                                        Crypto.CanBeExtracted
+                                        secureContext
+                                    )
+                                    "Importing the exported key with a different named curve"
+                                        (\err ->
+                                            test "Produces the expected error"
+                                                (\_ ->
+                                                    Expect.equal err Crypto.ImportEcKeyError
+                                                )
+                                        )
+                                ]
+                        )
+                    , await
+                        (Crypto.exportEcdsaPublicKeyAsSpki publicKey)
+                        "Exporting public ECDSA key as SPKI when not extractable"
+                        (\exportedKey ->
+                            concat
+                                [ await
+                                    (Crypto.importEcdsaPublicKeyFromSpki
+                                        namedCurve
+                                        exportedKey
+                                        Crypto.CanBeExtracted
+                                        secureContext
+                                    )
+                                    "Importing the exported key with the same named curve"
+                                    (\importedKey ->
+                                        test "Imported key equals the original key"
+                                            (\_ ->
+                                                Expect.equal importedKey publicKey
+                                            )
+                                    )
+                                , awaitError
+                                    (Crypto.importEcdsaPublicKeyFromSpki
+                                        (shuffleNamedCurve namedCurve)
+                                        exportedKey
+                                        Crypto.CanBeExtracted
+                                        secureContext
+                                    )
+                                    "Importing the exported key with a different named curve"
+                                            (\err ->
+                                                test "Produces the expected error"
+                                                    (\_ ->
+                                                        Expect.equal err Crypto.ImportEcKeyError
+                                                    )
+                                            )
+                                ]
+                        )
+                    , await
+                        (Crypto.exportEcdsaPublicKeyAsJwk publicKey)
+                        "Exporting public ECDSA key as JWK when not extractable"
+                        (\exportedKey ->
+                            concat 
+                                [ await
+                                    (Crypto.importEcdsaPublicKeyFromJwk
+                                        namedCurve
+                                        exportedKey
+                                        Crypto.CanBeExtracted
+                                        secureContext
+                                    )
+                                    "Importing the exported key with the same named curve"
+                                    (\importedKey ->
+                                        test "Imported key equals the original key"
+                                            (\_ ->
+                                                Expect.equal importedKey publicKey
+                                            )
+                                    )
+                                , awaitError
+                                    (Crypto.importEcdsaPublicKeyFromJwk
+                                        (shuffleNamedCurve namedCurve)
+                                        exportedKey
+                                        Crypto.CanBeExtracted
+                                        secureContext
+                                    )
+                                    "Importing the exported key with a different named curve"
+                                    (\err ->
+                                        test "Produces the expected error"
+                                            (\_ ->
+                                                Expect.equal err Crypto.ImportEcKeyError
+                                            )
+                                    )
+                                ]
+                        )
+                    , awaitError
+                        (Crypto.exportEcdsaPrivateKeyAsPkcs8 privateKey)
+                        "Exporting private ECDSA key as PKCS8 when not extractable"
+                        (\err ->
+                            test "When exporting private key that isn't extractable, fails with expected message"
+                                (\_ ->
+                                    Expect.equal err Crypto.KeyNotExportable
+                                )
+                        )
+                    , awaitError
+                        (Crypto.exportEcdsaPrivateKeyAsJwk privateKey)
+                        "Exporting private ECDSA key as JWK when not extractable"
+                        (\err ->
+                            test "When exporting private key that isn't extractable, fails with expected message"
+                                (\_ ->
+                                    Expect.equal err Crypto.KeyNotExportable
+                                )
+                        )
+                    ]
+            )
+        , await
+            (Crypto.generateEcdsaKeyPair
+                { namedCurve = namedCurve 
+                , extractable = Crypto.CanBeExtracted
+                }
+                secureContext
+            )
+            (withLabel "Generating a key that can be extracted")
+            (\{ publicKey, privateKey } ->
+                let
+                    bytesToSign =
+                        Bytes.fromString "hello"
+                in
+                concat
+                    [ await
+                        (Crypto.exportEcdsaPublicKeyAsRaw publicKey)
+                        "Exporting public ECDSA key as RAW when extractable"
+                        (\exportedKey ->
+                            concat
+                                [ await
+                                    (Crypto.importEcdsaPublicKeyFromRaw
+                                        namedCurve
+                                        exportedKey
+                                        Crypto.CanBeExtracted
+                                        secureContext
+                                    )
+                                    "Importing the exported key with the same named curve"
+                                    (\importedKey ->
+                                        test "Imported key equals the original key"
+                                            (\_ ->
+                                                Expect.equal importedKey publicKey
+                                            )
+                                    )
+                                , awaitError
+                                    (Crypto.importEcdsaPublicKeyFromRaw
+                                        (shuffleNamedCurve namedCurve)
+                                        exportedKey
+                                        Crypto.CanBeExtracted
+                                        secureContext
+                                    )
+                                    "Importing the exported key with a different named curve"
+                                    (\err ->
+                                        test "Produces the expected error"
+                                            (\_ ->
+                                                Expect.equal err Crypto.ImportEcKeyError
+                                            )
+                                    )
+                                ]
+                        )
+                    , await
+                        (Crypto.exportEcdsaPublicKeyAsSpki publicKey)
+                        "Exporting public ECDSA key as SPKI when extractable"
+                        (\exportedKey ->
+                            concat
+                                [ await
+                                    (Crypto.importEcdsaPublicKeyFromSpki
+                                        namedCurve
+                                        exportedKey
+                                        Crypto.CanBeExtracted
+                                        secureContext
+                                    )
+                                    "Importing the exported key with the same named curve"
+                                    (\importedKey ->
+                                        test "Imported key equals the original key"
+                                            (\_ ->
+                                                Expect.equal importedKey publicKey
+                                            )
+                                    )
+                                , awaitError
+                                    (Crypto.importEcdsaPublicKeyFromSpki
+                                        (shuffleNamedCurve namedCurve)
+                                        exportedKey
+                                        Crypto.CanBeExtracted
+                                        secureContext
+                                    )
+                                    "Importing the exported key with a different named curve"
+                                    (\err ->
+                                        test "Produces the expected error"
+                                            (\_ ->
+                                                Expect.equal err Crypto.ImportEcKeyError
+                                            )
+                                    )
+                                ]
+                        )
+                    , await
+                        (Crypto.exportEcdsaPublicKeyAsJwk publicKey)
+                        "Exporting public ECDSA key as JWK when extractable"
+                        (\exportedKey ->
+                            concat
+                                [ await
+                                    (Crypto.importEcdsaPublicKeyFromJwk
+                                        namedCurve
+                                        exportedKey
+                                        Crypto.CanBeExtracted
+                                        secureContext
+                                    )
+                                    "Importing the exported key with the same named curve"
+                                    (\importedKey ->
+                                        test "Imported key equals the original key"
+                                            (\_ ->
+                                                Expect.equal importedKey publicKey
+                                            )
+                                    )
+                                , awaitError
+                                    (Crypto.importEcdsaPublicKeyFromJwk
+                                        (shuffleNamedCurve namedCurve)
+                                        exportedKey
+                                        Crypto.CanBeExtracted
+                                        secureContext
+                                    )
+                                    "Importing the exported key with a different named curve"
+                                    (\err ->
+                                        test "Produces the expected error"
+                                            (\_ ->
+                                                Expect.equal err Crypto.ImportEcKeyError
+                                            )
+                                    )
+                                ]
+                        )
+                    , await
+                        (Crypto.exportEcdsaPrivateKeyAsPkcs8 privateKey)
+                        "Exporting private ECDSA key as PKCS8 when extractable"
+                        (\exportedKey ->
+                            concat 
+                                [ await
+                                    (Crypto.importEcdsaPrivateKeyFromPkcs8
+                                        namedCurve
+                                        exportedKey
+                                        Crypto.CanBeExtracted
+                                        secureContext
+                                    )
+                                    "Importing the exported key with the same named curve"
+                                    (\importedKey ->
+                                        test "Imported key equals the original key"
+                                            (\_ ->
+                                                Expect.equal importedKey privateKey
+                                            )
+                                    )
+                                , awaitError
+                                    (Crypto.importEcdsaPrivateKeyFromPkcs8
+                                        (shuffleNamedCurve namedCurve)
+                                        exportedKey
+                                        Crypto.CanBeExtracted
+                                        secureContext
+                                    )
+                                    "Importing the exported key with a different named curve"
+                                    (\err ->
+                                        test "Produces the expected error"
+                                            (\_ ->
+                                                Expect.equal err Crypto.ImportEcKeyError
+                                            )
+                                    )
+                                ]
+                        )
+                    , await
+                        (Crypto.exportEcdsaPrivateKeyAsJwk privateKey)
+                        "Exporting private ECDSA key as JWK when extractable"
+                        (\exportedKey ->
+                            concat
+                                [ await
+                                    (Crypto.importEcdsaPrivateKeyFromJwk
+                                        namedCurve
+                                        exportedKey
+                                        Crypto.CanBeExtracted
+                                        secureContext
+                                    )
+                                    "Importing the exported key with the same named curve"
+                                    (\importedKey ->
+                                        test "Imported key equals the original key"
+                                            (\_ ->
+                                                Expect.equal importedKey privateKey
+                                            )
+                                    )
+                                , awaitError
+                                    (Crypto.importEcdsaPrivateKeyFromJwk
+                                        (shuffleNamedCurve namedCurve)
+                                        exportedKey
+                                        Crypto.CanBeExtracted
+                                        secureContext
+                                    )
+                                    "Importing the exported key with a different named curve"
+                                    (\err ->
+                                        test "Produces the expected error"
+                                            (\_ ->
+                                                Expect.equal err Crypto.ImportEcKeyError
+                                            )
+                                    )
+                                ]
+                        )
+                    , await
+                        (Crypto.signWithEcdsa digestAlgorithm privateKey bytesToSign)
+                        "Sign some bytes"
+                        (\signature ->
+                            concat
+                                [ await
+                                    (Crypto.verifyWithEcdsa digestAlgorithm publicKey signature bytesToSign)
+                                    "Verifying signed bytes"
+                                    (\_ ->
+                                        test "Succeeds when bytes that are being verified were the same as what was signed"
+                                            (\_ ->
+                                                Expect.pass
+                                            )
+                                    )
+                                , awaitError
+                                    (Crypto.verifyWithEcdsa (shuffleDigestAlgorithm digestAlgorithm) publicKey signature bytesToSign)
+                                    "Verifying signed bytes with shuffled digest algorithm"
+                                    (\_ ->
+                                        test "Fails when using different digest algorithm to verify vs sign"
+                                            (\_ ->
+                                                Expect.pass
+                                            )
+                                    )
+                                , awaitError
+                                    (Crypto.verifyWithEcdsa digestAlgorithm publicKey signature (Bytes.fromString "some other bytes"))
+                                    "Verifying bytes that were not signed"
+                                    (\_ ->
+                                        test "Fails when bytes that are being verified are different than what was signed"
+                                            (\_ ->
+                                                Expect.pass
+                                            )
+                                    )
+                                ]
+                        )
+                    ]
+            )
+        ]
 
 
 
@@ -2005,6 +2431,20 @@ digestTestsHelper secureContext label digestAlgorithm =
 
 
 -- Utilities
+
+
+{-|-}
+shuffleNamedCurve : Crypto.EcNamedCurve -> Crypto.EcNamedCurve
+shuffleNamedCurve namedCurve =
+    when namedCurve is
+        Crypto.P256 ->
+            Crypto.P384
+
+        Crypto.P384 ->
+            Crypto.P521
+
+        Crypto.P521 ->
+            Crypto.P256
 
 
 {-| Change the passed `DigestAlgorithm` into another `DigestAlgorithm`.
