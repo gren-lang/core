@@ -27,8 +27,8 @@ import Test.Regex as Regex
 import Test.Runner.Effectful
 
 
-main_ : Program
-main_ =
+main : Program
+main =
     run <|
         describe "Gren Core Library Tests"
             [ Array.tests
@@ -50,11 +50,10 @@ main_ =
             ]
 
 
-{-| A set of effectful tests that must be run in a different 
-`Program` type than the main tests
+{-| A set of effectful tests that must be run in a different `Program` type than the main tests.
 -}
--- main : Test.Runner.Effectful.Program a
-main =
+main_effectful : Test.Runner.Effectful.Program a
+main_effectful =
     Node.defineSimpleProgram (\env ->
         Test.Runner.Effectful.run env Crypto.tests
     )
