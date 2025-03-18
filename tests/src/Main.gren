@@ -13,7 +13,6 @@ import Test.Bitwise as Bitwise
 import Test.Bytes as Bytes
 import Test.Char as Char
 import Test.CodeGen as CodeGen
-import Test.Crypto as Crypto
 import Test.Dict as Dict
 import Test.Equality as Equality
 import Test.Json as Json
@@ -24,7 +23,6 @@ import Test.Runner.Node exposing (Program, run)
 import Test.Set as Set
 import Test.String as String
 import Test.Regex as Regex
-import Test.Runner.Effectful
 
 
 main : Program
@@ -48,13 +46,3 @@ main =
             , Math.tests
             , Regex.tests
             ]
-
-
-{-| A set of effectful tests that must be run in a different `Program` type than the main tests.
--}
-main_effectful : Test.Runner.Effectful.Program a
-main_effectful =
-    Node.defineSimpleProgram (\env ->
-        Test.Runner.Effectful.run env Crypto.tests
-    )
-

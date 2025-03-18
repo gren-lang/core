@@ -1,0 +1,17 @@
+module Main exposing ( .. )
+
+
+{-|-}
+
+import Test.Crypto as Crypto
+import Test.Runner.Effectful
+import Node
+
+
+{-| A set of effectful tests that must be run in a different `Program` type than the main tests.
+-}
+main : Test.Runner.Effectful.Program a
+main =
+    Node.defineSimpleProgram (\env ->
+        Test.Runner.Effectful.run env Crypto.tests
+    )
