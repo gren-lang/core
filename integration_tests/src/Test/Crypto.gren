@@ -1,0 +1,2786 @@
+module Test.Crypto exposing (tests)
+
+{-|-}
+
+import Basics exposing (..)
+import Math
+import Expect
+import Array exposing (..)
+import Maybe exposing (Maybe(..))
+import Test.Runner.Effectful exposing (fuzz, describe, concat, test, await, awaitError, run)
+import Task exposing ( Task )
+import Crypto
+import Bytes exposing ( Bytes )
+import Bytes.Decode
+
+
+{-| All tests on the node platform for the `Crypto` module
+-}
+tests : Test.Runner.Effectful.Test
+tests = 
+    concat 
+        [ await Crypto.getSecureContext 
+            "`Crypto.getSecureContext` successfully runs and returns a value" 
+            (\secureContext ->
+                concat 
+                    [ uuidTests secureContext
+                    , rsaOaepKeyTests secureContext
+                    , aesCtrTests secureContext
+                    , aesCbcTests secureContext
+                    , aesGcmTests secureContext
+                    , rsaSsaPkcs1V1_5KeyTests secureContext
+                    , hmacTests secureContext
+                    , rsaPssTests secureContext
+                    , ecdsaTests secureContext
+                    , digestTests secureContext
+                    ]
+            )
+        , await Bytes.getHostEndianness
+            "Get host endianness for required tests" 
+            (\endianness ->
+                concat 
+                    [ randomValueTests endianness
+                    ]
+            )
+        ]
+
+
+
+-- Random Value Tests
+
+
+{-|-}
+type alias RandomValueTestsHelper x =
+    { label : String
+    , generator : Int -> Task x Bytes
+    , decoder : Bytes.Endianness -> Bytes.Decode.Decoder Int
+    , min : Int
+    , max : Int
+    , maximumPossibleValues : Int
+    }
+
+
+{-| Tests for all the random value generation functions
+-}
+randomValueTests : Bytes.Endianness -> Test.Runner.Effectful.Test
+randomValueTests endianness =
+    concat
+        [ randomValueTestsHelper 
+            endianness
+            { label = "int8"
+            , generator = Crypto.getRandomInt8Values
+            , decoder = \_ -> Bytes.Decode.signedInt8
+            , min = -128
+            , max = 128
+            , maximumPossibleValues = 65536
+            }
+        , randomValueTestsHelper 
+            endianness
+            { label = "uint8"
+            , generator = Crypto.getRandomUInt8Values
+            , decoder = \_ -> Bytes.Decode.unsignedInt8
+            , min = 0
+            , max = 256
+            , maximumPossibleValues = 65536
+            }
+        , randomValueTestsHelper 
+            endianness
+            { label = "int16"
+            , generator = Crypto.getRandomInt16Values
+            , decoder = Bytes.Decode.signedInt16
+            , min = -32767
+            , max = 32767
+            , maximumPossibleValues = 32768
+            }
+        , randomValueTestsHelper 
+            endianness
+            { label = "uint16"
+            , generator = Crypto.getRandomUInt16Values
+            , decoder = Bytes.Decode.unsignedInt16
+            , min = 0
+            , max = 65535
+            , maximumPossibleValues = 32768
+            }
+        , randomValueTestsHelper 
+            endianness
+            { label = "int32"
+            , generator = Crypto.getRandomInt32Values
+            , decoder = Bytes.Decode.signedInt32
+            , min = -2147483648
+            , max = 2147483648
+            , maximumPossibleValues = 16384
+            }
+        , randomValueTestsHelper 
+            endianness
+            { label = "uint32"
+            , generator = Crypto.getRandomUInt32Values
+            , decoder = Bytes.Decode.unsignedInt32
+            , min = 0
+            , max = 4294967295
+            , maximumPossibleValues = 16384
+            }
+        ]
+
+
+{-| A helper for generating tests for the random value functions.
+-}
+randomValueTestsHelper : Bytes.Endianness -> RandomValueTestsHelper a -> Test.Runner.Effectful.Test
+randomValueTestsHelper endianness { label, generator, decoder, min, max, maximumPossibleValues } =
+    concat
+        [ await
+            (generator 1)
+            ("Generate a random " ++ label)
+            (\values ->
+                test 
+                    "Generated `Bytes` can be decoded and are within their expected value range"
+                    (\_ ->
+                        when Bytes.Decode.decode (decoder endianness) values is
+                            Just num ->
+                                if num >= min && num <= max then
+                                    Expect.pass
+                                    
+                                else
+                                    Expect.fail "Generated `Bytes` not within expected values"
+
+                            Nothing ->
+                                Expect.fail "Generated `Bytes` were not successfully decoded"
+                    )
+            )
+        , await
+            (generator 99999)
+            ("Generate the maximum possible values of " ++ label)
+            (\values ->
+                let
+                    maximumValues =
+                        maximumPossibleValues
+
+                    arrayDecoder =
+                        Bytes.Decode.loop
+                            { valuesLeft = maximumValues
+                            , arr = []
+                            }
+                            (\{ valuesLeft, arr } ->
+                                if valuesLeft > 0 then
+                                    decoder endianness
+                                        |> Bytes.Decode.map (\val ->
+                                            Bytes.Decode.Loop
+                                                { valuesLeft = valuesLeft - 1
+                                                , arr = Array.pushLast val arr
+                                                }
+                                        )
+                                else
+                                    Bytes.Decode.Done arr
+                                        |> Bytes.Decode.succeed
+                            )
+                in
+                test "When passed a number greater than the maximum number of values that can be generated, generates the maxiumum number of values"
+                    (\_ ->
+                        Bytes.Decode.decode arrayDecoder values
+                            |> Maybe.map Array.length
+                            |> Expect.equal (Just maximumValues)
+                    )
+            )
+        , await
+            (generator -9)
+            ("Attempt to generate a negative number of values for " ++ label)
+            (\values ->
+                test 
+                    "When attempting to generate values with a negative number, returns 0 values" 
+                    (\_ -> 
+                        Bytes.Decode.decode (decoder endianness) values
+                            |> Expect.equal Nothing
+                    )
+            )
+        ]
+
+
+
+-- UUID Tests
+
+
+{-|-}
+uuidTests : Crypto.SecureContext -> Test.Runner.Effectful.Test
+uuidTests secureContext =
+    concat
+        [ await 
+            (Crypto.randomUuidV4 secureContext)
+            "Generate a random V4 UUID" 
+            (\randomUuid ->
+                describe "Tests for generated v4 UUID"
+                    [ test 
+                        "Successfully generates string of 36 characters"
+                        (\_ ->
+                            let
+                                expectedLength =
+                                    36
+                            in
+                            if String.count randomUuid == expectedLength then
+                                Expect.pass
+                            
+                            else
+                                Expect.fail "The generated UUID was not equal to the expected 36 character"
+                        )
+                    , test
+                        "The 15th character is a 4, indicating the generated id is a v4 UUID"
+                        (\_ ->
+                            if String.slice 14 15 randomUuid == "4" then
+                                Expect.pass
+                            
+                            else
+                                Expect.fail "The generated UUID is not valid"
+                        )
+                    ]
+            )
+        ]
+
+
+
+-- RSA-OAEP Tests
+
+
+{-|-}
+rsaOaepKeyTests secureContext =
+    let
+        encryptionLabel =
+            Just (Bytes.fromString "a")
+    in
+    concat 
+        [ rsaOaepKeyTestHelper 
+            secureContext
+            { label = "Crypto.Sha256 + 2048"
+            , encryptionLabel = encryptionLabel
+            , modulusLength = 2048
+            , hash = Crypto.Sha256
+            }
+        , rsaOaepKeyTestHelper 
+            secureContext
+            { label = "Crypto.Sha384 + 2048"
+            , encryptionLabel = encryptionLabel
+            , modulusLength = 2048
+            , hash = Crypto.Sha384
+            }
+        , rsaOaepKeyTestHelper 
+            secureContext
+            { label = "Crypto.Sha512 + 2048"
+            , encryptionLabel = encryptionLabel
+            , modulusLength = 2048
+            , hash = Crypto.Sha512
+            }
+        , rsaOaepKeyTestHelper 
+            secureContext
+            { label = "Crypto.Sha256 + 4096"
+            , encryptionLabel = encryptionLabel
+            , modulusLength = 4096
+            , hash = Crypto.Sha256
+            }
+        , rsaOaepKeyTestHelper 
+            secureContext
+            { label = "Crypto.Sha384 + 4096"
+            , encryptionLabel = encryptionLabel
+            , modulusLength = 4096
+            , hash = Crypto.Sha384
+            }
+        , rsaOaepKeyTestHelper 
+            secureContext
+            { label = "Crypto.Sha512 + 4096"
+            , encryptionLabel = encryptionLabel
+            , modulusLength = 4096
+            , hash = Crypto.Sha512
+            }
+        ]
+
+
+{-|-}
+rsaOaepKeyTestHelper secureContext { label, encryptionLabel, modulusLength, hash } =
+    let
+        withLabel string =
+            label ++ ": " ++ string
+
+        exportPublicKeyAsSpki label_ publicKey =
+            await
+                (Crypto.exportRsaOaepPublicKeyAsSpki publicKey)
+                (withLabel ("Exporting public key to SPKI " ++ label_))
+                (\exportedKey ->
+                    concat
+                        [ await
+                            (Crypto.importRsaOaepPublicKeyFromSpki 
+                                exportedKey
+                                { hash = hash
+                                }
+                                Crypto.CanBeExtracted
+                                secureContext
+                            ) 
+                            (withLabel "Importing a successfully extracted public key")
+                            (\importedKey ->
+                                test "The imported key matches the original key"
+                                    (\_ ->
+                                        Expect.equal importedKey publicKey
+                                    )
+                            )
+                        , await
+                            (Crypto.importRsaOaepPublicKeyFromSpki 
+                                exportedKey
+                                { hash = shuffleDigestAlgorithm hash
+                                }
+                                Crypto.CanBeExtracted
+                                secureContext
+                            ) 
+                            (withLabel "Importing a successfully extracted public key with the wrong hash")
+                            (\importedKey ->
+                                test "The imported key does not equal the original key given the different hash used to generate it"
+                                    (\_ ->
+                                        Expect.notEqual importedKey publicKey
+                                    )
+                            )
+                        ]
+                )
+
+        exportPublicKeyAsJwk label_ publicKey =
+            await
+                (Crypto.exportRsaOaepPublicKeyAsJwk publicKey)
+                (withLabel ("Exporting public key as JWK " ++ label_))
+                (\exportedKey ->
+                    concat
+                        [ await
+                            (Crypto.importRsaOaepPublicKeyFromJwk 
+                                exportedKey
+                                { hash = hash
+                                }
+                                Crypto.CanBeExtracted
+                                secureContext
+                            ) 
+                            (withLabel "Importing a successfully extracted public key")
+                            (\importedKey ->
+                                test "The imported key matches the original key"
+                                    (\_ ->
+                                        Expect.equal importedKey publicKey
+                                    )
+                            )
+                        , awaitError
+                            (Crypto.importRsaOaepPublicKeyFromJwk
+                                exportedKey
+                                { hash = shuffleDigestAlgorithm hash
+                                }
+                                Crypto.CanBeExtracted
+                                secureContext
+                            ) 
+                            (withLabel "Importing a successfully extracted public key with the wrong hash")
+                            (\err ->
+                                test "The import fails with the correct error"
+                                    (\_ ->
+                                        Expect.equal err Crypto.ImportRsaKeyError
+                                    )
+                            )
+                        ]
+                )
+    in
+    concat
+        [ await
+            (Crypto.generateRsaOaepKeyPair
+                { modulusLength = modulusLength
+                , hash = hash
+                , extractable = Crypto.CannotBeExtracted
+                }
+                secureContext
+            )
+            (withLabel "Generating a key pair when that is marked as no extractable")
+            (\{ publicKey, privateKey } ->
+                concat
+                    [ exportPublicKeyAsSpki "When not extractable" publicKey
+                    , exportPublicKeyAsJwk "When not extractable" publicKey
+                    , awaitError
+                        (Crypto.exportRsaOaepPrivateKeyAsPkcs8 privateKey)
+                        (withLabel "Exporting private RSA-OAEP key as PKCS8 when not extractable")
+                        (\res ->
+                            test (withLabel "Fails")
+                                (\_ ->
+                                    Expect.equal res Crypto.KeyNotExportable
+                                )
+                        )
+                    , awaitError
+                        (Crypto.exportRsaOaepPrivateKeyAsJwk privateKey)
+                        (withLabel "Exporting private RSA-OAEP key as JWK when not extractable")
+                        (\res ->
+                            test (withLabel "Fails")
+                                (\_ ->
+                                    Expect.equal res Crypto.KeyNotExportable
+                                )
+                        ) 
+                    ]
+            )
+        , await 
+            (Crypto.generateRsaOaepKeyPair
+                { modulusLength = modulusLength
+                , hash = hash
+                , extractable = Crypto.CanBeExtracted
+                }
+                secureContext
+            )
+            (withLabel "Generating a key pair when that is marked as extractable")
+            (\{ publicKey, privateKey } ->
+                let
+                    encryptionBytes =
+                        Bytes.fromString "encryption test string"
+                in
+                concat
+                    [ exportPublicKeyAsSpki "When extractable" publicKey
+                    , exportPublicKeyAsJwk "When extractable" publicKey
+                    , await
+                        (Crypto.exportRsaOaepPrivateKeyAsPkcs8 privateKey)
+                        (withLabel "Exporting private RSA-OAEP key as PKCS8 when extractable")
+                        (\exportedKey ->
+                            concat 
+                                [ await
+                                    (Crypto.importRsaOaepPrivateKeyFromPkcs8 
+                                        exportedKey
+                                        { hash = hash
+                                        }
+                                        Crypto.CanBeExtracted
+                                        secureContext
+                                    ) 
+                                    (withLabel "Importing a successfully extracted private key")
+                                    (\importedKey ->
+                                        test "The imported key matches the original key"
+                                            (\_ ->
+                                                Expect.equal importedKey privateKey
+                                            )
+                                    )
+                                , await
+                                    (Crypto.importRsaOaepPrivateKeyFromPkcs8 
+                                        exportedKey
+                                        { hash = shuffleDigestAlgorithm hash
+                                        }
+                                        Crypto.CanBeExtracted
+                                        secureContext
+                                    ) 
+                                    (withLabel "Importing a successfully extracted private key with the wrong hash")
+                                    (\importedKey ->
+                                        test "The imported key does not match the original key"
+                                            (\_ ->
+                                                Expect.notEqual importedKey privateKey
+                                            )
+                                    )
+                                ]
+                        )
+                    , await
+                        (Crypto.exportRsaOaepPrivateKeyAsJwk privateKey)
+                        (withLabel "Exporting private RSA-OAEP key as JWK when extractable")
+                        (\exportedKey ->
+                            concat 
+                                [ await
+                                    (Crypto.importRsaOaepPrivateKeyFromJwk 
+                                        exportedKey
+                                        { hash = hash
+                                        }
+                                        Crypto.CanBeExtracted
+                                        secureContext
+                                    ) 
+                                    (withLabel "Importing a successfully extracted private key")
+                                    (\importedKey ->
+                                        test "The imported key matches the original key"
+                                            (\_ ->
+                                                Expect.equal importedKey privateKey
+                                            )
+                                    )
+                                , awaitError
+                                    (Crypto.importRsaOaepPrivateKeyFromJwk 
+                                        exportedKey
+                                        { hash = shuffleDigestAlgorithm hash
+                                        }
+                                        Crypto.CanBeExtracted
+                                        secureContext
+                                    ) 
+                                    (withLabel "Importing a successfully extracted private key with the wrong hash")
+                                    (\err ->
+                                        test "The error returned matches the expected error"
+                                            (\_ ->
+                                                Expect.equal err Crypto.ImportRsaKeyError
+                                            )
+                                    )
+                                ]
+                        )
+                    , await
+                        (Crypto.encryptWithRsaOaep
+                            { label = encryptionLabel
+                            }
+                            publicKey
+                            encryptionBytes
+                        )
+                        "Test encrypting a string with an RSA-OAEP public key and no label"
+                        (\encryptedBytes ->
+                            concat
+                                [ test "The resulting encrypted bytes do not match the original bytes"
+                                    (\_ ->
+                                        Expect.notEqual encryptionBytes encryptedBytes
+                                    )
+                                , await
+                                    (Crypto.decryptWithRsaOaep
+                                        { label = encryptionLabel
+                                        }
+                                        privateKey
+                                        encryptedBytes
+                                    )
+                                    "Attempt to decrypt the encrypted bytes"
+                                    (\decryptedBytes ->
+                                        test "Bytes that were encrypted and then decrypted with the same public/prviate key pair equal the origianl value"
+                                            (\_ ->
+                                                Expect.equal encryptionBytes decryptedBytes
+                                            )
+                                    )
+                                , awaitError
+                                    (Crypto.decryptWithRsaOaep
+                                        { label = 
+                                            when encryptionLabel is
+                                                Just _ ->
+                                                    Nothing
+                                                
+                                                Nothing ->
+                                                    Just encryptionBytes
+                                        }
+                                        privateKey
+                                        encryptedBytes
+                                    )
+                                    "When the label does not match the label given, fails"
+                                    (\err -> 
+                                        test "The error equal the expected error" 
+                                            (\_ -> 
+                                                Expect.equal err Crypto.RsaOaepDecryptionError
+                                            )
+                                    )
+                                ]
+                        )
+                    ]
+            )
+        ]
+
+
+
+-- AES-CTR Tests
+
+
+{-| All the tests for the AES-CTR algorithm.
+
+These tests cover all possible `AesCtrLength` values with varying used when 
+encrypting values. The passed length should not affect the outcome of the 
+test, given the value is always clamped to what is acceptable, but want to
+have some tests to make sure that remains true.
+-}
+aesCtrTests secureContext =
+    concat
+        [ aesCtrTestsHelper 
+            secureContext 
+            "AesLength128 - length 128" 
+            { aesLength = Crypto.AesLength128 
+            , encryptionLength = 128
+            }
+        , aesCtrTestsHelper 
+            secureContext 
+            "AesLength192 - length 128" 
+            { aesLength = Crypto.AesLength192 
+            , encryptionLength = 128
+            }
+        , aesCtrTestsHelper 
+            secureContext 
+            "AesLength256 - length 128" 
+            { aesLength = Crypto.AesLength256 
+            , encryptionLength = 128
+            }
+        , aesCtrTestsHelper 
+            secureContext 
+            "AesLength128 - length 13040313" 
+            { aesLength = Crypto.AesLength128 
+            , encryptionLength = 13040313
+            }
+        , aesCtrTestsHelper 
+            secureContext 
+            "AesLength192 - length 13040313" 
+            { aesLength = Crypto.AesLength192 
+            , encryptionLength = 13040313
+            }
+        , aesCtrTestsHelper 
+            secureContext 
+            "AesLength256 - length 13040313" 
+            { aesLength = Crypto.AesLength256 
+            , encryptionLength = 13040313
+            }
+        , aesCtrTestsHelper 
+            secureContext 
+            "AesLength128 - length 1" 
+            { aesLength = Crypto.AesLength128 
+            , encryptionLength = 1
+            }
+        , aesCtrTestsHelper 
+            secureContext 
+            "AesLength192 - length 1" 
+            { aesLength = Crypto.AesLength192 
+            , encryptionLength = 1
+            }
+        , aesCtrTestsHelper 
+            secureContext 
+            "AesLength256 - length 1" 
+            { aesLength = Crypto.AesLength256 
+            , encryptionLength = 1
+            }
+        ]
+
+
+{-|-}
+aesCtrTestsHelper secureContext label { aesLength, encryptionLength } =
+    let
+        withLabel string =
+            label ++ ": " ++ string
+    in
+    concat 
+        [ await
+            (Crypto.generateAesCtrKey
+                { length = aesLength
+                , extractable = Crypto.CannotBeExtracted 
+                }
+                secureContext
+            )
+            (withLabel "Generating a key that is marked as not extractable")
+            (\key ->
+                concat
+                    [ awaitError
+                        (Crypto.exportAesCtrKeyAsRaw key)
+                        "Exporting the generated key as RAW"
+                        (\err ->
+                            test "When exporting non-extractable key, fails with the correct error"
+                                (\_ ->
+                                    Expect.equal err Crypto.KeyNotExportable
+                                )
+                        )
+                    , awaitError
+                        (Crypto.exportAesCtrKeyAsJwk key)
+                        "Exporting the generated key as JWK"
+                        (\err ->
+                            test "When exporting non-extractable key, fails with the correct error"
+                                (\_ ->
+                                    Expect.equal err Crypto.KeyNotExportable
+                                )
+                        )
+                    ]
+            )
+        , await
+            (Crypto.generateAesCtrKey
+                { length = aesLength
+                , extractable = Crypto.CanBeExtracted 
+                }
+                secureContext
+            )
+            (withLabel "Generating a key that is marked as extractable")
+            (\key ->
+                let
+                    encryptionBytes =
+                        Bytes.fromString "encryption test string"
+                in
+                concat [
+                    await
+                        (Crypto.exportAesCtrKeyAsRaw key)
+                        "Exporting the generated key as RAW"
+                        (\exportedKey ->
+                            await
+                                (Crypto.importAesCtrKeyFromRaw
+                                    exportedKey
+                                    Crypto.CanBeExtracted
+                                    secureContext
+                                )
+                                "Importing the exported key"
+                                (\importedKey ->
+                                    test "When importing an exported key, the imported key matches the original"
+                                        (\_ ->
+                                            Expect.equal importedKey key
+                                        )
+                                )
+                        )
+                    , await
+                        (Crypto.exportAesCtrKeyAsJwk key)
+                        "Exporting the generated key as JWK"
+                        (\exportedKey ->
+                            await
+                                (Crypto.importAesCtrKeyFromJwk
+                                    exportedKey
+                                    Crypto.CanBeExtracted
+                                    secureContext
+                                )
+                                "Importing the exported key"
+                                (\importedKey ->
+                                    test "When importing an exported key, the imported key matches the original"
+                                        (\_ ->
+                                            Expect.equal importedKey key
+                                        )
+                                )
+                        )
+                    , await
+                        (Crypto.getRandomUInt32Values 4)
+                        "Generating 16 bytes of randomness for use as the counter"
+                        (\counter ->
+                            concat 
+                                [ await
+                                    (Crypto.encryptWithAesCtr 
+                                        { counter = counter
+                                        , length = encryptionLength
+                                        }
+                                        key
+                                        encryptionBytes
+                                    )
+                                    "Encrypting some bytes"
+                                    (\encryptedBytes ->
+                                        concat 
+                                            [ test "The encrypted bytes do not match the original bytes"
+                                                (\_ ->
+                                                    Expect.notEqual encryptedBytes encryptionBytes
+                                                )
+                                            , await
+                                                (Crypto.decryptWithAesCtr
+                                                    { counter = counter
+                                                    , length = encryptionLength
+                                                    }
+                                                    key
+                                                    encryptedBytes
+                                                )
+                                                "Decrypting the encrypted bytes with the same counter and length"
+                                                (\decryptedBytes ->
+                                                    test "The decrypted bytes equal the original bytes"
+                                                        (\_ ->
+                                                            Expect.equal decryptedBytes encryptionBytes
+                                                        )
+                                                )
+                                            ]
+                                    )
+                                ]
+                        )
+                    , await
+                        (Crypto.getRandomUInt32Values 16)
+                        "Generating more than 16 bytes of data for the counter"
+                        (\counter ->
+                            awaitError
+                                (Crypto.encryptWithAesCtr 
+                                    { counter = counter
+                                    , length = encryptionLength
+                                    }
+                                    key
+                                    encryptionBytes
+                                )
+                                "Encrypting some bytes"
+                                (\err ->
+                                    test "Encryption fails with the correct error when the counter is wrong"
+                                        (\_ ->
+                                            Expect.equal err Crypto.AesCtrEncryptionErrorCounterTooLong
+                                        )
+                                )
+                        )
+                    , await
+                        (Crypto.getRandomUInt32Values 1)
+                        "Generating less than 16 bytes for the counter"
+                        (\counter ->
+                            awaitError
+                                (Crypto.encryptWithAesCtr 
+                                    { counter = counter
+                                    , length = encryptionLength
+                                    }
+                                    key
+                                    encryptionBytes
+                                )
+                                "Encrypting some bytes"
+                                (\err ->
+                                    test "Encryption fails with the correct error when the counter is wrong"
+                                        (\_ ->
+                                            Expect.equal err Crypto.AesCtrEncryptionErrorCounterTooLong
+                                        )
+                                )
+                        )
+                ]
+            )
+        ]
+
+
+
+-- AES-CBC Tests
+
+
+{-|-}
+aesCbcTests secureContext =
+    concat 
+        [ aesCbcTestHelper 
+            secureContext 
+            "AES-CBC : AesLength128" 
+            { aesLength = Crypto.AesLength128
+            }
+        , aesCbcTestHelper 
+            secureContext 
+            "AES-CBC : AesLength192" 
+            { aesLength = Crypto.AesLength192
+            }
+        , aesCbcTestHelper 
+            secureContext 
+            "AES-CBC : AesLength256" 
+            { aesLength = Crypto.AesLength256
+            }
+        ]
+
+
+{-|-}
+aesCbcTestHelper secureContext label { aesLength } =
+    let
+        withLabel string =
+            label ++ ": " ++ string
+    in
+    concat
+        [ await
+            (Crypto.generateAesCbcKey
+                { length = aesLength
+                , extractable = Crypto.CannotBeExtracted 
+                }
+                secureContext
+            )
+            (withLabel "Generating a key that is marked as not extractable")
+            (\key ->
+                concat
+                    [ awaitError
+                        (Crypto.exportAesCbcKeyAsRaw key)
+                        "Exporting the generated key as RAW"
+                        (\err ->
+                            test "When exporting non-extractable key, fails with the correct error"
+                                (\_ ->
+                                    Expect.equal err Crypto.KeyNotExportable
+                                )
+                        )
+                    , awaitError
+                        (Crypto.exportAesCbcKeyAsJwk key)
+                        "Exporting the generated key as JWK"
+                        (\err ->
+                            test "When exporting non-extractable key, fails with the correct error"
+                                (\_ ->
+                                    Expect.equal err Crypto.KeyNotExportable
+                                )
+                        )
+                    ]
+            )
+        , await
+            (Crypto.generateAesCbcKey
+                { length = aesLength
+                , extractable = Crypto.CanBeExtracted 
+                }
+                secureContext
+            )
+            (withLabel "Generating a key that is marked as extractable")
+            (\key ->
+                let
+                    encryptionBytes =
+                        Bytes.fromString "encryption test string"
+                in
+                concat 
+                    [ await
+                        (Crypto.exportAesCbcKeyAsRaw key)
+                        "Exporting the generated key as RAW"
+                        (\exportedKey ->
+                            await
+                                (Crypto.importAesCbcKeyFromRaw
+                                    exportedKey
+                                    Crypto.CanBeExtracted
+                                    secureContext
+                                )
+                                "Importing the exported key"
+                                (\importedKey ->
+                                    test "When importing an exported key, the imported key matches the original"
+                                        (\_ ->
+                                            Expect.equal importedKey key
+                                        )
+                                )
+                        )
+                    , await
+                        (Crypto.exportAesCbcKeyAsJwk key)
+                        "Exporting the generated key as JWK"
+                        (\exportedKey ->
+                            await
+                                (Crypto.importAesCbcKeyFromJwk
+                                    exportedKey
+                                    Crypto.CanBeExtracted
+                                    secureContext
+                                )
+                                "Importing the exported key"
+                                (\importedKey ->
+                                    test "When importing an exported key, the imported key matches the original"
+                                        (\_ ->
+                                            Expect.equal importedKey key
+                                        )
+                                )
+                        )
+                    , await
+                        (Crypto.getRandomUInt32Values 4)
+                        "Generating 16 bytes for the iv value"
+                        (\generatedBytes ->
+                            concat 
+                                [ await
+                                    (Crypto.encryptWithAesCbc 
+                                        { iv = generatedBytes
+                                        }
+                                        key
+                                        encryptionBytes
+                                    )
+                                    "Encrypting some bytes"
+                                    (\encryptedBytes ->
+                                        concat 
+                                            [ test "The encrypted bytes do not match the original bytes"
+                                                (\_ ->
+                                                    Expect.notEqual encryptedBytes encryptionBytes
+                                                )
+                                            , await
+                                                (Crypto.decryptWithAesCbc
+                                                    { iv = generatedBytes
+                                                    }
+                                                    key
+                                                    encryptedBytes
+                                                )
+                                                "Decrypting the encrypted bytes with the same iv"
+                                                (\decryptedBytes ->
+                                                    test "The decrypted bytes equal the original bytes"
+                                                        (\_ ->
+                                                            Expect.equal decryptedBytes encryptionBytes
+                                                        )
+                                                )
+                                            , await
+                                                (Crypto.getRandomUInt32Values 4)
+                                                "Generating 16 different bytes for the iv"
+                                                (\generatedNewBytes ->
+                                                    await
+                                                        (Crypto.decryptWithAesCbc
+                                                            { iv = generatedNewBytes
+                                                            }
+                                                            key
+                                                            encryptedBytes
+                                                        )
+                                                        "Decrypting the encrypted bytes with a different iv than used to encrypt"
+                                                        (\decryptedBytes ->
+                                                            test "When the decryption bytes are different than encryption bytes, the original bytes do not match the decrypted bytes"
+                                                                (\_ ->
+                                                                    Expect.notEqual decryptedBytes encryptedBytes
+                                                                )
+                                                        )
+                                                )
+                                            , await
+                                                (Crypto.getRandomUInt32Values 8)
+                                                "Generating too many bytes for the iv value"
+                                                (\generatedTooMayBytes ->
+                                                    awaitError
+                                                        (Crypto.decryptWithAesCbc
+                                                            { iv = generatedTooMayBytes
+                                                            }
+                                                            key
+                                                            encryptedBytes
+                                                        )
+                                                        "Decrypting the encrypted bytes with not enough bytes for the iv"
+                                                        (\err ->
+                                                            test "When decrypting without enough bytes, produces the correct error"
+                                                                (\_ ->
+                                                                    Expect.equal err Crypto.AesCtrDecryptionErrorIvTooLong
+                                                                )
+                                                        )
+                                                )
+                                            , await
+                                                (Crypto.getRandomUInt32Values 2)
+                                                "Generating too little bytes for the iv value"
+                                                (\generatdTooLittleBytes ->
+                                                    awaitError
+                                                        (Crypto.decryptWithAesCbc
+                                                            { iv = generatdTooLittleBytes
+                                                            }
+                                                            key
+                                                            encryptedBytes
+                                                        )
+                                                        "Decrypting the encrypted bytes with too many bytes for the iv"
+                                                        (\err ->
+                                                            test "When decrypting with too many bytes, produces the correct error"
+                                                                (\_ ->
+                                                                    Expect.equal err Crypto.AesCtrDecryptionErrorIvTooLong
+                                                                )
+                                                        )
+                                                )
+                                            ]
+                                    )
+                                ]
+                        )
+                    , await
+                        (Crypto.getRandomUInt32Values 8)
+                        "Generating too many bytes of data for the iv value"
+                        (\generatedBytes ->
+                            awaitError
+                                (Crypto.encryptWithAesCbc 
+                                    { iv = generatedBytes
+                                    }
+                                    key
+                                    encryptionBytes
+                                )
+                                "Encrypting some bytes"
+                                (\err ->
+                                    test "Encryption fails with the correct error when the iv is wrong"
+                                        (\_ ->
+                                            Expect.equal err Crypto.AesCbcEncryptionErrorIvTooLong
+                                        )
+                                )
+                        )
+                    , await
+                        (Crypto.getRandomUInt32Values 2)
+                        "Generating too little bytes of data for the iv value"
+                        (\generatedBytes ->
+                            awaitError
+                                (Crypto.encryptWithAesCbc 
+                                    { iv = generatedBytes
+                                    }
+                                    key
+                                    encryptionBytes
+                                )
+                                "Encrypting some bytes"
+                                (\err ->
+                                    test "Encryption fails with the correct error when the iv is wrong"
+                                        (\_ ->
+                                            Expect.equal err Crypto.AesCbcEncryptionErrorIvTooLong
+                                        )
+                                )
+                        )
+                    ]
+            )
+        ]
+
+
+
+-- AES-GCM Tests
+
+
+{-|-}
+aesGcmTests secureContext =
+    concat
+        [ aesGcmTestsHelper
+            secureContext 
+            "AES-GCM : AesLength128" 
+            { aesLength = Crypto.AesLength128
+            , tagLength = Nothing
+            }
+        , aesGcmTestsHelper
+            secureContext 
+            "AES-GCM : AesLength128 AesGcmTagLength96" 
+            { aesLength = Crypto.AesLength128
+            , tagLength = Just Crypto.AesGcmTagLength96
+            }
+        , aesGcmTestsHelper
+            secureContext 
+            "AES-GCM : AesLength128, AesGcmTagLength104" 
+            { aesLength = Crypto.AesLength128
+            , tagLength = Just Crypto.AesGcmTagLength104
+            }
+        , aesGcmTestsHelper
+            secureContext 
+            "AES-GCM : AesLength128 AesGcmTagLength112" 
+            { aesLength = Crypto.AesLength128
+            , tagLength = Just Crypto.AesGcmTagLength112
+            }
+        , aesGcmTestsHelper
+            secureContext 
+            "AES-GCM : AesLength128 AesGcmTagLength120" 
+            { aesLength = Crypto.AesLength128
+            , tagLength = Just Crypto.AesGcmTagLength120
+            }
+        , aesGcmTestsHelper
+            secureContext 
+            "AES-GCM : AesLength128 AesGcmTagLength128" 
+            { aesLength = Crypto.AesLength128
+            , tagLength = Just Crypto.AesGcmTagLength128
+            }
+        , aesGcmTestsHelper 
+            secureContext 
+            "AES-GCM : AesLength192" 
+            { aesLength = Crypto.AesLength192
+            , tagLength = Nothing
+            }
+        , aesGcmTestsHelper 
+            secureContext 
+            "AES-GCM : AesLength192 AesGcmTagLength96" 
+            { aesLength = Crypto.AesLength192
+            , tagLength = Just Crypto.AesGcmTagLength96
+            }
+        , aesGcmTestsHelper 
+            secureContext 
+            "AES-GCM : AesLength192 AesGcmTagLength104" 
+            { aesLength = Crypto.AesLength192
+            , tagLength = Just Crypto.AesGcmTagLength104
+            }
+        , aesGcmTestsHelper 
+            secureContext 
+            "AES-GCM : AesLength192 AesGcmTagLength112" 
+            { aesLength = Crypto.AesLength192
+            , tagLength = Just Crypto.AesGcmTagLength112
+            }
+        , aesGcmTestsHelper 
+            secureContext 
+            "AES-GCM : AesLength192 AesGcmTagLength120" 
+            { aesLength = Crypto.AesLength192
+            , tagLength = Just Crypto.AesGcmTagLength120
+            }
+        , aesGcmTestsHelper 
+            secureContext 
+            "AES-GCM : AesLength192 AesGcmTagLength128" 
+            { aesLength = Crypto.AesLength192
+            , tagLength = Just Crypto.AesGcmTagLength128
+            }
+        , aesGcmTestsHelper 
+            secureContext 
+            "AES-GCM : AesLength256" 
+            { aesLength = Crypto.AesLength256
+            , tagLength = Nothing
+            }
+        , aesGcmTestsHelper 
+            secureContext 
+            "AES-GCM : AesLength256 AesGcmTagLength96" 
+            { aesLength = Crypto.AesLength256
+            , tagLength = Just Crypto.AesGcmTagLength96
+            }
+        , aesGcmTestsHelper 
+            secureContext 
+            "AES-GCM : AesLength256 AesGcmTagLength104" 
+            { aesLength = Crypto.AesLength256
+            , tagLength = Just Crypto.AesGcmTagLength104
+            }
+        , aesGcmTestsHelper 
+            secureContext 
+            "AES-GCM : AesLength256 AesGcmTagLength112" 
+            { aesLength = Crypto.AesLength256
+            , tagLength = Just Crypto.AesGcmTagLength112
+            }
+        , aesGcmTestsHelper 
+            secureContext 
+            "AES-GCM : AesLength256 AesGcmTagLength120" 
+            { aesLength = Crypto.AesLength256
+            , tagLength = Just Crypto.AesGcmTagLength120
+            }
+        , aesGcmTestsHelper 
+            secureContext 
+            "AES-GCM : AesLength256 AesGcmTagLength128" 
+            { aesLength = Crypto.AesLength256
+            , tagLength = Just Crypto.AesGcmTagLength128
+            }
+        ]
+
+
+{-|-}
+aesGcmTestsHelper secureContext label { aesLength, tagLength } =
+    let
+        withLabel string =
+            label ++ ": " ++ string
+    in
+    concat 
+        [ await
+            (Crypto.generateAesGcmKey
+                { length = aesLength
+                , extractable = Crypto.CannotBeExtracted 
+                }
+                secureContext
+            )
+            (withLabel "Generating a key that is marked as not extractable")
+            (\key ->
+                concat
+                    [ awaitError
+                        (Crypto.exportAesGcmKeyAsRaw key)
+                        "Exporting the generated key as RAW"
+                        (\err ->
+                            test "When exporting non-extractable key, fails with the correct error"
+                                (\_ ->
+                                    Expect.equal err Crypto.KeyNotExportable
+                                )
+                        )
+                    , awaitError
+                        (Crypto.exportAesGcmKeyAsJwk key)
+                        "Exporting the generated key as JWK"
+                        (\err ->
+                            test "When exporting non-extractable key, fails with the correct error"
+                                (\_ ->
+                                    Expect.equal err Crypto.KeyNotExportable
+                                )
+                        )
+                    ]
+            )
+        , await
+            (Crypto.generateAesGcmKey
+                { length = aesLength
+                , extractable = Crypto.CanBeExtracted 
+                }
+                secureContext
+            )
+            (withLabel "Generating a key that is marked as extractable")
+            (\key ->
+                let
+                    encryptionBytes =
+                        Bytes.fromString "encryption test string that is longer..."
+                in
+                concat
+                    [ await
+                        (Crypto.exportAesGcmKeyAsRaw key)
+                        "Exporting the generated key as RAW"
+                        (\exportedKey ->
+                            await
+                                (Crypto.importAesGcmKeyFromRaw
+                                    exportedKey
+                                    Crypto.CanBeExtracted
+                                    secureContext
+                                )
+                                "Importing the exported key"
+                                (\importedKey ->
+                                    test "When importing an exported key, the imported key matches the original"
+                                        (\_ ->
+                                            Expect.equal importedKey key
+                                        )
+                                )
+                        )
+                    , await
+                        (Crypto.exportAesGcmKeyAsJwk key)
+                        "Exporting the generated key as JWK"
+                        (\exportedKey ->
+                            await
+                                (Crypto.importAesGcmKeyFromJwk
+                                    exportedKey
+                                    Crypto.CanBeExtracted
+                                    secureContext
+                                )
+                                "Importing the exported key"
+                                (\importedKey ->
+                                    test "When importing an exported key, the imported key matches the original"
+                                        (\_ ->
+                                            Expect.equal importedKey key
+                                        )
+                                )
+                        )
+                    -- Can, in the future, fuzz the bytes generated to test random values between 12 and 132 bytes
+                    , await
+                        (Crypto.getRandomUInt32Values 32)
+                        "Generating 128 bytes for the iv value"
+                        (\generatedBytes ->
+                            concat
+                                [ await
+                                    (Crypto.encryptWithAesGcm 
+                                        { iv = generatedBytes
+                                        , tagLength = tagLength
+                                        , additionalData = Nothing
+                                        }
+                                        key
+                                        encryptionBytes
+                                    )
+                                    "Encrypting some bytes without additional data"
+                                    (\encryptedBytes ->
+                                        concat
+                                            [ await
+                                                (Crypto.decryptWithAesGcm 
+                                                    { iv = generatedBytes
+                                                    , tagLength = tagLength
+                                                    , additionalData = Nothing
+                                                    }
+                                                    key
+                                                    encryptedBytes
+                                                )
+                                                "Decrypting the bytes with the same additional data"
+                                                (\decryptedBytes ->
+                                                    test "The decrypted bytes are equal to the original bytes"
+                                                        (\_ ->
+                                                            Expect.equal encryptionBytes decryptedBytes
+                                                        )
+                                                )
+                                            , await
+                                                (Crypto.getRandomUInt32Values 32)
+                                                "Generating different additional data"
+                                                    (\differentAdditionalData ->
+                                                        awaitError
+                                                            (Crypto.decryptWithAesGcm 
+                                                                { iv = generatedBytes
+                                                                , tagLength = tagLength
+                                                                , additionalData = Just differentAdditionalData
+                                                                }
+                                                                key
+                                                                encryptedBytes
+                                                            )
+                                                            "Decrypting the bytes with the different additional data"
+                                                            (\err ->
+                                                                test "The error equals the expected error"
+                                                                    (\_ ->
+                                                                        Expect.equal err Crypto.AesGcmDecryptionError
+                                                                    )
+                                                            )
+                                                    )
+                                            ]
+                                    )
+                                ]
+                        )
+                    , await
+                        (Crypto.getRandomUInt32Values 200)
+                        "Generating too many bytes of data for the iv value"
+                        (\generatedBytes ->
+                            concat
+                                [ awaitError
+                                    (Crypto.encryptWithAesGcm 
+                                        { iv = generatedBytes
+                                        , tagLength = tagLength
+                                        , additionalData = Nothing
+                                        }
+                                        key
+                                        encryptionBytes
+                                    )
+                                    "Encrypting some bytes without additional data with "
+                                    (\err ->
+                                        test "Encryption fails with the correct error when the iv is wrong"
+                                            (\_ ->
+                                                Expect.equal err Crypto.AesGcmEncryptionErrorInvalidIvByteLegth
+                                            )
+                                    )
+                                , awaitError
+                                    (Crypto.encryptWithAesGcm 
+                                        { iv = generatedBytes
+                                        , tagLength = tagLength
+                                        , additionalData = Just generatedBytes
+                                        }
+                                        key
+                                        encryptionBytes
+                                    )
+                                    "Encrypting some bytes with additional data"
+                                    (\err ->
+                                        test "Encryption fails with the correct error when the iv is wrong"
+                                            (\_ ->
+                                                Expect.equal err Crypto.AesGcmEncryptionErrorInvalidIvByteLegth
+                                            )
+                                    )
+                                , await
+                                    (Crypto.getRandomUInt32Values 5)
+                                    "Generating different additional data..."
+                                    (\differentAdditionalData ->
+                                        awaitError
+                                            (Crypto.encryptWithAesGcm 
+                                                { iv = generatedBytes
+                                                , tagLength = tagLength
+                                                , additionalData = Just differentAdditionalData
+                                                }
+                                                key
+                                                encryptionBytes
+                                            )
+                                            "Encrypting some bytes with additional data that's different..."
+                                            (\err ->
+                                                test "Encryption fails with the correct error when the iv is wrong"
+                                                    (\_ ->
+                                                        Expect.equal err Crypto.AesGcmEncryptionErrorInvalidIvByteLegth
+                                                    )
+                                            )
+                                    )
+                                ]
+                        )
+                    , await
+                        (Crypto.getRandomUInt32Values 2)
+                        "Generating too little bytes of data for the iv value"
+                        (\generatedBytes ->
+                            concat
+                                [ awaitError
+                                    (Crypto.encryptWithAesGcm 
+                                        { iv = generatedBytes
+                                        , tagLength = tagLength
+                                        , additionalData = Nothing
+                                        }
+                                        key
+                                        encryptionBytes
+                                    )
+                                    "Encrypting some bytes without additional data"
+                                    (\err ->
+                                        test "Encryption fails with the correct error when the iv is wrong"
+                                            (\_ ->
+                                                Expect.equal err Crypto.AesGcmEncryptionErrorInvalidIvByteLegth
+                                            )
+                                    )
+                                , awaitError
+                                    (Crypto.encryptWithAesGcm 
+                                        { iv = generatedBytes
+                                        , tagLength = tagLength
+                                        , additionalData = Just generatedBytes
+                                        }
+                                        key
+                                        encryptionBytes
+                                    )
+                                    "Encrypting some bytes with additional data"
+                                    (\err ->
+                                        test "Encryption fails with the correct error when the iv is wrong"
+                                            (\_ ->
+                                                Expect.equal err Crypto.AesGcmEncryptionErrorInvalidIvByteLegth
+                                            )
+                                    )
+                                , await
+                                    (Crypto.getRandomUInt32Values 5)
+                                    "Generating different additional data"
+                                    (\differentAdditionalData ->
+                                        awaitError
+                                            (Crypto.encryptWithAesGcm 
+                                                { iv = generatedBytes
+                                                , tagLength = tagLength
+                                                , additionalData = Just differentAdditionalData
+                                                }
+                                                key
+                                                encryptionBytes
+                                            )
+                                            "Encrypting some bytes with additional data that's different"
+                                            (\err ->
+                                                test "Encryption fails with the correct error when the iv is wrong"
+                                                    (\_ ->
+                                                        Expect.equal err Crypto.AesGcmEncryptionErrorInvalidIvByteLegth
+                                                    )
+                                            )
+                                    )
+                                ]
+                        )
+                    ]
+            )
+        ]
+
+
+
+-- RSA-SSAPKCS1v1.5 Tests
+
+
+{-|-}
+rsaSsaPkcs1V1_5KeyTests secureContext =
+    let
+        encryptionLabel =
+            Just (Bytes.fromString "a")
+
+        helper =
+            rsaSsaPkcs1V1_5KeyTestsHelper secureContext
+    in
+    concat
+        [ helper
+            "Crypto.Sha256 + 2048"
+            { encryptionLabel = encryptionLabel
+            , modulusLength = 2048
+            , hash = Crypto.Sha256
+            }
+        , helper
+            "Crypto.Sha384 + 2048"
+            { encryptionLabel = encryptionLabel
+            , modulusLength = 2048
+            , hash = Crypto.Sha384
+            }
+        , helper
+            "Crypto.Sha512 + 2048"
+            { encryptionLabel = encryptionLabel
+            , modulusLength = 2048
+            , hash = Crypto.Sha512
+            }
+        , helper
+            "Crypto.Sha256 + 4096"
+            { encryptionLabel = encryptionLabel
+            , modulusLength = 4096
+            , hash = Crypto.Sha256
+            }
+        , helper
+            "Crypto.Sha384 + 4096"
+            { encryptionLabel = encryptionLabel
+            , modulusLength = 4096
+            , hash = Crypto.Sha384
+            }
+        , helper
+            "Crypto.Sha512 + 4096"
+            { encryptionLabel = encryptionLabel
+            , modulusLength = 4096
+            , hash = Crypto.Sha512
+            }
+        ]
+
+
+{-|-}
+rsaSsaPkcs1V1_5KeyTestsHelper secureContext label { encryptionLabel, modulusLength, hash } =
+    let
+        withLabel string =
+            label ++ ": " ++ string
+    in
+    concat
+        [ await
+            (Crypto.generateRsaSsaPkcs1V1_5KeyPair
+                { modulusLength = modulusLength
+                , hash = hash
+                , extractable = Crypto.CannotBeExtracted
+                }
+                secureContext
+            )
+            (withLabel "Generating non-extractable RSA-SSA-PKCS1v1 key pair")
+            (\{ publicKey, privateKey } ->
+                concat
+                    [ await
+                        (Crypto.exportRsaSsaPkcs1V1_5PublicKeyAsSpki publicKey)
+                        "Exporting the generated public key as SPKI"
+                        (\exportedPublicKey ->
+                            await
+                                (Crypto.importRsaSsaPkcs1V1_5PublicKeyFromSpki 
+                                    exportedPublicKey
+                                    { hash = hash
+                                    }
+                                    Crypto.CanBeExtracted
+                                    secureContext
+                                )
+                                "Importing the exported key with the same hash"
+                                (\importedKey ->
+                                    test "When importing the key with the same hash, succeeds"
+                                        (\_ ->
+                                            Expect.equal importedKey publicKey
+                                        )
+                                )
+                        )
+                    , await
+                        (Crypto.exportRsaSsaPkcs1V1_5PublicKeyAsJwk publicKey)
+                        "Exporting the generated public key as JWK"
+                        (\exportedPublicKey ->
+                            concat
+                                [ await
+                                    (Crypto.importRsaSsaPkcs1V1_5PublicKeyFromJwk
+                                        exportedPublicKey
+                                        { hash = hash
+                                        }
+                                        Crypto.CanBeExtracted
+                                        secureContext
+                                    )
+                                    "Importing the exported key with the same hash"
+                                    (\importedKey ->
+                                        test "When importing the key with the same hash, succeeds"
+                                            (\_ ->
+                                                Expect.equal importedKey publicKey
+                                            )
+                                    )
+                                , awaitError
+                                    (Crypto.importRsaSsaPkcs1V1_5PublicKeyFromJwk
+                                        exportedPublicKey
+                                        { hash = shuffleDigestAlgorithm hash
+                                        }
+                                        Crypto.CanBeExtracted
+                                        secureContext
+                                    )
+                                    "Importing the exported key with a different hash"
+                                    (\err ->
+                                        test "When importing a JWK key with a different hash"
+                                            (\_ ->
+                                                Expect.equal err Crypto.ImportRsaKeyError
+                                            )
+                                    )
+                                ]
+                        )
+                    , awaitError
+                        (Crypto.exportRsaSsaPkcs1V1_5PrivateKeyAsPkcs8 privateKey)
+                        "Exporting the generated private key as PKCS8"
+                        (\err ->
+                            test "When exporting non-extractable private key, fails with the correct error"
+                                (\_ ->
+                                    Expect.equal err Crypto.KeyNotExportable
+                                )
+                        )
+                    , awaitError
+                        (Crypto.exportRsaSsaPkcs1V1_5PrivateKeyAsJwk privateKey)
+                        "Exporting the generated private key as JWK"
+                        (\err ->
+                            test "When exporting non-extractable private key, fails with the correct error"
+                                (\_ ->
+                                    Expect.equal err Crypto.KeyNotExportable
+                                )
+                        )
+                    ]
+            )
+        , await
+            (Crypto.generateRsaSsaPkcs1V1_5KeyPair
+                { modulusLength = modulusLength
+                , hash = hash
+                , extractable = Crypto.CanBeExtracted
+                }
+                secureContext
+            )
+            (withLabel "Generating extractable RSA-SSA-PKCS1v1 key pair")
+            (\{ publicKey, privateKey } ->
+                let
+                    bytesToSign =
+                        Bytes.fromString "hello"
+                in
+                concat
+                    [ await
+                        (Crypto.exportRsaSsaPkcs1V1_5PublicKeyAsSpki publicKey)
+                        "Exporting the generated public key as SPKI"
+                        (\exportedPublicKey ->
+                            await
+                                (Crypto.importRsaSsaPkcs1V1_5PublicKeyFromSpki 
+                                    exportedPublicKey
+                                    { hash = hash
+                                    }
+                                    Crypto.CanBeExtracted
+                                    secureContext
+                                )
+                                "Importing the exported key with the same hash"
+                                (\importedKey ->
+                                    test "When importing the key with the same hash, succeeds"
+                                        (\_ ->
+                                            Expect.equal importedKey publicKey
+                                        )
+                                )
+                        )
+                    , await
+                        (Crypto.exportRsaSsaPkcs1V1_5PublicKeyAsJwk publicKey)
+                        "Exporting the generated public key as JWK"
+                        (\exportedPublicKey ->
+                            concat
+                                [ await
+                                    (Crypto.importRsaSsaPkcs1V1_5PublicKeyFromJwk
+                                        exportedPublicKey
+                                        { hash = hash
+                                        }
+                                        Crypto.CanBeExtracted
+                                        secureContext
+                                    )
+                                    "Importing the exported key with the same hash"
+                                    (\importedKey ->
+                                        test "When importing the key with the same hash, succeeds"
+                                            (\_ ->
+                                                Expect.equal importedKey publicKey
+                                            )
+                                    )
+                                , awaitError
+                                    (Crypto.importRsaSsaPkcs1V1_5PublicKeyFromJwk
+                                        exportedPublicKey
+                                        { hash = shuffleDigestAlgorithm hash
+                                        }
+                                        Crypto.CanBeExtracted
+                                        secureContext
+                                    )
+                                    "Importing the exported key with a different hash"
+                                    (\err ->
+                                        test "When importing a JWK key with a different hash"
+                                            (\_ ->
+                                                Expect.equal err Crypto.ImportRsaKeyError
+                                            )
+                                    )
+                                ]
+                        )
+                    , await
+                        (Crypto.exportRsaSsaPkcs1V1_5PrivateKeyAsPkcs8 privateKey)
+                        "Exporting the generated private key as PKCS8"
+                        (\exportedPrivateKey ->
+                            await
+                                (Crypto.importRsaSsaPkcs1V1_5PrivateKeyFromPkcs8
+                                    exportedPrivateKey
+                                    { hash = hash
+                                    }
+                                    Crypto.CanBeExtracted
+                                    secureContext
+                                )
+                                "Importing the exported key with the same hash"
+                                (\importedKey ->
+                                    test "When importing the key with the same hash, succeeds"
+                                        (\_ ->
+                                            Expect.equal importedKey privateKey
+                                        )
+                                )
+                        )
+                    , await
+                        (Crypto.exportRsaSsaPkcs1V1_5PrivateKeyAsJwk privateKey)
+                        "Exporting the generated private key as JWK"
+                        (\exportedPrivateKey ->
+                            concat
+                                [ await
+                                    (Crypto.importRsaSsaPkcs1V1_5PrivateKeyFromJwk
+                                        exportedPrivateKey
+                                        { hash = hash
+                                        }
+                                        Crypto.CanBeExtracted
+                                        secureContext
+                                    )
+                                    "Importing the exported key with the same hash"
+                                    (\importedKey ->
+                                        test "When importing the key with the same hash, succeeds"
+                                            (\_ ->
+                                                Expect.equal importedKey privateKey
+                                            )
+                                    )
+                                , awaitError
+                                    (Crypto.importRsaSsaPkcs1V1_5PrivateKeyFromJwk
+                                        exportedPrivateKey
+                                        { hash = shuffleDigestAlgorithm hash
+                                        }
+                                        Crypto.CanBeExtracted
+                                        secureContext
+                                    )
+                                    "Importing the exported key with a different hash"
+                                    (\err ->
+                                        test "When importing a JWK key with a different hash"
+                                            (\_ ->
+                                                Expect.equal err Crypto.ImportRsaKeyError
+                                            )
+                                    )
+                                ]
+                        )
+                    , await
+                        (Crypto.signWithRsaSsaPkcs1V1_5 privateKey bytesToSign)
+                        "Sign some bytes"
+                        (\signature ->
+                            concat
+                                [ await
+                                    (Crypto.verifyWithRsaSsaPkcs1V1_5 publicKey signature bytesToSign)
+                                    "Verifying signed bytes"
+                                    (\_ ->
+                                        test "Succeeds when bytes that are being verified were the same as what was signed"
+                                            (\_ ->
+                                                Expect.pass
+                                            )
+                                    )
+                                , awaitError
+                                    (Crypto.verifyWithRsaSsaPkcs1V1_5 publicKey signature (Bytes.fromString "some other bytes"))
+                                    "Verifying bytes that were not signed"
+                                    (\_ ->
+                                        test "Fails when bytes that are being verified are different than what was signed"
+                                            (\_ ->
+                                                Expect.pass
+                                            )
+                                    )
+                                ]
+                        )
+                    ]
+            )
+        ]
+
+
+
+-- RSA-PSS Tests
+
+
+{-|-}
+rsaPssTests secureContext =
+    let
+        helper =
+            rsaPssTestsHelper secureContext
+    in
+    concat
+        [ helper
+            "RSA-PSS Crypto.Sha256 + 2048"
+            { modulusLength = 2048
+            , hash = Crypto.Sha256
+            }
+        , helper
+            "RSA-PSS Crypto.Sha384 + 2048"
+            { modulusLength = 2048
+            , hash = Crypto.Sha384
+            }
+        , helper
+            "RSA-PSS Crypto.Sha512 + 2048"
+            { modulusLength = 2048
+            , hash = Crypto.Sha512
+            }
+        , helper
+            "RSA-PSS Crypto.Sha256 + 4096"
+            { modulusLength = 4096
+            , hash = Crypto.Sha256
+            }
+        , helper
+            "RSA-PSS Crypto.Sha384 + 4096"
+            { modulusLength = 4096
+            , hash = Crypto.Sha384
+            }
+        , helper
+            "RSA-PSS Crypto.Sha512 + 4096"
+            { modulusLength = 4096
+            , hash = Crypto.Sha512
+            }
+        ]
+
+
+{-|-}
+rsaPssTestsHelper secureContext label { modulusLength, hash } =
+    let
+        withLabel string =
+            label ++ ": " ++ string
+    in
+    concat
+        [ await
+            (Crypto.generateRsaPssKeyPair
+                { modulusLength = modulusLength
+                , hash = hash
+                , extractable = Crypto.CannotBeExtracted
+                } 
+                secureContext
+            )
+            (withLabel "Generating non-extractable RSA-PSS key pair")
+            (\{ publicKey, privateKey } ->
+                concat
+                    [ await
+                        (Crypto.exportRsaPssPublicKeyAsSpki publicKey)
+                        "Exporting the generated public key as SPKI"
+                        (\exportedPublicKey ->
+                            await
+                                (Crypto.importRsaPssPublicKeyFromSpki 
+                                    exportedPublicKey
+                                    { hash = hash
+                                    }
+                                    Crypto.CanBeExtracted
+                                    secureContext
+                                )
+                                "Importing the exported key with the same hash"
+                                (\importedKey ->
+                                    test "When importing the key with the same hash, succeeds"
+                                        (\_ ->
+                                            Expect.equal importedKey publicKey
+                                        )
+                                )
+                        )
+                    , await
+                        (Crypto.exportRsaPssPublicKeyAsJwk publicKey)
+                        "Exporting the generated public key as JWK"
+                        (\exportedPublicKey ->
+                            concat
+                                [ await
+                                    (Crypto.importRsaPssPublicKeyFromJwk
+                                        exportedPublicKey
+                                        { hash = hash
+                                        }
+                                        Crypto.CanBeExtracted
+                                        secureContext
+                                    )
+                                    "Importing the exported key with the same hash"
+                                    (\importedKey ->
+                                        test "When importing the key with the same hash, succeeds"
+                                            (\_ ->
+                                                Expect.equal importedKey publicKey
+                                            )
+                                    )
+                                , awaitError
+                                    (Crypto.importRsaPssPublicKeyFromJwk
+                                        exportedPublicKey
+                                        { hash = shuffleDigestAlgorithm hash
+                                        }
+                                        Crypto.CanBeExtracted
+                                        secureContext
+                                    )
+                                    "Importing the exported key with a different hash"
+                                    (\err ->
+                                        test "When importing a JWK key with a different hash"
+                                            (\_ ->
+                                                Expect.equal err Crypto.ImportRsaKeyError
+                                            )
+                                    )
+                                ]
+                        )
+                    , awaitError
+                        (Crypto.exportRsaPssPrivateKeyAsPkcs8 privateKey)
+                        "Exporting the generated private key as PKCS8"
+                        (\err ->
+                            test "When exporting non-extractable private key, fails with the correct error"
+                                (\_ ->
+                                    Expect.equal err Crypto.KeyNotExportable
+                                )
+                        )
+                    , awaitError
+                        (Crypto.exportRsaPssPrivateKeyAsJwk privateKey)
+                        "Exporting the generated private key as JWK"
+                        (\err ->
+                            test "When exporting non-extractable private key, fails with the correct error"
+                                (\_ ->
+                                    Expect.equal err Crypto.KeyNotExportable
+                                )
+                        )
+                    ]
+            )
+            , await
+                (Crypto.generateRsaPssKeyPair
+                    { modulusLength = modulusLength
+                    , hash = hash
+                    , extractable = Crypto.CanBeExtracted
+                    } 
+                    secureContext
+                )
+                (withLabel "Generating extractable RSA-PSS key pair")
+                (\{ publicKey, privateKey } ->
+                    let
+                        bytesToSign =
+                            Bytes.fromString "hello"
+                    in
+                    concat
+                        [ await
+                            (Crypto.exportRsaPssPublicKeyAsSpki publicKey)
+                            "Exporting the generated public key as SPKI"
+                            (\exportedPublicKey ->
+                                await
+                                    (Crypto.importRsaPssPublicKeyFromSpki 
+                                        exportedPublicKey
+                                        { hash = hash
+                                        }
+                                        Crypto.CanBeExtracted
+                                        secureContext
+                                    )
+                                    "Importing the exported key with the same hash"
+                                    (\importedKey ->
+                                        test "When importing the key with the same hash, succeeds"
+                                            (\_ ->
+                                                Expect.equal importedKey publicKey
+                                            )
+                                    )
+                            )
+                        , await
+                            (Crypto.exportRsaPssPublicKeyAsJwk publicKey)
+                            "Exporting the generated public key as JWK"
+                            (\exportedPublicKey ->
+                                concat
+                                    [ await
+                                        (Crypto.importRsaPssPublicKeyFromJwk
+                                            exportedPublicKey
+                                            { hash = hash
+                                            }
+                                            Crypto.CanBeExtracted
+                                            secureContext
+                                        )
+                                        "Importing the exported key with the same hash"
+                                        (\importedKey ->
+                                            test "When importing the key with the same hash, succeeds"
+                                                (\_ ->
+                                                    Expect.equal importedKey publicKey
+                                                )
+                                        )
+                                    , awaitError
+                                        (Crypto.importRsaPssPublicKeyFromJwk
+                                            exportedPublicKey
+                                            { hash = shuffleDigestAlgorithm hash
+                                            }
+                                            Crypto.CanBeExtracted
+                                            secureContext
+                                        )
+                                        "Importing the exported key with a different hash"
+                                        (\err ->
+                                            test "When importing a JWK key with a different hash"
+                                                (\_ ->
+                                                    Expect.equal err Crypto.ImportRsaKeyError
+                                                )
+                                        )
+                                    ]
+                            )
+                        , await
+                            (Crypto.exportRsaPssPrivateKeyAsPkcs8 privateKey)
+                            "Exporting the generated private key as PKCS8"
+                            (\exportedPrivateKey ->
+                                await
+                                    (Crypto.importRsaPssPrivateKeyFromPkcs8
+                                        exportedPrivateKey
+                                        { hash = hash
+                                        }
+                                        Crypto.CanBeExtracted
+                                        secureContext
+                                    )
+                                    "Importing the exported key with the same hash"
+                                    (\importedKey ->
+                                        test "When importing the key with the same hash, succeeds"
+                                            (\_ ->
+                                                Expect.equal importedKey privateKey
+                                            )
+                                    )
+                            )
+                        , await
+                            (Crypto.exportRsaPssPrivateKeyAsJwk privateKey)
+                            "Exporting the generated private key as JWK"
+                            (\exportedPrivateKey ->
+                                concat
+                                    [ await
+                                        (Crypto.importRsaPssPrivateKeyFromJwk
+                                            exportedPrivateKey
+                                            { hash = hash
+                                            }
+                                            Crypto.CanBeExtracted
+                                            secureContext
+                                        )
+                                        "Importing the exported key with the same hash"
+                                        (\importedKey ->
+                                            test "When importing the key with the same hash, succeeds"
+                                                (\_ ->
+                                                    Expect.equal importedKey privateKey
+                                                )
+                                        )
+                                    , awaitError
+                                        (Crypto.importRsaPssPrivateKeyFromJwk
+                                            exportedPrivateKey
+                                            { hash = shuffleDigestAlgorithm hash
+                                            }
+                                            Crypto.CanBeExtracted
+                                            secureContext
+                                        )
+                                        "Importing the exported key with a different hash"
+                                        (\err ->
+                                            test "When importing a JWK key with a different hash"
+                                                (\_ ->
+                                                    Expect.equal err Crypto.ImportRsaKeyError
+                                                )
+                                        )
+                                    ]
+                            )
+                        , await
+                            (Crypto.signWithRsaPss { salt = digestAlgorithmMaxSalt hash } privateKey bytesToSign)
+                            "Sign some bytes"
+                            (\signature ->
+                                concat
+                                    [ await
+                                        (Crypto.verifyWithRsaPss { salt = digestAlgorithmMaxSalt hash } publicKey signature bytesToSign)
+                                        "Verifying signed bytes"
+                                        (\_ ->
+                                            test "Succeeds when bytes that are being verified were the same as what was signed"
+                                                (\_ ->
+                                                    Expect.pass
+                                                )
+                                        )
+                                    , awaitError
+                                        (Crypto.verifyWithRsaPss { salt = (digestAlgorithmMaxSalt hash + 100) } publicKey signature bytesToSign)
+                                        "Verifying signed bytes with invalid salt"
+                                        (\_ ->
+                                            test "Fails when verifying with the wrong salt"
+                                                (\_ ->
+                                                    Expect.pass
+                                                )
+                                        )
+                                    , awaitError
+                                        (Crypto.verifyWithRsaPss { salt = digestAlgorithmMaxSalt hash } publicKey signature (Bytes.fromString "some other bytes"))
+                                        "Verifying bytes that were not signed"
+                                        (\_ ->
+                                            test "Fails when bytes that are being verified are different than what was signed"
+                                                (\_ ->
+                                                    Expect.pass
+                                                )
+                                        )
+                                    ]
+                            )
+                        , awaitError
+                            (Crypto.signWithRsaPss { salt = (digestAlgorithmMaxSalt hash + 1) } privateKey bytesToSign)
+                            "Sign some bytes with invalid salt"
+                            (\err ->
+                                test "When signing bytes with invalid salt, fails"
+                                    (\_ ->
+                                        Expect.equal err Crypto.RsaPssSigningErrorInvalidSalt
+                                    )
+                            )
+                        ]
+                )
+        ]
+
+
+
+-- ECDSA Tests
+
+
+{-|-}
+ecdsaTests secureContext =
+    concat
+        [ ecdsaTestsHelper
+            secureContext
+            "P256 named curve, SHA256"
+            { namedCurve = Crypto.P256
+            , digestAlgorithm = Crypto.Sha256
+            }
+        , ecdsaTestsHelper
+            secureContext
+            "P256 named curve, SHA384"
+            { namedCurve = Crypto.P256
+            , digestAlgorithm = Crypto.Sha384
+            }
+        , ecdsaTestsHelper
+            secureContext
+            "P256 named curve, SHA512"
+            { namedCurve = Crypto.P256
+            , digestAlgorithm = Crypto.Sha512
+            }
+        , ecdsaTestsHelper
+            secureContext
+            "P384 named curve, SHA256"
+            { namedCurve = Crypto.P384
+            , digestAlgorithm = Crypto.Sha256
+            }
+        , ecdsaTestsHelper
+            secureContext
+            "P384 named curve, SHA384"
+            { namedCurve = Crypto.P384
+            , digestAlgorithm = Crypto.Sha384
+            }
+        , ecdsaTestsHelper
+            secureContext
+            "P384 named curve, SHA512"
+            { namedCurve = Crypto.P384
+            , digestAlgorithm = Crypto.Sha512
+            }
+        , ecdsaTestsHelper
+            secureContext
+            "P521 named curve, SHA256"
+            { namedCurve = Crypto.P521
+            , digestAlgorithm = Crypto.Sha256
+            }
+        , ecdsaTestsHelper
+            secureContext
+            "P521 named curve, SHA384"
+            { namedCurve = Crypto.P521
+            , digestAlgorithm = Crypto.Sha384
+            }
+        , ecdsaTestsHelper
+            secureContext
+            "P521 named curve, SHA512"
+            { namedCurve = Crypto.P521
+            , digestAlgorithm = Crypto.Sha512
+            }
+        ]
+
+
+{-|-}
+ecdsaTestsHelper secureContext label { namedCurve, digestAlgorithm } =
+    let
+        withLabel string =
+            label ++ ": " ++ string
+    in
+    concat
+        [ await
+            (Crypto.generateEcdsaKeyPair
+                { namedCurve = namedCurve 
+                , extractable = Crypto.CannotBeExtracted
+                }
+                secureContext
+            )
+            (withLabel "Generating a key that cannot be extracted")
+            (\{ publicKey, privateKey } ->
+                concat
+                    [ await
+                        (Crypto.exportEcdsaPublicKeyAsRaw publicKey)
+                        "Exporting public ECDSA key as RAW when not extractable"
+                        (\exportedKey ->
+                            concat
+                                [ await
+                                    (Crypto.importEcdsaPublicKeyFromRaw
+                                        namedCurve
+                                        exportedKey
+                                        Crypto.CanBeExtracted
+                                        secureContext
+                                    )
+                                    "Importing the exported key with the same named curve"
+                                    (\importedKey ->
+                                        test "Imported key equals the original key"
+                                            (\_ ->
+                                                Expect.equal importedKey publicKey
+                                            )
+                                    )
+                                , awaitError
+                                    (Crypto.importEcdsaPublicKeyFromRaw
+                                        (shuffleNamedCurve namedCurve)
+                                        exportedKey
+                                        Crypto.CanBeExtracted
+                                        secureContext
+                                    )
+                                    "Importing the exported key with a different named curve"
+                                        (\err ->
+                                            test "Produces the expected error"
+                                                (\_ ->
+                                                    Expect.equal err Crypto.ImportEcKeyError
+                                                )
+                                        )
+                                ]
+                        )
+                    , await
+                        (Crypto.exportEcdsaPublicKeyAsSpki publicKey)
+                        "Exporting public ECDSA key as SPKI when not extractable"
+                        (\exportedKey ->
+                            concat
+                                [ await
+                                    (Crypto.importEcdsaPublicKeyFromSpki
+                                        namedCurve
+                                        exportedKey
+                                        Crypto.CanBeExtracted
+                                        secureContext
+                                    )
+                                    "Importing the exported key with the same named curve"
+                                    (\importedKey ->
+                                        test "Imported key equals the original key"
+                                            (\_ ->
+                                                Expect.equal importedKey publicKey
+                                            )
+                                    )
+                                , awaitError
+                                    (Crypto.importEcdsaPublicKeyFromSpki
+                                        (shuffleNamedCurve namedCurve)
+                                        exportedKey
+                                        Crypto.CanBeExtracted
+                                        secureContext
+                                    )
+                                    "Importing the exported key with a different named curve"
+                                            (\err ->
+                                                test "Produces the expected error"
+                                                    (\_ ->
+                                                        Expect.equal err Crypto.ImportEcKeyError
+                                                    )
+                                            )
+                                ]
+                        )
+                    , await
+                        (Crypto.exportEcdsaPublicKeyAsJwk publicKey)
+                        "Exporting public ECDSA key as JWK when not extractable"
+                        (\exportedKey ->
+                            concat 
+                                [ await
+                                    (Crypto.importEcdsaPublicKeyFromJwk
+                                        namedCurve
+                                        exportedKey
+                                        Crypto.CanBeExtracted
+                                        secureContext
+                                    )
+                                    "Importing the exported key with the same named curve"
+                                    (\importedKey ->
+                                        test "Imported key equals the original key"
+                                            (\_ ->
+                                                Expect.equal importedKey publicKey
+                                            )
+                                    )
+                                , awaitError
+                                    (Crypto.importEcdsaPublicKeyFromJwk
+                                        (shuffleNamedCurve namedCurve)
+                                        exportedKey
+                                        Crypto.CanBeExtracted
+                                        secureContext
+                                    )
+                                    "Importing the exported key with a different named curve"
+                                    (\err ->
+                                        test "Produces the expected error"
+                                            (\_ ->
+                                                Expect.equal err Crypto.ImportEcKeyError
+                                            )
+                                    )
+                                ]
+                        )
+                    , awaitError
+                        (Crypto.exportEcdsaPrivateKeyAsPkcs8 privateKey)
+                        "Exporting private ECDSA key as PKCS8 when not extractable"
+                        (\err ->
+                            test "When exporting private key that isn't extractable, fails with expected message"
+                                (\_ ->
+                                    Expect.equal err Crypto.KeyNotExportable
+                                )
+                        )
+                    , awaitError
+                        (Crypto.exportEcdsaPrivateKeyAsJwk privateKey)
+                        "Exporting private ECDSA key as JWK when not extractable"
+                        (\err ->
+                            test "When exporting private key that isn't extractable, fails with expected message"
+                                (\_ ->
+                                    Expect.equal err Crypto.KeyNotExportable
+                                )
+                        )
+                    ]
+            )
+        , await
+            (Crypto.generateEcdsaKeyPair
+                { namedCurve = namedCurve 
+                , extractable = Crypto.CanBeExtracted
+                }
+                secureContext
+            )
+            (withLabel "Generating a key that can be extracted")
+            (\{ publicKey, privateKey } ->
+                let
+                    bytesToSign =
+                        Bytes.fromString "hello"
+                in
+                concat
+                    [ await
+                        (Crypto.exportEcdsaPublicKeyAsRaw publicKey)
+                        "Exporting public ECDSA key as RAW when extractable"
+                        (\exportedKey ->
+                            concat
+                                [ await
+                                    (Crypto.importEcdsaPublicKeyFromRaw
+                                        namedCurve
+                                        exportedKey
+                                        Crypto.CanBeExtracted
+                                        secureContext
+                                    )
+                                    "Importing the exported key with the same named curve"
+                                    (\importedKey ->
+                                        test "Imported key equals the original key"
+                                            (\_ ->
+                                                Expect.equal importedKey publicKey
+                                            )
+                                    )
+                                , awaitError
+                                    (Crypto.importEcdsaPublicKeyFromRaw
+                                        (shuffleNamedCurve namedCurve)
+                                        exportedKey
+                                        Crypto.CanBeExtracted
+                                        secureContext
+                                    )
+                                    "Importing the exported key with a different named curve"
+                                    (\err ->
+                                        test "Produces the expected error"
+                                            (\_ ->
+                                                Expect.equal err Crypto.ImportEcKeyError
+                                            )
+                                    )
+                                ]
+                        )
+                    , await
+                        (Crypto.exportEcdsaPublicKeyAsSpki publicKey)
+                        "Exporting public ECDSA key as SPKI when extractable"
+                        (\exportedKey ->
+                            concat
+                                [ await
+                                    (Crypto.importEcdsaPublicKeyFromSpki
+                                        namedCurve
+                                        exportedKey
+                                        Crypto.CanBeExtracted
+                                        secureContext
+                                    )
+                                    "Importing the exported key with the same named curve"
+                                    (\importedKey ->
+                                        test "Imported key equals the original key"
+                                            (\_ ->
+                                                Expect.equal importedKey publicKey
+                                            )
+                                    )
+                                , awaitError
+                                    (Crypto.importEcdsaPublicKeyFromSpki
+                                        (shuffleNamedCurve namedCurve)
+                                        exportedKey
+                                        Crypto.CanBeExtracted
+                                        secureContext
+                                    )
+                                    "Importing the exported key with a different named curve"
+                                    (\err ->
+                                        test "Produces the expected error"
+                                            (\_ ->
+                                                Expect.equal err Crypto.ImportEcKeyError
+                                            )
+                                    )
+                                ]
+                        )
+                    , await
+                        (Crypto.exportEcdsaPublicKeyAsJwk publicKey)
+                        "Exporting public ECDSA key as JWK when extractable"
+                        (\exportedKey ->
+                            concat
+                                [ await
+                                    (Crypto.importEcdsaPublicKeyFromJwk
+                                        namedCurve
+                                        exportedKey
+                                        Crypto.CanBeExtracted
+                                        secureContext
+                                    )
+                                    "Importing the exported key with the same named curve"
+                                    (\importedKey ->
+                                        test "Imported key equals the original key"
+                                            (\_ ->
+                                                Expect.equal importedKey publicKey
+                                            )
+                                    )
+                                , awaitError
+                                    (Crypto.importEcdsaPublicKeyFromJwk
+                                        (shuffleNamedCurve namedCurve)
+                                        exportedKey
+                                        Crypto.CanBeExtracted
+                                        secureContext
+                                    )
+                                    "Importing the exported key with a different named curve"
+                                    (\err ->
+                                        test "Produces the expected error"
+                                            (\_ ->
+                                                Expect.equal err Crypto.ImportEcKeyError
+                                            )
+                                    )
+                                ]
+                        )
+                    , await
+                        (Crypto.exportEcdsaPrivateKeyAsPkcs8 privateKey)
+                        "Exporting private ECDSA key as PKCS8 when extractable"
+                        (\exportedKey ->
+                            concat 
+                                [ await
+                                    (Crypto.importEcdsaPrivateKeyFromPkcs8
+                                        namedCurve
+                                        exportedKey
+                                        Crypto.CanBeExtracted
+                                        secureContext
+                                    )
+                                    "Importing the exported key with the same named curve"
+                                    (\importedKey ->
+                                        test "Imported key equals the original key"
+                                            (\_ ->
+                                                Expect.equal importedKey privateKey
+                                            )
+                                    )
+                                , awaitError
+                                    (Crypto.importEcdsaPrivateKeyFromPkcs8
+                                        (shuffleNamedCurve namedCurve)
+                                        exportedKey
+                                        Crypto.CanBeExtracted
+                                        secureContext
+                                    )
+                                    "Importing the exported key with a different named curve"
+                                    (\err ->
+                                        test "Produces the expected error"
+                                            (\_ ->
+                                                Expect.equal err Crypto.ImportEcKeyError
+                                            )
+                                    )
+                                ]
+                        )
+                    , await
+                        (Crypto.exportEcdsaPrivateKeyAsJwk privateKey)
+                        "Exporting private ECDSA key as JWK when extractable"
+                        (\exportedKey ->
+                            concat
+                                [ await
+                                    (Crypto.importEcdsaPrivateKeyFromJwk
+                                        namedCurve
+                                        exportedKey
+                                        Crypto.CanBeExtracted
+                                        secureContext
+                                    )
+                                    "Importing the exported key with the same named curve"
+                                    (\importedKey ->
+                                        test "Imported key equals the original key"
+                                            (\_ ->
+                                                Expect.equal importedKey privateKey
+                                            )
+                                    )
+                                , awaitError
+                                    (Crypto.importEcdsaPrivateKeyFromJwk
+                                        (shuffleNamedCurve namedCurve)
+                                        exportedKey
+                                        Crypto.CanBeExtracted
+                                        secureContext
+                                    )
+                                    "Importing the exported key with a different named curve"
+                                    (\err ->
+                                        test "Produces the expected error"
+                                            (\_ ->
+                                                Expect.equal err Crypto.ImportEcKeyError
+                                            )
+                                    )
+                                ]
+                        )
+                    , await
+                        (Crypto.signWithEcdsa digestAlgorithm privateKey bytesToSign)
+                        "Sign some bytes"
+                        (\signature ->
+                            concat
+                                [ await
+                                    (Crypto.verifyWithEcdsa digestAlgorithm publicKey signature bytesToSign)
+                                    "Verifying signed bytes"
+                                    (\_ ->
+                                        test "Succeeds when bytes that are being verified were the same as what was signed"
+                                            (\_ ->
+                                                Expect.pass
+                                            )
+                                    )
+                                , awaitError
+                                    (Crypto.verifyWithEcdsa (shuffleDigestAlgorithm digestAlgorithm) publicKey signature bytesToSign)
+                                    "Verifying signed bytes with shuffled digest algorithm"
+                                    (\_ ->
+                                        test "Fails when using different digest algorithm to verify vs sign"
+                                            (\_ ->
+                                                Expect.pass
+                                            )
+                                    )
+                                , awaitError
+                                    (Crypto.verifyWithEcdsa digestAlgorithm publicKey signature (Bytes.fromString "some other bytes"))
+                                    "Verifying bytes that were not signed"
+                                    (\_ ->
+                                        test "Fails when bytes that are being verified are different than what was signed"
+                                            (\_ ->
+                                                Expect.pass
+                                            )
+                                    )
+                                ]
+                        )
+                    ]
+            )
+        ]
+
+
+
+-- HMAC Tests
+
+
+{-|-}
+hmacTests secureContext =
+    let
+        helper =
+            generateHmacTestsHelper secureContext
+    in
+    concat
+        [ helper "HMAC - No length - SHA256"
+            { length = Nothing
+            , digestAlgorithm = Crypto.Sha256
+            }
+        , helper "HMAC - No length - SHA384"
+            { length = Nothing
+            , digestAlgorithm = Crypto.Sha384
+            }
+        , helper "HMAC - No length - SHA512"
+            { length = Nothing
+            , digestAlgorithm = Crypto.Sha512
+            }
+        , helper "HMAC - Small length - SHA256"
+            { length = Just 8
+            , digestAlgorithm = Crypto.Sha256
+            }
+        , helper "HMAC - Small length - SHA384"
+            { length = Just 8
+            , digestAlgorithm = Crypto.Sha384
+            }
+        , helper "HMAC - Small length - SHA512"
+            { length = Just 8
+            , digestAlgorithm = Crypto.Sha512
+            }
+        , helper "HMAC - Large length - SHA256"
+            { length = Just 2048
+            , digestAlgorithm = Crypto.Sha256
+            }
+        , helper "HMAC - SmLargeall length - SHA384"
+            { length = Just 2048
+            , digestAlgorithm = Crypto.Sha384
+            }
+        , helper "HMAC - Large length - SHA512"
+            { length = Just 2048
+            , digestAlgorithm = Crypto.Sha512
+            }
+        , awaitError
+            (Crypto.generateHmacKey 
+                { length = Just 12
+                , hash = Crypto.Sha256
+                , extractable = Crypto.CanBeExtracted
+                }
+                secureContext
+            )
+            "Generate an HMAC key with a length of 12"
+            (\err ->
+                test "When HMAC key is not divisible by 8, produces correct error"
+                    (\_ ->
+                        Expect.equal err Crypto.HmacLengthNotDivisibleByEight
+                    )
+            )
+        ]
+
+
+{-}-}
+generateHmacTestsHelper secureContext label { length, digestAlgorithm } =
+    let
+        withLabel string =
+            label ++ ": " ++ string
+    in
+    concat
+        [ await
+            (Crypto.generateHmacKey 
+                { length = length
+                , hash = digestAlgorithm
+                , extractable = Crypto.CannotBeExtracted
+                }
+                secureContext
+            )
+            (withLabel "Generating an HMAC key that cannot be extracted")
+            (\key ->
+                concat
+                    [ awaitError
+                        (Crypto.exportHmacKeyAsRaw key)
+                        "Exporting key as RAW"
+                        (\err ->
+                            test "When exporting key that isn't exportable, generates the correct error"
+                                (\_ ->
+                                    Expect.equal err Crypto.KeyNotExportable
+                                )
+                        )
+                    , awaitError
+                        (Crypto.exportHmacKeyAsJwk key)
+                        "Exporting key as JWK"
+                        (\err ->
+                            test "When exporting key that isn't exportable, generates the correct error"
+                                (\_ ->
+                                    Expect.equal err Crypto.KeyNotExportable
+                                )
+                        )
+                    ]
+            )
+        , await
+            (Crypto.generateHmacKey 
+                { length = length
+                , hash = digestAlgorithm
+                , extractable = Crypto.CanBeExtracted
+                }
+                secureContext
+            )
+            (withLabel "Generating an HMAC key that can be extracted")
+            (\key ->
+                let
+                    bytesToSign =
+                        Bytes.fromString "hello"
+                in
+                concat
+                    [ await
+                        (Crypto.exportHmacKeyAsRaw key)
+                        "Exporting key as RAW"
+                        (\exportedKey ->
+                            await 
+                                (Crypto.importHmacKeyFromRaw 
+                                    exportedKey
+                                    digestAlgorithm
+                                    length
+                                    Crypto.CanBeExtracted
+                                    secureContext
+                                )
+                                "Importing the key"
+                                (\importedKey ->
+                                    test "The imported key matches the original key"
+                                        (\_ ->
+                                            Expect.equal importedKey key
+                                        )
+                                )
+                        )
+                    , await
+                        (Crypto.exportHmacKeyAsJwk key)
+                        "Exporting key as JWK"
+                        (\exportedKey ->
+                            await 
+                                (Crypto.importHmacKeyFromJwk
+                                    exportedKey
+                                    digestAlgorithm
+                                    length
+                                    Crypto.CanBeExtracted
+                                    secureContext
+                                )
+                                "Importing the key"
+                                (\importedKey ->
+                                    test "The imported key matches the original key"
+                                        (\_ ->
+                                            Expect.equal importedKey key
+                                        )
+                                )
+                        )
+                    , await
+                        (Crypto.signWithHmac key bytesToSign)
+                        "Signing some bytes"
+                        (\signature ->
+                            concat
+                                [ await
+                                    (Crypto.verifyWithHmac key signature bytesToSign)
+                                    "Verifying bytes"
+                                    (\_ ->
+                                        test "Verifying bytes with the right signature succeeds"
+                                            (\_ ->
+                                                Expect.pass
+                                            )
+                                    )
+                                , awaitError
+                                    (Crypto.verifyWithHmac key signature (Bytes.fromString "different bytes"))
+                                    "Verifying different bytes"
+                                    (\_ ->
+                                        test "Verifying different bytes fails as expected"
+                                            (\_ ->
+                                                Expect.pass
+                                            )
+                                    )
+                                ]
+                        )
+                    ]
+            )
+        ]
+
+
+
+-- Digest Tests
+
+
+{-|-}
+digestTests secureContext =
+    let
+        helper =
+            digestTestsHelper secureContext
+    in
+    concat
+        [ helper "Crypto.Sha256" Crypto.Sha256
+        , helper "Crypto.Sha384" Crypto.Sha384
+        , helper "Crypto.Sha512" Crypto.Sha512
+        ]
+
+
+{-|-}
+digestTestsHelper secureContext label digestAlgorithm =
+    let
+        bytesToHash =
+            Bytes.fromString "Test bytes"
+
+        withLabel string =
+            label ++ ": " ++ string
+    in
+    concat
+        [ await
+            (Crypto.digest secureContext digestAlgorithm bytesToHash)
+            (withLabel "Hashing some bytes")
+            (\hash ->
+                concat 
+                    [ test "The hashed bytes do not equal the original bytes"
+                        (\_ ->
+                            Expect.notEqual hash bytesToHash
+                        )
+                    , await 
+                        (Crypto.digest secureContext digestAlgorithm bytesToHash)
+                        "Hashing the same bytes again"
+                        (\secondHash ->
+                            test "Hashing the same bytes again produces the same hash"
+                                (\_ ->
+                                    Expect.equal hash secondHash
+                                )
+                        )
+                    , await
+                        (Crypto.digest secureContext (shuffleDigestAlgorithm digestAlgorithm) bytesToHash)
+                        "Hashing the same bytes with a different digest algorithm"
+                        (\hashWithDifferentAlgorithm ->
+                            test "The same bytes hashed with a different algorithm do not produce the same hash"
+                                (\_ ->
+                                    Expect.notEqual hashWithDifferentAlgorithm hash
+                                )
+                        )
+                    ]
+            )
+        ]
+
+
+
+-- Utilities
+
+
+{-|-}
+digestAlgorithmMaxSalt : Crypto.DigestAlgorithm -> Int
+digestAlgorithmMaxSalt hash =
+    when hash is
+        Crypto.Sha256 ->
+            32
+
+        Crypto.Sha384 ->
+            48
+
+        Crypto.Sha512 ->
+            64
+
+
+{-|-}
+shuffleNamedCurve : Crypto.EcNamedCurve -> Crypto.EcNamedCurve
+shuffleNamedCurve namedCurve =
+    when namedCurve is
+        Crypto.P256 ->
+            Crypto.P384
+
+        Crypto.P384 ->
+            Crypto.P521
+
+        Crypto.P521 ->
+            Crypto.P256
+
+
+{-| Change the passed `DigestAlgorithm` into another `DigestAlgorithm`.
+
+Used when testing algorithms that use different digest algorithms.
+-}
+shuffleDigestAlgorithm : Crypto.DigestAlgorithm -> Crypto.DigestAlgorithm
+shuffleDigestAlgorithm hash =
+    when hash is
+        Crypto.Sha256 ->
+            Crypto.Sha512
+
+        Crypto.Sha384 ->
+            Crypto.Sha256
+
+        Crypto.Sha512 ->
+            Crypto.Sha384

@@ -2,7 +2,7 @@
 
 import Gren.Kernel.Scheduler exposing (binding, succeed, fail)
 import Gren.Kernel.Bytes exposing (writeBytes)
-import Crypto exposing (RsaSsaPkcs1V1_5SigningError, RsaPssSigningError, AesCtrEncryptionError, RsaOaepEncryptionError, P256, P384, P521, AesLength128, AesLength192, AesLength256, CanBeExtracted, CannotBeExtracted, HmacKey, Sha256, Sha384, Sha512, SignWithRsaPssError, AesGcmDecryptionError, AesGcmEncryptionError, AesCbcDecryptionError, AesCbcEncryptionError, AesCtrDecryptionError, DecryptWithRsaOaepError, ImportRsaKeyError, ImportHmacKeyError, ImportEcKeyError, ImportAesKeyError, Key, SecureContext, PublicKey, PrivateKey)
+import Crypto exposing (RsaSsaPkcs1V1_5SigningError, RsaPssSigningError, AesCtrEncryptionError, RsaOaepEncryptionError, RsaOaepDecryptionError, P256, P384, P521, AesLength128, AesLength192, AesLength256, CanBeExtracted, CannotBeExtracted, HmacKey, Sha256, Sha384, Sha512, SignWithRsaPssError, AesGcmDecryptionError, AesGcmEncryptionError, AesCbcDecryptionError, AesCbcEncryptionError, AesCtrDecryptionError, DecryptWithRsaOaepError, ImportRsaKeyError, ImportHmacKeyError, ImportEcKeyError, ImportAesKeyError, Key, SecureContext, PublicKey, PrivateKey, KeyNotExportable)
 import Maybe exposing (Just, Nothing)
 import Bytes exposing (Bytes)
 
@@ -45,7 +45,10 @@ var _Crypto_constructRsaKey = function (key) {
     __$hash: _Crypto_hashFromString(key.algorithm.hash.name),
     __$extractable: _Crypto_extractableFromBool(key.extractable),
   };
-  return A2(__Crypto_Key, key, rsaKeyData);
+  return __Crypto_Key({
+    __$key: key,
+    __$data: rsaKeyData,
+  });
 };
 
 var _Crypto_constructHmacKey = function (key) {
@@ -58,7 +61,10 @@ var _Crypto_constructHmacKey = function (key) {
   } else {
     hmacKeyData.__$length = __Maybe_Nothing;
   }
-  return A2(__Crypto_Key, key, hmacKeyData);
+  return __Crypto_Key({
+    __$key: key,
+    __$data: hmacKeyData,
+  });
 };
 
 var _Crypto_constructAesKey = function (key) {
@@ -73,7 +79,10 @@ var _Crypto_constructAesKey = function (key) {
     case 256:
       aesKeyData.__$length = __Crypto_AesLength256;
   }
-  return A2(__Crypto_Key, key, aesKeyData);
+  return __Crypto_Key({
+    __$key: key,
+    __$data: aesKeyData,
+  });
 };
 
 var _Crypto_constructEcKey = function (key) {
@@ -88,7 +97,10 @@ var _Crypto_constructEcKey = function (key) {
     case "P-521":
       ecKeyData.__$namedCurve = __Crypto_P521;
   }
-  return A2(__Crypto_Key, key, ecKeyData);
+  return __Crypto_Key({
+    __$key: key,
+    __$data: ecKeyData,
+  });
 };
 
 // Random
@@ -268,7 +280,7 @@ var _Crypto_exportKey = F2(function (format, key) {
         }
       })
       .catch(function (err) {
-        throw "There was an unforseen error that occured when exporting a key. This shouldn't happen! Please file a ticket in the `gren-lang/core` Github repo (https://github.com/gren-lang/core)";
+        return callback(__Scheduler_fail(__Crypto_KeyNotExportable));
       });
   });
 });
@@ -516,7 +528,7 @@ var _Crypto_decryptWithRsaOaep = F3(function (label, key, bytes) {
         return callback(__Scheduler_succeed(new DataView(res)));
       })
       .catch(function (err) {
-        return callback(__Scheduler_fail(__Crypto_AesCtrDecryptionError));
+        return callback(__Scheduler_fail(__Crypto_RsaOaepDecryptionError));
       });
   });
 });
@@ -665,7 +677,10 @@ var _Crypto_verifyWithRsaSsaPkcs1V1_5 = F3(function (key, signature, bytes) {
     _Crypto_impl.subtle
       .verify(algorithm, key, signature, bytes)
       .then(function (res) {
-        return callback(__Scheduler_succeed());
+        if (res) {
+          return callback(__Scheduler_succeed());
+        }
+        return callback(__Scheduler_fail());
       })
       .catch(function (err) {
         throw "There was an unforseen error that occured when attempting to verify with the RSA-SSA-PKCS v1.5 algorithm. This shouldn't happen! Please file a ticket in the `gren-lang/core` Github repo (https://github.com/gren-lang/core)";
@@ -682,7 +697,10 @@ var _Crypto_verifyWithRsaPss = F4(function (saltLength, key, signature, bytes) {
     _Crypto_impl.subtle
       .verify(algorithm, key, signature, bytes)
       .then(function (res) {
-        return callback(__Scheduler_succeed());
+        if (res) {
+          return callback(__Scheduler_succeed());
+        }
+        return callback(__Scheduler_fail());
       })
       .catch(function (err) {
         throw "There was an unforseen error that occured when attempting to verify with the RSA-PSS algorithm. This shouldn't happen! Please file a ticket in the `gren-lang/core` Github repo (https://github.com/gren-lang/core)";
@@ -699,7 +717,10 @@ var _Crypto_verifyWithEcdsa = F4(function (hash, key, signature, bytes) {
     _Crypto_impl.subtle
       .verify(algorithm, key, signature, bytes)
       .then(function (res) {
-        return callback(__Scheduler_succeed(res));
+        if (res) {
+          return callback(__Scheduler_succeed());
+        }
+        return callback(__Scheduler_fail());
       })
       .catch(function (err) {
         throw "There was an unforseen error that occured when attempting to verify with the ECDSA algorithm. This shouldn't happen! Please file a ticket in the `gren-lang/core` Github repo (https://github.com/gren-lang/core)";
@@ -715,7 +736,10 @@ var _Crypto_verifyWithHmac = F3(function (key, signature, bytes) {
     _Crypto_impl.subtle
       .verify(algorithm, key, signature, bytes)
       .then(function (res) {
-        return callback(__Scheduler_succeed(res));
+        if (res) {
+          return callback(__Scheduler_succeed());
+        }
+        return callback(__Scheduler_fail());
       })
       .catch(function (err) {
         throw "There was an unforseen error that occured when attempting to verify with the HMAC algorithm. This shouldn't happen! Please file a ticket in the `gren-lang/core` Github repo (https://github.com/gren-lang/core)";

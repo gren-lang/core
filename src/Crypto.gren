@@ -471,7 +471,10 @@ type Extractable
 {-| A generated key.
 -}
 type Key key keyData
-    = Key { key : key, data : keyData }
+    = Key 
+        { key : key
+        , data : keyData 
+        }
 
 
 {-| A public key that is used for encrypting and verifying values. This key type, 
@@ -783,7 +786,7 @@ type HmacKey =
 Errors that can happen when enerating a key for use with the HMAC algorithm. 
 There's a single case where this function can fail:
 
-- When the passed `modulusLength` is not divisible by 8, as is required by the 
+- When the passed `length` is not divisible by 8, as is required by the 
 algorithm. This is captured by `HmacLengthNotDivisibleByEight`.
 -}
 type HmacKeyGenerationError
@@ -1194,7 +1197,7 @@ importRsaPssPrivateKeyFromPkcs8 bytes { hash } extractable _context =
 
 
 {-|-}
-importRsaSsaPkcs1V1_5PublicKeyFromJwk : Json.Encode.Value -> ImportRsaKeyParams -> Extractable -> SecureContext -> Task ImportRsaKeyError (PrivateKey RsaSsaPkcs1V1_5Key RsaKeyParams)
+importRsaSsaPkcs1V1_5PublicKeyFromJwk : Json.Encode.Value -> ImportRsaKeyParams -> Extractable -> SecureContext -> Task ImportRsaKeyError (PublicKey RsaSsaPkcs1V1_5Key RsaKeyParams)
 importRsaSsaPkcs1V1_5PublicKeyFromJwk jwk { hash } extractable _context =
     Gren.Kernel.Crypto.importRsaKey
         "public"
@@ -1203,11 +1206,11 @@ importRsaSsaPkcs1V1_5PublicKeyFromJwk jwk { hash } extractable _context =
         "RSASSA-PKCS1-v1_5"
         (digestAlgorithmToString hash)
         (extractableToBool extractable)
-        [ "sign" ]
+        [ "verify" ]
 
 
 {-|-}
-importRsaSsaPkcs1V1_5PublicKeyFromSpki : Bytes -> ImportRsaKeyParams -> Extractable -> SecureContext -> Task ImportRsaKeyError (PrivateKey RsaSsaPkcs1V1_5Key RsaKeyParams)
+importRsaSsaPkcs1V1_5PublicKeyFromSpki : Bytes -> ImportRsaKeyParams -> Extractable -> SecureContext -> Task ImportRsaKeyError (PublicKey RsaSsaPkcs1V1_5Key RsaKeyParams)
 importRsaSsaPkcs1V1_5PublicKeyFromSpki bytes { hash } extractable _context =
     Gren.Kernel.Crypto.importRsaKey
         "public"
@@ -1278,7 +1281,7 @@ importAesCtrKeyFromJwk jwk extractable _context =
 
 
 {-|-}
-importAesCbcKeyFromRaw : Bytes -> Extractable -> SecureContext ->  Task ImportAesKeyError (Key AesCtrKey AesKeyParams)
+importAesCbcKeyFromRaw : Bytes -> Extractable -> SecureContext ->  Task ImportAesKeyError (Key AesCbcKey AesKeyParams)
 importAesCbcKeyFromRaw bytes extractable _context =
     Gren.Kernel.Crypto.importAesKey
         "raw"
@@ -1289,7 +1292,7 @@ importAesCbcKeyFromRaw bytes extractable _context =
 
 
 {-|-}
-importAesCbcKeyFromJwk : Json.Encode.Value -> Extractable -> SecureContext -> Task ImportAesKeyError (Key AesCtrKey AesKeyParams)
+importAesCbcKeyFromJwk : Json.Encode.Value -> Extractable -> SecureContext -> Task ImportAesKeyError (Key AesCbcKey AesKeyParams)
 importAesCbcKeyFromJwk jwk extractable _context =
     Gren.Kernel.Crypto.importAesKey
         "jwk"
@@ -1300,7 +1303,7 @@ importAesCbcKeyFromJwk jwk extractable _context =
 
 
 {-|-}
-importAesGcmKeyFromRaw : Bytes -> Extractable -> SecureContext -> Task ImportAesKeyError (Key AesCtrKey AesKeyParams)
+importAesGcmKeyFromRaw : Bytes -> Extractable -> SecureContext -> Task ImportAesKeyError (Key AesGcmKey AesKeyParams)
 importAesGcmKeyFromRaw bytes extractable _context =
     Gren.Kernel.Crypto.importAesKey
         "raw"
@@ -1311,7 +1314,7 @@ importAesGcmKeyFromRaw bytes extractable _context =
 
 
 {-|-}
-importAesGcmKeyFromJwk : Json.Encode.Value -> Extractable -> SecureContext -> Task ImportAesKeyError (Key AesCtrKey AesKeyParams)
+importAesGcmKeyFromJwk : Json.Encode.Value -> Extractable -> SecureContext -> Task ImportAesKeyError (Key AesGcmKey AesKeyParams)
 importAesGcmKeyFromJwk jwk extractable _context =
     Gren.Kernel.Crypto.importAesKey
         "jwk"
@@ -1830,8 +1833,6 @@ function. There are a few cases where this function can fail:
 
 - The passed `Bytes` are unable to be decrypted for whatever reason. This is captured by 
 `AesCbcDecryptionError`.
-- The passed `iv` does not match the `iv` used when the data was encrypted. This is captured by
-`AesCbcDecryptionError`.
 - When the passed `iv` in `AesCbcParams` is greater or less than than the required 16 bytes. This is 
 captured by `AesCtrDecryptionErrorIvTooLong`
 - Any unknown or unexpected errors are captured by `AesCtrDecryptionError`.
@@ -1843,6 +1844,9 @@ type AesCbcDecryptionError
 
 {-| Decrypt some `Bytes` with a `Key AesCbcKey`. You can generate the apporpriate key with the 
 [`generateAesCbcKey`](#generateAesCbcKey) function.
+
+It's important to use the same `iv` value when encrypting and decrypting. Using a different `iv` 
+value will succeed, but the resulting `Bytes` will not match the `Bytes` originally encrypted.
 -}
 decryptWithAesCbc : AesCbcParams -> Key AesCbcKey AesKeyParams -> Bytes -> Task AesCbcDecryptionError Bytes
 decryptWithAesCbc { iv } (Key { key }) bytes = 
@@ -1891,7 +1895,7 @@ decryptWithAesGcm { iv, additionalData, tagLength } (Key { key }) bytes =
                     key
                     bytes
             
-            { ad = Just ad, tl = Nothing} ->
+            { ad = Just ad, tl = Nothing } ->
                 Gren.Kernel.Crypto.decryptWithAesGcm
                     iv
                     ad
