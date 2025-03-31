@@ -418,51 +418,59 @@ function _Platform_setupIncomingPort(name, sendToApp) {
 
 var _Platform_taskPorts = {};
 
-function _Platform_taskPort(name, converter) {
+function _Platform_taskPort(name, inputConverter, converter) {
   _Platform_checkPortName(name);
   _Platform_taskPorts[name] = {};
 
-  return __Scheduler_binding(function (callback) {
-    var promise;
-    try {
-      promise = _Platform_taskPorts[name]();
-    } catch (e) {
-      throw new Error(
-        "Registered code for task-based port named '" + name + "'  crashed.",
-        { cause: e },
+  return function (input) {
+    var encodedInput = inputConverter
+      ? __Json_unwrap(inputConverter(input))
+      : null;
+
+    return __Scheduler_binding(function (callback) {
+      var promise;
+      try {
+        promise = _Platform_taskPorts[name](encodedInput);
+      } catch (e) {
+        throw new Error(
+          "Registered code for task-based port named '" + name + "'  crashed.",
+          { cause: e },
+        );
+      }
+
+      if (!(promise instanceof Promise)) {
+        throw new Error(
+          "Handler for task port named '" +
+            name +
+            "' did not return a Promise.",
+        );
+      }
+
+      promise.then(
+        function (value) {
+          var result = A2(__Json_run, converter, __Json_wrap(value));
+
+          __Result_isOk(result) || __Debug_crash(4, name, value);
+
+          callback(__Scheduler_succeed(result.a));
+        },
+        function (err) {
+          // If Error, convert to plain object. This is because Error doesn't have enumerable
+          // properties.
+          if (err instanceof Error) {
+            var newErr = {};
+            Object.getOwnPropertyNames(err).forEach(function (key) {
+              newErr[key] = err[key];
+            });
+
+            err = newErr;
+          }
+
+          callback(__Scheduler_fail(__Json_wrap(err)));
+        },
       );
-    }
-
-    if (!(promise instanceof Promise)) {
-      throw new Error(
-        "Handler for task port named '" + name + "' did not return a Promise.",
-      );
-    }
-
-    promise.then(
-      function (value) {
-        var result = A2(__Json_run, converter, __Json_wrap(value));
-
-        __Result_isOk(result) || __Debug_crash(4, name, value);
-
-        callback(__Scheduler_succeed(result.a));
-      },
-      function (err) {
-        // If Error, convert to plain object. This is because Error doesn't have enumerable
-        // properties.
-        if (err instanceof Error) {
-          var newErr = {};
-          Object.getOwnPropertyNames(err).forEach(function (key) {
-            newErr[key] = err[key];
-          });
-
-          err = newErr;
-        }
-
-        callback(__Scheduler_fail(__Json_wrap(err)));
-      },
-    );
-  });
+    });
+  };
 }
 
 function _Platform_setupTaskPorts(registeredPorts) {
