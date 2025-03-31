@@ -443,7 +443,7 @@ function _Platform_taskPort(name, converter) {
       function (value) {
         var result = A2(__Json_run, converter, __Json_wrap(value));
 
-        __Result_isOk(result) || __Debug_crash(4, name, result.a);
+        __Result_isOk(result) || __Debug_crash(4, name, value);
 
         callback(__Scheduler_succeed(result.a));
       },
