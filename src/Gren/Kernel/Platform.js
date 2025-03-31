@@ -448,6 +448,17 @@ function _Platform_taskPort(name, converter) {
         callback(__Scheduler_succeed(result.a));
       },
       function (err) {
+        // If Error, convert to plain object. This is because Error doesn't have enumerable
+        // properties.
+        if (err instanceof Error) {
+          var newErr = {};
+          Object.getOwnPropertyNames(err).forEach(function (key) {
+            newErr[key] = err[key];
+          });
+
+          err = newErr;
+        }
+
         callback(__Scheduler_fail(__Json_wrap(err)));
       },
     );
