@@ -3,7 +3,7 @@
 import Gren.Kernel.Debug exposing (crash)
 import Gren.Kernel.Json exposing (run, wrap, unwrap, errorToString)
 import Gren.Kernel.Process exposing (sleep)
-import Gren.Kernel.Scheduler exposing (andThen, binding, rawSend, rawSpawn, receive, send, succeed)
+import Gren.Kernel.Scheduler exposing (andThen, binding, rawSend, rawSpawn, receive, send, succeed, fail)
 import Array exposing (pushLast)
 import Result exposing (isOk)
 
@@ -423,7 +423,34 @@ function _Platform_taskPort(name, converter) {
   _Platform_taskPorts[name] = {};
 
   return __Scheduler_binding(function (callback) {
-    _Platform_taskPorts[name]();
+    var promise;
+    try {
+      promise = _Platform_taskPorts[name]();
+    } catch (e) {
+      throw new Error(
+        "Registered code for task-based port named '" + name + "'  crashed.",
+        { cause: e },
+      );
+    }
+
+    if (!(promise instanceof Promise)) {
+      throw new Error(
+        "Handler for task port named '" + name + "' did not return a Promise.",
+      );
+    }
+
+    promise.then(
+      function (value) {
+        var result = A2(__Json_run, converter, __Json_wrap(value));
+
+        __Result_isOk(result) || __Debug_crash(4, name, result.a);
+
+        callback(__Scheduler_succeed(result.a));
+      },
+      function (err) {
+        callback(__Scheduler_fail(__Json_wrap(err)));
+      },
+    );
   });
 }
 
@@ -435,7 +462,9 @@ function _Platform_setupTaskPorts(registeredPorts) {
   for (var key in registeredPorts) {
     if (!(key in _Platform_taskPorts)) {
       // TODO: proper way to crash program
-      throw new Error(key + " isn't defined in Gren code");
+      throw new Error(
+        key + " isn't defined as a task-based port in Gren code.",
+      );
     }
   }
 
@@ -443,6 +472,12 @@ function _Platform_setupTaskPorts(registeredPorts) {
     var handler = registeredPorts[key];
     if (!handler) {
       throw new Error("No handler defined for task port named '" + key + "'.");
+    }
+
+    if (!(handler instanceof Function)) {
+      throw new Error(
+        "Handler for task port named '" + key + "' is not a function.",
+      );
     }
 
     _Platform_taskPorts[key] = handler;
