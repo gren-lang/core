@@ -41,6 +41,9 @@ function _Platform_initialize(
   );
   __Result_isOk(result) ||
     __Debug_crash(2 /**__DEBUG/, __Json_errorToString(result.a) /**/);
+
+  _Platform_setupTaskPorts(args ? args["taskPorts"] : undefined);
+
   var managers = {};
   var initPair = init(result.a);
   var model = initPair.__$model;
@@ -294,6 +297,10 @@ function _Platform_checkPortName(name) {
   if (_Platform_effectManagers[name]) {
     __Debug_crash(3, name);
   }
+
+  if (_Platform_taskPorts[name]) {
+    __Debug_crash(3, name);
+  }
 }
 
 // OUTGOING PORTS
@@ -405,6 +412,41 @@ function _Platform_setupIncomingPort(name, sendToApp) {
   }
 
   return { send: send };
+}
+
+// TASK PORTS
+
+var _Platform_taskPorts = {};
+
+function _Platform_taskPort(name, converter) {
+  _Platform_checkPortName(name);
+  _Platform_taskPorts[name] = {};
+
+  return __Scheduler_binding(function (callback) {
+    _Platform_taskPorts[name]();
+  });
+}
+
+function _Platform_setupTaskPorts(registeredPorts) {
+  if (typeof registeredPorts !== "object") {
+    registeredPorts = {};
+  }
+
+  for (var key in registeredPorts) {
+    if (!(key in _Platform_taskPorts)) {
+      // TODO: proper way to crash program
+      throw new Error(key + " isn't defined in Gren code");
+    }
+  }
+
+  for (var key in _Platform_taskPorts) {
+    var handler = registeredPorts[key];
+    if (!handler) {
+      throw new Error("No handler defined for task port named '" + key + "'.");
+    }
+
+    _Platform_taskPorts[key] = handler;
+  }
 }
 
 // EXPORT GREN MODULES

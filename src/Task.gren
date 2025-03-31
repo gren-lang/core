@@ -3,6 +3,7 @@ effect module Task where { command = MyCmd } exposing
     , andThen, await, succeed, fail, sequence
     , map, map2, map3, map4, map5
     , onError, mapError
+    , PortError(..)
     )
 
 {-| Tasks make it easy to describe asynchronous operations that may fail, like
@@ -25,6 +26,10 @@ HTTP requests or writing to a database.
 ## Errors
 
 @docs onError, mapError
+
+## Ports
+
+@docs PortError
 
 -}
 
@@ -309,6 +314,8 @@ mapError convert task =
     task
         |> onError (fail << convert)
 
+
+type PortError = PortError
 
 
 -- COMMANDS
