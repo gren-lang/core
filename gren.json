@@ -25,7 +25,8 @@
             "Set"
         ],
         "Streams": [
-            "Stream"
+            "Stream",
+            "Stream.Log"
         ],
         "Error Handling": [
             "Maybe",

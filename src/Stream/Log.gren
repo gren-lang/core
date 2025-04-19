@@ -1,0 +1,29 @@
+module Stream.Log exposing
+    ( bytes
+    , string
+    , line
+    )
+
+
+import Basics exposing ((|>), (++))
+import Bytes exposing (Bytes)
+import Stream
+import String exposing (String)
+import Task exposing (Task)
+
+
+bytes : Stream.Writable Bytes -> Bytes -> Task x {}
+bytes stream data =
+    Stream.write data stream
+        |> Task.andThen (\_ -> Task.succeed {})
+        |> Task.onError (\_ -> Task.succeed {})
+
+
+string : Stream.Writable Bytes -> String -> Task x {}
+string stream data =
+    bytes stream (Bytes.fromString data)
+
+
+line : Stream.Writable Bytes -> String -> Task x {}
+line stream data =
+    string stream (data ++ "\n")
