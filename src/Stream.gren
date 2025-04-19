@@ -55,7 +55,7 @@ We have three kinds of streams: readable streams, writable streams, and transfor
 
 ## Readable Streams
 
-@docs Readable, fromArray, read, readBytesAsString, cancelReadable
+@docs Readable, fromArray, read, readBytesAsString, readUntilClosed, cancelReadable
 
 ## Writable Streams
 
@@ -79,6 +79,7 @@ import Array exposing (Array)
 import Basics exposing (Bool, Int, (<|), (|>), (++), max)
 import Bytes exposing (Bytes)
 import Maybe exposing (Maybe)
+import Result exposing (Result(..))
 import String exposing (String)
 import Task exposing (Task)
 import Gren.Kernel.Stream
@@ -163,6 +164,41 @@ readBytesAsString : Readable Bytes -> Task Error (Maybe String)
 readBytesAsString stream =
     read stream
         |> Task.map Bytes.toString
+
+
+{-| Reads values of the stream, incrementally building a value with the provided function, until
+the stream is closed or some error occurs.
+
+If the provided function return's an Err, the attached String will be used as the cancellation
+reason for the stream.
+-}
+readUntilClosed : (a -> b -> Result String b) -> b -> Readable a -> Task Error b
+readUntilClosed stepFn init stream =
+    readUntilClosedHelper stepFn init stream
+
+
+readUntilClosedHelper : (a -> b -> Result String b) -> b -> Readable a -> Task Error b
+readUntilClosedHelper stepFn oldAcc stream =
+    read stream
+        |> Task.andThen
+            (\newPart ->
+                when stepFn newPart oldAcc is
+                    Ok newAcc ->
+                        readUntilClosedHelper stepFn newAcc stream
+
+                    Err reason ->
+                        cancelReadable reason stream
+                            |> Task.andThen (\_ -> Task.fail (Cancelled reason))
+            )
+        |> Task.onError
+            (\err ->
+                when err is
+                    Closed ->
+                        Task.succeed oldAcc
+
+                    _ ->
+                        Task.fail err
+            )
 
 
 {-| Cancels the stream. This indicates a fatal error, and the given `String` should explain in a human-readable
