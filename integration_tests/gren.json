@@ -4,7 +4,7 @@
     "source-directories": [
         "src"
     ],
-    "gren-version": "0.5.2",
+    "gren-version": "0.5.3",
     "dependencies": {
         "direct": {
             "blaix/gren-effectful-tests-node": "4.0.0",
