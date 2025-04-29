@@ -3,6 +3,7 @@ module Stream exposing
     , fromArray
     , read
     , readBytesAsString
+    , readUntilClosed
     , cancelReadable
     -- Writable
     , Writable
