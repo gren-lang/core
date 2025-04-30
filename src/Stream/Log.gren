@@ -5,21 +5,20 @@ module Stream.Log exposing
     )
 
 
-{-| Logging information to a Stream is a common requirement. While you can use the
-`Stream` module for this, you'll quickly run into an issue with regards to error
-handling.
-
-What do you do if you cannot log an error message to the terminal? Try again? Try again
-on another stream? What if that fails?
-
-The functions in this module let's you send data to streams on a best effort basis. If
+{-| The functions in this module let's you send data to streams on a best effort basis. If
 something goes wrong, the error will be silently ignored.
 
-Only use these functions if there is no sane way to handle the event in which logging fails!
+We don't normally encourage ignoring errors in this way, but for the explicit purpose of logging
+it's not always clear how you would handle an error. If you cannot log an error message to the terminal,
+do you try again? Try again on another stream? What if that also fails?
+
+Only use these functions if there is no sane way to handle the event in which sending data to a stream
+fails!
 
 # Operations
 
 @docs bytes, string, line
+
 -}
 
 
