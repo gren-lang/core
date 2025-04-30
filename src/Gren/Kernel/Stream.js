@@ -35,11 +35,23 @@ var _Stream_read = function (stream) {
         reader.releaseLock();
         callback(
           __Scheduler_fail(
-            __Stream_Cancelled(typeof err === "string" ? err : ""),
+            __Stream_Cancelled(_Stream_cancellationErrorString(err)),
           ),
         );
       });
   });
+};
+
+var _Stream_cancellationErrorString = function (err) {
+  if (err instanceof Error) {
+    return err.toString();
+  }
+
+  if (typeof err === "string") {
+    return err;
+  }
+
+  return "Unknown error";
 };
 
 var _Stream_write = F2(function (value, stream) {
@@ -65,7 +77,7 @@ var _Stream_write = F2(function (value, stream) {
       .catch((err) => {
         callback(
           __Scheduler_fail(
-            __Stream_Cancelled(typeof err === "string" ? err : ""),
+            __Stream_Cancelled(_Stream_cancellationErrorString(err)),
           ),
         );
       });
@@ -155,7 +167,7 @@ var _Stream_pipeTo = F2(function (writable, readable) {
       .catch((err) => {
         callback(
           __Scheduler_fail(
-            __Stream_Cancelled(typeof err === "string" ? err : ""),
+            __Stream_Cancelled(_Stream_cancellationErrorString(err)),
           ),
         );
       });

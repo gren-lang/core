@@ -1,0 +1,53 @@
+module Stream.Log exposing
+    ( bytes
+    , string
+    , line
+    )
+
+
+{-| The functions in this module let's you send data to streams on a best effort basis. If
+something goes wrong, the error will be silently ignored.
+
+We don't normally encourage ignoring errors in this way, but for the explicit purpose of logging
+it's not always clear how you would handle an error. If you cannot log an error message to the terminal,
+do you try again? Try again on another stream? What if that also fails?
+
+Only use these functions if there is no sane way to handle the event in which sending data to a stream
+fails!
+
+# Operations
+
+@docs bytes, string, line
+
+-}
+
+
+import Basics exposing ((|>), (++))
+import Bytes exposing (Bytes)
+import Stream
+import String exposing (String)
+import Task exposing (Task)
+
+
+{-| Send `Bytes` to a writable byte stream. Any potential error is ignored.
+-}
+bytes : Stream.Writable Bytes -> Bytes -> Task x {}
+bytes stream data =
+    Stream.write data stream
+        |> Task.andThen (\_ -> Task.succeed {})
+        |> Task.onError (\_ -> Task.succeed {})
+
+
+{-| Send a `String` to a writable byte stream. Any potential error is ignored.
+-}
+string : Stream.Writable Bytes -> String -> Task x {}
+string stream data =
+    bytes stream (Bytes.fromString data)
+
+
+{-| Send a `String` to a writable byte stream. The ´String` will end with a newline character.
+Any potential error is ignored.
+-}
+line : Stream.Writable Bytes -> String -> Task x {}
+line stream data =
+    string stream (data ++ "\n")
