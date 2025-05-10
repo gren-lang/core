@@ -137,21 +137,16 @@ the current month, we could use [`Time`][time] to ask:
     getMonth =
         Task.map2 Time.toMonth Time.here Time.now
 
-**Note:** Say we were doing HTTP requests instead. `map2` does each task in
-order, so it would try the first request and only continue after it succeeds.
-If it fails, the whole thing fails!
+**Note:** Say we were doing HTTP requests instead. `map2` starts both requests concurrently
+and if either of them fails, the whole thing fails!
+If one request fails and the other is still in-flight, the in-flight task will be automatically cancelled and cleaned up.
 
 [time]: Time
 
 -}
 map2 : (a -> b -> result) -> Task x a -> Task x b -> Task x result
-map2 func taskA taskB =
-    taskA
-        |> andThen
-            (\a ->
-                taskB
-                    |> andThen (\b -> succeed (func a b))
-            )
+map2 =
+    Gren.Kernel.Scheduler.map2
 
 
 {-| -}
@@ -219,8 +214,8 @@ sequence fails.
 
 -}
 sequence : Array (Task x a) -> Task x (Array a)
-sequence tasks =
-    Array.foldr (map2 Array.pushFirst) (succeed []) tasks
+sequence =
+    Array.foldr (\task combined -> task |> andThen (\x -> map (Array.pushFirst x) combined)) (succeed []) 
 
 
 {-| Start with an array of tasks, and turn them into a single task that returns a

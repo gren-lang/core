@@ -188,6 +188,93 @@ tests =
                         ]
                 )
             ]
+        , describe "Task.map2"
+            [ await
+                (Task.map2 (++)
+                    (sleep 3 |> Task.map Array.singleton)
+                    (sleep 2 |> Task.map Array.singleton)
+                )
+                "two tasks"
+                (\res ->
+                    test "combines two results and preserves ordering"
+                        (\_ -> Expect.equal [ 3, 2 ] res)
+                )
+            , await
+                (Task.map2 (+)
+                    (Task.map2 (+)
+                        (sleep 1000)
+                        (Task.map2 (+)
+                            (sleep 1000)
+                            (Task.map2 (+)
+                                (sleep 1000)
+                                (sleep 1000)
+                            )
+                        )
+                    )
+                    (Task.map2 (+)
+                        (sleep 1000)
+                        (Task.map2 (+)
+                            (sleep 1000)
+                            (sleep 1000)
+                        )
+                    )
+                    |> withDuration
+                )
+                "deeply nested tasks"
+                (\res ->
+                    concat
+                        [ test "combines multiple results"
+                            (\_ -> Expect.equal 7000 res.value)
+                        , test "runs tasks concurrently"
+                            (\_ -> duration res |> Expect.lessThan (1000 + leeway))
+                        ]
+                )
+            , awaitError
+                (Task.map2 (+)
+                    (Task.map2 (+)
+                        (sleep 10000)
+                        (sleep 10000)
+                    )
+                    (Task.map2 (+)
+                        (sleep 10000 |> Task.andThen (\_ -> Task.fail "slow boom"))
+                        (Task.map2 (+)
+                            (sleep 10000)
+                            (sleep 1000 |> Task.andThen (\_ -> Task.fail "fast boom"))
+                        )
+                    )
+                    |> withDuration
+                )
+                "deeply nested task with errors"
+                (\res ->
+                    concat
+                        [ test "fails the whole task with the error from the first failed task"
+                            (\_ -> Expect.equal "fast boom" res.value)
+                        , test "does not wait for other tasks to finish"
+                            (\_ -> duration res |> Expect.lessThan (1000 + leeway))
+                        ]
+                )
+            , awaitError
+                (Task.map2 (+)
+                    (Task.fail "immediate boom")
+                    (Task.map2 (+)
+                        (sleep 10000 |> Task.andThen (\_ -> Task.fail "slow boom"))
+                        (Task.map2 (+)
+                            (sleep 10000)
+                            (sleep 1000 |> Task.andThen (\_ -> Task.fail "fast boom"))
+                        )
+                    )
+                    |> withDuration
+                )
+                "deeply nested task with immediate top level error"
+                (\res ->
+                    concat
+                        [ test "fails with correct error"
+                            (\_ -> Expect.equal "immediate boom" res.value)
+                        , test "fails immediately"
+                            (\_ -> duration res |> Expect.lessThan leeway)
+                        ]
+                )
+            ]
         ]
 
 

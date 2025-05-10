@@ -83,6 +83,13 @@ function _Scheduler_concurrent(tasks) {
   });
 }
 
+var _Scheduler_map2 = F3(function (callback, taskA, taskB) {
+  function combine([resA, resB]) {
+    return _Scheduler_succeed(A2(callback, resA, resB));
+  }
+  return A2(_Scheduler_andThen, combine, _Scheduler_concurrent([taskA, taskB]));
+});
+
 // PROCESSES
 
 var _Scheduler_guid = 0;
