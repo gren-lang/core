@@ -1,6 +1,6 @@
 effect module Task where { command = MyCmd } exposing
     ( Task, perform, attempt, execute
-    , andThen, await, succeed, fail, sequence
+    , andThen, await, succeed, fail, sequence, concurrent
     , map, map2, map3, map4, map5
     , onError, mapError
     )
@@ -14,7 +14,7 @@ HTTP requests or writing to a database.
 
 ## Chains
 
-@docs andThen, await, succeed, fail, sequence
+@docs andThen, await, succeed, fail, sequence, concurrent
 
 
 ## Maps
@@ -221,6 +221,32 @@ sequence fails.
 sequence : Array (Task x a) -> Task x (Array a)
 sequence tasks =
     Array.foldr (map2 Array.pushFirst) (succeed []) tasks
+
+
+{-| Start with an array of tasks, and turn them into a single task that returns a
+array. The tasks will be run concurrently and if any task fails the whole array fails.
+
+    concurrent [ succeed 1, succeed 2 ] == succeed [ 1, 2 ]
+
+Additionally if any task fails, any tasks already in-flight will be cleaned up (e.g. an in-flgiht http request will be cancelled).
+
+**Note**: Why use `sequence` over `concurrent`? Maybe you have an expensive operation, like making 100 http requests.
+You might want to do these sequentially rather than all at once to avoid overwhelming the server.
+
+**A note on concurrency and parallelism**:
+
+Why is there only `concurrent` and not `parallel`? Because JavaScript is single threaded, it's not possible currently to have true parallelism in gren.
+
+- A parallel task   : multiple subtasks can be run at exactly the same time on multiple processors or CPU cores.
+- A concurrent task : multiple subtasks can be in progress at the same time but not executing at exactly the same time.
+
+In practice this means CPU bound tasks (e.g. generate a cryptographic hash) won't see a speed boost from `concurrent`.
+IO bound tasks however (e.g. make a http request and wait until the response comes back) may get a noticable speed boost from `concurrent`.
+
+-}
+concurrent : Array (Task x a) -> Task x (Array a)
+concurrent =
+    Gren.Kernel.Scheduler.concurrent
 
 
 

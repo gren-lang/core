@@ -49,6 +49,40 @@ function _Scheduler_receive(callback) {
   };
 }
 
+function _Scheduler_concurrent(tasks) {
+  if (tasks.length === 0) return _Scheduler_succeed([]);
+
+  return _Scheduler_binding(function (callback) {
+    let count = 0;
+    let results = new Array(tasks.length);
+    let procs;
+
+    function killAll() {
+      procs.forEach(_Scheduler_rawKill);
+    }
+
+    function onError(e) {
+      killAll();
+      callback(_Scheduler_fail(e));
+    }
+
+    procs = tasks.map((task, i) => {
+      function onSuccess(res) {
+        results[i] = res;
+        count++;
+        if (count === tasks.length) {
+          callback(_Scheduler_succeed(results));
+        }
+      }
+      const success = A2(_Scheduler_andThen, onSuccess, task);
+      const handled = A2(_Scheduler_onError, onError, success);
+      return _Scheduler_rawSpawn(handled);
+    });
+
+    return killAll;
+  });
+}
+
 // PROCESSES
 
 var _Scheduler_guid = 0;
@@ -87,15 +121,19 @@ var _Scheduler_send = F2(function (proc, msg) {
 
 function _Scheduler_kill(proc) {
   return _Scheduler_binding(function (callback) {
-    var task = proc.__root;
-    if (task && task.$ === __1_BINDING && task.__kill) {
-      task.__kill();
-    }
-
-    proc.__root = null;
+    _Scheduler_rawKill(proc);
 
     callback(_Scheduler_succeed({}));
   });
+}
+
+function _Scheduler_rawKill(proc) {
+  var task = proc.__root;
+  if (task && task.$ === __1_BINDING && task.__kill) {
+    task.__kill();
+  }
+
+  proc.__root = null;
 }
 
 /* STEP PROCESSES

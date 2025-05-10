@@ -1,0 +1,234 @@
+module Test.Task exposing (tests)
+
+import Array exposing (..)
+import Basics exposing (..)
+import Bytes exposing (Bytes)
+import Bytes.Decode
+import Crypto
+import Expect exposing (Expectation)
+import Math
+import Maybe exposing (Maybe(..))
+import Process
+import Task exposing (Task)
+import Test.Runner.Effectful exposing (await, awaitError, concat, describe, fuzz, run, test)
+import Time
+
+
+{-| `Process.sleep` but returns the number of millis taken instead of {}.
+
+    This is a convenient way of labelling different `Process.sleep`s for tests.
+
+-}
+sleep : Float -> Task x Float
+sleep ms =
+    Process.sleep ms |> Task.map (\_ -> ms)
+
+
+{-| Use in assertions to allow some startup time.
+-}
+leeway : number
+leeway =
+    800
+
+
+{-| Tests for core gren `Task`.
+-}
+tests : Test.Runner.Effectful.Test
+tests =
+    describe "Task"
+        [ describe "Task.concurrent"
+            [ let
+                durations : Array Float
+                durations =
+                    Array.range 1 1000 |> Array.map toFloat
+              in
+              await
+                (durations
+                    |> Array.map sleep
+                    |> Task.concurrent
+                    |> withDuration
+                )
+                "concurrent array of tasks"
+                (\res ->
+                    concat
+                        [ test "preserves order of results"
+                            (\_ -> Expect.equal durations res.value)
+                        , test "runs tasks concurrently"
+                            (\_ -> duration res |> Expect.lessThan (1000 + leeway))
+                        ]
+                )
+            , await
+                (Array.repeat 1000000 (sleep 10)
+                    |> Task.concurrent
+                    |> withDuration
+                )
+                "large concurrent array of tasks"
+                (\res ->
+                    test "completes in reasonable time"
+                        (\_ -> duration res |> Expect.lessThan (10 + leeway))
+                )
+            , awaitError
+                (Task.concurrent
+                    [ Task.concurrent
+                        [ sleep 10000
+                        , sleep 10000
+                        ]
+                    , Task.concurrent
+                        [ sleep 5000 |> Task.andThen (\_ -> Task.fail "slow boom")
+                        , sleep 500
+                        ]
+                    , Task.concurrent
+                        [ sleep 1000 |> Task.andThen (\_ -> Task.fail "fast boom")
+                        , sleep 5000
+                        ]
+                    ]
+                    |> withDuration
+                )
+                "concurrent task with deeply nested failure"
+                (\res ->
+                    concat
+                        [ test "fails the whole task with the error from the first failed task"
+                            (\_ -> Expect.equal "fast boom" res.value)
+                        , test "does not wait for other tasks to finish"
+                            (\_ -> duration res |> Expect.lessThan (1000 + leeway))
+                        ]
+                )
+            , awaitError
+                (Task.concurrent
+                    [ Task.fail "immediate boom"
+                    , sleep 10000
+                    , sleep 10000
+                    , sleep 10000
+                    ]
+                    |> withDuration
+                )
+                "concurrent task with top level failure"
+                (\res ->
+                    concat
+                        [ test "fails with correct error"
+                            (\_ -> Expect.equal "immediate boom" res.value)
+                        , test "fails immediately"
+                            (\_ -> duration res |> Expect.lessThan leeway)
+                        ]
+                )
+            , let
+                nested : Array (Task x (Array a)) -> Task x (Array a)
+                nested =
+                    Task.concurrent >> Task.map Array.flatten
+              in
+              await
+                (nested
+                    [ Task.concurrent
+                        [ sleep 900
+                        , sleep 800
+                        ]
+                    , nested
+                        [ Task.concurrent
+                            [ sleep 900
+                            , sleep 950
+                            ]
+                        , nested
+                            [ Task.concurrent
+                                [ sleep 980
+                                , sleep 990
+                                ]
+                            , nested
+                                [ Task.concurrent
+                                    [ sleep 850
+                                    , sleep 880
+                                    ]
+                                ]
+                            ]
+                        ]
+                    , Task.concurrent
+                        [ sleep 990
+                        , sleep 980
+                        ]
+                    ]
+                    |> withDuration
+                )
+                "deeply nested concurrent task"
+                (\res ->
+                    concat
+                        [ test "runs deeply nested concurrent tasks at the same time"
+                            (\_ -> duration res |> Expect.lessThan (1000 + leeway))
+                        , test "preserves result order"
+                            (\_ ->
+                                Expect.equal [ 900, 800, 900, 950, 980, 990, 850, 880, 990, 980 ] res.value
+                            )
+                        ]
+                )
+            , let
+                tasks : Array (Task x Float)
+                tasks =
+                    Array.repeat 1000 (sleep 1)
+              in
+              await
+                (Task.map2
+                    (\sequence concurrent ->
+                        { sequence = sequence
+                        , concurrent = concurrent
+                        }
+                    )
+                    (Task.sequence tasks |> withDuration)
+                    (Task.concurrent tasks |> withDuration)
+                )
+                "sequence vs concurrent"
+                (\res ->
+                    concat
+                        [ test "concurrent is faster than sequence"
+                            (\_ ->
+                                (duration res.sequence - duration res.concurrent)
+                                    |> Expect.greaterThan 1000
+                            )
+                        , test "return the same results"
+                            (\_ ->
+                                Expect.equal res.concurrent.value res.sequence.value
+                            )
+                        ]
+                )
+            ]
+        ]
+
+
+
+-- Task duration helpers
+
+
+type alias Duration a =
+    { start : Time.Posix
+    , end : Time.Posix
+    , value : a
+    }
+
+
+duration : Duration a -> Int
+duration d =
+    Time.posixToMillis d.end - Time.posixToMillis d.start
+
+
+withDuration : Task x a -> Task (Duration x) (Duration a)
+withDuration task =
+    Task.await Time.now <|
+        \start ->
+            task
+                |> Task.onError
+                    (\x ->
+                        Task.await Time.now <|
+                            \end ->
+                                Task.fail
+                                    { start = start
+                                    , end = end
+                                    , value = x
+                                    }
+                    )
+                |> Task.andThen
+                    (\a ->
+                        Task.await Time.now <|
+                            \end ->
+                                Task.succeed
+                                    { start = start
+                                    , end = end
+                                    , value = a
+                                    }
+                    )
