@@ -1,7 +1,7 @@
 effect module Task where { command = MyCmd } exposing
     ( Task, perform, attempt, execute
     , andThen, await, succeed, fail, sequence, concurrent
-    , map, map2, map3, map4, map5
+    , map, map2, map3, andMap
     , onError, mapError
     )
 
@@ -19,7 +19,7 @@ HTTP requests or writing to a database.
 
 ## Maps
 
-@docs map, map2, map3, map4, map5
+@docs map, map2, map3, andMap
 
 
 ## Errors
@@ -152,58 +152,38 @@ map2 =
 {-| -}
 map3 : (a -> b -> c -> result) -> Task x a -> Task x b -> Task x c -> Task x result
 map3 func taskA taskB taskC =
-    taskA
-        |> andThen
-            (\a ->
-                taskB
-                    |> andThen
-                        (\b ->
-                            taskC
-                                |> andThen (\c -> succeed (func a b c))
-                        )
-            )
+    succeed func
+        |> andMap taskA
+        |> andMap taskB
+        |> andMap taskC
 
 
-{-| -}
-map4 : (a -> b -> c -> d -> result) -> Task x a -> Task x b -> Task x c -> Task x d -> Task x result
-map4 func taskA taskB taskC taskD =
-    taskA
-        |> andThen
-            (\a ->
-                taskB
-                    |> andThen
-                        (\b ->
-                            taskC
-                                |> andThen
-                                    (\c ->
-                                        taskD
-                                            |> andThen (\d -> succeed (func a b c d))
-                                    )
-                        )
-            )
+{-| Apply the results of two tasks together if they succeed. Both tasks are run concurrently, and if either task fails the whole task fails:
 
+    succeed ((+) 2)
+        |> andMap (succeed 3)
+    --> succeed 5
 
-{-| -}
-map5 : (a -> b -> c -> d -> e -> result) -> Task x a -> Task x b -> Task x c -> Task x d -> Task x e -> Task x result
-map5 func taskA taskB taskC taskD taskE =
-    taskA
-        |> andThen
-            (\a ->
-                taskB
-                    |> andThen
-                        (\b ->
-                            taskC
-                                |> andThen
-                                    (\c ->
-                                        taskD
-                                            |> andThen
-                                                (\d ->
-                                                    taskE
-                                                        |> andThen (\e -> succeed (func a b c d e))
-                                                )
-                                    )
-                        )
-            )
+    succeed ((+) 2)
+        |> andMap (fail "oh dear")
+    --> fail "oh dear"
+
+This can be used to do `Task.mapN` for any number of arguments - useful when `map2` or `map3` isn't enough:
+
+    succeed (\a b c d -> a + b + c + d)
+        |> andMap (succeed 1)
+        |> andMap (succeed 2)
+        |> andMap (succeed 3)
+        |> andMap (succeed 4)
+    -- succeed 10
+
+**NOTE**: for running an array of tasks at the same time see [`concurrent`](#concurrent).
+
+-}
+andMap : Task x a -> Task x (a -> b) -> Task x b
+andMap =
+    map2 (|>)
+
 
 
 {-| Start with an array of tasks, and turn them into a single task that returns a
