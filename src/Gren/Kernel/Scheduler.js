@@ -119,8 +119,14 @@ function _Scheduler_enqueue(proc) {
     return;
   }
   _Scheduler_working = true;
-  while ((proc = _Scheduler_queue.shift())) {
-    _Scheduler_step(proc);
+  // Make sure tasks created during _step are run
+  while (_Scheduler_queue.length > 0) {
+    const activeProcs = _Scheduler_queue;
+    _Scheduler_queue = [];
+
+    for (const proc of activeProcs) {
+      _Scheduler_step(proc);
+    }
   }
   _Scheduler_working = false;
 }
