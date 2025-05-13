@@ -268,7 +268,7 @@ get =
 
 {-| Find the first value that passes the test.
 
-    find (\n -> n > 0) [ -1, 0, 1, 2 ] == Just 1
+    findFirst (\n -> n > 0) [ -1, 0, 1, 2 ] == Just { index = 2, value = 1 }
 
 -}
 findFirst : (a -> Bool) -> Array a -> Maybe { index : Int, value : a }
@@ -278,7 +278,7 @@ findFirst =
 
 {-| Find the last value that passes the test.
 
-    find (\n -> n > 0) [ -1, 0, 1, 2 ] == Just 2
+    findLast (\n -> n > 0) [ -1, 0, 1, 2 ] == Just { index = 3, value = 2 }
 
 -}
 findLast : (a -> Bool) -> Array a -> Maybe { index : Int, value : a }
