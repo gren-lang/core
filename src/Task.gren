@@ -1,7 +1,7 @@
 effect module Task where { command = MyCmd } exposing
     ( Task, perform, attempt, execute
-    , andThen, await, succeed, fail, sequence
-    , map, map2, map3, map4, map5
+    , andThen, await, succeed, fail, sequence, concurrent
+    , map, map2, map3, andMap
     , onError, mapError
     )
 
@@ -14,12 +14,12 @@ HTTP requests or writing to a database.
 
 ## Chains
 
-@docs andThen, await, succeed, fail, sequence
+@docs andThen, await, succeed, fail, sequence, concurrent
 
 
 ## Maps
 
-@docs map, map2, map3, map4, map5
+@docs map, map2, map3, andMap
 
 
 ## Errors
@@ -137,78 +137,53 @@ the current month, we could use [`Time`][time] to ask:
     getMonth =
         Task.map2 Time.toMonth Time.here Time.now
 
-**Note:** Say we were doing HTTP requests instead. `map2` does each task in
-order, so it would try the first request and only continue after it succeeds.
-If it fails, the whole thing fails!
+**Note:** Say we were doing HTTP requests instead. `map2` starts both requests concurrently
+and if either of them fails, the whole thing fails!
+If one request fails and the other is still in-flight, the in-flight task will be automatically cancelled and cleaned up.
 
 [time]: Time
 
 -}
 map2 : (a -> b -> result) -> Task x a -> Task x b -> Task x result
-map2 func taskA taskB =
-    taskA
-        |> andThen
-            (\a ->
-                taskB
-                    |> andThen (\b -> succeed (func a b))
-            )
+map2 =
+    Gren.Kernel.Scheduler.map2
 
 
 {-| -}
 map3 : (a -> b -> c -> result) -> Task x a -> Task x b -> Task x c -> Task x result
 map3 func taskA taskB taskC =
-    taskA
-        |> andThen
-            (\a ->
-                taskB
-                    |> andThen
-                        (\b ->
-                            taskC
-                                |> andThen (\c -> succeed (func a b c))
-                        )
-            )
+    succeed func
+        |> andMap taskA
+        |> andMap taskB
+        |> andMap taskC
 
 
-{-| -}
-map4 : (a -> b -> c -> d -> result) -> Task x a -> Task x b -> Task x c -> Task x d -> Task x result
-map4 func taskA taskB taskC taskD =
-    taskA
-        |> andThen
-            (\a ->
-                taskB
-                    |> andThen
-                        (\b ->
-                            taskC
-                                |> andThen
-                                    (\c ->
-                                        taskD
-                                            |> andThen (\d -> succeed (func a b c d))
-                                    )
-                        )
-            )
+{-| Apply the results of two tasks together if they succeed. Both tasks are run concurrently, and if either task fails the whole task fails:
 
+    succeed ((+) 2)
+        |> andMap (succeed 3)
+    --> succeed 5
 
-{-| -}
-map5 : (a -> b -> c -> d -> e -> result) -> Task x a -> Task x b -> Task x c -> Task x d -> Task x e -> Task x result
-map5 func taskA taskB taskC taskD taskE =
-    taskA
-        |> andThen
-            (\a ->
-                taskB
-                    |> andThen
-                        (\b ->
-                            taskC
-                                |> andThen
-                                    (\c ->
-                                        taskD
-                                            |> andThen
-                                                (\d ->
-                                                    taskE
-                                                        |> andThen (\e -> succeed (func a b c d e))
-                                                )
-                                    )
-                        )
-            )
+    succeed ((+) 2)
+        |> andMap (fail "oh dear")
+    --> fail "oh dear"
+
+This can be used to do `Task.mapN` for any number of arguments - useful when `map2` or `map3` isn't enough:
+
+    succeed (\a b c d -> a + b + c + d)
+        |> andMap (succeed 1)
+        |> andMap (succeed 2)
+        |> andMap (succeed 3)
+        |> andMap (succeed 4)
+    -- succeed 10
+
+**NOTE**: for running an array of tasks at the same time see [`concurrent`](#concurrent).
+
+-}
+andMap : Task x a -> Task x (a -> b) -> Task x b
+andMap =
+    map2 (|>)
+
 
 
 {-| Start with an array of tasks, and turn them into a single task that returns a
@@ -219,8 +194,34 @@ sequence fails.
 
 -}
 sequence : Array (Task x a) -> Task x (Array a)
-sequence tasks =
-    Array.foldr (map2 Array.pushFirst) (succeed []) tasks
+sequence =
+    Array.foldr (\task combined -> task |> andThen (\x -> map (Array.pushFirst x) combined)) (succeed []) 
+
+
+{-| Start with an array of tasks, and turn them into a single task that returns a
+array. The tasks will be run concurrently and if any task fails the whole array fails.
+
+    concurrent [ succeed 1, succeed 2 ] == succeed [ 1, 2 ]
+
+Additionally if any task fails, any tasks already in-flight will be cleaned up (e.g. an in-flgiht http request will be cancelled).
+
+**Note**: Why use `sequence` over `concurrent`? Maybe you have an expensive operation, like making 100 http requests.
+You might want to do these sequentially rather than all at once to avoid overwhelming the server.
+
+**A note on concurrency and parallelism**:
+
+Why is there only `concurrent` and not `parallel`? Because JavaScript is single threaded, it's not possible currently to have true parallelism in gren.
+
+- A parallel task   : multiple subtasks can be run at exactly the same time on multiple processors or CPU cores.
+- A concurrent task : multiple subtasks can be in progress at the same time but not executing at exactly the same time.
+
+In practice this means CPU bound tasks (e.g. generate a cryptographic hash) won't see a speed boost from `concurrent`.
+IO bound tasks however (e.g. make a http request and wait until the response comes back) may get a noticable speed boost from `concurrent`.
+
+-}
+concurrent : Array (Task x a) -> Task x (Array a)
+concurrent =
+    Gren.Kernel.Scheduler.concurrent
 
 
 
