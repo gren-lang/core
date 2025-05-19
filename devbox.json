@@ -15,6 +15,10 @@
       "test": [
         "cd tests/",
         "./run-tests.sh"
+      ],
+      "integration": [
+        "cd integration_tests",
+        "./run-tests.sh"
       ]
     }
   }

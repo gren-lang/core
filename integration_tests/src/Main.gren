@@ -4,7 +4,8 @@ module Main exposing ( .. )
 {-|-}
 
 import Test.Crypto as Crypto
-import Test.Runner.Effectful
+import Test.Task as Task
+import Test.Runner.Effectful exposing (concat)
 import Node
 
 
@@ -13,5 +14,10 @@ import Node
 main : Test.Runner.Effectful.Program a
 main =
     Node.defineSimpleProgram (\env ->
-        Test.Runner.Effectful.run env Crypto.tests
+        Test.Runner.Effectful.run env
+            (concat
+                [ Crypto.tests
+                , Task.tests
+                ]
+            )
     )

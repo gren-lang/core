@@ -25,5 +25,8 @@ jobs:
       - name: Verify formatting
         run: devbox run format:check
 
-      - name: Run tests
+      - name: Run unit tests
         run: devbox run test
+
+      - name: Run integration tests
+        run: devbox run integration
