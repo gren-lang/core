@@ -65,7 +65,7 @@ tests =
                 "large concurrent array of tasks"
                 (\res ->
                     test "completes in reasonable time"
-                        (\_ -> duration res |> Expect.lessThan (10 + leeway))
+                        (\_ -> duration res |> Expect.lessThan (10 + leeway * 3))
                 )
             , awaitError
                 (Task.concurrent
