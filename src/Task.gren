@@ -74,7 +74,7 @@ type alias Task x a =
     timeInMillis : Task x Int
     timeInMillis =
         Time.now
-            |> andThen (\t -> succeed (Time.posixToMillis t))
+            |> Task.andThen (\t -> Task.succeed (Time.posixToMillis t))
 
 -}
 succeed : a -> Task x a
@@ -90,7 +90,7 @@ used with `andThen` to check on the outcome of another task.
 
     notFound : Task Error a
     notFound =
-        fail NotFound
+        Task.fail NotFound
 
 -}
 fail : x -> Task x a
@@ -160,22 +160,22 @@ map3 func taskA taskB taskC =
 
 {-| Apply the results of two tasks together if they succeed. Both tasks are run concurrently, and if either task fails the whole task fails:
 
-    succeed ((+) 2)
-        |> andMap (succeed 3)
-    --> succeed 5
+    Task.succeed ((+) 2)
+        |> Task.andMap (Task.succeed 3)
+    --> Task.succeed 5
 
-    succeed ((+) 2)
-        |> andMap (fail "oh dear")
-    --> fail "oh dear"
+    Task.succeed ((+) 2)
+        |> Task.andMap (Task.fail "oh dear")
+    --> Task.fail "oh dear"
 
 This can be used to do `Task.mapN` for any number of arguments - useful when `map2` or `map3` isn't enough:
 
-    succeed (\a b c d -> a + b + c + d)
-        |> andMap (succeed 1)
-        |> andMap (succeed 2)
-        |> andMap (succeed 3)
-        |> andMap (succeed 4)
-    -- succeed 10
+    Task.succeed (\a b c d -> a + b + c + d)
+        |> Task.andMap (Task.succeed 1)
+        |> Task.andMap (Task.succeed 2)
+        |> Task.andMap (Task.succeed 3)
+        |> Task.andMap (Task.succeed 4)
+    -- Task.succeed 10
 
 **NOTE**: for running an array of tasks at the same time see [`concurrent`](#concurrent).
 
@@ -190,7 +190,7 @@ andMap =
 array. The tasks will be run in order one-by-one and if any task fails the whole
 sequence fails.
 
-    sequence [ succeed 1, succeed 2 ] == succeed [ 1, 2 ]
+    Task.sequence [ Task.succeed 1, Task.succeed 2 ] == Task.succeed [ 1, 2 ]
 
 -}
 sequence : Array (Task x a) -> Task x (Array a)
@@ -201,22 +201,22 @@ sequence =
 {-| Start with an array of tasks, and turn them into a single task that returns a
 array. The tasks will be run concurrently and if any task fails the whole array fails.
 
-    concurrent [ succeed 1, succeed 2 ] == succeed [ 1, 2 ]
+    Task.concurrent [ Task.succeed 1, Task.succeed 2 ] == Task.succeed [ 1, 2 ]
 
-Additionally if any task fails, any tasks already in-flight will be cleaned up (e.g. an in-flight http request will be cancelled).
+Additionally if any task fails, any tasks already in-flight will be cleaned up (e.g. an in-flight HTTP request will be cancelled).
 
-**Note**: Why use `sequence` over `concurrent`? Maybe you have an expensive operation, like making 100 http requests.
+**Note**: Why use `sequence` over `concurrent`? Maybe you have an expensive operation, like making 100 HTTP requests.
 You might want to do these sequentially rather than all at once to avoid overwhelming the server.
 
 **A note on concurrency and parallelism**:
 
-Why is there only `concurrent` and not `parallel`? Because JavaScript is single threaded, it's not possible currently to have true parallelism in gren.
+Why is there only `concurrent` and not `parallel`? Because JavaScript is single-threaded, it's not possible currently to have true parallelism in gren.
 
 - A parallel task   : multiple subtasks can be run at exactly the same time on multiple processors or CPU cores.
 - A concurrent task : multiple subtasks can be in progress at the same time but not executing at exactly the same time.
 
 In practice this means CPU bound tasks (e.g. generate a cryptographic hash) won't see a speed boost from `concurrent`.
-IO bound tasks however (e.g. make a http request and wait until the response comes back) may get a noticable speed boost from `concurrent`.
+IO bound tasks however (e.g. make a HTTP request and wait until the response comes back) may get a noticable speed boost from `concurrent`.
 
 -}
 concurrent : Array (Task x a) -> Task x (Array a)
@@ -240,7 +240,7 @@ now:
     timeInOneHour : Task x Time.Posix
     timeInOneHour =
         Process.sleep (60 * 60 * 1000)
-            |> andThen (\_ -> Time.now)
+            |> Task.andThen (\_ -> Time.now)
 
 First the process sleeps for an hour **and then** it tells us what time it is.
 
@@ -276,13 +276,13 @@ await tsk callback =
 {-| Recover from a failure in a task. If the given task fails, we use the
 callback to recover.
 
-    fail "file not found"
-      |> onError (\msg -> succeed 42)
-      -- succeed 42
+    Task.fail "file not found"
+      |> Task.onError (\msg -> Task.succeed 42)
+      -- Task.succeed 42
 
-    succeed 9
-      |> onError (\msg -> succeed 42)
-      -- succeed 9
+    Task.succeed 9
+      |> Task.onError (\msg -> Task.succeed 42)
+      -- Task.succeed 9
 
 -}
 onError : (x -> Task y a) -> Task x a -> Task y a
@@ -299,9 +299,9 @@ types to match up.
 
     getResources : Task Error Resource
     getResources =
-        sequence
-            [ mapError Http serverTask
-            , mapError WebGL textureTask
+        Task.sequence
+            [ Task.mapError Http serverTask
+            , Task.mapError WebGL textureTask
             ]
 
 -}
