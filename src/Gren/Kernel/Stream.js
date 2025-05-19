@@ -5,6 +5,7 @@ import Gren.Kernel.Scheduler exposing (binding, succeed, fail, rawSpawn)
 
 */
 
+
 var _Stream_read = function (stream) {
   return __Scheduler_binding(function (callback) {
     if (stream.locked) {
