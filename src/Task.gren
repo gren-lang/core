@@ -203,7 +203,7 @@ array. The tasks will be run concurrently and if any task fails the whole array 
 
     concurrent [ succeed 1, succeed 2 ] == succeed [ 1, 2 ]
 
-Additionally if any task fails, any tasks already in-flight will be cleaned up (e.g. an in-flgiht http request will be cancelled).
+Additionally if any task fails, any tasks already in-flight will be cleaned up (e.g. an in-flight http request will be cancelled).
 
 **Note**: Why use `sequence` over `concurrent`? Maybe you have an expensive operation, like making 100 http requests.
 You might want to do these sequentially rather than all at once to avoid overwhelming the server.
