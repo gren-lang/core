@@ -223,8 +223,13 @@ function _Platform_enqueueEffects(managers, cmdBag, subBag) {
   if (_Platform_effectsActive) return;
 
   _Platform_effectsActive = true;
-  for (var fx; (fx = _Platform_effectsQueue.shift()); ) {
-    _Platform_dispatchEffects(fx.__managers, fx.__cmdBag, fx.__subBag);
+  while (_Platform_effectsQueue.length > 0) {
+    const activeEffects = _Platform_effectsQueue;
+    _Platform_effectsQueue = [];
+
+    for (const fx of activeEffects) {
+      _Platform_dispatchEffects(fx.__managers, fx.__cmdBag, fx.__subBag);
+    }
   }
   _Platform_effectsActive = false;
 }
