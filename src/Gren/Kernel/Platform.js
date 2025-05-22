@@ -48,12 +48,16 @@ function _Platform_initialize(
   var initPair = init(result.a);
   var model = initPair.__$model;
   var stepper = stepperBuilder(sendToApp, model);
-  var ports = _Platform_setupEffects(managers, sendToApp);
+  var ports = _Platform_setupEffects(managers, sendToApp, executeCmd);
 
   function sendToApp(msg, viewMetadata) {
     var pair = A2(update, msg, model);
     stepper((model = pair.__$model), viewMetadata);
     _Platform_enqueueEffects(managers, pair.__$command, subscriptions(model));
+  }
+
+  function executeCmd(cmd) {
+    _Platform_enqueueEffects(managers, cmd, subscriptions(model));
   }
 
   _Platform_enqueueEffects(managers, initPair.__$command, subscriptions(model));
@@ -77,7 +81,7 @@ function _Platform_registerPreload(url) {
 
 var _Platform_effectManagers = {};
 
-function _Platform_setupEffects(managers, sendToApp) {
+function _Platform_setupEffects(managers, sendToApp, executeCmd) {
   var ports;
 
   // setup all necessary effect managers
@@ -89,7 +93,11 @@ function _Platform_setupEffects(managers, sendToApp) {
       ports[key] = manager.__portSetup(key, sendToApp);
     }
 
-    managers[key] = _Platform_instantiateManager(manager, sendToApp);
+    managers[key] = _Platform_instantiateManager(
+      manager,
+      sendToApp,
+      executeCmd,
+    );
   }
 
   return ports;
@@ -105,9 +113,10 @@ function _Platform_createManager(init, onEffects, onSelfMsg, cmdMap, subMap) {
   };
 }
 
-function _Platform_instantiateManager(info, sendToApp) {
+function _Platform_instantiateManager(info, sendToApp, executeCmd) {
   var router = {
     __sendToApp: sendToApp,
+    __executeCmd: executeCmd,
     __selfProcess: undefined,
   };
 
@@ -152,6 +161,13 @@ var _Platform_sendToSelf = F2(function (router, msg) {
   return A2(__Scheduler_send, router.__selfProcess, {
     $: __2_SELF,
     a: msg,
+  });
+});
+
+var _Platform_executeCmd = F2(function (router, cmd) {
+  return _Scheduler_binding(function (callback) {
+    router.__executeCmd(cmd);
+    callback(__Scheduler_succeed({}));
   });
 });
 

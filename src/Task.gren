@@ -1,5 +1,5 @@
 effect module Task where { command = MyCmd } exposing
-    ( Task, perform, attempt, execute
+    ( Task, perform, attempt, execute, executeCmd
     , andThen, await, succeed, fail, sequence, concurrent
     , map, map2, map3, andMap
     , onError, mapError
@@ -9,7 +9,7 @@ effect module Task where { command = MyCmd } exposing
 HTTP requests or writing to a database.
 
 
-@docs Task, perform, attempt, execute
+@docs Task, perform, attempt, execute, executeCmd
 
 
 ## Chains
@@ -316,6 +316,7 @@ mapError convert task =
 
 type MyCmd msg
     = Perform (Task Never msg)
+    | ExecuteCmd (Task Never (Cmd msg))
     | Execute (Task Never {})
 
 
@@ -390,11 +391,31 @@ execute task =
     command (Execute (map (\_ -> {}) task))
 
 
+{-| This is very similar to [`execute`](#execute) except the resulting Cmd is run.
+Maybe we want to shut down a node program once a task is done.
+
+    import Node
+    import Task
+    import Stream.Log
+
+    Stream.Log.line stdout "Exiting program"
+        |> Task.map (\{} -> Node.exit)
+        |> Task.executeCmd
+
+-}
+executeCmd : Task Never (Cmd msg) -> Cmd msg
+executeCmd task =
+    command (ExecuteCmd task)
+
+
 cmdMap : (a -> b) -> MyCmd a -> MyCmd b
 cmdMap tagger cmd =
     when cmd is
         Perform task ->
             Perform (map tagger task)
+
+        ExecuteCmd task ->
+            ExecuteCmd (map (Platform.Cmd.map tagger) task)
 
         Execute task ->
             Execute task
@@ -427,6 +448,12 @@ spawnCmd router cmd =
             Gren.Kernel.Scheduler.spawn
                 (task
                     |> andThen (Platform.sendToApp router)
+                )
+
+        ExecuteCmd task ->
+            Gren.Kernel.Scheduler.spawn
+                (task
+                    |> andThen (Gren.Kernel.Platform.executeCmd router)
                 )
 
         Execute task ->
