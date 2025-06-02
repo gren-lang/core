@@ -68,7 +68,7 @@ module Crypto exposing
 
 {-| 
 
-This module gives access to various cryptograhic functions provided by the Web 
+This module gives access to various cryptographic functions provided by the Web 
 Crypto API.
 
 In addition to supporting generating random values and [UUIDs](#randomUuidV4), this 
