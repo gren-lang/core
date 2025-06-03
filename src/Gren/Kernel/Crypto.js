@@ -678,7 +678,7 @@ var _Crypto_verifyWithRsaSsaPkcs1V1_5 = F3(function (key, signature, bytes) {
       .verify(algorithm, key, signature, bytes)
       .then(function (res) {
         if (res) {
-          return callback(__Scheduler_succeed());
+          return callback(__Scheduler_succeed(bytes));
         }
         return callback(__Scheduler_fail());
       })
@@ -698,7 +698,7 @@ var _Crypto_verifyWithRsaPss = F4(function (saltLength, key, signature, bytes) {
       .verify(algorithm, key, signature, bytes)
       .then(function (res) {
         if (res) {
-          return callback(__Scheduler_succeed());
+          return callback(__Scheduler_succeed(bytes));
         }
         return callback(__Scheduler_fail());
       })
@@ -718,7 +718,7 @@ var _Crypto_verifyWithEcdsa = F4(function (hash, key, signature, bytes) {
       .verify(algorithm, key, signature, bytes)
       .then(function (res) {
         if (res) {
-          return callback(__Scheduler_succeed());
+          return callback(__Scheduler_succeed(bytes));
         }
         return callback(__Scheduler_fail());
       })
@@ -737,7 +737,7 @@ var _Crypto_verifyWithHmac = F3(function (key, signature, bytes) {
       .verify(algorithm, key, signature, bytes)
       .then(function (res) {
         if (res) {
-          return callback(__Scheduler_succeed());
+          return callback(__Scheduler_succeed(bytes));
         }
         return callback(__Scheduler_fail());
       })

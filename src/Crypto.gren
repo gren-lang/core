@@ -2077,10 +2077,10 @@ signWithHmac (Key { key }) bytes =
 {-| Verify that some `Bytes` were signed with the passed `Signature` with the 
 RSA-SSAPKCS1v1.5 algorithm.
 
-This function produces no values. Instead, the `Task` succeeds if the passed 
-signature is valid and fails otherwise.
+The `Task` succeeds with the verified `Bytes` if the passed signature is valid and 
+fails otherwise.
 -}
-verifyWithRsaSsaPkcs1V1_5 : PublicKey RsaSsaPkcs1V1_5Key RsaKeyParams -> Signature -> Bytes -> Task x a
+verifyWithRsaSsaPkcs1V1_5 : PublicKey RsaSsaPkcs1V1_5Key RsaKeyParams -> Signature -> Bytes -> Task x Bytes
 verifyWithRsaSsaPkcs1V1_5 (PublicKey (Key { key })) signature bytes =
     Gren.Kernel.Crypto.verifyWithRsaSsaPkcs1V1_5
         key
@@ -2091,10 +2091,10 @@ verifyWithRsaSsaPkcs1V1_5 (PublicKey (Key { key })) signature bytes =
 {-| Verify that some `Bytes` were signed with the passed `Signature` with the 
 RSA-PSS algorithm.
 
-This function produces no values. Instead, the `Task` succeeds if the passed 
-signature is valid and fails otherwise.
+The `Task` succeeds with the verified `Bytes` if the passed signature is valid and 
+fails otherwise.
 -}
-verifyWithRsaPss : RsaPssParams -> PublicKey RsaPssKey RsaKeyParams -> Signature -> Bytes -> Task x a
+verifyWithRsaPss : RsaPssParams -> PublicKey RsaPssKey RsaKeyParams -> Signature -> Bytes -> Task x Bytes
 verifyWithRsaPss { salt } (PublicKey (Key { key })) signature bytes =
     Gren.Kernel.Crypto.verifyWithRsaPss
         salt
@@ -2106,10 +2106,10 @@ verifyWithRsaPss { salt } (PublicKey (Key { key })) signature bytes =
 {-| Verify that some `Bytes` were signed with the passed `Signature` with the 
 ECDSA algorithm.
 
-This function produces no values. Instead, the `Task` succeeds if the passed 
-signature is valid and fails otherwise.
+The `Task` succeeds with the verified `Bytes` if the passed signature is valid and 
+fails otherwise.
 -}
-verifyWithEcdsa : DigestAlgorithm -> PublicKey EcdsaKey EcKeyParams -> Signature -> Bytes -> Task x a
+verifyWithEcdsa : DigestAlgorithm -> PublicKey EcdsaKey EcKeyParams -> Signature -> Bytes -> Task x Bytes
 verifyWithEcdsa hash (PublicKey (Key { key })) signature bytes =
     Gren.Kernel.Crypto.verifyWithEcdsa
         (digestAlgorithmToString hash)
@@ -2121,10 +2121,10 @@ verifyWithEcdsa hash (PublicKey (Key { key })) signature bytes =
 {-| Verify that some `Bytes` were signed with the passed `Signature` with the 
 HMAC algorithm.
 
-This function produces no values. Instead, the `Task` succeeds if the passed 
-signature is valid and fails otherwise.
+The `Task` succeeds with the verified `Bytes` if the passed signature is valid and 
+fails otherwise.
 -}
-verifyWithHmac : Key HmacKey HmacKeyParams -> Signature -> Bytes -> Task x a
+verifyWithHmac : Key HmacKey HmacKeyParams -> Signature -> Bytes -> Task x Bytes
 verifyWithHmac (Key { key }) signature bytes =
     Gren.Kernel.Crypto.verifyWithHmac
         key
