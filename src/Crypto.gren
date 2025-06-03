@@ -851,22 +851,23 @@ generateHmacKey { hash, length, extractable } _context =
 {-| Errors that can arise when exporting keys.
 
 - `KeyNotExportable` happens when trying to export a key that was not made
-`Extractable` during creation or import.
+`Extractable` during creation or import. This only applies to private keys,
+as public keys are always exportable.
 -}
 type ExportKeyError
     = KeyNotExportable
 
 
 {-| -}
-exportRsaOaepPublicKeyAsSpki : PublicKey RsaOaepKey RsaKeyParams -> Task ExportKeyError Bytes
+exportRsaOaepPublicKeyAsSpki : PublicKey RsaOaepKey RsaKeyParams -> Task {} Bytes
 exportRsaOaepPublicKeyAsSpki (PublicKey key) =
-    exportKeyAsSpki key
+    exportPublicKeyAsSpki key
 
 
 {-| -}
-exportRsaOaepPublicKeyAsJwk : PublicKey RsaOaepKey RsaKeyParams -> Task ExportKeyError Json.Encode.Value
+exportRsaOaepPublicKeyAsJwk : PublicKey RsaOaepKey RsaKeyParams -> Task {} Json.Encode.Value
 exportRsaOaepPublicKeyAsJwk (PublicKey key) =
-    exportKeyAsJwk key
+    exportPublicKeyAsJwk key
 
 
 {-| -}
@@ -882,15 +883,15 @@ exportRsaOaepPrivateKeyAsJwk (PrivateKey key) =
 
 
 {-|-}
-exportRsaPssPublicKeyAsSpki : PublicKey RsaPssKey RsaKeyParams -> Task ExportKeyError Bytes
+exportRsaPssPublicKeyAsSpki : PublicKey RsaPssKey RsaKeyParams -> Task {} Bytes
 exportRsaPssPublicKeyAsSpki (PublicKey key)=
-    exportKeyAsSpki key
+    exportPublicKeyAsSpki key
 
 
 {-|-}
-exportRsaPssPublicKeyAsJwk : PublicKey RsaPssKey RsaKeyParams -> Task ExportKeyError Json.Encode.Value
+exportRsaPssPublicKeyAsJwk : PublicKey RsaPssKey RsaKeyParams -> Task {} Json.Encode.Value
 exportRsaPssPublicKeyAsJwk (PublicKey key) =
-    exportKeyAsJwk key
+    exportPublicKeyAsJwk key
 
 
 {-|-}
@@ -906,15 +907,15 @@ exportRsaPssPrivateKeyAsJwk (PrivateKey key) =
 
 
 {-|-}
-exportRsaSsaPkcs1V1_5PublicKeyAsSpki : PublicKey RsaSsaPkcs1V1_5Key RsaKeyParams -> Task ExportKeyError Bytes
+exportRsaSsaPkcs1V1_5PublicKeyAsSpki : PublicKey RsaSsaPkcs1V1_5Key RsaKeyParams -> Task {} Bytes
 exportRsaSsaPkcs1V1_5PublicKeyAsSpki (PublicKey key) =
-    exportKeyAsSpki key
+    exportPublicKeyAsSpki key
 
 
 {-|-}
-exportRsaSsaPkcs1V1_5PublicKeyAsJwk : PublicKey RsaSsaPkcs1V1_5Key RsaKeyParams -> Task ExportKeyError Json.Encode.Value
+exportRsaSsaPkcs1V1_5PublicKeyAsJwk : PublicKey RsaSsaPkcs1V1_5Key RsaKeyParams -> Task {} Json.Encode.Value
 exportRsaSsaPkcs1V1_5PublicKeyAsJwk (PublicKey key) =
-    exportKeyAsJwk key
+    exportPublicKeyAsJwk key
 
 
 {-|-}
@@ -966,21 +967,21 @@ exportAesGcmKeyAsJwk =
 
 
 {-|-}
-exportEcdsaPublicKeyAsRaw : PublicKey EcdsaKey EcKeyParams -> Task ExportKeyError Bytes
+exportEcdsaPublicKeyAsRaw : PublicKey EcdsaKey EcKeyParams -> Task {} Bytes
 exportEcdsaPublicKeyAsRaw (PublicKey key) =
-    exportKeyAsRaw key
+    exportPublicKeyAsRaw key
 
 
 {-|-}
-exportEcdsaPublicKeyAsSpki : PublicKey EcdsaKey EcKeyParams -> Task ExportKeyError Bytes
+exportEcdsaPublicKeyAsSpki : PublicKey EcdsaKey EcKeyParams -> Task {} Bytes
 exportEcdsaPublicKeyAsSpki (PublicKey key) =
-    exportKeyAsSpki key
+    exportPublicKeyAsSpki key
 
 
 {-|-}
-exportEcdsaPublicKeyAsJwk : PublicKey EcdsaKey EcKeyParams -> Task ExportKeyError Json.Encode.Value
+exportEcdsaPublicKeyAsJwk : PublicKey EcdsaKey EcKeyParams -> Task {} Json.Encode.Value
 exportEcdsaPublicKeyAsJwk (PublicKey key) =
-    exportKeyAsJwk key
+    exportPublicKeyAsJwk key
 
 
 {-|-}
@@ -996,21 +997,21 @@ exportEcdsaPrivateKeyAsJwk (PrivateKey key)=
 
 
 {-|-}
-exportEcdhPublicKeyAsRaw :  PublicKey EcdhKey EcKeyParams -> Task ExportKeyError Bytes
+exportEcdhPublicKeyAsRaw :  PublicKey EcdhKey EcKeyParams -> Task {} Bytes
 exportEcdhPublicKeyAsRaw (PublicKey key) =
-    exportKeyAsRaw key
+    exportPublicKeyAsRaw key
 
 
 {-|-}
-exportEcdhPublicKeyAsSpki : PublicKey EcdhKey EcKeyParams -> Task ExportKeyError Bytes
+exportEcdhPublicKeyAsSpki : PublicKey EcdhKey EcKeyParams -> Task {} Bytes
 exportEcdhPublicKeyAsSpki (PublicKey key) =
-    exportKeyAsSpki key
+    exportPublicKeyAsSpki key
 
 
 {-|-}
-exportEcdhPublicKeyAsJwk : PublicKey EcdhKey EcKeyParams -> Task ExportKeyError Json.Encode.Value
+exportEcdhPublicKeyAsJwk : PublicKey EcdhKey EcKeyParams -> Task {} Json.Encode.Value
 exportEcdhPublicKeyAsJwk (PublicKey key) =
-    exportKeyAsJwk key
+    exportPublicKeyAsJwk key
 
 
 {-|-}
@@ -1038,33 +1039,61 @@ exportHmacKeyAsJwk =
 
 
 {-|-}
-exportKeyHelperV2 : String -> Key a b -> Task ExportKeyError c
-exportKeyHelperV2 keyType (Key { key }) =
+exportKeyHelper : String -> Key a b -> Task ExportKeyError c
+exportKeyHelper keyType (Key { key }) =
     Gren.Kernel.Crypto.exportKey keyType key
+
+
+{-| Identical to `exportKeyHelper`, only different in the return type.
+
+As the function suggests, is used when exporting public keys. These exports cannot
+fail because public keys cannot be marked as not exportable.
+-}
+exportPublicKeyHelper : String -> Key a b -> Task {} c
+exportPublicKeyHelper keyType (Key { key }) =
+    Gren.Kernel.Crypto.exportKey keyType key
+
+
+{-|-}
+exportPublicKeyAsRaw : Key a b -> Task {} Bytes
+exportPublicKeyAsRaw =
+    exportPublicKeyHelper "raw"
 
 
 {-|-}
 exportKeyAsRaw : Key a b -> Task ExportKeyError Bytes
 exportKeyAsRaw =
-    exportKeyHelperV2 "raw"
+    exportKeyHelper "raw"
 
 
 {-|-}
 exportKeyAsPkcs8 : Key a b -> Task ExportKeyError Bytes
 exportKeyAsPkcs8 =
-    exportKeyHelperV2 "pkcs8"
+    exportKeyHelper "pkcs8"
+
+
+{-|-}
+exportPublicKeyAsSpki : Key a b -> Task {} Bytes
+exportPublicKeyAsSpki =
+    exportPublicKeyHelper "spki"
 
 
 {-|-}
 exportKeyAsSpki : Key a b -> Task ExportKeyError Bytes
 exportKeyAsSpki =
-    exportKeyHelperV2 "spki"
+    exportKeyHelper "spki"
+
+
+{-|-}
+exportPublicKeyAsJwk : Key a b -> Task {} Json.Encode.Value
+exportPublicKeyAsJwk key =
+    Task.map Gren.Kernel.Json.wrap (exportPublicKeyHelper "jwk" key)
 
 
 {-|-}
 exportKeyAsJwk : Key a b -> Task ExportKeyError Json.Encode.Value
 exportKeyAsJwk key =
-    Task.map Gren.Kernel.Json.wrap (exportKeyHelperV2 "jwk" key)
+    Task.map Gren.Kernel.Json.wrap (exportKeyHelper "jwk" key)
 
 
 
@@ -1093,54 +1122,54 @@ type ImportRsaKeyError
 
 
 {-|-}
-importRsaOaepPublicKeyFromJwk : Json.Encode.Value -> ImportRsaKeyParams -> Extractable -> SecureContext -> Task ImportRsaKeyError (PublicKey RsaOaepKey RsaKeyParams)
-importRsaOaepPublicKeyFromJwk jwk { hash } extractable _context =
+importRsaOaepPublicKeyFromJwk : Json.Encode.Value -> ImportRsaKeyParams -> SecureContext -> Task ImportRsaKeyError (PublicKey RsaOaepKey RsaKeyParams)
+importRsaOaepPublicKeyFromJwk jwk { hash } _context =
     Gren.Kernel.Crypto.importRsaKey
         "public"
         "jwk"
         (Gren.Kernel.Json.unwrap jwk)
         "RSA-OAEP"
         (digestAlgorithmToString hash)
-        (extractableToBool extractable)
+        True
         [ "encrypt" ]
 
 
 {-|-}
-importRsaOaepPublicKeyFromSpki : Bytes -> ImportRsaKeyParams -> Extractable -> SecureContext -> Task ImportRsaKeyError (PublicKey RsaOaepKey RsaKeyParams)
-importRsaOaepPublicKeyFromSpki bytes { hash } extractable _context =
+importRsaOaepPublicKeyFromSpki : Bytes -> ImportRsaKeyParams -> SecureContext -> Task ImportRsaKeyError (PublicKey RsaOaepKey RsaKeyParams)
+importRsaOaepPublicKeyFromSpki bytes { hash } _context =
     Gren.Kernel.Crypto.importRsaKey
         "public"
         "spki"
         bytes
         "RSA-OAEP"
         (digestAlgorithmToString hash)
-        (extractableToBool extractable)
+        True
         [ "encrypt" ]
 
 
 {-|-}
-importRsaPssPublicKeyFromJwk : Json.Encode.Value -> ImportRsaKeyParams -> Extractable -> SecureContext -> Task ImportRsaKeyError (PublicKey RsaPssKey RsaKeyParams)
-importRsaPssPublicKeyFromJwk jwk { hash } extractable _context =
+importRsaPssPublicKeyFromJwk : Json.Encode.Value -> ImportRsaKeyParams -> SecureContext -> Task ImportRsaKeyError (PublicKey RsaPssKey RsaKeyParams)
+importRsaPssPublicKeyFromJwk jwk { hash } _context =
     Gren.Kernel.Crypto.importRsaKey
         "public"
         "jwk"
         (Gren.Kernel.Json.unwrap jwk)
         "RSA-PSS"
         (digestAlgorithmToString hash)
-        (extractableToBool extractable)
+        True
         [ "verify" ]
 
 
 {-|-}
-importRsaPssPublicKeyFromSpki : Bytes -> ImportRsaKeyParams -> Extractable -> SecureContext -> Task ImportRsaKeyError (PublicKey RsaPssKey RsaKeyParams)
-importRsaPssPublicKeyFromSpki bytes { hash } extractable _context =
+importRsaPssPublicKeyFromSpki : Bytes -> ImportRsaKeyParams -> SecureContext -> Task ImportRsaKeyError (PublicKey RsaPssKey RsaKeyParams)
+importRsaPssPublicKeyFromSpki bytes { hash } _context =
     Gren.Kernel.Crypto.importRsaKey
         "public"
         "spki"
         bytes
         "RSA-PSS"
         (digestAlgorithmToString hash)
-        (extractableToBool extractable)
+        True
         [ "verify" ]
 
 
@@ -1197,28 +1226,28 @@ importRsaPssPrivateKeyFromPkcs8 bytes { hash } extractable _context =
 
 
 {-|-}
-importRsaSsaPkcs1V1_5PublicKeyFromJwk : Json.Encode.Value -> ImportRsaKeyParams -> Extractable -> SecureContext -> Task ImportRsaKeyError (PublicKey RsaSsaPkcs1V1_5Key RsaKeyParams)
-importRsaSsaPkcs1V1_5PublicKeyFromJwk jwk { hash } extractable _context =
+importRsaSsaPkcs1V1_5PublicKeyFromJwk : Json.Encode.Value -> ImportRsaKeyParams -> SecureContext -> Task ImportRsaKeyError (PublicKey RsaSsaPkcs1V1_5Key RsaKeyParams)
+importRsaSsaPkcs1V1_5PublicKeyFromJwk jwk { hash } _context =
     Gren.Kernel.Crypto.importRsaKey
         "public"
         "jwk"
         (Gren.Kernel.Json.unwrap jwk)
         "RSASSA-PKCS1-v1_5"
         (digestAlgorithmToString hash)
-        (extractableToBool extractable)
+        True
         [ "verify" ]
 
 
 {-|-}
-importRsaSsaPkcs1V1_5PublicKeyFromSpki : Bytes -> ImportRsaKeyParams -> Extractable -> SecureContext -> Task ImportRsaKeyError (PublicKey RsaSsaPkcs1V1_5Key RsaKeyParams)
-importRsaSsaPkcs1V1_5PublicKeyFromSpki bytes { hash } extractable _context =
+importRsaSsaPkcs1V1_5PublicKeyFromSpki : Bytes -> ImportRsaKeyParams -> SecureContext -> Task ImportRsaKeyError (PublicKey RsaSsaPkcs1V1_5Key RsaKeyParams)
+importRsaSsaPkcs1V1_5PublicKeyFromSpki bytes { hash } _context =
     Gren.Kernel.Crypto.importRsaKey
         "public"
         "spki"
         bytes
         "RSASSA-PKCS1-v1_5"
         (digestAlgorithmToString hash)
-        (extractableToBool extractable)
+        True
         [ "verify" ]
 
 
@@ -1337,80 +1366,80 @@ type ImportEcKeyError
 
 
 {-|-}
-importEcdsaPublicKeyFromRaw : EcNamedCurve -> Bytes -> Extractable -> SecureContext -> Task ImportEcKeyError (PublicKey EcdsaKey EcKeyParams)
-importEcdsaPublicKeyFromRaw namedCurve bytes extractable _context =
+importEcdsaPublicKeyFromRaw : EcNamedCurve -> Bytes -> SecureContext -> Task ImportEcKeyError (PublicKey EcdsaKey EcKeyParams)
+importEcdsaPublicKeyFromRaw namedCurve bytes _context =
     Gren.Kernel.Crypto.importEcKey
         "public"
         "raw"
         bytes
         "ECDSA"
         (ecNamedCurveToString namedCurve)
-        (extractableToBool extractable)
+        True
         [ "verify" ]
 
 
 {-|-}
-importEcdsaPublicKeyFromSpki : EcNamedCurve -> Bytes -> Extractable -> SecureContext -> Task ImportEcKeyError (PublicKey EcdsaKey EcKeyParams)
-importEcdsaPublicKeyFromSpki namedCurve bytes extractable _context =
+importEcdsaPublicKeyFromSpki : EcNamedCurve -> Bytes -> SecureContext -> Task ImportEcKeyError (PublicKey EcdsaKey EcKeyParams)
+importEcdsaPublicKeyFromSpki namedCurve bytes _context =
     Gren.Kernel.Crypto.importEcKey
         "public"
         "spki"
         bytes
         "ECDSA"
         (ecNamedCurveToString namedCurve)
-        (extractableToBool extractable)
+        True
         [ "verify" ]
 
 
 {-|-}
-importEcdsaPublicKeyFromJwk : EcNamedCurve -> Json.Encode.Value -> Extractable -> SecureContext -> Task ImportEcKeyError (PublicKey EcdsaKey EcKeyParams)
-importEcdsaPublicKeyFromJwk namedCurve jwk extractable _context =
+importEcdsaPublicKeyFromJwk : EcNamedCurve -> Json.Encode.Value -> SecureContext -> Task ImportEcKeyError (PublicKey EcdsaKey EcKeyParams)
+importEcdsaPublicKeyFromJwk namedCurve jwk _context =
     Gren.Kernel.Crypto.importEcKey
         "public"
         "jwk"
         (Gren.Kernel.Json.unwrap jwk)
         "ECDSA"
         (ecNamedCurveToString namedCurve)
-        (extractableToBool extractable)
+        True
         [ "verify" ]
 
 
 {-|-}
-importEcdhPublicKeyFromRaw : EcNamedCurve -> Bytes -> Extractable -> SecureContext -> Task ImportEcKeyError (PublicKey EcdhKey EcKeyParams)
-importEcdhPublicKeyFromRaw namedCurve bytes extractable _context =
+importEcdhPublicKeyFromRaw : EcNamedCurve -> Bytes -> SecureContext -> Task ImportEcKeyError (PublicKey EcdhKey EcKeyParams)
+importEcdhPublicKeyFromRaw namedCurve bytes _context =
     Gren.Kernel.Crypto.importEcKey
         "public"
         "raw"
         bytes
         "ECDH"
         (ecNamedCurveToString namedCurve)
-        (extractableToBool extractable)
+        True
         []
 
 
 {-|-}
-importEcdhPublicKeyFromSpki : EcNamedCurve -> Bytes -> Extractable -> SecureContext -> Task ImportEcKeyError (PublicKey EcdhKey EcKeyParams)
-importEcdhPublicKeyFromSpki namedCurve bytes extractable _context =
+importEcdhPublicKeyFromSpki : EcNamedCurve -> Bytes -> SecureContext -> Task ImportEcKeyError (PublicKey EcdhKey EcKeyParams)
+importEcdhPublicKeyFromSpki namedCurve bytes _context =
     Gren.Kernel.Crypto.importEcKey
         "public"
         "spki"
         bytes
         "ECDH"
         (ecNamedCurveToString namedCurve)
-        (extractableToBool extractable)
+        True
         []
 
 
 {-|-}
-importEcdhPublicKeyFromJwk : EcNamedCurve -> Json.Encode.Value -> Extractable -> SecureContext -> Task ImportEcKeyError (PublicKey EcdhKey EcKeyParams)
-importEcdhPublicKeyFromJwk namedCurve jwk extractable _context =
+importEcdhPublicKeyFromJwk : EcNamedCurve -> Json.Encode.Value -> SecureContext -> Task ImportEcKeyError (PublicKey EcdhKey EcKeyParams)
+importEcdhPublicKeyFromJwk namedCurve jwk _context =
     Gren.Kernel.Crypto.importEcKey
         "public"
         "jwk"
         (Gren.Kernel.Json.unwrap jwk)
         "ECDH"
         (ecNamedCurveToString namedCurve)
-        (extractableToBool extractable)
+        True
         []
 
 

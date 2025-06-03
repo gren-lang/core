@@ -307,7 +307,6 @@ rsaOaepKeyTestHelper secureContext { label, encryptionLabel, modulusLength, hash
                                 exportedKey
                                 { hash = hash
                                 }
-                                Crypto.CanBeExtracted
                                 secureContext
                             ) 
                             (withLabel "Importing a successfully extracted public key")
@@ -322,7 +321,6 @@ rsaOaepKeyTestHelper secureContext { label, encryptionLabel, modulusLength, hash
                                 exportedKey
                                 { hash = shuffleDigestAlgorithm hash
                                 }
-                                Crypto.CanBeExtracted
                                 secureContext
                             ) 
                             (withLabel "Importing a successfully extracted public key with the wrong hash")
@@ -346,7 +344,6 @@ rsaOaepKeyTestHelper secureContext { label, encryptionLabel, modulusLength, hash
                                 exportedKey
                                 { hash = hash
                                 }
-                                Crypto.CanBeExtracted
                                 secureContext
                             ) 
                             (withLabel "Importing a successfully extracted public key")
@@ -361,7 +358,6 @@ rsaOaepKeyTestHelper secureContext { label, encryptionLabel, modulusLength, hash
                                 exportedKey
                                 { hash = shuffleDigestAlgorithm hash
                                 }
-                                Crypto.CanBeExtracted
                                 secureContext
                             ) 
                             (withLabel "Importing a successfully extracted public key with the wrong hash")
@@ -1513,7 +1509,6 @@ rsaSsaPkcs1V1_5KeyTestsHelper secureContext label { encryptionLabel, modulusLeng
                                     exportedPublicKey
                                     { hash = hash
                                     }
-                                    Crypto.CanBeExtracted
                                     secureContext
                                 )
                                 "Importing the exported key with the same hash"
@@ -1534,7 +1529,6 @@ rsaSsaPkcs1V1_5KeyTestsHelper secureContext label { encryptionLabel, modulusLeng
                                         exportedPublicKey
                                         { hash = hash
                                         }
-                                        Crypto.CanBeExtracted
                                         secureContext
                                     )
                                     "Importing the exported key with the same hash"
@@ -1549,7 +1543,6 @@ rsaSsaPkcs1V1_5KeyTestsHelper secureContext label { encryptionLabel, modulusLeng
                                         exportedPublicKey
                                         { hash = shuffleDigestAlgorithm hash
                                         }
-                                        Crypto.CanBeExtracted
                                         secureContext
                                     )
                                     "Importing the exported key with a different hash"
@@ -1605,7 +1598,6 @@ rsaSsaPkcs1V1_5KeyTestsHelper secureContext label { encryptionLabel, modulusLeng
                                     exportedPublicKey
                                     { hash = hash
                                     }
-                                    Crypto.CanBeExtracted
                                     secureContext
                                 )
                                 "Importing the exported key with the same hash"
@@ -1626,7 +1618,6 @@ rsaSsaPkcs1V1_5KeyTestsHelper secureContext label { encryptionLabel, modulusLeng
                                         exportedPublicKey
                                         { hash = hash
                                         }
-                                        Crypto.CanBeExtracted
                                         secureContext
                                     )
                                     "Importing the exported key with the same hash"
@@ -1641,7 +1632,6 @@ rsaSsaPkcs1V1_5KeyTestsHelper secureContext label { encryptionLabel, modulusLeng
                                         exportedPublicKey
                                         { hash = shuffleDigestAlgorithm hash
                                         }
-                                        Crypto.CanBeExtracted
                                         secureContext
                                     )
                                     "Importing the exported key with a different hash"
@@ -1811,7 +1801,6 @@ rsaPssTestsHelper secureContext label { modulusLength, hash } =
                                     exportedPublicKey
                                     { hash = hash
                                     }
-                                    Crypto.CanBeExtracted
                                     secureContext
                                 )
                                 "Importing the exported key with the same hash"
@@ -1832,7 +1821,6 @@ rsaPssTestsHelper secureContext label { modulusLength, hash } =
                                         exportedPublicKey
                                         { hash = hash
                                         }
-                                        Crypto.CanBeExtracted
                                         secureContext
                                     )
                                     "Importing the exported key with the same hash"
@@ -1847,7 +1835,6 @@ rsaPssTestsHelper secureContext label { modulusLength, hash } =
                                         exportedPublicKey
                                         { hash = shuffleDigestAlgorithm hash
                                         }
-                                        Crypto.CanBeExtracted
                                         secureContext
                                     )
                                     "Importing the exported key with a different hash"
@@ -1903,7 +1890,6 @@ rsaPssTestsHelper secureContext label { modulusLength, hash } =
                                         exportedPublicKey
                                         { hash = hash
                                         }
-                                        Crypto.CanBeExtracted
                                         secureContext
                                     )
                                     "Importing the exported key with the same hash"
@@ -1924,7 +1910,6 @@ rsaPssTestsHelper secureContext label { modulusLength, hash } =
                                             exportedPublicKey
                                             { hash = hash
                                             }
-                                            Crypto.CanBeExtracted
                                             secureContext
                                         )
                                         "Importing the exported key with the same hash"
@@ -1939,7 +1924,6 @@ rsaPssTestsHelper secureContext label { modulusLength, hash } =
                                             exportedPublicKey
                                             { hash = shuffleDigestAlgorithm hash
                                             }
-                                            Crypto.CanBeExtracted
                                             secureContext
                                         )
                                         "Importing the exported key with a different hash"
@@ -2146,7 +2130,6 @@ ecdsaTestsHelper secureContext label { namedCurve, digestAlgorithm } =
                                     (Crypto.importEcdsaPublicKeyFromRaw
                                         namedCurve
                                         exportedKey
-                                        Crypto.CanBeExtracted
                                         secureContext
                                     )
                                     "Importing the exported key with the same named curve"
@@ -2160,7 +2143,6 @@ ecdsaTestsHelper secureContext label { namedCurve, digestAlgorithm } =
                                     (Crypto.importEcdsaPublicKeyFromRaw
                                         (shuffleNamedCurve namedCurve)
                                         exportedKey
-                                        Crypto.CanBeExtracted
                                         secureContext
                                     )
                                     "Importing the exported key with a different named curve"
@@ -2181,7 +2163,6 @@ ecdsaTestsHelper secureContext label { namedCurve, digestAlgorithm } =
                                     (Crypto.importEcdsaPublicKeyFromSpki
                                         namedCurve
                                         exportedKey
-                                        Crypto.CanBeExtracted
                                         secureContext
                                     )
                                     "Importing the exported key with the same named curve"
@@ -2195,7 +2176,6 @@ ecdsaTestsHelper secureContext label { namedCurve, digestAlgorithm } =
                                     (Crypto.importEcdsaPublicKeyFromSpki
                                         (shuffleNamedCurve namedCurve)
                                         exportedKey
-                                        Crypto.CanBeExtracted
                                         secureContext
                                     )
                                     "Importing the exported key with a different named curve"
@@ -2216,7 +2196,6 @@ ecdsaTestsHelper secureContext label { namedCurve, digestAlgorithm } =
                                     (Crypto.importEcdsaPublicKeyFromJwk
                                         namedCurve
                                         exportedKey
-                                        Crypto.CanBeExtracted
                                         secureContext
                                     )
                                     "Importing the exported key with the same named curve"
@@ -2230,7 +2209,6 @@ ecdsaTestsHelper secureContext label { namedCurve, digestAlgorithm } =
                                     (Crypto.importEcdsaPublicKeyFromJwk
                                         (shuffleNamedCurve namedCurve)
                                         exportedKey
-                                        Crypto.CanBeExtracted
                                         secureContext
                                     )
                                     "Importing the exported key with a different named curve"
@@ -2285,7 +2263,6 @@ ecdsaTestsHelper secureContext label { namedCurve, digestAlgorithm } =
                                     (Crypto.importEcdsaPublicKeyFromRaw
                                         namedCurve
                                         exportedKey
-                                        Crypto.CanBeExtracted
                                         secureContext
                                     )
                                     "Importing the exported key with the same named curve"
@@ -2299,7 +2276,6 @@ ecdsaTestsHelper secureContext label { namedCurve, digestAlgorithm } =
                                     (Crypto.importEcdsaPublicKeyFromRaw
                                         (shuffleNamedCurve namedCurve)
                                         exportedKey
-                                        Crypto.CanBeExtracted
                                         secureContext
                                     )
                                     "Importing the exported key with a different named curve"
@@ -2320,7 +2296,6 @@ ecdsaTestsHelper secureContext label { namedCurve, digestAlgorithm } =
                                     (Crypto.importEcdsaPublicKeyFromSpki
                                         namedCurve
                                         exportedKey
-                                        Crypto.CanBeExtracted
                                         secureContext
                                     )
                                     "Importing the exported key with the same named curve"
@@ -2334,7 +2309,6 @@ ecdsaTestsHelper secureContext label { namedCurve, digestAlgorithm } =
                                     (Crypto.importEcdsaPublicKeyFromSpki
                                         (shuffleNamedCurve namedCurve)
                                         exportedKey
-                                        Crypto.CanBeExtracted
                                         secureContext
                                     )
                                     "Importing the exported key with a different named curve"
@@ -2355,7 +2329,6 @@ ecdsaTestsHelper secureContext label { namedCurve, digestAlgorithm } =
                                     (Crypto.importEcdsaPublicKeyFromJwk
                                         namedCurve
                                         exportedKey
-                                        Crypto.CanBeExtracted
                                         secureContext
                                     )
                                     "Importing the exported key with the same named curve"
@@ -2369,7 +2342,6 @@ ecdsaTestsHelper secureContext label { namedCurve, digestAlgorithm } =
                                     (Crypto.importEcdsaPublicKeyFromJwk
                                         (shuffleNamedCurve namedCurve)
                                         exportedKey
-                                        Crypto.CanBeExtracted
                                         secureContext
                                     )
                                     "Importing the exported key with a different named curve"
