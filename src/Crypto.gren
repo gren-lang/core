@@ -1082,12 +1082,6 @@ exportPublicKeyAsSpki =
 
 
 {-|-}
-exportKeyAsSpki : Key a b -> Task ExportKeyError Bytes
-exportKeyAsSpki =
-    exportKeyHelper "spki"
-
-
-{-|-}
 exportPublicKeyAsJwk : Key a b -> Task {} Json.Encode.Value
 exportPublicKeyAsJwk key =
     Task.map Gren.Kernel.Json.wrap (exportPublicKeyHelper "jwk" key)
