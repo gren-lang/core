@@ -287,6 +287,48 @@ rsaOaepKeyTests secureContext =
             , modulusLength = 4096
             , hash = Crypto.Sha512
             }
+        , rsaOaepKeyTestHelper 
+            secureContext
+            { label = "Crypto.Sha256 + 2048 and no label"
+            , encryptionLabel = Nothing
+            , modulusLength = 2048
+            , hash = Crypto.Sha256
+            }
+        , rsaOaepKeyTestHelper 
+            secureContext
+            { label = "Crypto.Sha384 + 2048 and no label"
+            , encryptionLabel = Nothing
+            , modulusLength = 2048
+            , hash = Crypto.Sha384
+            }
+        , rsaOaepKeyTestHelper 
+            secureContext
+            { label = "Crypto.Sha512 + 2048 and no label"
+            , encryptionLabel = Nothing
+            , modulusLength = 2048
+            , hash = Crypto.Sha512
+            }
+        , rsaOaepKeyTestHelper 
+            secureContext
+            { label = "Crypto.Sha256 + 4096 and no label"
+            , encryptionLabel = Nothing
+            , modulusLength = 4096
+            , hash = Crypto.Sha256
+            }
+        , rsaOaepKeyTestHelper 
+            secureContext
+            { label = "Crypto.Sha384 + 4096 and no label"
+            , encryptionLabel = Nothing
+            , modulusLength = 4096
+            , hash = Crypto.Sha384
+            }
+        , rsaOaepKeyTestHelper 
+            secureContext
+            { label = "Crypto.Sha512 + 4096 and no label"
+            , encryptionLabel = Nothing
+            , modulusLength = 4096
+            , hash = Crypto.Sha512
+            }
         ]
 
 
@@ -502,7 +544,7 @@ rsaOaepKeyTestHelper secureContext { label, encryptionLabel, modulusLength, hash
                             publicKey
                             encryptionBytes
                         )
-                        "Test encrypting a string with an RSA-OAEP public key and no label"
+                        "Test encrypting a string with an RSA-OAEP public key"
                         (\encryptedBytes ->
                             concat
                                 [ test "The resulting encrypted bytes do not match the original bytes"

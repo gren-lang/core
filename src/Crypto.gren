@@ -5,7 +5,7 @@ module Crypto exposing
     , getRandomInt32Values, getRandomUInt32Values
     , randomUuidV4
     , RsaOaepParams
-    , RsaOaepEncryptionError(..), encryptWithRsaOaep
+    , encryptWithRsaOaep
     , RsaOaepDecryptionError(..), decryptWithRsaOaep
     , AesCtrParams
     , AesCtrEncryptionError(..), encryptWithAesCtr
@@ -133,7 +133,7 @@ generate one with the [`generateRsaOaepKeyPair`](#generateRsaOaepKeyPair) functi
 
 @docs RsaOaepParams
 
-@docs RsaOaepEncryptionError, encryptWithRsaOaep
+@docs encryptWithRsaOaep
 
 @docs RsaOaepDecryptionError, decryptWithRsaOaep
 
@@ -1602,20 +1602,10 @@ type alias RsaOaepParams =
     }
 
 
-{-| Errors that can happen when encrypting using the [`encryptWithRsaOaep`](#encryptWithRsaOaep) 
-function.
-
-This error should only appear if there are problems in kernel code. If you run into it, please 
-file a ticket!
--}
-type RsaOaepEncryptionError
-    = RsaOaepEncryptionError
-
-
 {-| Encrypt some `Bytes` with a `PublicKey RsaOaepKey`. You can generate the apporpriate
 key with the [`generateRsaOaepKeyPair`](#generateRsaOaepKeyPair) function.
 -}
-encryptWithRsaOaep : RsaOaepParams  -> PublicKey RsaOaepKey RsaKeyParams -> Bytes -> Task RsaOaepEncryptionError Bytes
+encryptWithRsaOaep : RsaOaepParams  -> PublicKey RsaOaepKey RsaKeyParams -> Bytes -> Task x Bytes
 encryptWithRsaOaep { label } (PublicKey (Key { key })) bytes =
     when label is
         Nothing ->

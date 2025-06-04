@@ -442,7 +442,7 @@ var _Crypto_encryptWithRsaOaep = F3(function (label, key, bytes) {
         return callback(__Scheduler_succeed(new DataView(res)));
       })
       .catch(function (err) {
-        return callback(__Scheduler_fail(__Crypto_RsaOaepEncryptionError));
+        throw "There was an unforseen error that occured when attempting encrypt some bytes with RSA-OAEP. This shouldn't happen! Please file a ticket in the `gren-lang/core` Github repo (https://github.com/gren-lang/core)";
       });
   });
 });
