@@ -202,7 +202,7 @@ var _Crypto_generateAesKey = F4(
           return callback(__Scheduler_succeed(_Crypto_constructAesKey(key)));
         })
         .catch(function (err) {
-          return callback(__Scheduler_fail(__Crypto_AesCtrEncryptionError));
+          throw "There was an unforseen error that occured when attempting to generate an AES key. This shouldn't happen! Please file a ticket in the `gren-lang/core` Github repo (https://github.com/gren-lang/core)";
         });
     });
   },
