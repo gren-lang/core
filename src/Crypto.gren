@@ -17,7 +17,7 @@ module Crypto exposing
     , AesGcmEncryptionError(..), encryptWithAesGcm
     , AesGcmDecryptionError(..), decryptWithAesGcm
     , Signature
-    , RsaSsaPkcs1V1_5SigningError(..), signWithRsaSsaPkcs1V1_5
+    , signWithRsaSsaPkcs1V1_5
     , verifyWithRsaSsaPkcs1V1_5
     , RsaPssParams, RsaPssSigningError(..)
     , signWithRsaPss, verifyWithRsaPss
@@ -186,7 +186,7 @@ Sign and verify some `Bytes` with the RSASSA-PKCS1-v1_5 (Rivest, Shamir, and Adl
 with Appendix ...) algorithm. These functions require an RSASSA-PKCS1-v1_5 key. You can generate one 
 with the [`generateRsaSsaPkcs1V1_5KeyPair`](#generateRsaSsaPkcs1V1_5KeyPair) function.
 
-@docs RsaSsaPkcs1V1_5SigningError, signWithRsaSsaPkcs1V1_5
+@docs signWithRsaSsaPkcs1V1_5
 
 @docs verifyWithRsaSsaPkcs1V1_5
 
@@ -1960,21 +1960,11 @@ type alias Signature
 -- SIGN
 
 
-{-| Errors that can happen when signing using the 
-[`signWithRsaSsaPkcs1V1_5`](#signWithRsaSsaPkcs1V1_5) function.
-
-This error should only appear if there are problems in kernel code. If you run into it, please 
-file a ticket!
--}
-type RsaSsaPkcs1V1_5SigningError
-    = RsaSsaPkcs1V1_5SigningError
-
-
 {-| Sign some `Bytes` with the RSA-SSAPKCS1v1.5 algorithm. This produces a `Signature` (which 
 is just some `Bytes`). The `Signature` can be used with the cooresponding verification function 
 to verify that the passed `Bytes` were signed with the passed key.
 -}
-signWithRsaSsaPkcs1V1_5 : PrivateKey RsaSsaPkcs1V1_5Key RsaKeyParams -> Bytes -> Task RsaSsaPkcs1V1_5SigningError Signature
+signWithRsaSsaPkcs1V1_5 : PrivateKey RsaSsaPkcs1V1_5Key RsaKeyParams -> Bytes -> Task x Signature
 signWithRsaSsaPkcs1V1_5 (PrivateKey (Key { key })) bytes =
     Gren.Kernel.Crypto.signWithRsaSsaPkcs1V1_5 
         key 

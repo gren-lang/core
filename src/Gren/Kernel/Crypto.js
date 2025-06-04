@@ -612,7 +612,7 @@ var _Crypto_signWithRsaSsaPkcs1V1_5 = F2(function (key, bytes) {
         return callback(__Scheduler_succeed(new DataView(res)));
       })
       .catch(function (err) {
-        return callback(__Scheduler_fail(__Crypto_RsaSsaPkcs1V1_5SigningError));
+        throw "There was an unforseen error that occured when attempting sign some bytes with RSASSA-PKCS1-v1_5. This shouldn't happen! Please file a ticket in the `gren-lang/core` Github repo (https://github.com/gren-lang/core)";
       });
   });
 });
