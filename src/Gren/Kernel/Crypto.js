@@ -264,7 +264,7 @@ var _Crypto_generateHmacKey = F5(
   },
 );
 
-// Exprort key
+// Export key
 
 var _Crypto_exportKey = F2(function (format, key) {
   return __Scheduler_binding(function (callback) {

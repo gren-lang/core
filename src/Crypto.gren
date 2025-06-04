@@ -462,6 +462,9 @@ getSecureContext =
 {-| Denotes if a key can be exported using the `exportKey` or `exportKeyPair`
 functions. If a key is not marked as exportable when it is created or imported, 
 any attempts to export the key will fail.
+
+Public keys will always be exportable when generated or imported, regardless of
+the `Extractable` value provided when generating the key.
 -}
 type Extractable
     = CanBeExtracted
