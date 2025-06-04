@@ -1750,10 +1750,10 @@ rsaSsaPkcs1V1_5KeyTestsHelper secureContext label { encryptionLabel, modulusLeng
                                 [ await
                                     (Crypto.verifyWithRsaSsaPkcs1V1_5 publicKey signature bytesToSign)
                                     "Verifying signed bytes"
-                                    (\_ ->
-                                        test "Succeeds when bytes that are being verified were the same as what was signed"
+                                    (\verifiedBytes ->
+                                        test "The verified bytes are the same as the bytes passed to verify function"
                                             (\_ ->
-                                                Expect.pass
+                                                Expect.equal verifiedBytes bytesToSign
                                             )
                                     )
                                 , awaitError
@@ -2041,10 +2041,10 @@ rsaPssTestsHelper secureContext label { modulusLength, hash } =
                                     [ await
                                         (Crypto.verifyWithRsaPss { salt = digestAlgorithmMaxSalt hash } publicKey signature bytesToSign)
                                         "Verifying signed bytes"
-                                        (\_ ->
-                                            test "Succeeds when bytes that are being verified were the same as what was signed"
+                                        (\verifiedBytes ->
+                                            test "The verified bytes are the same as the bytes passed to verification function"
                                                 (\_ ->
-                                                    Expect.pass
+                                                    Expect.equal verifiedBytes bytesToSign
                                                 )
                                         )
                                     , awaitError
@@ -2472,10 +2472,10 @@ ecdsaTestsHelper secureContext label { namedCurve, digestAlgorithm } =
                                 [ await
                                     (Crypto.verifyWithEcdsa digestAlgorithm publicKey signature bytesToSign)
                                     "Verifying signed bytes"
-                                    (\_ ->
-                                        test "Succeeds when bytes that are being verified were the same as what was signed"
+                                    (\verifiedBytes ->
+                                        test "The verified bytes are the same as the signed bytes"
                                             (\_ ->
-                                                Expect.pass
+                                                Expect.equal verifiedBytes bytesToSign
                                             )
                                     )
                                 , awaitError
@@ -2669,10 +2669,10 @@ generateHmacTestsHelper secureContext label { length, digestAlgorithm } =
                                 [ await
                                     (Crypto.verifyWithHmac key signature bytesToSign)
                                     "Verifying bytes"
-                                    (\_ ->
-                                        test "Verifying bytes with the right signature succeeds"
+                                    (\verifiedBytes ->
+                                        test "The verified bytes equal the bytes passed for verification"
                                             (\_ ->
-                                                Expect.pass
+                                                Expect.equal verifiedBytes bytesToSign
                                             )
                                     )
                                 , awaitError
