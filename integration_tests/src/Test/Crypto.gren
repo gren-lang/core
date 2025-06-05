@@ -287,6 +287,48 @@ rsaOaepKeyTests secureContext =
             , modulusLength = 4096
             , hash = Crypto.Sha512
             }
+        , rsaOaepKeyTestHelper 
+            secureContext
+            { label = "Crypto.Sha256 + 2048 and no label"
+            , encryptionLabel = Nothing
+            , modulusLength = 2048
+            , hash = Crypto.Sha256
+            }
+        , rsaOaepKeyTestHelper 
+            secureContext
+            { label = "Crypto.Sha384 + 2048 and no label"
+            , encryptionLabel = Nothing
+            , modulusLength = 2048
+            , hash = Crypto.Sha384
+            }
+        , rsaOaepKeyTestHelper 
+            secureContext
+            { label = "Crypto.Sha512 + 2048 and no label"
+            , encryptionLabel = Nothing
+            , modulusLength = 2048
+            , hash = Crypto.Sha512
+            }
+        , rsaOaepKeyTestHelper 
+            secureContext
+            { label = "Crypto.Sha256 + 4096 and no label"
+            , encryptionLabel = Nothing
+            , modulusLength = 4096
+            , hash = Crypto.Sha256
+            }
+        , rsaOaepKeyTestHelper 
+            secureContext
+            { label = "Crypto.Sha384 + 4096 and no label"
+            , encryptionLabel = Nothing
+            , modulusLength = 4096
+            , hash = Crypto.Sha384
+            }
+        , rsaOaepKeyTestHelper 
+            secureContext
+            { label = "Crypto.Sha512 + 4096 and no label"
+            , encryptionLabel = Nothing
+            , modulusLength = 4096
+            , hash = Crypto.Sha512
+            }
         ]
 
 
@@ -304,11 +346,10 @@ rsaOaepKeyTestHelper secureContext { label, encryptionLabel, modulusLength, hash
                     concat
                         [ await
                             (Crypto.importRsaOaepPublicKeyFromSpki 
-                                exportedKey
+                                secureContext
                                 { hash = hash
                                 }
-                                Crypto.CanBeExtracted
-                                secureContext
+                                exportedKey
                             ) 
                             (withLabel "Importing a successfully extracted public key")
                             (\importedKey ->
@@ -319,11 +360,10 @@ rsaOaepKeyTestHelper secureContext { label, encryptionLabel, modulusLength, hash
                             )
                         , await
                             (Crypto.importRsaOaepPublicKeyFromSpki 
-                                exportedKey
+                                secureContext
                                 { hash = shuffleDigestAlgorithm hash
                                 }
-                                Crypto.CanBeExtracted
-                                secureContext
+                                exportedKey
                             ) 
                             (withLabel "Importing a successfully extracted public key with the wrong hash")
                             (\importedKey ->
@@ -343,11 +383,10 @@ rsaOaepKeyTestHelper secureContext { label, encryptionLabel, modulusLength, hash
                     concat
                         [ await
                             (Crypto.importRsaOaepPublicKeyFromJwk 
-                                exportedKey
+                                secureContext
                                 { hash = hash
                                 }
-                                Crypto.CanBeExtracted
-                                secureContext
+                                exportedKey
                             ) 
                             (withLabel "Importing a successfully extracted public key")
                             (\importedKey ->
@@ -358,11 +397,10 @@ rsaOaepKeyTestHelper secureContext { label, encryptionLabel, modulusLength, hash
                             )
                         , awaitError
                             (Crypto.importRsaOaepPublicKeyFromJwk
-                                exportedKey
+                                secureContext
                                 { hash = shuffleDigestAlgorithm hash
                                 }
-                                Crypto.CanBeExtracted
-                                secureContext
+                                exportedKey
                             ) 
                             (withLabel "Importing a successfully extracted public key with the wrong hash")
                             (\err ->
@@ -377,11 +415,11 @@ rsaOaepKeyTestHelper secureContext { label, encryptionLabel, modulusLength, hash
     concat
         [ await
             (Crypto.generateRsaOaepKeyPair
+                secureContext
                 { modulusLength = modulusLength
                 , hash = hash
                 , extractable = Crypto.CannotBeExtracted
                 }
-                secureContext
             )
             (withLabel "Generating a key pair when that is marked as no extractable")
             (\{ publicKey, privateKey } ->
@@ -410,11 +448,11 @@ rsaOaepKeyTestHelper secureContext { label, encryptionLabel, modulusLength, hash
             )
         , await 
             (Crypto.generateRsaOaepKeyPair
+                secureContext
                 { modulusLength = modulusLength
                 , hash = hash
                 , extractable = Crypto.CanBeExtracted
                 }
-                secureContext
             )
             (withLabel "Generating a key pair when that is marked as extractable")
             (\{ publicKey, privateKey } ->
@@ -432,11 +470,11 @@ rsaOaepKeyTestHelper secureContext { label, encryptionLabel, modulusLength, hash
                             concat 
                                 [ await
                                     (Crypto.importRsaOaepPrivateKeyFromPkcs8 
-                                        exportedKey
+                                        secureContext
+                                        Crypto.CanBeExtracted
                                         { hash = hash
                                         }
-                                        Crypto.CanBeExtracted
-                                        secureContext
+                                        exportedKey
                                     ) 
                                     (withLabel "Importing a successfully extracted private key")
                                     (\importedKey ->
@@ -447,11 +485,11 @@ rsaOaepKeyTestHelper secureContext { label, encryptionLabel, modulusLength, hash
                                     )
                                 , await
                                     (Crypto.importRsaOaepPrivateKeyFromPkcs8 
-                                        exportedKey
+                                        secureContext
+                                        Crypto.CanBeExtracted
                                         { hash = shuffleDigestAlgorithm hash
                                         }
-                                        Crypto.CanBeExtracted
-                                        secureContext
+                                        exportedKey
                                     ) 
                                     (withLabel "Importing a successfully extracted private key with the wrong hash")
                                     (\importedKey ->
@@ -469,11 +507,11 @@ rsaOaepKeyTestHelper secureContext { label, encryptionLabel, modulusLength, hash
                             concat 
                                 [ await
                                     (Crypto.importRsaOaepPrivateKeyFromJwk 
-                                        exportedKey
+                                        secureContext
+                                        Crypto.CanBeExtracted
                                         { hash = hash
                                         }
-                                        Crypto.CanBeExtracted
-                                        secureContext
+                                        exportedKey
                                     ) 
                                     (withLabel "Importing a successfully extracted private key")
                                     (\importedKey ->
@@ -484,11 +522,11 @@ rsaOaepKeyTestHelper secureContext { label, encryptionLabel, modulusLength, hash
                                     )
                                 , awaitError
                                     (Crypto.importRsaOaepPrivateKeyFromJwk 
-                                        exportedKey
+                                        secureContext
+                                        Crypto.CanBeExtracted
                                         { hash = shuffleDigestAlgorithm hash
                                         }
-                                        Crypto.CanBeExtracted
-                                        secureContext
+                                        exportedKey
                                     ) 
                                     (withLabel "Importing a successfully extracted private key with the wrong hash")
                                     (\err ->
@@ -506,7 +544,7 @@ rsaOaepKeyTestHelper secureContext { label, encryptionLabel, modulusLength, hash
                             publicKey
                             encryptionBytes
                         )
-                        "Test encrypting a string with an RSA-OAEP public key and no label"
+                        "Test encrypting a string with an RSA-OAEP public key"
                         (\encryptedBytes ->
                             concat
                                 [ test "The resulting encrypted bytes do not match the original bytes"
@@ -633,10 +671,10 @@ aesCtrTestsHelper secureContext label { aesLength, encryptionLength } =
     concat 
         [ await
             (Crypto.generateAesCtrKey
+                secureContext
                 { length = aesLength
                 , extractable = Crypto.CannotBeExtracted 
                 }
-                secureContext
             )
             (withLabel "Generating a key that is marked as not extractable")
             (\key ->
@@ -663,10 +701,10 @@ aesCtrTestsHelper secureContext label { aesLength, encryptionLength } =
             )
         , await
             (Crypto.generateAesCtrKey
+                secureContext
                 { length = aesLength
                 , extractable = Crypto.CanBeExtracted 
                 }
-                secureContext
             )
             (withLabel "Generating a key that is marked as extractable")
             (\key ->
@@ -681,9 +719,9 @@ aesCtrTestsHelper secureContext label { aesLength, encryptionLength } =
                         (\exportedKey ->
                             await
                                 (Crypto.importAesCtrKeyFromRaw
-                                    exportedKey
-                                    Crypto.CanBeExtracted
                                     secureContext
+                                    Crypto.CanBeExtracted
+                                    exportedKey
                                 )
                                 "Importing the exported key"
                                 (\importedKey ->
@@ -699,9 +737,9 @@ aesCtrTestsHelper secureContext label { aesLength, encryptionLength } =
                         (\exportedKey ->
                             await
                                 (Crypto.importAesCtrKeyFromJwk
-                                    exportedKey
-                                    Crypto.CanBeExtracted
                                     secureContext
+                                    Crypto.CanBeExtracted
+                                    exportedKey
                                 )
                                 "Importing the exported key"
                                 (\importedKey ->
@@ -829,10 +867,10 @@ aesCbcTestHelper secureContext label { aesLength } =
     concat
         [ await
             (Crypto.generateAesCbcKey
+                secureContext
                 { length = aesLength
                 , extractable = Crypto.CannotBeExtracted 
                 }
-                secureContext
             )
             (withLabel "Generating a key that is marked as not extractable")
             (\key ->
@@ -859,10 +897,10 @@ aesCbcTestHelper secureContext label { aesLength } =
             )
         , await
             (Crypto.generateAesCbcKey
+                secureContext
                 { length = aesLength
                 , extractable = Crypto.CanBeExtracted 
                 }
-                secureContext
             )
             (withLabel "Generating a key that is marked as extractable")
             (\key ->
@@ -877,9 +915,9 @@ aesCbcTestHelper secureContext label { aesLength } =
                         (\exportedKey ->
                             await
                                 (Crypto.importAesCbcKeyFromRaw
-                                    exportedKey
-                                    Crypto.CanBeExtracted
                                     secureContext
+                                    Crypto.CanBeExtracted
+                                    exportedKey
                                 )
                                 "Importing the exported key"
                                 (\importedKey ->
@@ -895,9 +933,9 @@ aesCbcTestHelper secureContext label { aesLength } =
                         (\exportedKey ->
                             await
                                 (Crypto.importAesCbcKeyFromJwk
-                                    exportedKey
-                                    Crypto.CanBeExtracted
                                     secureContext
+                                    Crypto.CanBeExtracted
+                                    exportedKey
                                 )
                                 "Importing the exported key"
                                 (\importedKey ->
@@ -1171,10 +1209,10 @@ aesGcmTestsHelper secureContext label { aesLength, tagLength } =
     concat 
         [ await
             (Crypto.generateAesGcmKey
+                secureContext
                 { length = aesLength
                 , extractable = Crypto.CannotBeExtracted 
                 }
-                secureContext
             )
             (withLabel "Generating a key that is marked as not extractable")
             (\key ->
@@ -1201,10 +1239,10 @@ aesGcmTestsHelper secureContext label { aesLength, tagLength } =
             )
         , await
             (Crypto.generateAesGcmKey
+                secureContext
                 { length = aesLength
                 , extractable = Crypto.CanBeExtracted 
                 }
-                secureContext
             )
             (withLabel "Generating a key that is marked as extractable")
             (\key ->
@@ -1219,9 +1257,9 @@ aesGcmTestsHelper secureContext label { aesLength, tagLength } =
                         (\exportedKey ->
                             await
                                 (Crypto.importAesGcmKeyFromRaw
-                                    exportedKey
-                                    Crypto.CanBeExtracted
                                     secureContext
+                                    Crypto.CanBeExtracted
+                                    exportedKey
                                 )
                                 "Importing the exported key"
                                 (\importedKey ->
@@ -1237,9 +1275,9 @@ aesGcmTestsHelper secureContext label { aesLength, tagLength } =
                         (\exportedKey ->
                             await
                                 (Crypto.importAesGcmKeyFromJwk
-                                    exportedKey
-                                    Crypto.CanBeExtracted
                                     secureContext
+                                    Crypto.CanBeExtracted
+                                    exportedKey
                                 )
                                 "Importing the exported key"
                                 (\importedKey ->
@@ -1495,11 +1533,11 @@ rsaSsaPkcs1V1_5KeyTestsHelper secureContext label { encryptionLabel, modulusLeng
     concat
         [ await
             (Crypto.generateRsaSsaPkcs1V1_5KeyPair
+                secureContext
                 { modulusLength = modulusLength
                 , hash = hash
                 , extractable = Crypto.CannotBeExtracted
                 }
-                secureContext
             )
             (withLabel "Generating non-extractable RSA-SSA-PKCS1v1 key pair")
             (\{ publicKey, privateKey } ->
@@ -1509,12 +1547,11 @@ rsaSsaPkcs1V1_5KeyTestsHelper secureContext label { encryptionLabel, modulusLeng
                         "Exporting the generated public key as SPKI"
                         (\exportedPublicKey ->
                             await
-                                (Crypto.importRsaSsaPkcs1V1_5PublicKeyFromSpki 
-                                    exportedPublicKey
+                                (Crypto.importRsaSsaPkcs1V1_5PublicKeyFromSpki
+                                    secureContext
                                     { hash = hash
                                     }
-                                    Crypto.CanBeExtracted
-                                    secureContext
+                                    exportedPublicKey
                                 )
                                 "Importing the exported key with the same hash"
                                 (\importedKey ->
@@ -1531,11 +1568,10 @@ rsaSsaPkcs1V1_5KeyTestsHelper secureContext label { encryptionLabel, modulusLeng
                             concat
                                 [ await
                                     (Crypto.importRsaSsaPkcs1V1_5PublicKeyFromJwk
-                                        exportedPublicKey
+                                        secureContext
                                         { hash = hash
                                         }
-                                        Crypto.CanBeExtracted
-                                        secureContext
+                                        exportedPublicKey
                                     )
                                     "Importing the exported key with the same hash"
                                     (\importedKey ->
@@ -1546,11 +1582,10 @@ rsaSsaPkcs1V1_5KeyTestsHelper secureContext label { encryptionLabel, modulusLeng
                                     )
                                 , awaitError
                                     (Crypto.importRsaSsaPkcs1V1_5PublicKeyFromJwk
-                                        exportedPublicKey
+                                        secureContext
                                         { hash = shuffleDigestAlgorithm hash
                                         }
-                                        Crypto.CanBeExtracted
-                                        secureContext
+                                        exportedPublicKey
                                     )
                                     "Importing the exported key with a different hash"
                                     (\err ->
@@ -1583,11 +1618,11 @@ rsaSsaPkcs1V1_5KeyTestsHelper secureContext label { encryptionLabel, modulusLeng
             )
         , await
             (Crypto.generateRsaSsaPkcs1V1_5KeyPair
+                secureContext
                 { modulusLength = modulusLength
                 , hash = hash
                 , extractable = Crypto.CanBeExtracted
                 }
-                secureContext
             )
             (withLabel "Generating extractable RSA-SSA-PKCS1v1 key pair")
             (\{ publicKey, privateKey } ->
@@ -1602,11 +1637,10 @@ rsaSsaPkcs1V1_5KeyTestsHelper secureContext label { encryptionLabel, modulusLeng
                         (\exportedPublicKey ->
                             await
                                 (Crypto.importRsaSsaPkcs1V1_5PublicKeyFromSpki 
-                                    exportedPublicKey
+                                    secureContext
                                     { hash = hash
                                     }
-                                    Crypto.CanBeExtracted
-                                    secureContext
+                                    exportedPublicKey
                                 )
                                 "Importing the exported key with the same hash"
                                 (\importedKey ->
@@ -1623,11 +1657,10 @@ rsaSsaPkcs1V1_5KeyTestsHelper secureContext label { encryptionLabel, modulusLeng
                             concat
                                 [ await
                                     (Crypto.importRsaSsaPkcs1V1_5PublicKeyFromJwk
-                                        exportedPublicKey
+                                        secureContext
                                         { hash = hash
                                         }
-                                        Crypto.CanBeExtracted
-                                        secureContext
+                                        exportedPublicKey
                                     )
                                     "Importing the exported key with the same hash"
                                     (\importedKey ->
@@ -1638,11 +1671,10 @@ rsaSsaPkcs1V1_5KeyTestsHelper secureContext label { encryptionLabel, modulusLeng
                                     )
                                 , awaitError
                                     (Crypto.importRsaSsaPkcs1V1_5PublicKeyFromJwk
-                                        exportedPublicKey
+                                        secureContext
                                         { hash = shuffleDigestAlgorithm hash
                                         }
-                                        Crypto.CanBeExtracted
-                                        secureContext
+                                        exportedPublicKey
                                     )
                                     "Importing the exported key with a different hash"
                                     (\err ->
@@ -1659,11 +1691,11 @@ rsaSsaPkcs1V1_5KeyTestsHelper secureContext label { encryptionLabel, modulusLeng
                         (\exportedPrivateKey ->
                             await
                                 (Crypto.importRsaSsaPkcs1V1_5PrivateKeyFromPkcs8
-                                    exportedPrivateKey
+                                    secureContext
+                                    Crypto.CanBeExtracted
                                     { hash = hash
                                     }
-                                    Crypto.CanBeExtracted
-                                    secureContext
+                                    exportedPrivateKey
                                 )
                                 "Importing the exported key with the same hash"
                                 (\importedKey ->
@@ -1680,11 +1712,11 @@ rsaSsaPkcs1V1_5KeyTestsHelper secureContext label { encryptionLabel, modulusLeng
                             concat
                                 [ await
                                     (Crypto.importRsaSsaPkcs1V1_5PrivateKeyFromJwk
-                                        exportedPrivateKey
+                                        secureContext
+                                        Crypto.CanBeExtracted
                                         { hash = hash
                                         }
-                                        Crypto.CanBeExtracted
-                                        secureContext
+                                        exportedPrivateKey
                                     )
                                     "Importing the exported key with the same hash"
                                     (\importedKey ->
@@ -1695,11 +1727,11 @@ rsaSsaPkcs1V1_5KeyTestsHelper secureContext label { encryptionLabel, modulusLeng
                                     )
                                 , awaitError
                                     (Crypto.importRsaSsaPkcs1V1_5PrivateKeyFromJwk
-                                        exportedPrivateKey
+                                        secureContext
+                                        Crypto.CanBeExtracted
                                         { hash = shuffleDigestAlgorithm hash
                                         }
-                                        Crypto.CanBeExtracted
-                                        secureContext
+                                        exportedPrivateKey
                                     )
                                     "Importing the exported key with a different hash"
                                     (\err ->
@@ -1718,10 +1750,10 @@ rsaSsaPkcs1V1_5KeyTestsHelper secureContext label { encryptionLabel, modulusLeng
                                 [ await
                                     (Crypto.verifyWithRsaSsaPkcs1V1_5 publicKey signature bytesToSign)
                                     "Verifying signed bytes"
-                                    (\_ ->
-                                        test "Succeeds when bytes that are being verified were the same as what was signed"
+                                    (\verifiedBytes ->
+                                        test "The verified bytes are the same as the bytes passed to verify function"
                                             (\_ ->
-                                                Expect.pass
+                                                Expect.equal verifiedBytes bytesToSign
                                             )
                                     )
                                 , awaitError
@@ -1793,11 +1825,11 @@ rsaPssTestsHelper secureContext label { modulusLength, hash } =
     concat
         [ await
             (Crypto.generateRsaPssKeyPair
+                secureContext
                 { modulusLength = modulusLength
                 , hash = hash
                 , extractable = Crypto.CannotBeExtracted
                 } 
-                secureContext
             )
             (withLabel "Generating non-extractable RSA-PSS key pair")
             (\{ publicKey, privateKey } ->
@@ -1808,11 +1840,10 @@ rsaPssTestsHelper secureContext label { modulusLength, hash } =
                         (\exportedPublicKey ->
                             await
                                 (Crypto.importRsaPssPublicKeyFromSpki 
-                                    exportedPublicKey
+                                    secureContext
                                     { hash = hash
                                     }
-                                    Crypto.CanBeExtracted
-                                    secureContext
+                                    exportedPublicKey
                                 )
                                 "Importing the exported key with the same hash"
                                 (\importedKey ->
@@ -1829,11 +1860,10 @@ rsaPssTestsHelper secureContext label { modulusLength, hash } =
                             concat
                                 [ await
                                     (Crypto.importRsaPssPublicKeyFromJwk
-                                        exportedPublicKey
+                                        secureContext
                                         { hash = hash
                                         }
-                                        Crypto.CanBeExtracted
-                                        secureContext
+                                        exportedPublicKey
                                     )
                                     "Importing the exported key with the same hash"
                                     (\importedKey ->
@@ -1844,11 +1874,10 @@ rsaPssTestsHelper secureContext label { modulusLength, hash } =
                                     )
                                 , awaitError
                                     (Crypto.importRsaPssPublicKeyFromJwk
-                                        exportedPublicKey
+                                        secureContext
                                         { hash = shuffleDigestAlgorithm hash
                                         }
-                                        Crypto.CanBeExtracted
-                                        secureContext
+                                        exportedPublicKey
                                     )
                                     "Importing the exported key with a different hash"
                                     (\err ->
@@ -1881,11 +1910,11 @@ rsaPssTestsHelper secureContext label { modulusLength, hash } =
             )
             , await
                 (Crypto.generateRsaPssKeyPair
+                    secureContext
                     { modulusLength = modulusLength
                     , hash = hash
                     , extractable = Crypto.CanBeExtracted
-                    } 
-                    secureContext
+                    }
                 )
                 (withLabel "Generating extractable RSA-PSS key pair")
                 (\{ publicKey, privateKey } ->
@@ -1900,11 +1929,10 @@ rsaPssTestsHelper secureContext label { modulusLength, hash } =
                             (\exportedPublicKey ->
                                 await
                                     (Crypto.importRsaPssPublicKeyFromSpki 
-                                        exportedPublicKey
+                                        secureContext
                                         { hash = hash
                                         }
-                                        Crypto.CanBeExtracted
-                                        secureContext
+                                        exportedPublicKey
                                     )
                                     "Importing the exported key with the same hash"
                                     (\importedKey ->
@@ -1921,11 +1949,9 @@ rsaPssTestsHelper secureContext label { modulusLength, hash } =
                                 concat
                                     [ await
                                         (Crypto.importRsaPssPublicKeyFromJwk
-                                            exportedPublicKey
-                                            { hash = hash
-                                            }
-                                            Crypto.CanBeExtracted
                                             secureContext
+                                            { hash = hash
+                                            }exportedPublicKey
                                         )
                                         "Importing the exported key with the same hash"
                                         (\importedKey ->
@@ -1936,11 +1962,10 @@ rsaPssTestsHelper secureContext label { modulusLength, hash } =
                                         )
                                     , awaitError
                                         (Crypto.importRsaPssPublicKeyFromJwk
-                                            exportedPublicKey
+                                            secureContext
                                             { hash = shuffleDigestAlgorithm hash
                                             }
-                                            Crypto.CanBeExtracted
-                                            secureContext
+                                            exportedPublicKey
                                         )
                                         "Importing the exported key with a different hash"
                                         (\err ->
@@ -1957,11 +1982,11 @@ rsaPssTestsHelper secureContext label { modulusLength, hash } =
                             (\exportedPrivateKey ->
                                 await
                                     (Crypto.importRsaPssPrivateKeyFromPkcs8
-                                        exportedPrivateKey
+                                        secureContext
+                                        Crypto.CanBeExtracted
                                         { hash = hash
                                         }
-                                        Crypto.CanBeExtracted
-                                        secureContext
+                                        exportedPrivateKey
                                     )
                                     "Importing the exported key with the same hash"
                                     (\importedKey ->
@@ -1978,11 +2003,11 @@ rsaPssTestsHelper secureContext label { modulusLength, hash } =
                                 concat
                                     [ await
                                         (Crypto.importRsaPssPrivateKeyFromJwk
-                                            exportedPrivateKey
+                                            secureContext
+                                            Crypto.CanBeExtracted
                                             { hash = hash
                                             }
-                                            Crypto.CanBeExtracted
-                                            secureContext
+                                            exportedPrivateKey
                                         )
                                         "Importing the exported key with the same hash"
                                         (\importedKey ->
@@ -1993,11 +2018,11 @@ rsaPssTestsHelper secureContext label { modulusLength, hash } =
                                         )
                                     , awaitError
                                         (Crypto.importRsaPssPrivateKeyFromJwk
-                                            exportedPrivateKey
+                                            secureContext
+                                            Crypto.CanBeExtracted
                                             { hash = shuffleDigestAlgorithm hash
                                             }
-                                            Crypto.CanBeExtracted
-                                            secureContext
+                                            exportedPrivateKey
                                         )
                                         "Importing the exported key with a different hash"
                                         (\err ->
@@ -2016,10 +2041,10 @@ rsaPssTestsHelper secureContext label { modulusLength, hash } =
                                     [ await
                                         (Crypto.verifyWithRsaPss { salt = digestAlgorithmMaxSalt hash } publicKey signature bytesToSign)
                                         "Verifying signed bytes"
-                                        (\_ ->
-                                            test "Succeeds when bytes that are being verified were the same as what was signed"
+                                        (\verifiedBytes ->
+                                            test "The verified bytes are the same as the bytes passed to verification function"
                                                 (\_ ->
-                                                    Expect.pass
+                                                    Expect.equal verifiedBytes bytesToSign
                                                 )
                                         )
                                     , awaitError
@@ -2129,10 +2154,10 @@ ecdsaTestsHelper secureContext label { namedCurve, digestAlgorithm } =
     concat
         [ await
             (Crypto.generateEcdsaKeyPair
+                secureContext
                 { namedCurve = namedCurve 
                 , extractable = Crypto.CannotBeExtracted
                 }
-                secureContext
             )
             (withLabel "Generating a key that cannot be extracted")
             (\{ publicKey, privateKey } ->
@@ -2144,10 +2169,9 @@ ecdsaTestsHelper secureContext label { namedCurve, digestAlgorithm } =
                             concat
                                 [ await
                                     (Crypto.importEcdsaPublicKeyFromRaw
+                                        secureContext
                                         namedCurve
                                         exportedKey
-                                        Crypto.CanBeExtracted
-                                        secureContext
                                     )
                                     "Importing the exported key with the same named curve"
                                     (\importedKey ->
@@ -2158,10 +2182,9 @@ ecdsaTestsHelper secureContext label { namedCurve, digestAlgorithm } =
                                     )
                                 , awaitError
                                     (Crypto.importEcdsaPublicKeyFromRaw
+                                        secureContext
                                         (shuffleNamedCurve namedCurve)
                                         exportedKey
-                                        Crypto.CanBeExtracted
-                                        secureContext
                                     )
                                     "Importing the exported key with a different named curve"
                                         (\err ->
@@ -2179,10 +2202,9 @@ ecdsaTestsHelper secureContext label { namedCurve, digestAlgorithm } =
                             concat
                                 [ await
                                     (Crypto.importEcdsaPublicKeyFromSpki
+                                        secureContext
                                         namedCurve
                                         exportedKey
-                                        Crypto.CanBeExtracted
-                                        secureContext
                                     )
                                     "Importing the exported key with the same named curve"
                                     (\importedKey ->
@@ -2193,10 +2215,9 @@ ecdsaTestsHelper secureContext label { namedCurve, digestAlgorithm } =
                                     )
                                 , awaitError
                                     (Crypto.importEcdsaPublicKeyFromSpki
+                                        secureContext
                                         (shuffleNamedCurve namedCurve)
                                         exportedKey
-                                        Crypto.CanBeExtracted
-                                        secureContext
                                     )
                                     "Importing the exported key with a different named curve"
                                             (\err ->
@@ -2214,10 +2235,9 @@ ecdsaTestsHelper secureContext label { namedCurve, digestAlgorithm } =
                             concat 
                                 [ await
                                     (Crypto.importEcdsaPublicKeyFromJwk
+                                        secureContext
                                         namedCurve
                                         exportedKey
-                                        Crypto.CanBeExtracted
-                                        secureContext
                                     )
                                     "Importing the exported key with the same named curve"
                                     (\importedKey ->
@@ -2228,10 +2248,9 @@ ecdsaTestsHelper secureContext label { namedCurve, digestAlgorithm } =
                                     )
                                 , awaitError
                                     (Crypto.importEcdsaPublicKeyFromJwk
+                                        secureContext
                                         (shuffleNamedCurve namedCurve)
                                         exportedKey
-                                        Crypto.CanBeExtracted
-                                        secureContext
                                     )
                                     "Importing the exported key with a different named curve"
                                     (\err ->
@@ -2264,10 +2283,10 @@ ecdsaTestsHelper secureContext label { namedCurve, digestAlgorithm } =
             )
         , await
             (Crypto.generateEcdsaKeyPair
+                secureContext
                 { namedCurve = namedCurve 
                 , extractable = Crypto.CanBeExtracted
                 }
-                secureContext
             )
             (withLabel "Generating a key that can be extracted")
             (\{ publicKey, privateKey } ->
@@ -2283,10 +2302,9 @@ ecdsaTestsHelper secureContext label { namedCurve, digestAlgorithm } =
                             concat
                                 [ await
                                     (Crypto.importEcdsaPublicKeyFromRaw
+                                        secureContext
                                         namedCurve
                                         exportedKey
-                                        Crypto.CanBeExtracted
-                                        secureContext
                                     )
                                     "Importing the exported key with the same named curve"
                                     (\importedKey ->
@@ -2297,10 +2315,9 @@ ecdsaTestsHelper secureContext label { namedCurve, digestAlgorithm } =
                                     )
                                 , awaitError
                                     (Crypto.importEcdsaPublicKeyFromRaw
+                                        secureContext
                                         (shuffleNamedCurve namedCurve)
                                         exportedKey
-                                        Crypto.CanBeExtracted
-                                        secureContext
                                     )
                                     "Importing the exported key with a different named curve"
                                     (\err ->
@@ -2318,10 +2335,9 @@ ecdsaTestsHelper secureContext label { namedCurve, digestAlgorithm } =
                             concat
                                 [ await
                                     (Crypto.importEcdsaPublicKeyFromSpki
+                                        secureContext
                                         namedCurve
                                         exportedKey
-                                        Crypto.CanBeExtracted
-                                        secureContext
                                     )
                                     "Importing the exported key with the same named curve"
                                     (\importedKey ->
@@ -2332,10 +2348,9 @@ ecdsaTestsHelper secureContext label { namedCurve, digestAlgorithm } =
                                     )
                                 , awaitError
                                     (Crypto.importEcdsaPublicKeyFromSpki
+                                        secureContext
                                         (shuffleNamedCurve namedCurve)
                                         exportedKey
-                                        Crypto.CanBeExtracted
-                                        secureContext
                                     )
                                     "Importing the exported key with a different named curve"
                                     (\err ->
@@ -2353,10 +2368,9 @@ ecdsaTestsHelper secureContext label { namedCurve, digestAlgorithm } =
                             concat
                                 [ await
                                     (Crypto.importEcdsaPublicKeyFromJwk
+                                        secureContext
                                         namedCurve
                                         exportedKey
-                                        Crypto.CanBeExtracted
-                                        secureContext
                                     )
                                     "Importing the exported key with the same named curve"
                                     (\importedKey ->
@@ -2367,10 +2381,9 @@ ecdsaTestsHelper secureContext label { namedCurve, digestAlgorithm } =
                                     )
                                 , awaitError
                                     (Crypto.importEcdsaPublicKeyFromJwk
+                                        secureContext
                                         (shuffleNamedCurve namedCurve)
                                         exportedKey
-                                        Crypto.CanBeExtracted
-                                        secureContext
                                     )
                                     "Importing the exported key with a different named curve"
                                     (\err ->
@@ -2388,10 +2401,10 @@ ecdsaTestsHelper secureContext label { namedCurve, digestAlgorithm } =
                             concat 
                                 [ await
                                     (Crypto.importEcdsaPrivateKeyFromPkcs8
+                                        secureContext
+                                        Crypto.CanBeExtracted
                                         namedCurve
                                         exportedKey
-                                        Crypto.CanBeExtracted
-                                        secureContext
                                     )
                                     "Importing the exported key with the same named curve"
                                     (\importedKey ->
@@ -2402,10 +2415,10 @@ ecdsaTestsHelper secureContext label { namedCurve, digestAlgorithm } =
                                     )
                                 , awaitError
                                     (Crypto.importEcdsaPrivateKeyFromPkcs8
+                                        secureContext
+                                        Crypto.CanBeExtracted
                                         (shuffleNamedCurve namedCurve)
                                         exportedKey
-                                        Crypto.CanBeExtracted
-                                        secureContext
                                     )
                                     "Importing the exported key with a different named curve"
                                     (\err ->
@@ -2423,10 +2436,10 @@ ecdsaTestsHelper secureContext label { namedCurve, digestAlgorithm } =
                             concat
                                 [ await
                                     (Crypto.importEcdsaPrivateKeyFromJwk
+                                        secureContext
+                                        Crypto.CanBeExtracted
                                         namedCurve
                                         exportedKey
-                                        Crypto.CanBeExtracted
-                                        secureContext
                                     )
                                     "Importing the exported key with the same named curve"
                                     (\importedKey ->
@@ -2437,10 +2450,10 @@ ecdsaTestsHelper secureContext label { namedCurve, digestAlgorithm } =
                                     )
                                 , awaitError
                                     (Crypto.importEcdsaPrivateKeyFromJwk
+                                        secureContext
+                                        Crypto.CanBeExtracted
                                         (shuffleNamedCurve namedCurve)
                                         exportedKey
-                                        Crypto.CanBeExtracted
-                                        secureContext
                                     )
                                     "Importing the exported key with a different named curve"
                                     (\err ->
@@ -2459,10 +2472,10 @@ ecdsaTestsHelper secureContext label { namedCurve, digestAlgorithm } =
                                 [ await
                                     (Crypto.verifyWithEcdsa digestAlgorithm publicKey signature bytesToSign)
                                     "Verifying signed bytes"
-                                    (\_ ->
-                                        test "Succeeds when bytes that are being verified were the same as what was signed"
+                                    (\verifiedBytes ->
+                                        test "The verified bytes are the same as the signed bytes"
                                             (\_ ->
-                                                Expect.pass
+                                                Expect.equal verifiedBytes bytesToSign
                                             )
                                     )
                                 , awaitError
@@ -2539,11 +2552,11 @@ hmacTests secureContext =
             }
         , awaitError
             (Crypto.generateHmacKey 
+                secureContext
                 { length = Just 12
                 , hash = Crypto.Sha256
                 , extractable = Crypto.CanBeExtracted
                 }
-                secureContext
             )
             "Generate an HMAC key with a length of 12"
             (\err ->
@@ -2564,11 +2577,11 @@ generateHmacTestsHelper secureContext label { length, digestAlgorithm } =
     concat
         [ await
             (Crypto.generateHmacKey 
+                secureContext
                 { length = length
                 , hash = digestAlgorithm
                 , extractable = Crypto.CannotBeExtracted
                 }
-                secureContext
             )
             (withLabel "Generating an HMAC key that cannot be extracted")
             (\key ->
@@ -2595,11 +2608,11 @@ generateHmacTestsHelper secureContext label { length, digestAlgorithm } =
             )
         , await
             (Crypto.generateHmacKey 
+                secureContext
                 { length = length
                 , hash = digestAlgorithm
                 , extractable = Crypto.CanBeExtracted
                 }
-                secureContext
             )
             (withLabel "Generating an HMAC key that can be extracted")
             (\key ->
@@ -2614,11 +2627,11 @@ generateHmacTestsHelper secureContext label { length, digestAlgorithm } =
                         (\exportedKey ->
                             await 
                                 (Crypto.importHmacKeyFromRaw 
-                                    exportedKey
+                                    secureContext
+                                    Crypto.CanBeExtracted
                                     digestAlgorithm
                                     length
-                                    Crypto.CanBeExtracted
-                                    secureContext
+                                    exportedKey
                                 )
                                 "Importing the key"
                                 (\importedKey ->
@@ -2634,11 +2647,11 @@ generateHmacTestsHelper secureContext label { length, digestAlgorithm } =
                         (\exportedKey ->
                             await 
                                 (Crypto.importHmacKeyFromJwk
-                                    exportedKey
+                                    secureContext
+                                    Crypto.CanBeExtracted
                                     digestAlgorithm
                                     length
-                                    Crypto.CanBeExtracted
-                                    secureContext
+                                    exportedKey
                                 )
                                 "Importing the key"
                                 (\importedKey ->
@@ -2656,10 +2669,10 @@ generateHmacTestsHelper secureContext label { length, digestAlgorithm } =
                                 [ await
                                     (Crypto.verifyWithHmac key signature bytesToSign)
                                     "Verifying bytes"
-                                    (\_ ->
-                                        test "Verifying bytes with the right signature succeeds"
+                                    (\verifiedBytes ->
+                                        test "The verified bytes equal the bytes passed for verification"
                                             (\_ ->
-                                                Expect.pass
+                                                Expect.equal verifiedBytes bytesToSign
                                             )
                                     )
                                 , awaitError

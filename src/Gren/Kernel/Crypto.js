@@ -202,7 +202,7 @@ var _Crypto_generateAesKey = F4(
           return callback(__Scheduler_succeed(_Crypto_constructAesKey(key)));
         })
         .catch(function (err) {
-          return callback(__Scheduler_fail(__Crypto_AesCtrEncryptionError));
+          throw "There was an unforseen error that occured when attempting to generate an AES key. This shouldn't happen! Please file a ticket in the `gren-lang/core` Github repo (https://github.com/gren-lang/core)";
         });
     });
   },
@@ -264,7 +264,7 @@ var _Crypto_generateHmacKey = F5(
   },
 );
 
-// Exprort key
+// Export key
 
 var _Crypto_exportKey = F2(function (format, key) {
   return __Scheduler_binding(function (callback) {
@@ -442,7 +442,7 @@ var _Crypto_encryptWithRsaOaep = F3(function (label, key, bytes) {
         return callback(__Scheduler_succeed(new DataView(res)));
       })
       .catch(function (err) {
-        return callback(__Scheduler_fail(__Crypto_RsaOaepEncryptionError));
+        throw "There was an unforseen error that occured when attempting encrypt some bytes with RSA-OAEP. This shouldn't happen! Please file a ticket in the `gren-lang/core` Github repo (https://github.com/gren-lang/core)";
       });
   });
 });
@@ -612,7 +612,7 @@ var _Crypto_signWithRsaSsaPkcs1V1_5 = F2(function (key, bytes) {
         return callback(__Scheduler_succeed(new DataView(res)));
       })
       .catch(function (err) {
-        return callback(__Scheduler_fail(__Crypto_RsaSsaPkcs1V1_5SigningError));
+        throw "There was an unforseen error that occured when attempting sign some bytes with RSASSA-PKCS1-v1_5. This shouldn't happen! Please file a ticket in the `gren-lang/core` Github repo (https://github.com/gren-lang/core)";
       });
   });
 });
@@ -678,7 +678,7 @@ var _Crypto_verifyWithRsaSsaPkcs1V1_5 = F3(function (key, signature, bytes) {
       .verify(algorithm, key, signature, bytes)
       .then(function (res) {
         if (res) {
-          return callback(__Scheduler_succeed());
+          return callback(__Scheduler_succeed(bytes));
         }
         return callback(__Scheduler_fail());
       })
@@ -698,7 +698,7 @@ var _Crypto_verifyWithRsaPss = F4(function (saltLength, key, signature, bytes) {
       .verify(algorithm, key, signature, bytes)
       .then(function (res) {
         if (res) {
-          return callback(__Scheduler_succeed());
+          return callback(__Scheduler_succeed(bytes));
         }
         return callback(__Scheduler_fail());
       })
@@ -718,7 +718,7 @@ var _Crypto_verifyWithEcdsa = F4(function (hash, key, signature, bytes) {
       .verify(algorithm, key, signature, bytes)
       .then(function (res) {
         if (res) {
-          return callback(__Scheduler_succeed());
+          return callback(__Scheduler_succeed(bytes));
         }
         return callback(__Scheduler_fail());
       })
@@ -737,7 +737,7 @@ var _Crypto_verifyWithHmac = F3(function (key, signature, bytes) {
       .verify(algorithm, key, signature, bytes)
       .then(function (res) {
         if (res) {
-          return callback(__Scheduler_succeed());
+          return callback(__Scheduler_succeed(bytes));
         }
         return callback(__Scheduler_fail());
       })
