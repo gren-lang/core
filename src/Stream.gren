@@ -20,6 +20,7 @@ module Stream exposing
     , Transformation
     , identityTransformation
     , identityTransformationWithOptions
+    , nullTransformation
     , CustomTransformationAction(..)
     , customTransformation
     , customTransformationWithOptions
@@ -68,7 +69,7 @@ We have three kinds of streams: readable streams, writable streams, and transfor
 
 ## Transformation Streams
 
-@docs Transformation, identityTransformation, identityTransformationWithOptions, CustomTransformationAction, customTransformation, customTransformationWithOptions, readable, writable, pipeThrough, awaitAndPipeThrough, pipeTo
+@docs Transformation, identityTransformation, identityTransformationWithOptions, nullTransformation, CustomTransformationAction, customTransformation, customTransformationWithOptions, readable, writable, pipeThrough, awaitAndPipeThrough, pipeTo
 
 ## Useful Transformation Streams
 
@@ -280,6 +281,7 @@ type Transformation read write =
 
 
 {-| A [Transformation](#Transformation) that doesn't actually transform the data written to the writable stream.
+
 This can be useful as a communication primitive. You can pass the on the readable stream, allowing a one-way
 communication to some other part of your codebase.
 -}
@@ -302,6 +304,16 @@ empty or capacity is 0, the read will succeed once there's a value to be read.
 identityTransformationWithOptions : { readCapacity : Int, writeCapacity : Int } -> Task x (Transformation data data)
 identityTransformationWithOptions { readCapacity, writeCapacity } =
     Gren.Kernel.Stream.identityTransformation (max 1 readCapacity) (max 1 writeCapacity)
+
+
+{-| A [Transformation](#Transformation) that ignores all data written to it. The readable stream never outputs data,
+but is closed whenever the writable stream is closed.
+-}
+nullTransformation : data -> Task x (Transformation data data)
+nullTransformation initialState =
+    customTransformation
+        (\state _ -> UpdateState state)
+        initialState
 
 
 {-| When defining a custom [Transformation](#Transformation), you need to specify how the data coming in is handled.
