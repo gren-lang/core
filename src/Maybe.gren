@@ -1,7 +1,7 @@
 module Maybe exposing
     ( Maybe(..)
     , hasValue, checkValue, keepIf
-    , withDefault, withDefaultLazy, map, map2, map3, map4, map5
+    , withDefault, withDefaultLazy, map, map2, map3, andMap
     , andThen
     )
 
@@ -18,7 +18,7 @@ you with optional arguments, error handling, and records with optional fields.
 
 ## Transform
 
-@docs withDefault, withDefaultLazy, map, map2, map3, map4, map5, andThen
+@docs withDefault, withDefaultLazy, map, map2, map3, andMap, andThen
 
 -}
 
@@ -146,7 +146,7 @@ map f maybe =
             Nothing
 
 
-{-| Apply a function if all the arguments are `Just` a value.
+{-| Apply a function if both arguments are `Just` a value.
 
     map2 (+) (Just 3) (Just 4) == Just 7
 
@@ -176,7 +176,19 @@ map2 func ma mb =
                     Just (func a b)
 
 
-{-| -}
+{-| Apply a function if all three arguments are `Just` a value.
+
+    map3 (+) (Just 3) (Just 4) (Just 3) == Just 10
+
+    map3 (+) (Just 3) Nothing (Just 3) == Nothing
+
+    map3 (+) Nothing (Just 4) (Just 3) == Nothing
+
+    map3 (+) (String.toInt "1") (String.toInt "123") (String.toInt "4") == Just 128
+
+    map3 (+) (String.toInt "x") (String.toInt "123") (String.toInt "4") == Nothing
+
+-}
 map3 : (a -> b -> c -> value) -> Maybe a -> Maybe b -> Maybe c -> Maybe value
 map3 func ma mb mc =
     when ma is
@@ -197,61 +209,17 @@ map3 func ma mb mc =
                             Just (func a b c)
 
 
-{-| -}
-map4 : (a -> b -> c -> d -> value) -> Maybe a -> Maybe b -> Maybe c -> Maybe d -> Maybe value
-map4 func ma mb mc md =
-    when ma is
-        Nothing ->
-            Nothing
+{-| Combine multiple `Maybe`s. Helpful when [map2](#map2) and [map3](#map3) aren't enough.
 
-        Just a ->
-            when mb is
-                Nothing ->
-                    Nothing
-
-                Just b ->
-                    when mc is
-                        Nothing ->
-                            Nothing
-
-                        Just c ->
-                            when md is
-                                Nothing ->
-                                    Nothing
-
-                                Just d ->
-                                    Just (func a b c d)
-
-
-{-| -}
-map5 : (a -> b -> c -> d -> e -> value) -> Maybe a -> Maybe b -> Maybe c -> Maybe d -> Maybe e -> Maybe value
-map5 func ma mb mc md me =
-    when ma is
-        Nothing ->
-            Nothing
-
-        Just a ->
-            when mb is
-                Nothing ->
-                    Nothing
-
-                Just b ->
-                    when mc is
-                        Nothing ->
-                            Nothing
-
-                        Just c ->
-                            when md is
-                                Nothing ->
-                                    Nothing
-
-                                Just d ->
-                                    when me is
-                                        Nothing ->
-                                            Nothing
-
-                                        Just e ->
-                                            Just (func a b c d e)
+    Just (++)
+        |> andMap (Just "one ")
+        |> andMap (Just "more ")
+        |> andMap (Just "time")
+        == (Just "one more time")
+-}
+andMap : Maybe a -> Maybe (a -> b) -> Maybe b
+andMap =
+    map2 (|>)
 
 
 {-| Returns `Nothing` if the contained value doesn't pass the given

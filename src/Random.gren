@@ -2,7 +2,7 @@ effect module Random where { command = MyCmd } exposing
   ( Generator, Seed
   , int, float, uniform, weighted, constant
   , array, pair
-  , map, map2, map3, map4, map5
+  , map, map2, map3, andMap
   , andThen, lazy
   , minInt, maxInt
   , generate
@@ -26,7 +26,7 @@ by M. E. O'Neil. It is not cryptographically secure.
 @docs pair, array
 
 ## Mapping
-@docs map, map2, map3, map4, map5
+@docs map, map2, map3, andMap
 
 ## Fancy Stuff
 @docs andThen, lazy
@@ -495,7 +495,7 @@ map3 func (Generator genA) (Generator genB) (Generator genC) =
   )
 
 
-{-| Combine four generators.
+{-| Combine any number of generators.
 
 Say you are making game and want to place enemies or terrain randomly. You
 _could_ generate a [quadtree](https://en.wikipedia.org/wiki/Quadtree)!
@@ -505,7 +505,7 @@ _could_ generate a [quadtree](https://en.wikipedia.org/wiki/Quadtree)!
     type QuadTree a
       = Empty
       | Leaf a
-      | Node (QuadTree a) (QuadTree a) (QuadTree a) (QuadTree a)
+      | Node { one : QuadTree a, two : QuadTree a, three : QuadTree a, four : QuadTree a }
 
     quadTree : Random.Generator a -> Random.Generator (QuadTree a)
     quadTree leafGen =
@@ -517,17 +517,21 @@ _could_ generate a [quadtree](https://en.wikipedia.org/wiki/Quadtree)!
         Random.uniform
           (Random.constant Empty)
           [ Random.map Leaf leafGen
-          , Random.map4 Node subQuad subQuad subQuad subQuad
+          , Random.constant (\one two three four -> Node { one = one, two = two, three = three, four = four})
+              |> Random.andMap subQuad
+              |> Random.andMap subQuad
+              |> Random.andMap subQuad
+              |> Random.andMap subQuad
           ]
 
 We start by creating a `QuadTree` type where each quadrant is either `Empty`, a
-`Leaf` containing something interesting, or a `Node` with four sub-quadrants.
+Leaf` containing something interesting, or a `Node` with four sub-quadrants.
 
 Next the `quadTree` definition describes how to generate these values. A third
 of a time you get an `Empty` tree. A third of the time you get a `Leaf` with
 some interesting value. And a third of the time you get a `Node` full of more
-`QuadTree` values. How are those subtrees generated though? Well, we use our
-`quadTree` generator!
+QuadTree` values. How are those subtrees generated though? Well, we use our
+quadTree` generator!
 
 **Exercises:** Can `quadTree` generate infinite `QuadTree` values? Is there
 some way to limit the depth of the `QuadTree`? Can you render the `QuadTree`
@@ -537,39 +541,9 @@ the `QuadTree` to SVG?
 **Note:** Check out the docs for [`lazy`](#lazy) to learn why that is needed
 to define a recursive `Generator` like this one.
 -}
-map4 : (a -> b -> c -> d -> e) -> Generator a -> Generator b -> Generator c -> Generator d -> Generator e
-map4 func (Generator genA) (Generator genB) (Generator genC) (Generator genD) =
-  Generator (\seed0 ->
-    let
-      { value = a, seed = seed1 } = genA seed0
-      { value = b, seed = seed2 } = genB seed1
-      { value = c, seed = seed3 } = genC seed2
-      { value = d, seed = seed4 } = genD seed3
-    in
-      { value = func a b c d, seed = seed4 }
-  )
-
-
-{-| Combine five generators.
-
-If you need to combine more things, you can always do it by chaining
-[`andThen`](#andThen). There are also some additional helpers for this
-in [`elm-community/random-extra`][extra].
-
-[extra]: /packages/elm-community/random-extra/latest
--}
-map5 : (a -> b -> c -> d -> e -> f) -> Generator a -> Generator b -> Generator c -> Generator d -> Generator e -> Generator f
-map5 func (Generator genA) (Generator genB) (Generator genC) (Generator genD) (Generator genE) =
-  Generator (\seed0 ->
-    let
-      { value = a, seed = seed1 } = genA seed0
-      { value = b, seed = seed2 } = genB seed1
-      { value = c, seed = seed3 } = genC seed2
-      { value = d, seed = seed4 } = genD seed3
-      { value = e, seed = seed5 } = genE seed4
-    in
-      { value = func a b c d e, seed = seed5 }
-  )
+andMap : Generator a -> Generator (a -> b) -> Generator b
+andMap =
+  map2 (|>)
 
 
 {-| Generate fancy random values.
