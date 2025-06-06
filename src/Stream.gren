@@ -80,7 +80,7 @@ We have three kinds of streams: readable streams, writable streams, and transfor
 import Array exposing (Array)
 import Basics exposing (Bool, Int, (<|), (|>), (++), max)
 import Bytes exposing (Bytes)
-import Maybe exposing (Maybe)
+import Maybe exposing (Maybe(..))
 import Result exposing (Result(..))
 import String exposing (String)
 import Task exposing (Task)
@@ -160,12 +160,26 @@ read =
     Gren.Kernel.Stream.read
 
 
-{-| Reads `Bytes` off the stream and attempt to convert it into `String`.
+{-| Reads `Bytes` off the stream and attempt to convert it into `String`. If the conversion fails,
+the stream will be cancelled.
 -}
-readBytesAsString : Readable Bytes -> Task Error (Maybe String)
+readBytesAsString : Readable Bytes -> Task Error String
 readBytesAsString stream =
     read stream
-        |> Task.map Bytes.toString
+        |> Task.andThen
+            (\bytes ->
+                when Bytes.toString bytes is
+                    Just str ->
+                        Task.succeed str
+
+                    Nothing ->
+                        let
+                            reason =
+                                "Failed to convert bytes to string"
+                        in
+                        cancelReadable reason stream
+                            |> Task.andThen (\_ -> Task.fail (Cancelled reason))
+            ) 
 
 
 {-| Reads values of the stream, incrementally building a value with the provided function, until
