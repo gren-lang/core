@@ -211,7 +211,7 @@ map3 func ma mb mc =
 
 {-| Combine multiple `Maybe`s. Helpful when [map2](#map2) and [map3](#map3) aren't enough.
 
-    Just (++)
+    Just (\a b c -> a ++ b ++ c)
         |> andMap (Just "one ")
         |> andMap (Just "more ")
         |> andMap (Just "time")

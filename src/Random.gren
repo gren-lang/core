@@ -532,14 +532,6 @@ of a time you get an `Empty` tree. A third of the time you get a `Leaf` with
 some interesting value. And a third of the time you get a `Node` full of more
 QuadTree` values. How are those subtrees generated though? Well, we use our
 quadTree` generator!
-
-**Exercises:** Can `quadTree` generate infinite `QuadTree` values? Is there
-some way to limit the depth of the `QuadTree`? Can you render the `QuadTree`
-to HTML using absolute positions and fractional dimensions? Can you render
-the `QuadTree` to SVG?
-
-**Note:** Check out the docs for [`lazy`](#lazy) to learn why that is needed
-to define a recursive `Generator` like this one.
 -}
 andMap : Generator a -> Generator (a -> b) -> Generator b
 andMap =
