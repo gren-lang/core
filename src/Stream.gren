@@ -171,7 +171,7 @@ readBytesAsString stream =
 {-| Reads values of the stream, incrementally building a value with the provided function, until
 the stream is closed or some error occurs.
 
-If the provided function return's an Err, the attached String will be used as the cancellation
+If the provided function returns an `Err`, the attached `String` will be used as the cancellation
 reason for the stream.
 -}
 readUntilClosed : (a -> b -> Result String b) -> b -> Readable a -> Task Error b
