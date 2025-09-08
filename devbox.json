@@ -2,7 +2,7 @@
   "$schema":  "https://raw.githubusercontent.com/jetify-com/devbox/0.13.7/.schema/devbox.schema.json",
   "packages": [
     "nodejs@20",
-    "github:gren-lang/nix/0.6.0",
+    "gren@0.6",
     "nodePackages.prettier@latest"
   ],
   "shell": {
