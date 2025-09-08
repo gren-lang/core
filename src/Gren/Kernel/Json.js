@@ -385,7 +385,11 @@ function _Json_arrayEquality(aDecoders, bDecoders) {
 // ENCODE
 
 var _Json_encode = F2(function (indentLevel, value) {
-  return JSON.stringify(_Json_unwrap(value), null, indentLevel) + "";
+  return (
+    (indentLevel === 0
+      ? JSON.stringify(_Json_unwrap(value))
+      : JSON.stringify(_Json_unwrap(value), null, indentLevel)) + ""
+  );
 });
 
 function _Json_wrap__DEBUG(value) {
