@@ -4,15 +4,8 @@
     "name": "gren-lang/core",
     "summary": "Gren's core modules",
     "license": "BSD-3-Clause",
-    "version": "7.0.0",
+    "version": "7.0.1",
     "exposed-modules": {
-        "Primitives": [
-            "Basics",
-            "String",
-            "Char",
-            "Bitwise",
-            "Math"
-        ],
         "Bytes": [
             "Bytes",
             "Bytes.Encode",
@@ -24,13 +17,8 @@
             "Dict",
             "Set"
         ],
-        "Streams": [
-            "Stream",
-            "Stream.Log"
-        ],
-        "Error Handling": [
-            "Maybe",
-            "Result"
+        "Crypto": [
+            "Crypto"
         ],
         "Debug": [
             "Debug"
@@ -42,21 +30,33 @@
             "Process",
             "Task"
         ],
+        "Error Handling": [
+            "Maybe",
+            "Result"
+        ],
         "Json": [
             "Json.Decode",
             "Json.Encode"
         ],
+        "Primitives": [
+            "Basics",
+            "String",
+            "Char",
+            "Bitwise",
+            "Math"
+        ],
         "Random": [
             "Random"
+        ],
+        "Streams": [
+            "Stream",
+            "Stream.Log"
         ],
         "Strings": [
             "String.Regex"
         ],
         "Time": [
             "Time"
-        ],
-        "Crypto": [
-            "Crypto"
         ]
     },
     "gren-version": "0.6.0 <= v < 0.7.0",
