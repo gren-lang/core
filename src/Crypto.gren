@@ -26,13 +26,14 @@ module Crypto exposing
     , DigestAlgorithm(..), digest
     , Key, PublicKey, PrivateKey, KeyPair
     , Extractable(..)
+    , RsaOaepKey, RsaPssKey, RsaSsaPkcs1V1_5Key
     , RsaKeyParams, RsaKeyGenerationError(..)
     , generateRsaOaepKeyPair, generateRsaPssKeyPair, generateRsaSsaPkcs1V1_5KeyPair
-    , AesKeyParams, AesLength(..)
+    , AesCtrKey, AesCbcKey, AesGcmKey, AesKeyParams, AesLength(..)
     , generateAesCtrKey, generateAesCbcKey, generateAesGcmKey
-    , EcKeyParams, EcNamedCurve(..)
+    , EcdsaKey, EcdhKey, EcKeyParams, EcNamedCurve(..)
     , generateEcdsaKeyPair
-    , HmacKeyParams, HmacKeyGenerationError(..)
+    , HmacKey, HmacKeyParams, HmacKeyGenerationError(..)
     , generateHmacKey
     , ExportKeyError(..)
     , exportRsaOaepPublicKeyAsSpki, exportRsaOaepPublicKeyAsJwk
@@ -232,7 +233,7 @@ Generate, import, and export keys for completing cryptographic operations.
 
 Generate keys to use with RSA (Rivest-Shamir-Adleman) algorithm.
 
-@docs RsaKeyParams, RsaKeyGenerationError
+@docs RsaOaepKey, RsaPssKey, RsaSsaPkcs1V1_5Key, RsaKeyParams, RsaKeyGenerationError
 
 @docs generateRsaOaepKeyPair, generateRsaPssKeyPair, generateRsaSsaPkcs1V1_5KeyPair
 
@@ -240,7 +241,7 @@ Generate keys to use with RSA (Rivest-Shamir-Adleman) algorithm.
 
 Generate keys to use with AES (Advanced Encryption Standard) algorithm.
 
-@docs AesKeyParams, AesLength
+@docs AesCtrKey, AesCbcKey, AesGcmKey, AesKeyParams, AesLength
 
 @docs generateAesCtrKey, generateAesCbcKey, generateAesGcmKey
 
@@ -248,7 +249,7 @@ Generate keys to use with AES (Advanced Encryption Standard) algorithm.
 
 Generate keys to use with EC (Elliptic Curve) algorithm.
 
-@docs EcKeyParams, EcNamedCurve
+@docs EcdsaKey, EcdhKey, EcKeyParams, EcNamedCurve
 
 @docs generateEcdsaKeyPair
 
@@ -256,7 +257,7 @@ Generate keys to use with EC (Elliptic Curve) algorithm.
 
 Generate keys to use with HMAC (Hash-Based Message Authentication Code) algorithm.
 
-@docs HmacKeyParams, HmacKeyGenerationError
+@docs HmacKey, HmacKeyParams, HmacKeyGenerationError
 
 @docs generateHmacKey
 
