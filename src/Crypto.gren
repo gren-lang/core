@@ -1708,7 +1708,7 @@ type AesGcmTagLength
 {-| Required paramaters to encrypt and decrypt values with the AES-GCM algorithm.
 
 - `iv` needs to be be greater than 12 bytes, but less than 128 bytes. The recommended 
-length is 96 bytes.
+length is 12 bytes.
 - `additionalData` is completely optional data that is not encrypted, but will be
 a part of the completed, encrypted, `Bytes`. If provided when encrypting data, the
 same value must be provided when decrypting it or else the operation will fail.
