@@ -4,7 +4,7 @@
     "name": "gren-lang/core",
     "summary": "Gren's core modules",
     "license": "BSD-3-Clause",
-    "version": "7.0.1",
+    "version": "7.1.0",
     "exposed-modules": {
         "Bytes": [
             "Bytes",
