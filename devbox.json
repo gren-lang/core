@@ -14,11 +14,11 @@
       "format:check": "prettier -c \"!**/*.json\" .",
       "test": [
         "cd tests/",
-        "./run-tests.sh"
+        "gren run Main"
       ],
       "integration": [
         "cd integration_tests",
-        "./run-tests.sh"
+        "gren run Main"
       ]
     }
   }
