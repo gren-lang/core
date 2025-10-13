@@ -13,10 +13,14 @@
       "format": "prettier -w \"!**/*.json\" .",
       "format:check": "prettier -c \"!**/*.json\" .",
       "test": [
+        "devbox run test:unit",
+        "devbox run test:integration"
+      ],
+      "test:unit": [
         "cd tests/",
         "gren run Main"
       ],
-      "integration": [
+      "test:integration": [
         "cd integration_tests",
         "gren run Main"
       ]
