@@ -9,7 +9,7 @@ module String exposing
     , toArray, fromArray
     , toUpper, toLower, pad, padLeft, padRight, trim, trimLeft, trimRight
     , map, keepIf, foldl, foldr, any, all
-    , unitLength, getUnit, foldlUnits, foldrUnits
+    , unitLength, getUnit, foldlUnits, foldrUnits, sliceUnits
     )
 
 {-| A built-in representation for efficient string manipulation. When it comes to strings,
@@ -78,7 +78,7 @@ Cosmetic operations such as padding with extra characters or trimming whitespace
 
 Functions that operates on units instead of code points.
 
-@docs unitLength, getUnit, foldlUnits, foldrUnits
+@docs unitLength, getUnit, foldlUnits, foldrUnits, sliceUnits
 
 -}
 
@@ -825,7 +825,7 @@ unitLength =
 {-| Retrieve the character unit at a given index, or `Nothing` if the index is out of bounds.
 A negative index uses the end of the string as the starting point.
 
-    getUnit 1 "abc" == Just 'a'
+    getUnit 1 "abc" == Just 'b'
     
     getUnit 10 "abc" == Nothing
     
@@ -857,3 +857,17 @@ character.
 foldrUnits : (Char -> b -> b) -> b -> String -> b
 foldrUnits =
     Gren.Kernel.String.foldrUnits
+
+{-| Take a substring given a start and end index. Negative indexes
+are taken starting from the _end_ of the array. Indexes refers to character units,
+_not_ code points!
+
+    sliceUnits 1 -1 "snakes" == "nake"
+
+    sliceUnits 2 5 "snakes" == "ake"
+
+    sliceUnits 3 5 "hi 😎 there" == "😎"
+-}
+sliceUnits : Int -> Int -> String -> String
+sliceUnits =
+    Gren.Kernel.String.sliceUnits

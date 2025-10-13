@@ -11,79 +11,82 @@ import Test exposing (..)
 
 tests : Test
 tests =
-    let
-        simpleTests =
-            describe "Simple Stuff"
-                [ test "is empty" <| \{} -> Expect.equal True (String.isEmpty "")
-                , test "is not empty" <| \{} -> Expect.equal True (not (String.isEmpty "the world"))
-                , test "count" <| \{} -> Expect.equal 11 (String.count "innumerable")
-                , test "endsWith" <| \{} -> Expect.equal True <| String.endsWith "ship" "spaceship"
-                , test "reverse" <| \{} -> Expect.equal "desserts" (String.reverse "stressed")
-                , test "repeat" <| \{} -> Expect.equal "hahaha" (String.repeat 3 "ha")
-                , test "indexes" <| \{} -> Expect.equal [ 0, 2 ] (String.indices "a" "aha")
-                , test "empty indexes" <| \{} -> Expect.equal [] (String.indices "" "aha")
-                ]
-
-        combiningTests =
-            describe "Combining Strings"
-                [ test "popFirst non-empty" <| \{} -> Expect.equal (Just { first = 'a', rest = "bc" }) (String.popFirst "abc")
-                , test "popFirst" <| \{} -> Expect.equal Nothing (String.popFirst "")
-                , test "prepend" <| \{} -> Expect.equal "butterfly" (String.prepend "butter" "fly")
-                , test "append 1" <| \{} -> Expect.equal "flybutter" (String.append "butter" "fly")
-                , test "append 2" <| \{} -> Expect.equal "butter" (String.append "butter" "")
-                , test "append 3" <| \{} -> Expect.equal "butter" (String.append "" "butter")
-                , test "split commas" <| \{} -> Expect.equal [ "cat", "dog", "cow" ] (String.split "," "cat,dog,cow")
-                , test "split slashes" <| \{} -> Expect.equal [ "home", "steve", "Desktop", "" ] (String.split "/" "home/steve/Desktop/")
-                , test "join spaces" <| \{} -> Expect.equal "cat dog cow" (String.join " " [ "cat", "dog", "cow" ])
-                , test "join slashes" <| \{} -> Expect.equal "home/steve/Desktop" (String.join "/" [ "home", "steve", "Desktop" ])
-                , test "slice 1" <| \{} -> Expect.equal "c" (String.slice 2 3 "abcd")
-                , test "slice 2" <| \{} -> Expect.equal "abc" (String.slice 0 3 "abcd")
-                , test "slice 3" <| \{} -> Expect.equal "abc" (String.slice 0 -1 "abcd")
-                , test "slice 4" <| \{} -> Expect.equal "cd" (String.slice -2 4 "abcd")
-                ]
-
-        intTests =
-            describe "String.toInt"
-                [ goodInt "1234" 1234
-                , goodInt "+1234" 1234
-                , goodInt "-1234" -1234
-                , badInt "1.34"
-                , badInt "1e31"
-                , badInt "123a"
-                , goodInt "0123" 123
-                , badInt "0x001A"
-                , badInt "0x001a"
-                , badInt "0xBEEF"
-                , badInt "0x12.0"
-                , badInt "0x12an"
-                ]
-
-        floatTests =
-            describe "String.toFloat"
-                [ goodFloat "123" 123
-                , goodFloat "3.14" 3.14
-                , goodFloat "+3.14" 3.14
-                , goodFloat "-3.14" -3.14
-                , goodFloat "0.12" 0.12
-                , goodFloat ".12" 0.12
-                , goodFloat "1e-42" 1.0e-42
-                , goodFloat "6.022e23" 6.022e23
-                , goodFloat "6.022E23" 6.022e23
-                , goodFloat "6.022e+23" 6.022e23
-                , badFloat "6.022e"
-                , badFloat "6.022n"
-                , badFloat "6.022.31"
-                ]
-
-        queryTests =
-            describe "String queries"
-                [ test "any true" <| \{} -> Expect.equal True (String.any Char.isDigit "one is 1")
-                , test "any false" <| \{} -> Expect.equal False (String.any Char.isDigit "one is one")
-                , test "all true" <| \{} -> Expect.equal True (String.all Char.isDigit "123")
-                , test "all false" <| \{} -> Expect.equal False (String.all Char.isDigit "1 2 3")
-                ]
-    in
-    describe "String" [ simpleTests, combiningTests, intTests, floatTests, queryTests ]
+    describe "String"
+        [ describe "Simple Stuff"
+            [ test "is empty" <| \{} -> Expect.equal True (String.isEmpty "")
+            , test "is not empty" <| \{} -> Expect.equal True (not (String.isEmpty "the world"))
+            , test "count" <| \{} -> Expect.equal 11 (String.count "innumerable")
+            , test "count (unicode)" <| \_ -> Expect.equal 1 (String.count "😎")
+            , test "endsWith" <| \{} -> Expect.equal True <| String.endsWith "ship" "spaceship"
+            , test "reverse" <| \{} -> Expect.equal "desserts" (String.reverse "stressed")
+            , test "repeat" <| \{} -> Expect.equal "hahaha" (String.repeat 3 "ha")
+            , test "indexes" <| \{} -> Expect.equal [ 0, 2 ] (String.indices "a" "aha")
+            , test "empty indexes" <| \{} -> Expect.equal [] (String.indices "" "aha")
+            ]
+        , describe "Combining"
+            [ test "popFirst non-empty" <| \{} -> Expect.equal (Just { first = 'a', rest = "bc" }) (String.popFirst "abc")
+            , test "popFirst" <| \{} -> Expect.equal Nothing (String.popFirst "")
+            , test "prepend" <| \{} -> Expect.equal "butterfly" (String.prepend "butter" "fly")
+            , test "append 1" <| \{} -> Expect.equal "flybutter" (String.append "butter" "fly")
+            , test "append 2" <| \{} -> Expect.equal "butter" (String.append "butter" "")
+            , test "append 3" <| \{} -> Expect.equal "butter" (String.append "" "butter")
+            , test "split commas" <| \{} -> Expect.equal [ "cat", "dog", "cow" ] (String.split "," "cat,dog,cow")
+            , test "split slashes" <| \{} -> Expect.equal [ "home", "steve", "Desktop", "" ] (String.split "/" "home/steve/Desktop/")
+            , test "join spaces" <| \{} -> Expect.equal "cat dog cow" (String.join " " [ "cat", "dog", "cow" ])
+            , test "join slashes" <| \{} -> Expect.equal "home/steve/Desktop" (String.join "/" [ "home", "steve", "Desktop" ])
+            , test "slice 1" <| \{} -> Expect.equal "c" (String.slice 2 3 "abcd")
+            , test "slice 2" <| \{} -> Expect.equal "abc" (String.slice 0 3 "abcd")
+            , test "slice 3" <| \{} -> Expect.equal "abc" (String.slice 0 -1 "abcd")
+            , test "slice 4" <| \{} -> Expect.equal "cd" (String.slice -2 4 "abcd")
+            ]
+        , describe "toInt"
+            [ goodInt "1234" 1234
+            , goodInt "+1234" 1234
+            , goodInt "-1234" -1234
+            , badInt "1.34"
+            , badInt "1e31"
+            , badInt "123a"
+            , goodInt "0123" 123
+            , badInt "0x001A"
+            , badInt "0x001a"
+            , badInt "0xBEEF"
+            , badInt "0x12.0"
+            , badInt "0x12an"
+            ]
+        , describe "toFloat"
+            [ goodFloat "123" 123
+            , goodFloat "3.14" 3.14
+            , goodFloat "+3.14" 3.14
+            , goodFloat "-3.14" -3.14
+            , goodFloat "0.12" 0.12
+            , goodFloat ".12" 0.12
+            , goodFloat "1e-42" 1.0e-42
+            , goodFloat "6.022e23" 6.022e23
+            , goodFloat "6.022E23" 6.022e23
+            , goodFloat "6.022e+23" 6.022e23
+            , badFloat "6.022e"
+            , badFloat "6.022n"
+            , badFloat "6.022.31"
+            ]
+        , describe "Queries"
+            [ test "any true" <| \{} -> Expect.equal True (String.any Char.isDigit "one is 1")
+            , test "any false" <| \{} -> Expect.equal False (String.any Char.isDigit "one is one")
+            , test "all true" <| \{} -> Expect.equal True (String.all Char.isDigit "123")
+            , test "all false" <| \{} -> Expect.equal False (String.all Char.isDigit "1 2 3")
+            ]
+        , describe "Unit operations"
+            [ test "length" <| \_ -> Expect.equal 3 (String.unitLength "abc")
+            , test "length (unicode)" <| \_ -> Expect.equal 2 (String.unitLength "😎")
+            , test "getUnit" <| \_ -> Expect.equal (Just 'y') (String.getUnit 1 "xyz")
+            , test "getUnit (fail)" <| \_ -> Expect.equal Nothing (String.getUnit 10 "xyz")
+            , test "getUnit (negative)" <| \_ -> Expect.equal (Just 'z') (String.getUnit -1 "xyz")
+            , test "foldlUnits" <| \_ -> Expect.equal "time" (String.foldl String.pushFirst "" "emit")
+            , test "foldrUnits" <| \_ -> Expect.equal "emit" (String.foldr String.pushFirst "" "emit")
+            , test "sliceUnits" <| \_ -> Expect.equal "second" (String.sliceUnits 6 1000 "first second")
+            , test "sliceUnits (negative end)" <| \_ -> Expect.equal "nake" (String.sliceUnits 1 -1 "snakes")
+            , test "sliceUnits (unicode)" <| \_ -> Expect.equal "😎" (String.sliceUnits 3 5 "hi 😎 there")
+            ]
+        ]
 
 
 

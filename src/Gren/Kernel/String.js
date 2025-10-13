@@ -268,9 +268,9 @@ var _String_unitLength = function (str) {
 };
 
 var _String_getUnit = F2(function (index, str) {
-  var ret = str.at(index);
+  var char = str.at(index);
 
-  if (typeof ret === "undefined") {
+  if (typeof char === "undefined") {
     return __Maybe_Nothing;
   }
 
@@ -291,4 +291,8 @@ var _String_foldrUnits = F3(function (fn, state, str) {
   }
 
   return state;
+});
+
+var _String_sliceUnits = F3(function (start, end, str) {
+  return str.slice(start, end);
 });
