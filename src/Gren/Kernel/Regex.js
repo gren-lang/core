@@ -13,7 +13,7 @@ var _Regex_fromStringWith = F2(function (options, string) {
     return __Maybe_Nothing;
   }
 
-  var flags = "g";
+  var flags = "gu";
   if (options.__$multiline) {
     flags += "m";
   }
@@ -86,5 +86,3 @@ var _Regex_replaceAtMost = F4(function (n, re, replacer, string) {
 var _Regex_splitAtMost = F3(function (n, re, str) {
   return str.split(re, n);
 });
-
-var _Regex_infinity = Number.MAX_SAFE_INTEGER;

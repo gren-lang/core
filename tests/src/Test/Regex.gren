@@ -14,6 +14,9 @@ tests =
         [ test "Regex.replace" <| \{} ->
             Regex.replace vowels (\_ -> "_") "abc"
                 |> Expect.equal "_bc"
+        , test "Regex has unicode enabled" <| \{} ->
+            Regex.replace smily (\_ -> "_") "you are all 🙂 aren't you?"
+                |> Expect.equal "you are all _ aren't you?"
         , test "Regex.split with never and empty string returns empty string" <| \{} ->
             Regex.split Regex.never ""
                 |> Expect.equal [""]
@@ -32,4 +35,10 @@ tests =
 vowels : Regex
 vowels = 
     Regex.fromString "[aeiou]"
+        |> Maybe.withDefault Regex.never
+
+
+smily : Regex
+smily = 
+    Regex.fromString "[🙂]"
         |> Maybe.withDefault Regex.never
