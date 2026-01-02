@@ -5,7 +5,7 @@ module Json.Decode exposing
     , maybe, oneOf
     , decodeString, decodeValue, Value, Error(..), errorToString
     , map, map2, map3, map4, map5, map6, map7, map8
-    , lazy, value, null, succeed, fail, andThen
+    , lazy, value, null, succeed, fail, andThen, andMap
     )
 
 {-| Turn JSON values into Gren values. We've inherited this from Elm. Definitely check out this [intro to
@@ -44,7 +44,7 @@ JSON decoders][guide] to get a feel for how this library works!
 
 ## Fancy Decoding
 
-@docs lazy, value, null, succeed, fail, andThen
+@docs lazy, value, null, succeed, fail, andThen, andMap
 
 -}
 
@@ -715,6 +715,36 @@ andThen : (a -> Decoder b) -> Decoder a -> Decoder b
 andThen =
     Gren.Kernel.Json.andThen
 
+
+{-| Use andMap to incrementally decode a JSON object. Each andMap
+provides a value that will be an argument to a type constructor.
+For example:
+
+```
+-- The Type
+type alias Info =
+    { height : Float
+    , age : Int
+    }
+
+-- The Constructor
+makeInfo : Float -> Int -> Info
+makeInfo height age =
+    { height = height
+    , age = age
+    }
+
+-- The Decoder
+infoDecoder : Decoder Info
+infoDecoder =
+    succeed makeInfo
+        |> andMap (field "height" float)
+        |> andMap (field "age" int)
+```
+-}
+andMap : Decoder a -> Decoder (a -> b) -> Decoder b
+andMap =
+    map2 (|>)
 
 {-| Sometimes you have JSON with recursive structure, like nested comments.
 You can use `lazy` to make sure your decoder unrolls lazily.
