@@ -720,27 +720,26 @@ andThen =
 provides a value that will be an argument to a type constructor.
 For example:
 
-```
--- The Type
-type alias Info =
-    { height : Float
-    , age : Int
-    }
+    -- The Type
+    type alias Info =
+        { height : Float
+        , age : Int
+        }
 
--- The Constructor
-makeInfo : Float -> Int -> Info
-makeInfo height age =
-    { height = height
-    , age = age
-    }
+    -- The Constructor
+    makeInfo : Float -> Int -> Info
+    makeInfo height age =
+        { height = height
+        , age = age
+        }
 
--- The Decoder
-infoDecoder : Decoder Info
-infoDecoder =
-    succeed makeInfo
-        |> andMap (field "height" float)
-        |> andMap (field "age" int)
-```
+    -- The Decoder
+    infoDecoder : Decoder Info
+    infoDecoder =
+        succeed makeInfo
+            |> andMap (field "height" float)
+            |> andMap (field "age" int)
+
 -}
 andMap : Decoder a -> Decoder (a -> b) -> Decoder b
 andMap =
