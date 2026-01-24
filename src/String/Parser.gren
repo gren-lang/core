@@ -50,7 +50,6 @@ import Basics exposing (..)
 import Char exposing (Char)
 import String exposing (String)
 import String.Parser.Advanced as A
-import Set
 import Result exposing (Result(..))
 import Maybe exposing (Maybe(..))
 import Array exposing (Array)
@@ -944,14 +943,12 @@ we could try something like this:
 
     import Char
     import Parser exposing (..)
-    import Set
 
     typeVar : Parser String
     typeVar =
       variable
         { start = Char.isLower
         , inner = \c -> Char.isAlphaNum c || c == '_'
-        , reserved = Set.fromList [ "let", "in", "when", "of" ]
         }
 
 This is saying it _must_ start with a lower-case character. After that,
@@ -961,14 +958,12 @@ you run into any of these reserved names, it is definitely not a variable.
 variable :
   { start : Char -> Bool
   , inner : Char -> Bool
-  , reserved : Set.Set String
   }
   -> Parser String
 variable i =
   A.variable
     { start = i.start
     , inner = i.inner
-    , reserved = i.reserved
     , expecting = ExpectingVariable
     }
 

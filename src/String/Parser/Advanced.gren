@@ -53,7 +53,6 @@ import Basics exposing (..)
 import String exposing (String)
 import Array exposing (Array)
 import Char exposing (Char)
-import Set
 import Result exposing (Result(..))
 import Maybe exposing (Maybe(..))
 
@@ -784,7 +783,6 @@ parsing a specific definition:
 
     import Char
     import Parser.Advanced exposing (..)
-    import Set
 
     type Context
       = Definition String
@@ -808,7 +806,6 @@ parsing a specific definition:
       variable
         { start = Char.isLower
         , inner = Char.isAlphaNum
-        , reserved = Set.fromList ["let","in"]
         , expecting = ExpectingFunctionName
         }
 
@@ -992,7 +989,6 @@ problem yourself.
 variable :
   { start : Char -> Bool
   , inner : Char -> Bool
-  , reserved : Set.Set String
   , expecting : x
   }
   -> Parser c x String
@@ -1003,7 +999,7 @@ variable i =
         isSubChar i.start s.offset s.src
     in
     if firstOffset == -1 then
-      Bad { pred = False, bag = (fromState s i.expecting) }
+      Bad { pred = False, bag = fromState s i.expecting }
     else
       let
         s1 =
@@ -1015,10 +1011,7 @@ variable i =
         name =
           String.sliceUnits s.offset s1.offset s.src
       in
-      if Set.member name i.reserved then
-        Bad { pred = False, bag = (fromState s i.expecting) }
-      else
-        Good { pred = True, value = name, state = s1 }
+      Good { pred = True, value = name, state = s1 }
 
 
 varHelp : (Char -> Bool) -> Int -> Int -> Int -> String -> Int -> Array (Located c) -> State c
