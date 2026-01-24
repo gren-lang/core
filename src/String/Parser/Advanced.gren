@@ -965,14 +965,6 @@ isSubChar =
   Gren.Kernel.Parser.isSubChar
 
 
-{-| Check an offset in the string. Is it equal to the given Char? Are they
-both ASCII characters?
--}
-isAsciiCode : Int -> Int -> String -> Bool
-isAsciiCode =
-  Gren.Kernel.Parser.isAsciiCode
-
-
 {-| Find a substring after a given offset.
 
     findSubString "42" offset row col "Is 42 the answer?"
