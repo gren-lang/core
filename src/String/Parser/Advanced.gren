@@ -1,8 +1,8 @@
 module String.Parser.Advanced exposing
   ( Parser, run, DeadEnd, inContext, Token(..)
-  , int, float, number, symbol, keyword, variable, end
+  , int, token, keyword, variable, end
   , succeed, keep, skip, lazy, andThen, problem
-  , oneOf, map, mapError, backtrackable, commit, token
+  , oneOf, map, mapError, backtrackable, commit 
   , sequence, Trailing(..), loop, Step(..)
   , spaces, lineComment, multiComment, Nestable(..)
   , getChompedString, chompIf, chompWhile, chompUntil, chompUntilEndOr, mapChompedString
@@ -24,13 +24,13 @@ certain scenarios.**
 * * *
 
 # Building Blocks
-@docs int, float, number, symbol, keyword, variable, end
+@docs int, token, keyword, variable, end
 
 # Pipelines
 @docs succeed, keep, skip, lazy, andThen, problem
 
 # Branches
-@docs oneOf, map, mapError, backtrackable, commit, token
+@docs oneOf, map, mapError, backtrackable, commit 
 
 # Loops
 @docs sequence, Trailing, loop, Step
@@ -464,24 +464,6 @@ commit a =
   Parser <| \s -> Good { pred = True, value = a, state = s }
 
 
-
--- SYMBOL
-
-
-{-| Just like [`Parser.symbol`](Parser#symbol) except you provide a `Token` to
-clearly indicate your custom type of problems:
-
-    comma : Parser Context Problem {}
-    comma =
-      symbol (Token "," ExpectingComma)
-
--}
-symbol : Token x -> Parser c x {}
-symbol =
-  token
-
-
-
 -- KEYWORD
 
 
@@ -603,191 +585,31 @@ yourself. The only difference is that you provide a two potential problems:
 
 You can use problems like `ExpectingInt` and `InvalidNumber`.
 -}
-int : x -> x -> Parser c x Int
-int expecting invalid =
-  number
-    { int = Ok identity
-    , hex = Err invalid
-    , octal = Err invalid
-    , binary = Err invalid
-    , float = Err invalid
-    , invalid = invalid
-    , expecting = expecting
-    }
+int : x -> Parser c x Int
+int invalid =
+  oneOf
+    [ chompIf (\c -> c == '0') invalid
+      |> andThen
+        (\_ ->
+          oneOf
+            [ chompIf Char.isDigit invalid
+                |> andThen (\_ -> problem invalid)
+            , succeed 0
+            ]
+        )
+    , chompIf Char.isDigit invalid
+      |> skip (chompWhile Char.isDigit)
+      |> getChompedString
+      |> andThen
+        (\str ->
+          when String.toInt str is
+            Nothing ->
+              problem invalid
 
-
-
--- FLOAT
-
-
-{-| Just like [`Parser.float`](Parser#float) where you have to handle negation
-yourself. The only difference is that you provide a two potential problems:
-
-    float : x -> x -> Parser c x Float
-    float expecting invalid =
-      number
-        { int = Ok toFloat
-        , hex = Err invalid
-        , octal = Err invalid
-        , binary = Err invalid
-        , float = Ok identity
-        , invalid = invalid
-        , expecting = expecting
-        }
-
-You can use problems like `ExpectingFloat` and `InvalidNumber`.
--}
-float : x -> x -> Parser c x Float
-float expecting invalid =
-  number
-    { int = Ok toFloat
-    , hex = Err invalid
-    , octal = Err invalid
-    , binary = Err invalid
-    , float = Ok identity
-    , invalid = invalid
-    , expecting = expecting
-    }
-
-
-
--- NUMBER
-
-
-{-| Just like [`Parser.number`](Parser#number) where you have to handle
-negation yourself. The only difference is that you provide all the potential
-problems.
--}
-number
-  : { int : Result x (Int -> a)
-    , hex : Result x (Int -> a)
-    , octal : Result x (Int -> a)
-    , binary : Result x (Int -> a)
-    , float : Result x (Float -> a)
-    , invalid : x
-    , expecting : x
-    }
-  -> Parser c x a
-number c =
-  Parser <| \s ->
-    if isAsciiCode 0x30 {- 0 -} s.offset s.src then
-      let
-        zeroOffset = s.offset + 1
-        baseOffset = zeroOffset + 1
-      in
-      if isAsciiCode 0x78 {- x -} zeroOffset s.src then
-        finalizeInt c.invalid c.hex baseOffset (consumeBase16 baseOffset s.src) s
-      else if isAsciiCode 0x6F {- o -} zeroOffset s.src then
-        finalizeInt c.invalid c.octal baseOffset (consumeBase 8 baseOffset s.src) s
-      else if isAsciiCode 0x62 {- b -} zeroOffset s.src then
-        finalizeInt c.invalid c.binary baseOffset (consumeBase 2 baseOffset s.src) s
-      else
-        finalizeFloat c.invalid c.expecting c.int c.float { offset = zeroOffset, total = 0 } s
-
-    else
-      finalizeFloat c.invalid c.expecting c.int c.float (consumeBase 10 s.offset s.src) s
-
-
-consumeBase : Int -> Int -> String -> { offset: Int, total: Int }
-consumeBase =
-  Gren.Kernel.Parser.consumeBase
-
-
-consumeBase16 : Int -> String -> { offset: Int, total: Int }
-consumeBase16 =
-  Gren.Kernel.Parser.consumeBase16
-
-
-finalizeInt : x -> Result x (Int -> a) -> Int -> { offset: Int, total: Int } -> State c -> PStep c x a
-finalizeInt invalid handler startOffset { offset, total } s =
-  when handler is
-    Err x ->
-      Bad { pred = True, bag = (fromState s x) }
-
-    Ok toValue ->
-      if startOffset == offset
-        then Bad { pred = (s.offset < startOffset), bag = (fromState s invalid) }
-        else Good { pred = True, value = (toValue total), state = (bumpOffset offset s) }
-
-
-bumpOffset : Int -> State c -> State c
-bumpOffset offset s =
-  { src = s.src
-  , offset = offset
-  , indent = s.indent
-  , context = s.context
-  , row = s.row
-  , col = s.col + (offset - s.offset)
-  }
-
-
-finalizeFloat : x -> x -> Result x (Int -> a) -> Result x (Float -> a) -> { offset: Int, total: Int } -> State c -> PStep c x a
-finalizeFloat invalid expecting intSettings floatSettings intPair s =
-  let
-    intOffset = intPair.offset
-    floatOffset = consumeDotAndExp intOffset s.src
-  in
-  if floatOffset < 0 then
-    Bad { pred = True, bag = (fromInfo s.row (s.col - (floatOffset + s.offset)) invalid s.context) }
-
-  else if s.offset == floatOffset then
-    Bad { pred = False, bag = (fromState s expecting) }
-
-  else if intOffset == floatOffset then
-    finalizeInt invalid intSettings s.offset intPair s
-
-  else
-    when floatSettings is
-      Err x ->
-        Bad { pred = True, bag = (fromState s invalid) }
-
-      Ok toValue ->
-        when String.toFloat (String.sliceUnits s.offset floatOffset s.src) is
-          Nothing -> Bad { pred = True, bag = (fromState s invalid) }
-          Just n -> Good { pred = True, value = (toValue n), state = (bumpOffset floatOffset s) }
-
-
---
--- On a failure, returns negative index of problem.
---
-consumeDotAndExp : Int -> String -> Int
-consumeDotAndExp offset src =
-  if isAsciiCode 0x2E {- . -} offset src then
-    consumeExp (chompBase10 (offset + 1) src) src
-  else
-    consumeExp offset src
-
-
---
--- On a failure, returns negative index of problem.
---
-consumeExp : Int -> String -> Int
-consumeExp offset src =
-  if isAsciiCode 0x65 {- e -} offset src || isAsciiCode 0x45 {- E -} offset src then
-    let
-      eOffset = offset + 1
-
-      expOffset =
-        if isAsciiCode 0x2B {- + -} eOffset src || isAsciiCode 0x2D {- - -} eOffset src then
-          eOffset + 1
-        else
-          eOffset
-
-      newOffset = chompBase10 expOffset src
-    in
-    if expOffset == newOffset then
-      -newOffset
-    else
-      newOffset
-
-  else
-    offset
-
-
-chompBase10 : Int -> String -> Int
-chompBase10 =
-  Gren.Kernel.Parser.chompBase10
-
+            Just num ->
+              succeed num
+        )
+    ]
 
 
 -- END

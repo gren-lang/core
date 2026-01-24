@@ -1,6 +1,6 @@
 module String.Parser exposing
   ( Parser, run
-  , int, float, number, symbol, keyword, variable, end
+  , int, keyword, variable, end
   , succeed, keep, skip, lazy, andThen, problem
   , oneOf, map, backtrackable, commit, token
   , sequence, Trailing(..), loop, Step(..)
@@ -18,13 +18,13 @@ module String.Parser exposing
 @docs Parser, run
 
 # Building Blocks
-@docs int, float, number, symbol, keyword, variable, end
+@docs int, token, keyword, variable, end
 
 # Pipelines
 @docs succeed, keep, skip, lazy, andThen, problem
 
 # Branches
-@docs oneOf, map, backtrackable, commit, token
+@docs oneOf, map, backtrackable, commit
 
 # Loops
 @docs sequence, Trailing, loop, Step
@@ -139,13 +139,7 @@ elsewhere!
 type Problem
   = Expecting String
   | ExpectingInt
-  | ExpectingHex
-  | ExpectingOctal
-  | ExpectingBinary
-  | ExpectingFloat
-  | ExpectingNumber
   | ExpectingVariable
-  | ExpectingSymbol String
   | ExpectingKeyword String
   | ExpectingEnd
   | UnexpectedChar
@@ -178,20 +172,8 @@ deadEndToString deadEnd =
             "Expecting: \"" ++ str ++ "\""
         ExpectingInt ->
             "ExpectingInt"
-        ExpectingHex ->
-            "ExpectingHex"
-        ExpectingOctal ->
-            "ExpectingOctal"
-        ExpectingBinary ->
-            "ExpectingBinary"
-        ExpectingFloat ->
-            "ExpectingFloat"
-        ExpectingNumber ->
-            "ExpectingNumber"
         ExpectingVariable ->
             "ExpectingVariable"
-        ExpectingSymbol str ->
-            "ExpectingSymbol: \"" ++ str ++ "\""
         ExpectingKeyword str ->
             "ExpectingKeyword: \"" ++ str ++ "\""
         ExpectingEnd ->
@@ -609,128 +591,7 @@ parser like this:
 -}
 int : Parser Int
 int =
-  A.int ExpectingInt ExpectingInt
-
-
-{-| Parse floats.
-
-    run float "123"       == Ok 123
-    run float "3.1415"    == Ok 3.1415
-    run float "0.1234"    == Ok 0.1234
-    run float ".1234"     == Ok 0.1234
-    run float "1e-42"     == Ok 1e-42
-    run float "6.022e23"  == Ok 6.022e23
-    run float "6.022E23"  == Ok 6.022e23
-    run float "6.022e+23" == Ok 6.022e23
-
-This parser does not look ahead, which is why "0123" and "123a" succeeds with
-the digits it did succeed to parse.
-
-If you want to disable literals like `.123` (like in Gren) you could write
-something like this:
-
-    grenFloat : Parser Float
-    grenFloat =
-      oneOf
-        [ symbol "."
-            |> andThen (\_ -> problem "floating point numbers must start with a digit, like 0.25")
-        , float
-        ]
-
-**Note:** If you want a parser for both `Int` and `Float` literals, check out
-[`number`](#number) below. It will be faster than using `oneOf` to combining
-`int` and `float` yourself.
--}
-float : Parser Float
-float =
-  A.float ExpectingFloat ExpectingFloat
-
-
-
--- NUMBER
-
-
-{-| Parse a bunch of different kinds of numbers without backtracking. A parser
-for Gren would need to handle integers, floats, and hexadecimal like this:
-
-    type Expr
-      = Variable String
-      | Int Int
-      | Float Float
-      | Apply Expr Expr
-
-    grenNumber : Parser Expr
-    grenNumber =
-      number
-        { int = Just Int
-        , hex = Just Int    -- 0x001A is allowed
-        , octal = Nothing   -- 0o0731 is not
-        , binary = Nothing  -- 0b1101 is not
-        , float = Just Float
-        }
-
-If you wanted to implement the [`float`](#float) parser, it would be like this:
-
-    float : Parser Float
-    float =
-      number
-        { int = Just toFloat
-        , hex = Nothing
-        , octal = Nothing
-        , binary = Nothing
-        , float = Just identity
-        }
-
-Notice that it actually is processing `int` results! This is because `123`
-looks like an integer to me, but maybe it looks like a float to you. If you had
-`int = Nothing`, floats would need a decimal like `1.0` in every case. If you
-like explicitness, that may actually be preferable!
-
-**Note:** This function does not check for weird trailing characters in the
-current implementation, so parsing `123abc` can succeed up to `123` and then
-move on. This is helpful for people who want to parse things like `40px` or
-`3m`, but it requires a bit of extra code to rule out trailing characters in
-other cases.
--}
-number
-  : { int : Maybe (Int -> a)
-    , hex : Maybe (Int -> a)
-    , octal : Maybe (Int -> a)
-    , binary : Maybe (Int -> a)
-    , float : Maybe (Float -> a)
-    }
-  -> Parser a
-number i =
-  A.number
-    { int = Result.fromMaybe ExpectingInt i.int
-    , hex = Result.fromMaybe ExpectingHex i.hex
-    , octal = Result.fromMaybe ExpectingOctal i.octal
-    , binary = Result.fromMaybe ExpectingBinary i.binary
-    , float = Result.fromMaybe ExpectingFloat i.float
-    , invalid = ExpectingNumber
-    , expecting = ExpectingNumber
-    }
-
-
-
--- SYMBOL
-
-
-{-| Parse symbols like `(` and `,`.
-
-    run (symbol "[") "[" == Ok {}
-    run (symbol "[") "4" == Err ... (ExpectingSymbol "[") ...
-
-**Note:** This is good for stuff like brackets and semicolons, but it probably
-should not be used for binary operators like `+` and `-` because you can find
-yourself in weird situations. For example, is `3--4` a typo? Or is it `3 - -4`?
-I have had better luck with `chompWhile isSymbol` and sorting out which
-operator it is afterwards.
--}
-symbol : String -> Parser {}
-symbol str =
-  A.symbol (A.Token { str = str, expecting = (ExpectingSymbol str) })
-
+  A.int ExpectingInt
 
 
 -- KEYWORD
