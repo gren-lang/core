@@ -473,12 +473,12 @@ you would not get (1) anymore.
 -}
 token : String -> Parser {}
 token str =
-  A.token (toToken str)
+  A.token str (Expecting str)
 
 
 toToken : String -> A.Token Problem
 toToken str =
-  A.Token { str = str, expecting = (Expecting str) }
+  { string = str, expecting = Expecting str }
 
 
 
@@ -621,7 +621,7 @@ be parsed as `let ters` and then wonder where the equals sign is! Check out the
 -}
 keyword : String -> Parser {}
 keyword kwd =
-  A.keyword (A.Token { str = kwd, expecting = (ExpectingKeyword kwd) })
+  A.keyword kwd (ExpectingKeyword kwd)
 
 
 
@@ -758,7 +758,7 @@ though. It can be trickier than it looks!
 -}
 chompUntil : String -> Parser {}
 chompUntil str =
-  A.chompUntil (toToken str)
+  A.chompUntil str (Expecting str)
 
 
 {-| Chomp until you see a certain string or until you run out of characters to
@@ -1082,7 +1082,7 @@ a newline, that is fine too.
 -}
 lineComment : String -> Parser {}
 lineComment str =
-  A.lineComment (toToken str)
+  A.lineComment str (Expecting str)
 
 
 {-| Parse multi-line comments. So if you wanted to parse Gren whitespace or

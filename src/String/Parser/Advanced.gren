@@ -1,5 +1,5 @@
 module String.Parser.Advanced exposing
-  ( Parser, run, DeadEnd, inContext, Token(..)
+  ( Parser, run, DeadEnd, inContext, Token
   , int, token, keyword, variable, end
   , succeed, keep, skip, lazy, andThen, problem
   , oneOf, map, mapError, backtrackable, commit 
@@ -477,8 +477,8 @@ to clearly indicate your custom type of problems:
 Note that this would fail to chomp `letter` because of the subsequent
 characters. Use `token` if you do not want that last letter check.
 -}
-keyword : Token x -> Parser c x {}
-keyword (Token { str = kwd, expecting }) =
+keyword : String -> x -> Parser c x {}
+keyword kwd expecting =
   let
     progress =
       not (String.isEmpty kwd)
@@ -509,36 +509,11 @@ keyword (Token { str = kwd, expecting }) =
 -- TOKEN
 
 
-{-| With the simpler `Parser` module, you could just say `symbol ","` and
-parse all the commas you wanted. But now that we have a custom type for our
-problems, we actually have to specify that as well. So anywhere you just used
-a `String` in the simpler module, you now use a `Token Problem` in the advanced
-module:
-
-    type Problem
-      = ExpectingComma
-      | ExpectingListEnd
-
-    comma : Token Problem
-    comma =
-      Token "," ExpectingComma
-
-    listEnd : Token Problem
-    listEnd =
-      Token "]" ExpectingListEnd
-
-You can be creative with your custom type. Maybe you want a lot of detail.
-Maybe you want looser categories. It is a custom type. Do what makes sense for
-you!
--}
-type Token x = Token { str : String, expecting : x }
-
-
 {-| Just like [`Parser.token`](Parser#token) except you provide a `Token`
 specifying your custom type of problems.
 -}
-token : Token x -> Parser c x {}
-token (Token { str, expecting }) =
+token : String -> x -> Parser c x {}
+token str expecting =
   let
     progress =
       not (String.isEmpty str)
@@ -748,8 +723,8 @@ chompWhileHelp isGood offset row col s0 =
 `Token` in case you chomp all the way to the end of the input without finding
 what you need.
 -}
-chompUntil : Token x -> Parser c x {}
-chompUntil (Token { str, expecting }) =
+chompUntil : String -> x -> Parser c x {}
+chompUntil str expecting =
   Parser <| \s ->
     let
       { newOffset, newRow, newCol } =
@@ -1071,6 +1046,12 @@ varHelp isGood offset row col src indent context =
 -- SEQUENCES
 
 
+type alias Token x =
+  { string : String
+  , expecting : x
+  }
+
+
 {-| Just like [`Parser.sequence`](Parser#sequence) except with a `Token` for
 the start, separator, and end. That way you can specify your custom type of
 problem for when something is not found.
@@ -1085,9 +1066,14 @@ sequence
     }
   -> Parser c x (Array a)
 sequence i =
-  revSkip (token i.start) <|
-  revSkip i.spaces <|
-    sequenceEnd (token i.end) i.spaces i.item (token i.separator) i.trailing
+  revSkip (token i.start.string i.start.expecting) <|
+    revSkip i.spaces <|
+      sequenceEnd
+        (token i.end.string i.end.expecting)
+        i.spaces
+        i.item
+        (token i.separator.string i.separator.expecting)
+        i.trailing
 
 
 {-| What’s the deal with trailing commas? Are they `Forbidden`?
@@ -1179,9 +1165,9 @@ spaces =
 {-| Just like [`Parser.lineComment`](Parser#lineComment) except you provide a
 `Token` describing the starting symbol.
 -}
-lineComment : Token x -> Parser c x {}
-lineComment start =
-  skip (chompUntilEndOr "\n") (token start)
+lineComment : String -> x -> Parser c x {}
+lineComment string expecting =
+  skip (chompUntilEndOr "\n") (token string expecting)
 
 
 {-| Just like [`Parser.multiComment`](Parser#multiComment) except with a
@@ -1191,7 +1177,7 @@ multiComment : Token x -> Token x -> Nestable -> Parser c x {}
 multiComment open close nestable =
   when nestable is
     NotNestable ->
-      skip (chompUntil close) (token open)
+      skip (chompUntil close.string close.expecting) (token open.string open.expecting)
 
     Nestable ->
       nestableComment open close
@@ -1205,7 +1191,7 @@ type Nestable = NotNestable | Nestable
 
 
 nestableComment : Token x -> Token x -> Parser c x {}
-nestableComment (Token { str = oStr, expecting = oX } as open) (Token { str = cStr, expecting = cX } as close) =
+nestableComment ({ string = oStr, expecting = oX } as open) ({ string = cStr, expecting = cX } as close) =
   when String.popFirst oStr is
     Nothing ->
       problem oX
@@ -1221,9 +1207,9 @@ nestableComment (Token { str = oStr, expecting = oX } as open) (Token { str = cS
               char /= openChar && char /= closeChar
 
             chompOpen =
-              token open
+              token oStr oX
           in
-          skip (nestableHelp isNotRelevant chompOpen (token close) cX 1) chompOpen
+          skip (nestableHelp isNotRelevant chompOpen (token cStr cX) cX 1) chompOpen
 
 
 nestableHelp : (Char -> Bool) -> Parser c x {} -> Parser c x {} -> x -> Int -> Parser c x {}
