@@ -5,7 +5,7 @@ module String.Parser.Advanced exposing
   , oneOf, map, mapError, backtrackable, commit 
   , sequence, Trailing(..), loop, Step(..)
   , spaces, lineComment, multiComment, Nestable(..)
-  , getChompedString, chompIf, chompWhile, chompUntil, chompUntilEndOr, mapChompedString
+  , getChompedString, chompIf, chompChar, chompWhile, chompUntil, chompUntilEndOr, mapChompedString
   , withIndent, getIndent
   , getPosition, getRow, getCol, getOffset, getSource
   )
@@ -39,7 +39,7 @@ certain scenarios.**
 @docs spaces, lineComment, multiComment, Nestable
 
 # Chompers
-@docs getChompedString, chompIf, chompWhile, chompUntil, chompUntilEndOr, mapChompedString
+@docs getChompedString, chompIf, chompChar, chompWhile, chompUntil, chompUntilEndOr, mapChompedString
 
 # Indentation
 @docs withIndent, getIndent
@@ -672,6 +672,13 @@ chompIf isGood expecting =
           }
         }
 
+
+{-| Just like [`Parser.chompChar`](Parser#chompChar) except you provide a problem
+in case a character cannot be chomped.
+-}
+chompChar : Char -> x -> Parser c x {}
+chompChar chr expecting =
+  chompIf (\c -> c == chr) expecting
 
 
 -- CHOMP WHILE

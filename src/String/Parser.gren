@@ -5,7 +5,7 @@ module String.Parser exposing
   , oneOf, map, backtrackable, commit, token
   , sequence, Trailing(..), loop, Step(..)
   , spaces, lineComment, multiComment, Nestable(..)
-  , getChompedString, chompIf, chompWhile, chompUntil, chompUntilEndOr, mapChompedString
+  , getChompedString, chompIf, chompChar, chompWhile, chompUntil, chompUntilEndOr, mapChompedString
   , DeadEnd, Problem(..), deadEndsToString
   , withIndent, getIndent
   , getPosition, getRow, getCol, getOffset, getSource
@@ -33,7 +33,7 @@ module String.Parser exposing
 @docs spaces, lineComment, multiComment, Nestable
 
 # Chompers
-@docs getChompedString, chompIf, chompWhile, chompUntil, chompUntilEndOr, mapChompedString
+@docs getChompedString, chompIf, chompChar, chompWhile, chompUntil, chompUntilEndOr, mapChompedString
 
 # Errors
 @docs DeadEnd, Problem, deadEndsToString
@@ -717,6 +717,19 @@ chompIf : (Char -> Bool) -> Parser {}
 chompIf isGood =
   A.chompIf isGood UnexpectedChar
 
+
+{-| Chomp one specific character.
+
+    chompChar 'c'
+
+This is the same as
+
+    chompIf (\c -> c == 'c')
+
+-}
+chompChar : Char -> Parser {}
+chompChar chr =
+  A.chompChar chr UnexpectedChar
 
 
 {-| Chomp zero or more characters if they pass the test. This is commonly
