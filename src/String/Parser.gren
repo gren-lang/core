@@ -7,7 +7,6 @@ module String.Parser exposing
   , spaces, lineComment, multiComment, Nestable(..)
   , getChompedString, chompIf, chompChar, chompWhile, chompUntil, chompUntilEndOr, mapChompedString
   , DeadEnd, Problem(..), deadEndsToString
-  , withIndent, getIndent
   , getPosition, getRow, getCol, getOffset, getSource
   )
 
@@ -38,9 +37,6 @@ module String.Parser exposing
 # Errors
 @docs DeadEnd, Problem, deadEndsToString
 
-# Indentation
-@docs withIndent, getIndent
-
 # Positions
 @docs getPosition, getRow, getCol, getOffset, getSource
 -}
@@ -68,7 +64,7 @@ The cool thing is that you can combine `Parser` values to handle much more
 complex scenarios.
 -}
 type alias Parser a =
-  A.Parser Never Problem a
+  A.Parser {} Problem a
 
 
 
@@ -89,7 +85,7 @@ of the string!
 -}
 run : Parser a -> String -> Result (Array DeadEnd) a
 run parser source =
-  when A.run parser source is
+  when A.run parser {} source is
     Ok a ->
       Ok a
 
@@ -97,7 +93,7 @@ run parser source =
       Err (Array.map problemToDeadEnd problems)
 
 
-problemToDeadEnd : A.DeadEnd Never Problem -> DeadEnd
+problemToDeadEnd : A.DeadEnd {} Problem -> DeadEnd
 problemToDeadEnd p =
   { row = p.row
   , col = p.col
@@ -180,7 +176,7 @@ deadEndToString deadEnd =
         UnexpectedChar ->
             "UnexpectedChar"
         Problem str ->
-            "ProblemString: \"" ++ str ++ "\""
+            "Problem: \"" ++ str ++ "\""
         BadRepeat ->
             "BadRepeat"
     , "at row:" 
@@ -790,39 +786,6 @@ scenario.
 chompUntilEndOr : String -> Parser {}
 chompUntilEndOr =
   A.chompUntilEndOr
-
-
-
--- INDENTATION
-
-
-{-| Some languages are indentation sensitive. Python cares about tabs. Gren
-cares about spaces sometimes. `withIndent` and `getIndent` allow you to manage
-"indentation state" yourself, however is necessary in your scenario.
--}
-withIndent : Int -> Parser a -> Parser a
-withIndent =
-  A.withIndent
-
-
-{-| When someone said `withIndent` earlier, what number did they put in there?
-
-- `getIndent` results in `1`, the default value
-- `withIndent 4 getIndent` results in `4`
-
-So you are just asking about things you said earlier. These numbers do not leak
-out of `withIndent`, so say we have:
-
-    succeed (\a b -> { a = a, b = b })
-      |= withIndent 4 getIndent
-      |= getIndent
-
-Assuming there are no `withIndent` above this, you would get `{ a = 4, b = 4 }` from this.
--}
-getIndent : Parser Int
-getIndent =
-  A.getIndent
-
 
 
 -- POSITION

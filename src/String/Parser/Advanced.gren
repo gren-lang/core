@@ -6,7 +6,6 @@ module String.Parser.Advanced exposing
   , sequence, Trailing(..), loop, Step(..)
   , spaces, lineComment, multiComment, Nestable(..)
   , getChompedString, chompIf, chompChar, chompWhile, chompUntil, chompUntilEndOr, mapChompedString
-  , withIndent, getIndent
   , getPosition, getRow, getCol, getOffset, getSource
   )
 
@@ -40,9 +39,6 @@ certain scenarios.**
 
 # Chompers
 @docs getChompedString, chompIf, chompChar, chompWhile, chompUntil, chompUntilEndOr, mapChompedString
-
-# Indentation
-@docs withIndent, getIndent
 
 # Positions
 @docs getPosition, getRow, getCol, getOffset, getSource
@@ -92,31 +88,22 @@ form, allowing you to switch over pretty easily.
 
 [parser]: /package/gren-lang/parser/latest/Parser
 -}
-type Parser context problem value =
-  Parser (State context -> PStep context problem value)
+type Parser payload problem value =
+  Parser (State payload -> PStep payload problem value)
 
 
-type PStep context problem value
-  = Good { pred : Bool, value : value, state : (State context) }
-  | Bad { pred : Bool, bag : (Bag context problem) }
+type PStep payload problem value
+  = Good { pred : Bool, value : value, state : State payload }
+  | Bad { pred : Bool, bag : Bag payload problem }
 
 
-type alias State context =
+type alias State payload =
   { src : String
   , offset : Int
-  , indent : Int
-  , context : Array (Located context)
   , row : Int
   , col : Int
+  , payload : payload
   }
-
-
-type alias Located context =
-  { row : Int
-  , col : Int
-  , context : context
-  }
-
 
 
 -- RUN
@@ -126,9 +113,9 @@ type alias Located context =
 The only difference is that when it fails, it has much more precise information
 for each dead end.
 -}
-run : Parser c x a -> String -> Result (Array (DeadEnd c x)) a
-run (Parser parse) src =
-  when parse { src = src, offset = 0, indent = 1, context = [], row = 1, col = 1} is
+run : Parser p x a -> p -> String -> Result (Array (DeadEnd p x)) a
+run (Parser parse) initialPayload src =
+  when parse { src = src, offset = 0, payload = initialPayload, row = 1, col = 1} is
     Good { value } ->
       Ok value
 
@@ -174,18 +161,18 @@ here.” Otherwise you can get very confusing error messages on a missing `]` or
 and `col=1`. The `col` increments as characters are chomped. When a `\n` is chomped,
 `row` is incremented and `col` starts over again at `1`.
 -}
-type alias DeadEnd context problem =
+type alias DeadEnd payload problem =
   { row : Int
   , col : Int
   , problem : problem
-  , contextStack : Array { row : Int, col : Int, context : context }
+  , payload : payload
   }
 
 
 type Bag c x
   = Empty
-  | AddRight { bag : (Bag c x), deadEnd : (DeadEnd c x) }
-  | Append { left : (Bag c x), right : (Bag c x) }
+  | AddRight { bag : Bag c x, deadEnd : DeadEnd c x }
+  | Append { left : Bag c x, right : Bag c x }
 
 
 fromState : State c -> x -> Bag c x
@@ -196,20 +183,7 @@ fromState s x =
       { row = s.row
       , col = s.col
       , problem = x
-      , contextStack = s.context
-      }
-    }
-
-
-fromInfo : Int -> Int -> x -> Array (Located c) -> Bag c x
-fromInfo row col x context =
-  AddRight
-    { bag = Empty 
-    , deadEnd =
-      { row = row
-      , col = col
-      , problem = x
-      , contextStack = context
+      , payload = s.payload
       }
     }
 
@@ -290,7 +264,7 @@ mapBagProblem mapper bag =
           { row = deadEnd.row
           , col = deadEnd.col
           , problem = mapper deadEnd.problem
-          , contextStack = deadEnd.contextStack
+          , payload = deadEnd.payload
           }
         }
 
@@ -496,10 +470,9 @@ keyword kwd expecting =
         , state =
           { src = s.src
           , offset = newOffset
-          , indent = s.indent
-          , context = s.context
           , row = newRow
           , col = newCol
+          , payload = s.payload
           }
         }
 
@@ -531,10 +504,9 @@ token str expecting =
         , state =
           { src = s.src
           , offset = newOffset
-          , indent = s.indent
-          , context = s.context
           , row = newRow
           , col = newCol
+          , payload = s.payload
           }
         }
 
@@ -650,10 +622,9 @@ chompIf isGood expecting =
         , state =
           { src = s.src
           , offset = s.offset + 1
-          , indent = s.indent
-          , context = s.context
           , row = s.row + 1
           , col = 1
+          , payload = s.payload
           }
         }
 
@@ -665,10 +636,9 @@ chompIf isGood expecting =
         , state =
           { src = s.src
           , offset = newOffset
-          , indent = s.indent
-          , context = s.context
           , row = s.row
           , col = s.col + 1
+          , payload = s.payload
           }
         }
 
@@ -705,10 +675,9 @@ chompWhileHelp isGood offset row col s0 =
       , state =
         { src = s0.src
         , offset = offset
-        , indent = s0.indent
-        , context = s0.context
         , row = row
         , col = col
+        , payload = s0.payload
         }
       }
 
@@ -737,19 +706,18 @@ chompUntil str expecting =
         findSubString str s.offset s.row s.col s.src
     in
     if newOffset == -1 then
-      Bad { pred = False, bag = (fromInfo newRow newCol expecting s.context) }
+      Bad { pred = False, bag = fromState s expecting }
 
     else
       Good 
-        { pred = (s.offset < newOffset)
+        { pred = s.offset < newOffset
         , value = {}
         , state =
           { src = s.src
           , offset = newOffset
-          , indent = s.indent
-          , context = s.context
           , row = newRow
           , col = newCol
+          , payload = s.payload
           }
         }
 
@@ -772,10 +740,9 @@ chompUntilEndOr str =
       , state =
         { src = s.src
         , offset = adjustedOffset
-        , indent = s.indent
-        , context = s.context
         , row = newRow
         , col = newCol
+        , payload = s.payload
         }
       }
 
@@ -821,62 +788,25 @@ Importantly, we call `inContext` so that any dead end that occurs in
 `definitionBody` will get this extra context information. That way you can say
 things like, “I was expecting an equals sign in the `view` definition.” Context!
 -}
-inContext : context -> Parser context x a -> Parser context x a
-inContext context (Parser parse) =
+inContext : payload -> Parser payload x a -> Parser payload x a
+inContext payload (Parser parse) =
   Parser <| \s0 ->
-    when parse (changeContext (Array.pushFirst { row = s0.row, col = s0.col, context = context } s0.context) s0) is
+    when parse (changeContext payload s0) is
       Good { pred = p, value = a, state = s1 } ->
-        Good { pred = p, value = a, state = (changeContext s0.context s1) }
+        Good { pred = p, value = a, state = changeContext payload s1 }
 
       Bad _ as step ->
         step
 
 
-changeContext : Array (Located c) -> State c -> State c
-changeContext newContext s =
+changeContext : payload -> State payload -> State payload
+changeContext payload s =
   { src = s.src
   , offset = s.offset
-  , indent = s.indent
-  , context = newContext
   , row = s.row
   , col = s.col
+  , payload = payload
   }
-
-
-
--- INDENTATION
-
-
-{-| Just like [`Parser.getIndent`](Parser#getIndent)
--}
-getIndent : Parser c x Int
-getIndent =
-  Parser <| \s -> Good { pred = False, value = s.indent, state = s }
-
-
-{-| Just like [`Parser.withIndent`](Parser#withIndent)
--}
-withIndent : Int -> Parser c x a -> Parser c x a
-withIndent newIndent (Parser parse) =
-  Parser <| \s0 ->
-    when parse (changeIndent newIndent s0) is
-      Good { pred = p, value = a, state = s1 } ->
-        Good { pred = p, value = a, state = (changeIndent s0.indent s1) }
-
-      Bad { pred = p, bag = x } ->
-        Bad { pred = p, bag = x }
-
-
-changeIndent : Int -> State c -> State c
-changeIndent newIndent s =
-  { src = s.src
-  , offset = s.offset
-  , indent = newIndent
-  , context = s.context
-  , row = s.row
-  , col = s.col
-  }
-
 
 
 -- POSITION
@@ -1003,9 +933,9 @@ variable i =
       let
         s1 =
           if firstOffset == -2 then
-            varHelp i.inner (s.offset + 1) (s.row + 1) 1 s.src s.indent s.context
+            varHelp i.inner (s.offset + 1) (s.row + 1) 1 s.src s.payload
           else
-            varHelp i.inner firstOffset s.row (s.col + 1) s.src s.indent s.context
+            varHelp i.inner firstOffset s.row (s.col + 1) s.src s.payload
 
         name =
           String.sliceUnits s.offset s1.offset s.src
@@ -1013,25 +943,24 @@ variable i =
       Good { pred = True, value = name, state = s1 }
 
 
-varHelp : (Char -> Bool) -> Int -> Int -> Int -> String -> Int -> Array (Located c) -> State c
-varHelp isGood offset row col src indent context =
+varHelp : (Char -> Bool) -> Int -> Int -> Int -> String -> payload -> State payload
+varHelp isGood offset row col src payload =
   let
     newOffset = isSubChar isGood offset src
   in
   if newOffset == -1 then
     { src = src
     , offset = offset
-    , indent = indent
-    , context = context
+    , payload = payload
     , row = row
     , col = col
     }
 
   else if newOffset == -2 then
-    varHelp isGood (offset + 1) (row + 1) 1 src indent context
+    varHelp isGood (offset + 1) (row + 1) 1 src payload
 
   else
-    varHelp isGood newOffset row (col + 1) src indent context
+    varHelp isGood newOffset row (col + 1) src payload
 
 
 
