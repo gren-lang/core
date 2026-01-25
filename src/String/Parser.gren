@@ -126,7 +126,7 @@ how [`deadEndsToString`](#deadEndsToString) works!
 
 **Note:** If you feel limited by this type (i.e. having to represent custom
 problems as strings) I highly recommend switching to `Parser.Advanced`. It
-lets you define your own `Problem` type. It can also track "context" which
+lets you define your own `Problem` type. It can also track "payload" which
 can improve error messages a ton! This is how the Gren compiler produces
 relatively nice parse errors, and I am excited to see those techniques applied
 elsewhere!
@@ -149,8 +149,8 @@ read.
 It is not interactive. It just turns the raw data into strings. I really hope
 folks will check out the source code for some inspiration on how to turn errors
 into `Html` with nice colors and interaction! The `Parser.Advanced` module lets
-you work with context as well, which really unlocks another level of quality!
-The "context" technique is how the Gren compiler can say "I think I am parsing a
+you work with payload as well, which really unlocks another level of quality!
+The "payload" technique is how the Gren compiler can say "I think I am parsing a
 list, so I was expecting a closing `]` here." Telling users what the parser
 _thinks_ is happening can be really helpful!
 -}
@@ -213,22 +213,22 @@ succeed =
     point : Parser Point
     point =
       succeed (\x y -> { x = x, y = y })
-        |> skip (symbol "(")
+        |> skip (token "(")
         |> skip spaces
         |> keep float
         |> skip spaces
-        |> skip (symbol ",")
+        |> skip (token ",")
         |> skip spaces
         |> keep float
         |> skip spaces
-        |> skip (symbol ")")
+        |> skip (token ")")
 
 All the parsers in this pipeline will chomp characters and produce values. So
-`symbol "("` will chomp one paren and produce a `{}` value. Similarly, `float`
-will chomp some digits and produce a `Float` value. The `(|.)` and `(|=)`
-operators just decide whether we give the values to the `Point` function.
+`token "("` will chomp one paren and produce a `{}` value. Similarly, `float`
+will chomp some digits and produce a `Float` value. The `skip` and `keep`
+functions just decide whether we give the values to the `Point` function.
 
-So in this case, we skip the `{}` from `symbol "("`, we skip the `{}` from
+So in this case, we skip the `{}` from `token "("`, we skip the `{}` from
 `spaces`, we keep the `Float` from `float`, etc.
 -}
 keep : Parser keep -> Parser (keep -> b) -> Parser b
@@ -256,7 +256,7 @@ some JavaScript variables:
 
 `chompIf isStartChar` can chomp one character and produce a `{}` value.
 `chompWhile isInnerChar` can chomp zero or more characters and produce a `{}`
-value. The `(|.)` operators are saying to still chomp all the characters, but
+value. The `skip` function is saying to still chomp all the characters, but
 skip the two `{}` values that get produced. No one cares about them.
 -}
 skip : Parser ignore -> Parser kept -> Parser kept
@@ -284,19 +284,19 @@ That means we will want to define our parser in terms of itself:
     boolean =
       oneOf
         [ succeed MyTrue
-            |. keyword "true"
+            |> skip (keyword "true")
         , succeed MyFalse
-            |. keyword "false"
+            |> skip (keyword "false")
         , succeed MyOr
-            |. symbol "("
-            |. spaces
-            |= lazy (\_ -> boolean)
-            |. spaces
-            |. symbol "||"
-            |. spaces
-            |= lazy (\_ -> boolean)
-            |. spaces
-            |. symbol ")"
+            |> skip (token "(")
+            |> skip spaces
+            |> keep (lazy (\_ -> boolean))
+            |> skip spaces
+            |> skip (token "||")
+            |> skip spaces
+            |> keep (lazy (\_ -> boolean))
+            |> skip spaces
+            |> skip (token ")")
         ]
 
 **Notice that `boolean` uses `boolean` in its definition!** In Gren, you can
@@ -443,11 +443,11 @@ trick to peek ahead a bit:
     keyword : String -> Parser {}
     keyword kwd =
       succeed identity
-        |. backtrackable (token kwd)
-        |= oneOf
+        |> skip (backtrackable (token kwd))
+        |> keep (oneOf
             [ map (\_ -> True) (backtrackable (chompIf isVarChar))
             , succeed False
-            ]
+            ])
         |> andThen (checkEnding kwd)
 
     checkEnding : String -> Bool -> Parser {}
@@ -491,10 +491,10 @@ repeated structures, like a bunch of statements:
     statementsHelp revStmts =
       oneOf
         [ succeed (\stmt -> Loop (stmt :: revStmts))
-            |= statement
-            |. spaces
-            |. symbol ";"
-            |. spaces
+            |> keep statement
+            |> skip spaces
+            |> skip (token ";")
+            |> skip spaces
         , succeed {}
             |> map (\_ -> Done (List.reverse revStmts))
         ]
@@ -575,8 +575,8 @@ parser like this:
     myInt =
       oneOf
         [ succeed negate
-            |. symbol "-"
-            |= int
+            |> skip (token "-")
+            |> keep int
         , int
         ]
 
@@ -603,11 +603,11 @@ character to make sure it is not a letter, number, or underscore. The goal is
 to help with parsers like this:
 
     succeed identity
-      |. keyword "let"
-      |. spaces
-      |= grenVar
-      |. spaces
-      |. symbol "="
+      |> skip (keyword "let")
+      |> skip spaces
+      |> keep grenVar
+      |> skip spaces
+      |> skip (token "=")
 
 The trouble is that `spaces` may chomp zero characters (to handle expressions
 like `[1,2]` and `[ 1 , 2 ]`) and in this case, it would mean `letters` could
@@ -628,8 +628,8 @@ keyword kwd =
     justAnInt : Parser Int
     justAnInt =
       succeed identity
-        |= int
-        |. end
+        |> keep int
+        |> skip end
 
     -- run justAnInt "90210" == Ok 90210
     -- run justAnInt "1 + 2" == Err ...
@@ -655,9 +655,9 @@ need to parse [valid PHP variables][php] like `$x` and `$txt`:
     php =
       getChompedString <|
         succeed {}
-          |. chompIf (\c -> c == '$')
-          |. chompIf (\c -> Char.isAlpha c || c == '_')
-          |. chompWhile (\c -> Char.isAlphaNum c || c == '_')
+          |> skip (chompChar '$')
+          |> skip (chompIf (\c -> Char.isAlpha c || c == '_'))
+          |> skip (chompWhile (\c -> Char.isAlphaNum c || c == '_'))
 
 The idea is that you create a bunch of chompers that validate the underlying
 characters. Then `getChompedString` extracts the underlying `String` efficiently.
@@ -668,10 +668,10 @@ and [`getSource`](#getSource) to implement this function:
     getChompedString : Parser a -> Parser String
     getChompedString parser =
       succeed String.slice
-        |= getOffset
-        |. parser
-        |= getOffset
-        |= getSource
+        |> keep getOffset
+        |> skip parser
+        |> keep getOffset
+        |> keep getSource
 
 [php]: https://www.w3schools.com/php/php_variables.asp
 -}
@@ -739,8 +739,8 @@ useful for chomping whitespace or variable names:
     grenVar =
       getChompedString <|
         succeed {}
-          |. chompIf Char.isLower
-          |. chompWhile (\c -> Char.isAlphaNum c || c == '_')
+          |> skip (chompIf Char.isLower)
+          |> skip (chompWhile (\c -> Char.isAlphaNum c || c == '_'))
 
 **Note:** a `chompWhile` parser always succeeds! This can lead to tricky
 situations, especially if you define your whitespace with it. In that case,
@@ -758,8 +758,8 @@ comments like this:
 
     comment : Parser {}
     comment =
-      symbol "/*"
-        |. chompUntil "*/"
+      token "/*"
+        |> skip (chompUntil "*/")
 
 I recommend using [`multiComment`](#multiComment) for this particular scenario
 though. It can be trickier than it looks!
@@ -774,8 +774,8 @@ chomp! You could define single-line comments like this:
 
     gren : Parser {}
     gren =
-      symbol "--"
-        |. chompUntilEndOr "\n"
+      token "--"
+        |> skip (chompUntilEndOr "\n")
 
 A file may end with a single-line comment, so the file can end before you see
 a newline. Tricky!
@@ -807,9 +807,9 @@ like this:
     located : Parser a -> Parser (Located a)
     located parser =
       succeed (\start value end -> { start = start, value = value, end = end })
-        |= getPosition
-        |= parser
-        |= getPosition
+        |> keep getPosition
+        |> keep parser
+        |> keep getPosition
 
 So if there is a problem during type inference, I use this saved position
 information to underline the exact problem!
@@ -854,26 +854,11 @@ getRow =
   A.getRow
 
 
-{-| This is a more efficient version of `map (\pos -> pos.col) getPosition`. This
-can be useful in combination with [`withIndent`](#withIndent) and
-[`getIndent`](#getIndent), like this:
+{-| This is a more efficient version of `map (\pos -> pos.col) getPosition`.
+This can be useful when you need to track or check the current column position
+during parsing.
 
-    checkIndent : Parser {}
-    checkIndent =
-      succeed (\indent column -> indent <= column)
-        |= getIndent
-        |= getCol
-        |> andThen checkIndentHelp
-
-    checkIndentHelp : Bool -> Parser {}
-    checkIndentHelp isIndented =
-      if isIndented then
-        succeed {}
-      else
-        problem "expecting more spaces"
-
-So the `checkIndent` parser only succeeds when you are "deeper" than the
-current indent level. You could use this to parse Gren-style `let` expressions.
+See [`getPosition`](#getPosition) for an explanation of rows and columns.
 -}
 getCol : Parser Int
 getCol =
@@ -900,10 +885,10 @@ getOffset =
     getChompedString : Parser a -> Parser String
     getChompedString parser =
       succeed String.slice
-        |= getOffset
-        |. parser
-        |= getOffset
-        |= getSource
+        |> keep getOffset
+        |> skip parser
+        |> keep getOffset
+        |> keep getSource
 -}
 getSource : Parser String
 getSource =
@@ -1045,8 +1030,8 @@ This parser is defined like this:
 
     lineComment : String -> Parser {}
     lineComment str =
-      symbol str
-        |. chompUntilEndOr "\n"
+      token str
+        |> skip (chompUntilEndOr "\n")
 
 So it will consume the remainder of the line. If the file ends before you see
 a newline, that is fine too.
@@ -1080,8 +1065,8 @@ JS whitespace, you could say:
     ifProgress : Parser a -> Int -> Parser (Step Int {})
     ifProgress parser offset =
       succeed identity
-        |. parser
-        |= getOffset
+        |> skip parser
+        |> keep getOffset
         |> map (\newOffset -> if offset == newOffset then Done {} else Loop newOffset)
 
 **Note:** The fact that `spaces` comes last in the definition of `gren` is very
@@ -1101,8 +1086,8 @@ in C-style syntax are `NotNestable`, meaning they can be implemented like this:
 
     js : Parser {}
     js =
-      symbol "/*"
-        |. chompUntil "*/"
+      token "/*"
+        |> skip (chompUntil "*/")
 
 In fact, `multiComment "/*" "*/" NotNestable` *is* implemented like that! It is
 very simple, but it does not allow you to nest comments like this:
