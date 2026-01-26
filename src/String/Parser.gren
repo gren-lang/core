@@ -208,18 +208,18 @@ succeed =
 
 {-| **Keep** values in a parser pipeline. For example, we could say:
 
-    type alias Point = { x : Float, y : Float }
+    type alias Point = { x : Int, y : Int }
 
     point : Parser Point
     point =
       succeed (\x y -> { x = x, y = y })
         |> skip (token "(")
         |> skip spaces
-        |> keep float
+        |> keep int
         |> skip spaces
         |> skip (token ",")
         |> skip spaces
-        |> keep float
+        |> keep int
         |> skip spaces
         |> skip (token ")")
 
@@ -241,10 +241,10 @@ some JavaScript variables:
 
     var : Parser String
     var =
-      getChompedString <|
-        succeed {}
-          |> skip (chompIf isStartChar)
-          |> skip (chompWhile isInnerChar)
+      succeed {}
+        |> skip (chompIf isStartChar)
+        |> skip (chompWhile isInnerChar)
+        |> getChompedString
 
     isStartChar : Char -> Bool
     isStartChar char =
@@ -483,29 +483,21 @@ toToken str =
 {-| A parser that can loop indefinitely. This can be helpful when parsing
 repeated structures, like a bunch of statements:
 
-    statements : Parser (List Stmt)
+    statements : Parser (Array Stmt)
     statements =
       loop [] statementsHelp
 
-    statementsHelp : List Stmt -> Parser (Step (List Stmt) (List Stmt))
-    statementsHelp revStmts =
+    statementsHelp : Array Stmt -> Parser (Step (Array Stmt) (Array Stmt))
+    statementsHelp stmts =
       oneOf
-        [ succeed (\stmt -> Loop (stmt :: revStmts))
+        [ succeed (\stmt -> Loop (Array.pushLast stmt stmts))
             |> keep statement
             |> skip spaces
             |> skip (token ";")
             |> skip spaces
         , succeed {}
-            |> map (\_ -> Done (List.reverse revStmts))
+            |> map (\_ -> Done stmts)
         ]
-
-    -- statement : Parser Stmt
-
-Notice that the statements are tracked in reverse as we `Loop`, and we reorder
-them only once we are `Done`. This is a very common pattern with `loop`!
-
-Check out [`examples/DoubleQuoteString.gren`](https://github.com/gren-lang/parser/blob/master/examples/DoubleQuoteString.gren)
-for another example.
 
 **IMPORTANT NOTE:** Parsers like `succeed {}` and `chompWhile Char.isAlpha` can
 succeed without consuming any characters. So in some cases you may want to use
@@ -653,11 +645,11 @@ need to parse [valid PHP variables][php] like `$x` and `$txt`:
 
     php : Parser String
     php =
-      getChompedString <|
-        succeed {}
-          |> skip (chompChar '$')
-          |> skip (chompIf (\c -> Char.isAlpha c || c == '_'))
-          |> skip (chompWhile (\c -> Char.isAlphaNum c || c == '_'))
+      succeed {}
+        |> skip (chompChar '$')
+        |> skip (chompIf (\c -> Char.isAlpha c || c == '_'))
+        |> skip (chompWhile (\c -> Char.isAlphaNum c || c == '_'))
+        |> getChompedString
 
 The idea is that you create a bunch of chompers that validate the underlying
 characters. Then `getChompedString` extracts the underlying `String` efficiently.
@@ -737,10 +729,10 @@ useful for chomping whitespace or variable names:
 
     grenVar : Parser String
     grenVar =
-      getChompedString <|
-        succeed {}
-          |> skip (chompIf Char.isLower)
-          |> skip (chompWhile (\c -> Char.isAlphaNum c || c == '_'))
+      succeed {}
+        |> skip (chompIf Char.isLower)
+        |> skip (chompWhile (\c -> Char.isAlphaNum c || c == '_'))
+        |> getChompedString
 
 **Note:** a `chompWhile` parser always succeeds! This can lead to tricky
 situations, especially if you define your whitespace with it. In that case,
