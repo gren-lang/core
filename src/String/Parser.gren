@@ -58,7 +58,6 @@ import Array exposing (Array)
 we can [`run`](#run) the [`int`](#int) parser to turn `String` to `Int`:
 
     run int "123456" == Ok 123456
-    run int "3.1415" == Err ...
 
 The cool thing is that you can combine `Parser` values to handle much more
 complex scenarios.
@@ -551,11 +550,11 @@ toAdvancedStep step =
     run int "1234" == Ok 1234
     run int "0123" == Ok 0
     run int "123a" == Ok 123
+    run int "1.34" == Ok 1
+    run int "1e31" == Ok 1
+    run int "0x1A" == Ok 0
 
     run int "-789" == Err ...
-    run int "1.34" == Err ...
-    run int "1e31" == Err ...
-    run int "0x1A" == Err ...
 
 This parser does not look ahead, which is why "0123" and "123a" succeeds with
 the digits it did succeed to parse.

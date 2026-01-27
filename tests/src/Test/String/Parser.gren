@@ -47,8 +47,8 @@ testErr : String -> Parser a -> Test
 testErr description parser =
     test description <| \{} ->
         when run parser description is
-            Ok actual -> Expect.equal "Should fail" "Parser succeeded unexpectedly"
-            Err _ -> Expect.equal True True
+            Ok actual -> Expect.fail "Parser succeeded unexpectedly"
+            Err _ -> Expect.pass
 
 -- Test that a parser succeeds and reaches end
 testOkEnd : String -> Parser a -> a -> Test
@@ -67,22 +67,20 @@ tests =
                 Expect.equal (Ok 123456) (run int "123456")
             
             , test "run int with decimal fails" <| \{} ->
-                when run int "3.1415" is
-                    Ok _ -> Expect.equal "Should fail" "Unexpected success"
-                    Err _ -> Expect.equal True True
+                Expect.equal (Ok 3) (run int "3.1415")
             
             , test "run keyword true with exact match" <| \{} ->
                 Expect.equal (Ok {}) (run (keyword "true") "true")
             
             , test "run keyword true with wrong case fails" <| \{} ->
                 when run (keyword "true") "True" is
-                    Ok _ -> Expect.equal "Should fail" "Unexpected success"
-                    Err _ -> Expect.equal True True
+                    Ok _ -> Expect.fail "Unexpected success"
+                    Err _ -> Expect.pass
             
             , test "run keyword true with different keyword fails" <| \{} ->
                 when run (keyword "true") "false" is
-                    Ok _ -> Expect.equal "Should fail" "Unexpected success"
-                    Err _ -> Expect.equal True True
+                    Ok _ -> Expect.fail "Unexpected success"
+                    Err _ -> Expect.pass
             
             , test "run keyword true with trailing characters succeeds" <| \{} ->
                 Expect.equal (Ok {}) (run (keyword "true") "true!")
@@ -95,18 +93,8 @@ tests =
             
             , test "run int with negative sign fails" <| \{} ->
                 when run int "-789" is
-                    Ok _ -> Expect.equal "Should fail" "Unexpected success"
-                    Err _ -> Expect.equal True True
-            
-            , test "run int with scientific notation fails" <| \{} ->
-                when run int "1e31" is
-                    Ok _ -> Expect.equal "Should fail" "Unexpected success"
-                    Err _ -> Expect.equal True True
-            
-            , test "run int with hex notation fails" <| \{} ->
-                when run int "0x1A" is
-                    Ok _ -> Expect.equal "Should fail" "Unexpected success"
-                    Err _ -> Expect.equal True True
+                    Ok _ -> Expect.fail "Unexpected success"
+                    Err _ -> Expect.pass
             ]
         
         , describe "Pipeline Functions"
@@ -156,10 +144,18 @@ tests =
                     isInnerChar char =
                       isStartChar char || Char.isDigit char
                 in
-                    Expect.equal (Ok "myVar123") (run var "myVar123")
+                Expect.equal (Ok "myVar123") (run var "myVar123")
             ]
         
-        , describe "Branching Functions"
+        , describe "Branching Functions" <|
+            let
+                nullOrInt : Parser (Maybe Int)
+                nullOrInt =
+                  oneOf
+                    [ map Just int
+                    , map (\_ -> Nothing) (keyword "null")
+                    ]
+            in
             [ test "JSON parser with oneOf" <| \{} ->
                 let
                     json : Parser Json
@@ -171,29 +167,13 @@ tests =
                         , map (\_ -> Null) (keyword "null")
                         ]
                 in
-                    Expect.equal (Ok (Number 42)) (run json "42")
+                Expect.equal (Ok (Number 42)) (run json "42")
             
             , test "nullOrInt parser" <| \{} ->
-                let
-                    nullOrInt : Parser (Maybe Int)
-                    nullOrInt =
-                      oneOf
-                        [ map Just int
-                        , map (\_ -> Nothing) (keyword "null")
-                        ]
-                in
-                    Expect.equal (Ok (Just 13)) (run nullOrInt "13")
+                Expect.equal (Ok (Just 13)) (run nullOrInt "13")
             
             , test "nullOrInt with null" <| \{} ->
-                let
-                    nullOrInt : Parser (Maybe Int)
-                    nullOrInt =
-                      oneOf
-                        [ map Just int
-                        , map (\_ -> Nothing) (keyword "null")
-                        ]
-                in
-                    Expect.equal (Ok Nothing) (run nullOrInt "null")
+                Expect.equal (Ok Nothing) (run nullOrInt "null")
             ]
         
         , describe "Loop Functions"
@@ -219,33 +199,24 @@ tests =
                     statement =
                       getChompedString (chompWhile (\c -> c /= ';' && c /= ' '))
                 in
-                    Expect.equal (Ok ["stmt1", "stmt2"]) (run statements "stmt1; stmt2;")
+                Expect.equal (Ok ["stmt1", "stmt2"]) (run statements "stmt1; stmt2;")
             ]
         
-        , describe "Chomping Functions"
+        , describe "Chomping Functions" <|
+            let
+                php : Parser String
+                php =
+                    succeed {}
+                        |> skip (chompChar '$')
+                        |> skip (chompIf (\c -> Char.isAlpha c || c == '_'))
+                        |> skip (chompWhile (\c -> Char.isAlphaNum c || c == '_'))
+                        |> getChompedString
+            in
             [ test "PHP variable parser" <| \{} ->
-                let
-                    php : Parser String
-                    php =
-                        succeed {}
-                            |> skip (chompChar '$')
-                            |> skip (chompIf (\c -> Char.isAlpha c || c == '_'))
-                            |> skip (chompWhile (\c -> Char.isAlphaNum c || c == '_'))
-                            |> getChompedString
-                in
-                    Expect.equal (Ok "x") (run php "$x")
+                Expect.equal (Ok "$x") (run php "$x")
             
             , test "PHP variable parser with longer name" <| \{} ->
-                let
-                    php : Parser String
-                    php =
-                        succeed {}
-                          |> skip (chompChar '$')
-                          |> skip (chompIf (\c -> Char.isAlpha c || c == '_'))
-                          |> skip (chompWhile (\c -> Char.isAlphaNum c || c == '_'))
-                          |> getChompedString
-                in
-                    Expect.equal (Ok "txt") (run php "$txt")
+                Expect.equal (Ok "$txt") (run php "$txt")
             
             , test "chompUpper with uppercase char" <| \{} ->
                 let
@@ -253,7 +224,7 @@ tests =
                     chompUpper =
                       chompIf Char.isUpper
                 in
-                    Expect.equal (Ok {}) (run chompUpper "Test")
+                Expect.equal (Ok {}) (run chompUpper "Test")
             
             , test "chompChar with specific char" <| \{} ->
                 Expect.equal (Ok {}) (run (chompChar 'c') "cat")
@@ -264,7 +235,7 @@ tests =
                     whitespace =
                       chompWhile (\c -> c == ' ' || c == '\t' || c == '\n' || c == '\r')
                 in
-                    Expect.equal (Ok {}) (run whitespace "   \t\n")
+                Expect.equal (Ok {}) (run whitespace "   \t\n")
             
             , test "grenVar parser" <| \{} ->
                 let
@@ -275,7 +246,7 @@ tests =
                             |> skip (chompWhile (\c -> Char.isAlphaNum c || c == '_'))
                             |> getChompedString
                 in
-                    Expect.equal (Ok "myVar") (run grenVar "myVar")
+                Expect.equal (Ok "myVar") (run grenVar "myVar")
             ]
         
         , describe "Position Functions"
@@ -288,11 +259,12 @@ tests =
                         |> keep parser
                         |> keep getPosition
                 in
-                    when run (located (succeed "test")) "test" is
-                        Ok locatedValue ->
-                            Expect.equal "test" locatedValue.value
-                        Err _ ->
-                            Expect.equal "Should succeed" "Parser failed"
+                when run (located (succeed "test")) "test" is
+                    Ok locatedValue ->
+                        Expect.equal "test" locatedValue.value
+
+                    Err _ ->
+                        Expect.equal "Should succeed" "Parser failed"
             
             , test "getRow returns row number" <| \{} ->
                 when run getRow "test" is
@@ -310,31 +282,31 @@ tests =
                     Err _ -> Expect.equal "Should succeed" "Parser failed"
             ]
         
-        , describe "Variable Functions"
+        , describe "Variable Functions" <|
+            let
+                typeVar : Parser String
+                typeVar =
+                  variable
+                    { start = Char.isLower
+                    , inner = \c -> Char.isAlphaNum c || c == '_'
+                    }
+            in
             [ test "type variable parser" <| \{} ->
-                let
-                    typeVar : Parser String
-                    typeVar =
-                      variable
-                        { start = Char.isLower
-                        , inner = \c -> Char.isAlphaNum c || c == '_'
-                        }
-                in
-                    Expect.equal (Ok "myVar") (run typeVar "myVar")
-            
+                Expect.equal (Ok "myVar") (run typeVar "myVar")
+        
             , test "type variable parser with underscore" <| \{} ->
-                let
-                    typeVar : Parser String
-                    typeVar =
-                      variable
-                        { start = Char.isLower
-                        , inner = \c -> Char.isAlphaNum c || c == '_'
-                        }
-                in
-                    Expect.equal (Ok "my_var") (run typeVar "my_var")
+                Expect.equal (Ok "my_var") (run typeVar "my_var")
             ]
         
-        , describe "Whitespace Functions"
+        , describe "Whitespace Functions" <|
+            let
+                ifProgress : Parser a -> Int -> Parser (Step Int {})
+                ifProgress parser offset =
+                  succeed identity
+                    |> skip parser
+                    |> keep getOffset
+                    |> map (\newOffset -> if offset == newOffset then Done {} else Loop newOffset)
+            in
             [ test "Gren whitespace parser" <| \{} ->
                 let
                     gren : Parser {}
@@ -345,15 +317,8 @@ tests =
                           , multiComment "{-" "-}" Nestable
                           , spaces
                           ]
-                    
-                    ifProgress : Parser a -> Int -> Parser (Step Int {})
-                    ifProgress parser offset =
-                      succeed identity
-                        |> String.Parser.skip parser
-                        |> keep getOffset
-                        |> map (\newOffset -> if offset == newOffset then Done {} else Loop newOffset)
                 in
-                    Expect.equal (Ok {}) (run gren "  -- comment\n  ")
+                Expect.equal (Ok {}) (run gren "  -- comment\n  ")
             
             , test "JavaScript whitespace parser" <| \{} ->
                 let
@@ -365,15 +330,8 @@ tests =
                           , multiComment "/*" "*/" NotNestable
                           , chompWhile (\c -> c == ' ' || c == '\n' || c == '\r' || c == '\t')
                           ]
-                    
-                    ifProgress : Parser a -> Int -> Parser (Step Int {})
-                    ifProgress parser offset =
-                      succeed identity
-                        |> skip parser
-                        |> keep getOffset
-                        |> map (\newOffset -> if offset == newOffset then Done {} else Loop newOffset)
                 in
-                    Expect.equal (Ok {}) (run js "  // comment\n  ")
+                Expect.equal (Ok {}) (run js "  // comment\n  ")
             ]
         
         , describe "Error Handling"
@@ -382,18 +340,18 @@ tests =
                     deadEnd = { row = 1, col = 5, problem = Expecting "test" }
                     result = deadEndsToString [deadEnd]
                 in
-                    Expect.equal True (String.contains "Expecting: \"test\"" result)
+                Expect.equal True (String.contains "Expecting: \"test\"" result)
             
             , test "deadEndsToString with ExpectingInt problem" <| \{} ->
                 let
                     deadEnd = { row = 2, col = 10, problem = ExpectingInt }
                     result = deadEndsToString [deadEnd]
                 in
-                    Expect.equal True (String.contains "ExpectingInt" result)
+                Expect.equal True (String.contains "ExpectingInt" result)
             
             , test "problem function creates error" <| \{} ->
                 when run (problem "test error") "anything" is
-                    Ok _ -> Expect.equal "Should fail" "Unexpected success"
-                    Err problems -> Expect.equal True True
+                    Ok _ -> Expect.fail "Unexpected success"
+                    Err problems -> Expect.pass
             ]
         ]

@@ -45,12 +45,12 @@ you need to provide a `Problem` for certain scenarios.**
 
 
 import Basics exposing (..)
+import Bitwise
 import String exposing (String)
 import Array exposing (Array)
 import Char exposing (Char)
 import Result exposing (Result(..))
 import Maybe exposing (Maybe(..))
-
 
 
 -- PARSERS
@@ -509,15 +509,8 @@ the parser fails.
 int : x -> Parser c x Int
 int invalid =
   oneOf
-    [ chompIf (\c -> c == '0') invalid
-      |> andThen
-        (\_ ->
-          oneOf
-            [ chompIf Char.isDigit invalid
-                |> andThen (\_ -> problem invalid)
-            , succeed 0
-            ]
-        )
+    [ succeed 0
+      |> skip (chompIf (\c -> c == '0') invalid)
     , chompIf Char.isDigit invalid
       |> skip (chompWhile Char.isDigit)
       |> getChompedString
@@ -846,8 +839,30 @@ two words wide, so even if there are no newlines, `offset` and `col`
 may not be equal.
 -}
 isSubString : String -> Int -> Int -> Int -> String -> { newOffset: Int, newRow: Int, newCol: Int }
-isSubString =
-  Gren.Kernel.Parser.isSubString
+isSubString smallString offset row col bigString =
+  let
+    slice =
+      String.sliceUnits offset (offset + String.unitLength smallString) bigString
+
+    newlineIndices =
+      String.indices "\n" smallString
+
+    sliceLength =
+      String.unitLength slice
+  in
+  { newOffset =
+    if smallString == slice then
+      offset + sliceLength
+
+    else
+      -1
+  , newRow = row + Array.length newlineIndices
+  , newCol =
+    newlineIndices
+      |> Array.last
+      |> Maybe.map (\newlineIndex -> newlineIndex - offset + 1 + sliceLength)
+      |> Maybe.withDefault (col + sliceLength)
+  }
 
 
 {-| Again, when parsing, you want to allocate as little as possible.
@@ -866,8 +881,34 @@ The `newOffset` value can be a few different things:
     words wide.
 -}
 isSubChar : (Char -> Bool) -> Int -> String -> Int
-isSubChar =
-  Gren.Kernel.Parser.isSubChar
+isSubChar pred offset str =
+  when String.getUnit offset str is
+    Nothing ->
+      -1
+
+    Just unit ->
+      if Bitwise.and (Char.toCode unit) 0xF800 == 0xD800 then
+        when String.popFirst (String.sliceUnits offset (offset + 2) str) is
+          Just { first = uniChar } ->
+            if pred unit then
+              offset + 2
+
+            else
+              -1
+
+          Nothing ->
+            -1
+
+      else
+        if pred unit then
+          if unit == '\n' then
+            -2
+
+          else
+            offset + 1
+
+        else
+          -1
 
 
 {-| Find a substring after a given offset.
@@ -879,8 +920,41 @@ If `offset = 0` we would get `(3, 1, 4)`
 If `offset = 7` we would get `(-1, 1, 18)`
 -}
 findSubString : String -> Int -> Int -> Int -> String -> { newOffset: Int, newRow: Int, newCol: Int }
-findSubString =
-  Gren.Kernel.Parser.findSubString
+findSubString smallString offset row col bigString =
+  let
+    slice =
+      String.sliceUnits offset (String.unitLength bigString) bigString
+
+    sliceLength =
+      String.unitLength slice
+
+    newlines =
+      String.indices "\n" slice
+  in
+  when String.firstIndexOf smallString slice is
+    Just idx ->
+      let
+        relevantNewlines =
+          Array.keepIf (\newlineIdx -> newlineIdx < idx) newlines
+      in
+      { newOffset = offset + idx
+      , newRow = row + Array.length relevantNewlines
+      , newCol =
+        relevantNewlines
+          |> Array.last
+          |> Maybe.map (\lastNewlineIdx -> lastNewlineIdx - offset + 1)
+          |> Maybe.withDefault (col + sliceLength)
+      }
+
+    Nothing ->
+      { newOffset = -1
+      , newRow = row + Array.length newlines
+      , newCol =
+        newlines
+          |> Array.last
+          |> Maybe.map (\lastNewlineIdx -> lastNewlineIdx - offset + 1 + sliceLength)
+          |> Maybe.withDefault (col + sliceLength)
+      }
 
 
 
