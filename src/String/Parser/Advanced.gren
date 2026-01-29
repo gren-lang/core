@@ -1,5 +1,6 @@
 module String.Parser.Advanced exposing
-  ( Parser, run, DeadEnd, inContext, Token
+  ( Parser, run, DeadEnd, Token
+  , setPayload, getPayload, updatePayload
   , int, token, keyword, variable, end
   , succeed, keep, skip, lazy, andThen, problem
   , oneOf, map, mapError, backtrackable, commit 
@@ -14,7 +15,10 @@ module String.Parser.Advanced exposing
 {-|
 
 # Parsers
-@docs Parser, run, DeadEnd, inContext, Token
+@docs Parser, run, DeadEnd, Token
+
+# Payload
+@docs setPayload, getPayload, updatePayload 
 
 * * *
 **Everything past here works just like in the
@@ -67,8 +71,9 @@ import Set
 custom type like `type Problem = BadIndent | BadKeyword String` and track
 problems much more precisely.
 - `payload` &mdash; Sometimes you want to track information while you're parsing.
-This could be things like comments for when you want to format code, or indentation
-levels. The payload gives you a place to store arbitrary data, should you need it.
+This could be things like comments for when you want to format code, indentation
+levels, or what you're currently trying to parse. The payload gives you a place
+to store arbitrary data, should you need it.
 
 I recommend starting with the simpler [`Parser`][parser] module though, and
 when you feel comfortable and want better error messages, you can create a type
@@ -436,7 +441,7 @@ commit a =
 {-| Just like [`Parser.keyword`](Parser#keyword) except you provide a
 problem in case the parser fails:
 
-    let_ : Parser Context Problem {}
+    let_ : Parser Payload Problem {}
     let_ =
       token "let" ExpectingLet
 
@@ -721,7 +726,7 @@ chompUntilEndOr str =
 
 
 
--- CONTEXT
+-- PAYLOAD
 
 
 {-| This is how you mark that you are in a certain payload. For example, here
@@ -761,19 +766,23 @@ Importantly, we call `inContext` so that any dead end that occurs in
 `definitionBody` will get this extra payload information. That way you can say
 things like, "I was expecting an equals sign in the `view` definition." Payload!
 -}
-inContext : payload -> Parser payload x a -> Parser payload x a
-inContext payload (Parser parse) =
-  Parser <| \s0 ->
-    when parse (changeContext payload s0) is
-      Good { pred = p, value = a, state = s1 } ->
-        Good { pred = p, value = a, state = changeContext payload s1 }
-
-      Bad _ as step ->
-        step
+setPayload : payload -> Parser payload x a -> Parser payload x a
+setPayload payload parser =
+  updatePayload (\_ -> payload) parser
 
 
-changeContext : payload -> State payload -> State payload
-changeContext payload s =
+getPayload : Parser payload x payload
+getPayload =
+  Parser <| \s -> Good { pred = False, value = s.payload, state = s }
+
+
+updatePayload : (payload -> payload) -> Parser payload x a -> Parser payload x a
+updatePayload updater (Parser parse) =
+  Parser <| \s -> parse (setStatePayload (updater s.payload) s)
+
+
+setStatePayload : payload -> State payload -> State payload
+setStatePayload payload s =
   { src = s.src
   , offset = s.offset
   , row = s.row
