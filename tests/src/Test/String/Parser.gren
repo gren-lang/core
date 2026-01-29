@@ -337,17 +337,45 @@ tests =
         , describe "Error Handling"
             [ test "deadEndsToString with Expecting problem" <| \{} ->
                 let
-                    deadEnd = { row = 1, col = 5, problem = Expecting "test" }
-                    result = deadEndsToString [deadEnd]
+                    deadEnd = { row = 2, col = 2, problem = Expecting "nonsense" }
                 in
-                Expect.equal True (String.contains "Expecting: \"test\"" result)
+                deadEndsToString
+                    """
+                    one
+                    two
+                    three
+                    """
+                    [deadEnd]
+                    |> Expect.equal
+                        """
+                        1| one
+                        2| two
+                            ^
+                        3| three
+
+                          Expecting nonsense
+                        """
             
             , test "deadEndsToString with ExpectingInt problem" <| \{} ->
                 let
-                    deadEnd = { row = 2, col = 10, problem = ExpectingInt }
-                    result = deadEndsToString [deadEnd]
+                    deadEnd = { row = 1, col = 1, problem = ExpectingInt }
                 in
-                Expect.equal True (String.contains "ExpectingInt" result)
+                deadEndsToString
+                    """
+                    one
+                    two
+                    three
+                    """
+                    [deadEnd]
+                    |> Expect.equal
+                        """
+                        1| one
+                           ^
+                        2| two
+                        3| three
+
+                          Expecting an integer
+                        """
             
             , test "problem function creates error" <| \{} ->
                 when run (problem "test error") "anything" is

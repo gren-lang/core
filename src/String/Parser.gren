@@ -143,48 +143,51 @@ type Problem
 
 {-| Turn all the `DeadEnd` data into a string that is easier for people to
 read.
-
-**Note:** This is just a baseline of quality. It cannot do anything with colors.
-It is not interactive. It just turns the raw data into strings. I really hope
-folks will check out the source code for some inspiration on how to turn errors
-into `Html` with nice colors and interaction! The `Parser.Advanced` module lets
-you work with payload as well, which really unlocks another level of quality!
-The "payload" technique is how the Gren compiler can say "I think I am parsing a
-list, so I was expecting a closing `]` here." Telling users what the parser
-_thinks_ is happening can be really helpful!
 -}
-deadEndsToString : Array DeadEnd -> String
-deadEndsToString deadEnds =
-  Array.foldl (++) "" (Array.map deadEndToString deadEnds)
+deadEndsToString : String -> Array DeadEnd -> String
+deadEndsToString src deadEnds =
+  String.join "" <|
+    A.renderDeadEnds
+      { text = identity
+      , formatCaret = identity
+      , formatContext = identity
+      , newline = "\n"
+      , linesOfExtraContext = 2
+      }
+      { deadEndToString = \de -> { row = de.row, col = de.col, context = "" }
+      , problemToString = problemToExpected
+      }
+      src
+      (Array.map (\de -> { row = de.row, col = de.col, payload = {}, problem = de.problem }) deadEnds)
 
 
-deadEndToString : DeadEnd -> String
-deadEndToString deadEnd =
-  String.join " " 
-    [ when deadEnd.problem is
-        Expecting str ->
-            "Expecting: \"" ++ str ++ "\""
-        ExpectingInt ->
-            "ExpectingInt"
-        ExpectingVariable ->
-            "ExpectingVariable"
-        ExpectingKeyword str ->
-            "ExpectingKeyword: \"" ++ str ++ "\""
-        ExpectingEnd ->
-            "ExpectingEnd"
-        UnexpectedChar ->
-            "UnexpectedChar"
-        Problem str ->
-            "Problem: \"" ++ str ++ "\""
-        BadRepeat ->
-            "BadRepeat"
-    , "at row:" 
-    , String.fromInt deadEnd.row
-    , "col:"
-    , String.fromInt deadEnd.col
-    , "\n"
-    ]
+problemToExpected : Problem -> A.Expected
+problemToExpected p =
+   when p is
+       Expecting x ->
+           A.Expected x
 
+       ExpectingVariable ->
+           A.Expected "a variable"
+
+       ExpectingEnd ->
+           A.Expected "the end"
+
+       ExpectingInt ->
+           A.Expected "an integer"
+
+       ExpectingKeyword k ->
+           A.Expected ("keyword \"" ++ k ++ "\"")
+
+       UnexpectedChar ->
+           A.Other "Unexpected char"
+
+       Problem p_ ->
+           A.Other p_
+
+       BadRepeat ->
+           A.Other "Bad repetition"
+ 
 
 -- PIPELINES
 

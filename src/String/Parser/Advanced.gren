@@ -7,6 +7,7 @@ module String.Parser.Advanced exposing
   , spaces, lineComment, multiComment, Nestable(..)
   , getChompedString, chompIf, chompChar, chompWhile, chompUntil, chompUntilEndOr, mapChompedString
   , getPosition, getRow, getCol, getOffset, getSource
+  , Output, Extract, Expected(..), renderDeadEnds
   )
 
 
@@ -41,6 +42,9 @@ you need to provide a `Problem` for certain scenarios.**
 
 # Positions
 @docs getPosition, getRow, getCol, getOffset, getSource
+
+# Error formatting
+@docs Output, Extract, Expected, renderDeadEnds
 -}
 
 
@@ -51,6 +55,7 @@ import Array exposing (Array)
 import Char exposing (Char)
 import Result exposing (Result(..))
 import Maybe exposing (Maybe(..))
+import Set
 
 
 -- PARSERS
@@ -1204,3 +1209,239 @@ nestableHelp isNotRelevant open close expectingClose nestLevel =
 isChar : Char -> Bool
 isChar char =
   True
+
+
+-- ERROR RENDERING
+
+
+{-| Describes how to output the various parts of the error message.
+-}
+type alias Output out =
+    { text : String -> out
+    , formatCaret : out -> out
+    , newline : out
+    , formatContext : out -> out
+    , linesOfExtraContext : Int
+    }
+
+
+{-| Describes how to get the context stack from a `DeadEnd` and how to extract expectations information from a problem.
+-}
+type alias Extract payload problem =
+    { deadEndToString : DeadEnd payload problem -> { row : Int, col : Int, context : String }
+    , problemToString : problem -> Expected
+    }
+
+
+{-| A problem is often of the form "expected `something`". This type is used to group those together.
+-}
+type Expected
+    = Expected String
+    | Other String
+
+
+type Line a
+    = Line (Array a)
+
+
+{-| Render an array of `DeadEnd`s.
+
+The `String` is the input to the parser.
+
+This returns a list of renderable "pieces", explaining what went wrong.
+-}
+renderDeadEnds :
+    Output out
+    -> Extract payload problem
+    -> String
+    -> Array (DeadEnd payload problem)
+    -> Array out
+renderDeadEnds output extract src deadEnds =
+    let
+        lines =
+            src
+                |> String.split "\n"
+                |> Array.indexedMap (\i l -> { row = i + 1, string = l })
+    in
+    deadEnds
+        |> gatherEqualsBy (\{ row, col } -> [ row, col ])
+        |> Array.mapAndFlatten (\line -> deadEndToString output extract lines (Array.sortBy .col line))
+        |> Array.intersperse (Line [ output.newline ])
+        |> Array.mapAndFlatten (\(Line l) -> l)
+
+
+gatherEqualsBy : (a -> b) -> Array a -> Array (Array a)
+gatherEqualsBy fn array =
+  let
+    helper gathered scattered =
+      when Array.popFirst scattered is
+        Nothing ->
+          gathered  
+
+        Just { first, rest } ->
+          let
+            firstComp =
+              fn first
+
+            { trues = group, falses = stillScattered } =
+              Array.partition (\a -> firstComp == fn a) scattered
+          in
+          helper (Array.pushLast group gathered) stillScattered
+  in
+  helper [] array
+
+
+deadEndToString :
+    Output out
+    -> Extract payload problem
+    -> Array { row : Int, string : String }
+    -> Array (DeadEnd payload problem)
+    -> Array (Line out)
+deadEndToString output extract lines deadEnds =
+    let
+        grouped : Array { row : Int, col : Int, context : String, problems : Array problem }
+        grouped =
+            deadEnds
+                |> gatherEqualsBy extract.deadEndToString
+                |> Array.map
+                    (\group ->
+                      when Array.popFirst group is
+                        Nothing ->
+                          -- Shouldn't happen :/
+                          { row = 1
+                          , col = 1
+                          , context = ""
+                          , problems = Array.map .problem group
+                          }
+
+                        Just { first, rest } ->
+                          let
+                            extractedFirst =
+                              extract.deadEndToString first
+                          in
+                          { row = extractedFirst.row
+                          , col = extractedFirst.col
+                          , context = extractedFirst.context
+                          , problems = Array.map .problem group
+                          }
+                    )
+
+        sourceFragment : Array (Line out)
+        sourceFragment =
+          when Array.popFirst deadEnds is
+            Nothing ->
+              []
+
+            Just { first } ->
+              formatSourceFragment output { row = first.row, col = first.col } lines
+
+        groupToString :
+            { row : Int, col : Int, context : String, problems : Array problem }
+            -> Array (Line out)
+        groupToString { context, problems } =
+            let
+                { expected, other } =
+                    Array.foldl
+                        (\prob acc ->
+                            when extract.problemToString prob is
+                                Expected e ->
+                                    { expected = Set.set e acc.expected, other = acc.other }
+
+                                Other o ->
+                                    { expected = acc.expected, other = Set.set o acc.other }
+                        )
+                        { expected = Set.empty, other = Set.empty }
+                        problems
+
+                groupedExpected : Array String
+                groupedExpected =
+                    when Set.toArray expected is
+                        [] ->
+                            []
+
+                        [ x ] ->
+                            [ "Expecting " ++ x ]
+
+                        rest ->
+                            [ "Expecting one of "
+                                ++ String.join ", " rest
+                            ]
+
+                problemsLines : Array (Line out)
+                problemsLines =
+                    (groupedExpected ++ Set.toArray other)
+                        |> Array.sort
+                        |> Array.map (\l -> Line [ output.text ("  " ++ l) ])
+            in
+            if String.isEmpty context then
+                problemsLines
+
+            else
+              Array.pushLast
+                ( Line
+                    [ output.text "- "
+                    , output.formatContext (output.text context)
+                    , output.text ":"
+                    ]
+                )
+                problemsLines
+    in
+    Array.flatten
+      [ sourceFragment
+      , [ Line [ output.text "" ] ]
+      , Array.mapAndFlatten groupToString grouped
+      ]
+
+
+formatSourceFragment : Output a -> { row : Int, col : Int } -> Array { row : Int, string : String } -> Array (Line a)
+formatSourceFragment output head lines =
+    let
+        line : { row : Int, string : String }
+        line =
+            lines
+                |> Array.dropFirst (head.row - 1)
+                |> Array.first
+                |> Maybe.withDefault { row = head.row, string = "" }
+
+        before : Array { row : Int, string : String }
+        before =
+            lines
+                |> Array.dropFirst (head.row - output.linesOfExtraContext)
+                |> Array.takeFirst output.linesOfExtraContext
+                |> Array.keepIf (\{ row } -> row < head.row)
+
+        after : Array { row : Int, string : String }
+        after =
+            lines
+                |> Array.dropFirst head.row
+                |> Array.takeFirst output.linesOfExtraContext
+
+        formatLine : { row : Int, string : String } -> Line a
+        formatLine { row, string = l } =
+            Line
+                [ output.text
+                    (String.padLeft numLength ' ' (String.fromInt row)
+                        ++ "| "
+                        ++ l
+                    )
+                ]
+
+        numLength : Int
+        numLength =
+            after
+                |> Array.last
+                |> Maybe.map (\{ row } -> row)
+                |> Maybe.withDefault head.row
+                |> String.fromInt
+                |> String.count
+
+        caret : Line a
+        caret =
+            Line
+                [ output.text (String.repeat (numLength + head.col + 1) " ")
+                , output.formatCaret (output.text "^")
+                ]
+    in
+    Array.map formatLine before
+        ++ [ formatLine line, caret ]
+        ++ Array.map formatLine after
