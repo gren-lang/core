@@ -1,0 +1,385 @@
+module Test.String.Parser exposing (tests)
+
+import Basics exposing (..)
+import Expect
+import Result exposing (Result(..))
+import String exposing (String)
+import String.Parser exposing (..)
+import Test exposing (Test, describe, test)
+import Array exposing (Array)
+import Char exposing (Char)
+import Maybe exposing (Maybe(..))
+
+
+-- Type definitions for testing
+
+type Json
+  = Number Int
+  | Boolean Bool
+  | Null
+
+
+type alias Point = { x : Int, y : Int }
+
+
+type alias Stmt = String
+
+
+type alias Located a =
+  { start : { row: Int, col: Int }
+  , value : a
+  , end : { row: Int, col: Int }
+  }
+
+
+-- Helper functions for testing
+
+-- Test that a parser succeeds with expected result
+testOk : String -> Parser a -> a -> Test
+testOk description parser expected =
+    test description <| \{} ->
+        when run parser description is
+            Ok actual -> Expect.equal expected actual
+            Err problems -> Expect.equal "Should succeed" "Parser failed"
+
+-- Test that a parser fails
+testErr : String -> Parser a -> Test
+testErr description parser =
+    test description <| \{} ->
+        when run parser description is
+            Ok actual -> Expect.fail "Parser succeeded unexpectedly"
+            Err _ -> Expect.pass
+
+-- Test that a parser succeeds and reaches end
+testOkEnd : String -> Parser a -> a -> Test
+testOkEnd description parser expected =
+    test description <| \{} ->
+        when run (parser |> andThen (\a -> succeed a |> skip end)) description is
+            Ok actual -> Expect.equal expected actual
+            Err problems -> Expect.equal "Should succeed and reach end" "Parser failed or didn't reach end"
+
+
+tests : Test
+tests =
+    describe "String.Parser Tests"
+        [ describe "Basic Parsers"
+            [ test "run int with valid integer" <| \{} ->
+                Expect.equal (Ok 123456) (run int "123456")
+            
+            , test "run int with decimal fails" <| \{} ->
+                Expect.equal (Ok 3) (run int "3.1415")
+            
+            , test "run keyword true with exact match" <| \{} ->
+                Expect.equal (Ok {}) (run (keyword "true") "true")
+            
+            , test "run keyword true with wrong case fails" <| \{} ->
+                when run (keyword "true") "True" is
+                    Ok _ -> Expect.fail "Unexpected success"
+                    Err _ -> Expect.pass
+            
+            , test "run keyword true with different keyword fails" <| \{} ->
+                when run (keyword "true") "false" is
+                    Ok _ -> Expect.fail "Unexpected success"
+                    Err _ -> Expect.pass
+            
+            , test "run keyword true with trailing characters succeeds" <| \{} ->
+                Expect.equal (Ok {}) (run (keyword "true") "true!")
+            
+            , test "run int with leading zeros" <| \{} ->
+                Expect.equal (Ok 0) (run int "0123")
+            
+            , test "run int with trailing characters" <| \{} ->
+                Expect.equal (Ok 123) (run int "123a")
+            
+            , test "run int with negative sign fails" <| \{} ->
+                when run int "-789" is
+                    Ok _ -> Expect.fail "Unexpected success"
+                    Err _ -> Expect.pass
+            ]
+        
+        , describe "Pipeline Functions"
+            [ test "succeed with integer" <| \{} ->
+                Expect.equal (Ok 90210) (run (succeed 90210) "mississippi")
+            
+            , test "succeed with float" <| \{} ->
+                Expect.equal (Ok 3.141) (run (succeed 3.141) "mississippi")
+            
+            , test "succeed with empty record" <| \{} ->
+                Expect.equal (Ok {}) (run (succeed {}) "mississippi")
+            
+            , test "succeed with Maybe Nothing" <| \{} ->
+                Expect.equal (Ok Nothing) (run (succeed Nothing) "mississippi")
+            
+            , test "Point parser with keep and skip" <| \{} ->
+                let
+                    pointParser : Parser Point
+                    pointParser =
+                      succeed (\x y -> { x = x, y = y })
+                        |> skip (token "(")
+                        |> skip spaces
+                        |> keep int
+                        |> skip spaces
+                        |> skip (token ",")
+                        |> skip spaces
+                        |> keep int
+                        |> skip spaces
+                        |> skip (token ")")
+                in
+                Expect.equal (Ok { x = 15, y = 25 }) (run pointParser "(15, 25)")
+            
+            , test "JavaScript variable parser" <| \{} ->
+                let
+                    var : Parser String
+                    var =
+                        succeed {}
+                            |> skip (chompIf isStartChar)
+                            |> skip (chompWhile isInnerChar)
+                            |> getChompedString
+                    
+                    isStartChar : Char -> Bool
+                    isStartChar char =
+                      Char.isAlpha char || char == '_' || char == '$'
+                    
+                    isInnerChar : Char -> Bool
+                    isInnerChar char =
+                      isStartChar char || Char.isDigit char
+                in
+                Expect.equal (Ok "myVar123") (run var "myVar123")
+            ]
+        
+        , describe "Branching Functions" <|
+            let
+                nullOrInt : Parser (Maybe Int)
+                nullOrInt =
+                  oneOf
+                    [ map Just int
+                    , map (\_ -> Nothing) (keyword "null")
+                    ]
+            in
+            [ test "JSON parser with oneOf" <| \{} ->
+                let
+                    json : Parser Json
+                    json =
+                      oneOf
+                        [ map Number int
+                        , map (\_ -> Boolean True) (keyword "true")
+                        , map (\_ -> Boolean False) (keyword "false")
+                        , map (\_ -> Null) (keyword "null")
+                        ]
+                in
+                Expect.equal (Ok (Number 42)) (run json "42")
+            
+            , test "nullOrInt parser" <| \{} ->
+                Expect.equal (Ok (Just 13)) (run nullOrInt "13")
+            
+            , test "nullOrInt with null" <| \{} ->
+                Expect.equal (Ok Nothing) (run nullOrInt "null")
+            ]
+        
+        , describe "Loop Functions"
+            [ test "statements parser with loop" <| \{} ->
+                let
+                    statements : Parser (Array Stmt)
+                    statements =
+                      loop [] statementsHelp
+                    
+                    statementsHelp : Array Stmt -> Parser (Step (Array Stmt) (Array Stmt))
+                    statementsHelp stmts =
+                      oneOf
+                        [ succeed (\stmt -> Loop (Array.pushLast stmt stmts))
+                            |> keep statement
+                            |> skip spaces
+                            |> skip (token ";")
+                            |> skip spaces
+                        , succeed {}
+                            |> map (\_ -> Done stmts)
+                        ]
+                    
+                    statement : Parser Stmt
+                    statement =
+                      getChompedString (chompWhile (\c -> c /= ';' && c /= ' '))
+                in
+                Expect.equal (Ok ["stmt1", "stmt2"]) (run statements "stmt1; stmt2;")
+            ]
+        
+        , describe "Chomping Functions" <|
+            let
+                php : Parser String
+                php =
+                    succeed {}
+                        |> skip (chompChar '$')
+                        |> skip (chompIf (\c -> Char.isAlpha c || c == '_'))
+                        |> skip (chompWhile (\c -> Char.isAlphaNum c || c == '_'))
+                        |> getChompedString
+            in
+            [ test "PHP variable parser" <| \{} ->
+                Expect.equal (Ok "$x") (run php "$x")
+            
+            , test "PHP variable parser with longer name" <| \{} ->
+                Expect.equal (Ok "$txt") (run php "$txt")
+            
+            , test "chompUpper with uppercase char" <| \{} ->
+                let
+                    chompUpper : Parser {}
+                    chompUpper =
+                      chompIf Char.isUpper
+                in
+                Expect.equal (Ok {}) (run chompUpper "Test")
+            
+            , test "chompChar with specific char" <| \{} ->
+                Expect.equal (Ok {}) (run (chompChar 'c') "cat")
+            
+            , test "whitespace parser" <| \{} ->
+                let
+                    whitespace : Parser {}
+                    whitespace =
+                      chompWhile (\c -> c == ' ' || c == '\t' || c == '\n' || c == '\r')
+                in
+                Expect.equal (Ok {}) (run whitespace "   \t\n")
+            
+            , test "grenVar parser" <| \{} ->
+                let
+                    grenVar : Parser String
+                    grenVar =
+                        succeed {}
+                            |> skip (chompIf Char.isLower)
+                            |> skip (chompWhile (\c -> Char.isAlphaNum c || c == '_'))
+                            |> getChompedString
+                in
+                Expect.equal (Ok "myVar") (run grenVar "myVar")
+            ]
+        
+        , describe "Position Functions"
+            [ test "located parser with getPosition" <| \{} ->
+                let
+                    located : Parser a -> Parser (Located a)
+                    located parser =
+                      succeed (\start value end -> { start = start, value = value, end = end })
+                        |> keep getPosition
+                        |> keep parser
+                        |> keep getPosition
+                in
+                when run (located (succeed "test")) "test" is
+                    Ok locatedValue ->
+                        Expect.equal "test" locatedValue.value
+
+                    Err _ ->
+                        Expect.equal "Should succeed" "Parser failed"
+            
+            , test "getRow returns row number" <| \{} ->
+                when run getRow "test" is
+                    Ok row -> Expect.equal 1 row
+                    Err _ -> Expect.equal "Should succeed" "Parser failed"
+            
+            , test "getCol returns column number" <| \{} ->
+                when run getCol "test" is
+                    Ok col -> Expect.equal 1 col
+                    Err _ -> Expect.equal "Should succeed" "Parser failed"
+            
+            , test "getOffset returns offset" <| \{} ->
+                when run getOffset "test" is
+                    Ok offset -> Expect.equal 0 offset
+                    Err _ -> Expect.equal "Should succeed" "Parser failed"
+            ]
+        
+        , describe "Variable Functions" <|
+            let
+                typeVar : Parser String
+                typeVar =
+                  variable
+                    { start = Char.isLower
+                    , inner = \c -> Char.isAlphaNum c || c == '_'
+                    }
+            in
+            [ test "type variable parser" <| \{} ->
+                Expect.equal (Ok "myVar") (run typeVar "myVar")
+        
+            , test "type variable parser with underscore" <| \{} ->
+                Expect.equal (Ok "my_var") (run typeVar "my_var")
+            ]
+        
+        , describe "Whitespace Functions" <|
+            let
+                ifProgress : Parser a -> Int -> Parser (Step Int {})
+                ifProgress parser offset =
+                  succeed identity
+                    |> skip parser
+                    |> keep getOffset
+                    |> map (\newOffset -> if offset == newOffset then Done {} else Loop newOffset)
+            in
+            [ test "Gren whitespace parser" <| \{} ->
+                let
+                    gren : Parser {}
+                    gren =
+                      loop 0 <| ifProgress <|
+                        oneOf
+                          [ lineComment "--"
+                          , multiComment "{-" "-}" Nestable
+                          , spaces
+                          ]
+                in
+                Expect.equal (Ok {}) (run gren "  -- comment\n  ")
+            
+            , test "JavaScript whitespace parser" <| \{} ->
+                let
+                    js : Parser {}
+                    js =
+                      loop 0 <| ifProgress <|
+                        oneOf
+                          [ lineComment "//"
+                          , multiComment "/*" "*/" NotNestable
+                          , chompWhile (\c -> c == ' ' || c == '\n' || c == '\r' || c == '\t')
+                          ]
+                in
+                Expect.equal (Ok {}) (run js "  // comment\n  ")
+            ]
+        
+        , describe "Error Handling"
+            [ test "deadEndsToString with Expecting problem" <| \{} ->
+                let
+                    deadEnd = { row = 2, col = 2, problem = Expecting "nonsense" }
+                in
+                deadEndsToString
+                    """
+                    one
+                    two
+                    three
+                    """
+                    [deadEnd]
+                    |> Expect.equal
+                        """
+                        1| one
+                        2| two
+                            ^
+                        3| three
+
+                          Expecting nonsense
+                        """
+            
+            , test "deadEndsToString with ExpectingInt problem" <| \{} ->
+                let
+                    deadEnd = { row = 1, col = 1, problem = ExpectingInt }
+                in
+                deadEndsToString
+                    """
+                    one
+                    two
+                    three
+                    """
+                    [deadEnd]
+                    |> Expect.equal
+                        """
+                        1| one
+                           ^
+                        2| two
+                        3| three
+
+                          Expecting an integer
+                        """
+            
+            , test "problem function creates error" <| \{} ->
+                when run (problem "test error") "anything" is
+                    Ok _ -> Expect.fail "Unexpected success"
+                    Err problems -> Expect.pass
+            ]
+        ]
