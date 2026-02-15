@@ -1,6 +1,6 @@
 module String.Parser.Advanced exposing
   ( Parser, run, DeadEnd, Token
-  , setPayload, getPayload, updatePayload
+  , setPayload, getPayload, updatePayload, scopedUpdatePayload
   , int, token, keyword, variable, end
   , succeed, keep, skip, lazy, andThen, problem
   , oneOf, map, mapError, backtrackable, commit 
@@ -18,7 +18,7 @@ module String.Parser.Advanced exposing
 @docs Parser, run, DeadEnd, Token
 
 # Payload
-@docs setPayload, getPayload, updatePayload 
+@docs setPayload, getPayload, updatePayload, scopedUpdatePayload
 
 * * *
 **Everything past here works just like in the
@@ -520,7 +520,7 @@ int : x -> Parser c x Int
 int invalid =
   oneOf
     [ succeed 0
-      |> skip (chompIf (\c -> c == '0') invalid)
+      |> skip (chompChar '0' invalid)
     , chompIf Char.isDigit invalid
       |> skip (chompWhile Char.isDigit)
       |> getChompedString
@@ -590,7 +590,7 @@ chompIf isGood expecting =
     in
     -- not found
     if newOffset == -1 then
-      Bad { pred = False, bag = (fromState s expecting) }
+      Bad { pred = False, bag = fromState s expecting }
 
     -- newline
     else if newOffset == -2 then
@@ -789,6 +789,25 @@ setStatePayload payload s =
   , col = s.col
   , payload = payload
   }
+
+
+scopedUpdatePayload : val -> (payload -> val) -> (val -> payload -> payload) -> Parser payload x a -> Parser payload x a
+scopedUpdatePayload before afterGet update (Parser parse) =
+  Parser <| \s ->
+    let
+      after =
+        afterGet s.payload
+    in
+    when parse (setStatePayload (update before s.payload) s) is
+      Good { pred, value, state } ->
+        Good
+          { pred = pred
+          , value = value
+          , state = setStatePayload (update after state.payload) state
+          }
+
+      bad ->
+        bad
 
 
 -- POSITION
