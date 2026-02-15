@@ -280,6 +280,79 @@ tests =
                 when run getOffset "test" is
                     Ok offset -> Expect.equal 0 offset
                     Err _ -> Expect.equal "Should succeed" "Parser failed"
+
+            , test "token with whitespace" <| \{} ->
+                let
+                    parser =
+                        succeed identity
+                            |> skip (token "\n")
+                            |> keep getPosition
+                in
+                when run parser "\n" is
+                    Ok ret ->
+                        Expect.equal { row = 2, col = 1 } ret
+
+                    Err err ->
+                        Expect.fail <| "Unexpected failure: " ++ Debug.toString err
+
+            , test "token with infix whitespace" <| \{} ->
+                let
+                    parser =
+                        succeed identity
+                            |> skip (token "one\ntwo")
+                            |> keep getPosition
+                in
+                when run parser "one\ntwo" is
+                    Ok ret ->
+                        Expect.equal { row = 2, col = 4 } ret
+
+                    Err err ->
+                        Expect.fail <| "Unexpected failure: " ++ Debug.toString err
+
+            , test "chompUntil with whitespace" <| \{} ->
+                let
+                    parser =
+                        succeed identity
+                            |> skip (chompUntil "\n")
+                            |> keep getPosition
+                in
+                when run parser "test\n" is
+                    Ok ret ->
+                        Expect.equal { row = 1, col = 5 } ret
+
+                    Err err ->
+                        Expect.fail <| "Unexpected failure: " ++ Debug.toString err
+
+            , test "chompUntil with suffix whitespace" <| \{} ->
+                let
+                    parser =
+                        succeed identity
+                            |> skip (chompUntil "\nboo")
+                            |> keep getPosition
+                in
+                when run parser "test\nboo" is
+                    Ok ret ->
+                        Expect.equal { row = 1, col = 5 } ret
+
+                    Err err ->
+                        Expect.fail <| "Unexpected failure: " ++ Debug.toString err
+
+            , test "chompUntil with non-matching whitespace" <| \{} ->
+                let
+                    parser =
+                        succeed identity
+                            |> skip (chompUntil "\n")
+                            |> keep getPosition
+                in
+                when run parser "test" is
+                    Ok _ ->
+                        Expect.fail "Unexpected success"
+
+                    Err [err] ->
+                        Expect.equal { row = 1, col = 1 } { row = err.row, col = err.col }
+
+                    Err errs ->
+                        Expect.fail <| "Unexpected failure " ++ Debug.toString errs
             ]
         
         , describe "Variable Functions" <|

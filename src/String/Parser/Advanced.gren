@@ -893,7 +893,7 @@ isSubString smallString offset row col bigString =
   , newCol =
     newlineIndices
       |> Array.last
-      |> Maybe.map (\newlineIndex -> newlineIndex - offset + 1 + sliceLength)
+      |> Maybe.map (\newlineIndex -> sliceLength - newlineIndex)
       |> Maybe.withDefault (col + sliceLength)
   }
 
@@ -975,8 +975,8 @@ findSubString smallString offset row col bigString =
       , newCol =
         relevantNewlines
           |> Array.last
-          |> Maybe.map (\lastNewlineIdx -> lastNewlineIdx - offset + 1)
-          |> Maybe.withDefault (col + sliceLength)
+          |> Maybe.map (\lastNewlineIdx -> idx - lastNewlineIdx)
+          |> Maybe.withDefault (col + idx)
       }
 
     Nothing ->
@@ -985,7 +985,7 @@ findSubString smallString offset row col bigString =
       , newCol =
         newlines
           |> Array.last
-          |> Maybe.map (\lastNewlineIdx -> lastNewlineIdx - offset + 1 + sliceLength)
+          |> Maybe.map (\lastNewlineIdx -> sliceLength - lastNewlineIdx - 1)
           |> Maybe.withDefault (col + sliceLength)
       }
 
