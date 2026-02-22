@@ -426,7 +426,7 @@ tests =
                             ^
                         3| three
 
-                          Expecting nonsense
+                        Expecting nonsense
                         """
             
             , test "deadEndsToString with ExpectingInt problem" <| \{} ->
@@ -447,7 +447,7 @@ tests =
                         2| two
                         3| three
 
-                          Expecting an integer
+                        Expecting an integer
                         """
             
             , test "problem function creates error" <| \{} ->

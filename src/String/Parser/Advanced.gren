@@ -1399,7 +1399,7 @@ deadEndToString output extract lines deadEnds =
                 problemsLines =
                     (groupedExpected ++ Set.toArray other)
                         |> Array.sort
-                        |> Array.map (\l -> Line [ output.text ("  " ++ l) ])
+                        |> Array.map (\l -> Line [ output.text l ])
             in
             if String.isEmpty context then
                 problemsLines
@@ -1427,14 +1427,13 @@ formatSourceFragment output head lines =
         line : { row : Int, string : String }
         line =
             lines
-                |> Array.dropFirst (head.row - 1)
-                |> Array.first
+                |> Array.get (head.row - 1)
                 |> Maybe.withDefault { row = head.row, string = "" }
 
         before : Array { row : Int, string : String }
         before =
             lines
-                |> Array.dropFirst (head.row - output.linesOfExtraContext)
+                |> Array.dropFirst (max 0 (head.row - output.linesOfExtraContext - 1))
                 |> Array.takeFirst output.linesOfExtraContext
                 |> Array.keepIf (\{ row } -> row < head.row)
 
