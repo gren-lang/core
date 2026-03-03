@@ -202,12 +202,6 @@ float a b =
     alwaysFour : Random.Generator Int
     alwaysFour =
         Random.constant 4
-
-Think of it as picking from a hat with only one thing in it. It is weird,
-but it can be useful with [`elm-community/random-extra`][extra] which has
-tons of nice helpers.
-
-[extra]: /packages/elm-community/random-extra/latest
 -}
 constant : a -> Generator a
 constant value =
@@ -389,11 +383,7 @@ You could also do this for lower case ASCII letters:
 The `letter` generator first picks a number between 0 and 25 inclusive.
 It then uses `Char.fromCode` to turn [ASCII codes][ascii] into `Char` values.
 
-**Note:** Instead of making these yourself, always check if the
-[`random-extra`][extra] package has what you need!
-
 [ascii]: https://en.wikipedia.org/wiki/ASCII#Printable_characters
-[extra]: /packages/elm-community/random-extra/latest
 -}
 map : (a -> b) -> Generator a -> Generator b
 map func (Generator genA) =
@@ -553,11 +543,6 @@ example, here is how you can define `map` using `andThen`:
     map func generator =
       generator
         |> Random.andThen (\value -> Random.constant (func value))
-
-The `andThen` function gets used a lot in [`elm-community/random-extra`][extra],
-so it may be helpful to look through the implementation there for more examples.
-
-[extra]: /packages/elm-community/random-extra/latest
 -}
 andThen : (a -> Generator b) -> Generator a -> Generator b
 andThen callback (Generator genA) =
