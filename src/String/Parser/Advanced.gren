@@ -791,10 +791,13 @@ setStatePayload payload s =
   }
 
 
-scopedUpdatePayload : val -> (payload -> val) -> (val -> payload -> payload) -> Parser payload x a -> Parser payload x a
-scopedUpdatePayload before afterGet update (Parser parse) =
+scopedUpdatePayload : (payload -> val) -> (payload -> val) -> (val -> payload -> payload) -> Parser payload x a -> Parser payload x a
+scopedUpdatePayload beforeGet afterGet update (Parser parse) =
   Parser <| \s ->
     let
+      before =
+        beforeGet s.payload
+
       after =
         afterGet s.payload
     in
