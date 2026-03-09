@@ -443,7 +443,7 @@ problem in case the parser fails:
 
     let_ : Parser Payload Problem {}
     let_ =
-      token "let" ExpectingLet
+      keyword "let" ExpectingLet
 
 Note that this would fail to chomp `letter` because of the subsequent
 characters. Use `token` if you do not want that last letter check.
@@ -463,7 +463,7 @@ keyword kwd expecting =
       Bad { pred = False, bag = (fromState s expecting) }
     else
       Good 
-        { pred =progress
+        { pred = progress
         , value = {}
         , state =
           { src = s.src
