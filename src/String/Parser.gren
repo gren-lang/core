@@ -1035,17 +1035,8 @@ lineComment str =
   A.lineComment str (Expecting str)
 
 
-{-| Parse multi-line comments. So if you wanted to parse Gren whitespace or
-JS whitespace, you could say:
-
-    gren : Parser {}
-    gren =
-      loop 0 <| ifProgress <|
-        oneOf
-          [ lineComment "--"
-          , multiComment "{-" "-}" Nestable
-          , spaces
-          ]
+{-| Parse multi-line comments. So if you wanted to parse JS whitespace,
+you could say:
 
     js : Parser {}
     js =
@@ -1063,12 +1054,11 @@ JS whitespace, you could say:
         |> keep getOffset
         |> map (\newOffset -> if offset == newOffset then Done {} else Loop newOffset)
 
-**Note:** The fact that `spaces` comes last in the definition of `gren` is very
+**Note:** The fact that `chompWhile` comes last in the definition of `js` is very
 important! It can succeed without consuming any characters, so if it were the
-first option, it would always succeed and bypass the others! (Same is true of
-`chompWhile` in `js`.) This possibility of success without consumption is also
-why wee need the `ifProgress` helper. It detects if there is no more whitespace
-to consume.
+first option, it would always succeed and bypass the others! This possibility of
+success without consumption is also why wee need the `ifProgress` helper. It
+detects if there is no more whitespace to consume.
 -}
 multiComment : String -> String -> Nestable -> Parser {}
 multiComment open close nestable =
@@ -1097,10 +1087,10 @@ line3
 It would stop on the first `*/`, eventually throwing a syntax error on the
 second `*/`. This can be pretty annoying in long files.
 
-Languages like Gren allow you to nest multi-line comments, but your parser needs
+Some languages allow you to nest multi-line comments, but your parser needs
 to be a bit fancier to handle this. After you start a comment, you have to
 detect if there is another one inside it! And then you have to make sure all
-the `{-` and `-}` match up properly! Saying `multiComment "{-" "-}" Nestable`
+the `/*` and `*/` match up properly! Saying `multiComment "/*" "*/" Nestable`
 does all that for you.
 -}
 type Nestable = NotNestable | Nestable

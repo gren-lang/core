@@ -1193,8 +1193,7 @@ multiComment open close nestable =
 
 
 {-| Works just like [`Parser.Nestable`](Parser#Nestable) to help distinguish
-between unnestable `/*` `*/` comments like in JS and nestable `{-` `-}`
-comments like in Gren.
+between unnestable and nestable comments.
 -}
 type Nestable = NotNestable | Nestable
 
