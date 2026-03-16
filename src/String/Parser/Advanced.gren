@@ -1288,6 +1288,8 @@ renderDeadEnds :
     -> Array (DeadEnd payload problem)
     -> Array out
 renderDeadEnds output extract src deadEnds =
+    -- TODO: Re-evaluate. Can we make this more general?
+    -- Can we pair deadends with the rendered location in the string?
     let
         lines =
             src
