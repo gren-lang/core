@@ -1,6 +1,6 @@
 module String.Parser.Advanced exposing
   ( Parser, run, DeadEnd, Token
-  , setPayload, getPayload, updatePayload, scopedUpdatePayload
+  , getPayload, setPayload, updatePayload, scopedUpdatePayload
   , int, token, keyword, variable, end
   , succeed, keep, skip, lazy, andThen, problem
   , oneOf, map, mapError, backtrackable, commit 
@@ -18,11 +18,14 @@ module String.Parser.Advanced exposing
 @docs Parser, run, DeadEnd, Token
 
 # Payload
-@docs setPayload, getPayload, updatePayload, scopedUpdatePayload
+@docs getPayload, setPayload, updatePayload, scopedUpdatePayload
+
+# Error formatting
+@docs renderDeadEnds, Output, Extract, Expected
 
 * * *
 **Everything past here works just like in the
-[`Parser`](/package/gren-lang/parser/latest/Parser) module, except that
+[`String.Parser`](/String/Parser) module, except that
 you need to provide a `Problem` for certain scenarios.**
 * * *
 
@@ -47,8 +50,6 @@ you need to provide a `Problem` for certain scenarios.**
 # Positions
 @docs getPosition, getRow, getCol, getOffset, getSource
 
-# Error formatting
-@docs Output, Extract, Expected, renderDeadEnds
 -}
 
 
@@ -75,7 +76,7 @@ This could be things like comments for when you want to format code, indentation
 levels, or what you're currently trying to parse. The payload gives you a place
 to store arbitrary data, should you need it.
 
-I recommend starting with the simpler [`Parser`][parser] module though, and
+I recommend starting with the simpler [`String.Parser`][String.Parser] module though, and
 when you feel comfortable and want better error messages, you can create a type
 alias like this:
 
@@ -90,10 +91,8 @@ type Payload = Definition String | List | Record
 type Problem = BadIndent | BadKeyword String
 ```
 
-All of the functions from `Parser` should exist in `Parser.Advanced` in some
+All of the functions from `String.Parser` should exist in `String.Parser.Advanced` in some
 form, allowing you to switch over pretty easily.
-
-[parser]: /package/gren-lang/parser/latest/Parser
 -}
 type Parser payload problem value =
   Parser (State payload -> PStep payload problem value)
@@ -116,9 +115,9 @@ type alias State payload =
 -- RUN
 
 
-{-| This works just like [`Parser.run`](/package/gren-lang/parser/latest/Parser#run).
-The only difference is that when it fails, it has much more precise information
-for each dead end.
+{-| This works just like [`String.Parser.run`](String.Parser#run), except it requires
+an intial payload value and will return more precise information for each dead
+end.
 -}
 run : Parser p x a -> p -> String -> Result (Array (DeadEnd p x)) a
 run (Parser parse) initialPayload src =
@@ -202,7 +201,7 @@ bagToArray bag array =
 -- PRIMITIVES
 
 
-{-| Just like [`Parser.succeed`](Parser#succeed)
+{-| Just like [`String.Parser.succeed`](String.Parser#succeed)
 -}
 succeed : a -> Parser c x a
 succeed a =
@@ -210,20 +209,20 @@ succeed a =
     Good { pred = False, value = a, state = s }
 
 
-{-| Just like [`Parser.problem`](Parser#problem) except you provide a custom
+{-| Just like [`String.Parser.problem`](String.Parser#problem) except you provide a custom
 type for your problem.
 -}
 problem : x -> Parser c x a
 problem x =
   Parser <| \s ->
-    Bad { pred = False, bag = (fromState s x) }
+    Bad { pred = False, bag = fromState s x }
 
 
 
 -- MAPPING
 
 
-{-| Just like [`Parser.map`](Parser#map)
+{-| Just like [`String.Parser.map`](String.Parser#map)
 -}
 map : (a -> b) -> Parser c x a -> Parser c x b
 map func (Parser parse) =
@@ -289,14 +288,14 @@ map2 func (Parser parseA) (Parser parseB) =
             Good { pred = (p1 || p2), value = (func a b), state = s2 }
 
 
-{-| Just like [keep](Parser#keep) from the `Parser` module.
+{-| Just like [keep](String.Parser#keep) from the `String.Parser` module.
 -}
 keep : Parser c x a -> Parser c x (a -> b) -> Parser c x b
 keep parseArg parseFunc =
   map2 (<|) parseFunc parseArg
 
 
-{-| Just like [skip](Parser#skip) from the `Parser` module.
+{-| Just like [skip](String.Parser#skip) from the `String.Parser` module.
 -}
 skip : Parser c x ignore -> Parser c x keep -> Parser c x keep
 skip ignoreParser keepParser =
@@ -306,7 +305,7 @@ skip ignoreParser keepParser =
 -- AND THEN
 
 
-{-| Just like [`Parser.andThen`](Parser#andThen)
+{-| Just like [`String.Parser.andThen`](String.Parser#andThen)
 -}
 andThen : (a -> Parser c x b) -> Parser c x a -> Parser c x b
 andThen callback (Parser parseA) =
@@ -332,7 +331,7 @@ andThen callback (Parser parseA) =
 -- LAZY
 
 
-{-| Just like [`Parser.lazy`](Parser#lazy)
+{-| Just like [`String.Parser.lazy`](String.Parser#lazy)
 -}
 lazy : ({} -> Parser c x a) -> Parser c x a
 lazy thunk =
@@ -348,7 +347,7 @@ lazy thunk =
 -- ONE OF
 
 
-{-| Just like [`Parser.oneOf`](Parser#oneOf)
+{-| Just like [`String.Parser.oneOf`](String.Parser#oneOf)
 -}
 oneOf : Array (Parser c x a) -> Parser c x a
 oneOf parsers =
@@ -377,14 +376,14 @@ oneOfHelp s0 bag parsers =
 -- LOOP
 
 
-{-| Just like [`Parser.Step`](Parser#Step)
+{-| Just like [`String.Parser.Step`](String.Parser#Step)
 -}
 type Step state a
   = Loop state
   | Done a
 
 
-{-| Just like [`Parser.loop`](Parser#loop)
+{-| Just like [`String.Parser.loop`](String.Parser#loop)
 -}
 loop : state -> (state -> Parser c x (Step state a)) -> Parser c x a
 loop state callback =
@@ -415,7 +414,7 @@ loopHelp p state callback s0 =
 -- BACKTRACKABLE
 
 
-{-| Just like [`Parser.backtrackable`](Parser#backtrackable)
+{-| Just like [`String.Parser.backtrackable`](String.Parser#backtrackable)
 -}
 backtrackable : Parser c x a -> Parser c x a
 backtrackable (Parser parse) =
@@ -428,7 +427,7 @@ backtrackable (Parser parse) =
         Good { pred = False, value = a, state = s1 }
 
 
-{-| Just like [`Parser.commit`](Parser#commit)
+{-| Just like [`String.Parser.commit`](String.Parser#commit)
 -}
 commit : a -> Parser c x a
 commit a =
@@ -438,7 +437,7 @@ commit a =
 -- KEYWORD
 
 
-{-| Just like [`Parser.keyword`](Parser#keyword) except you provide a
+{-| Just like [`String.Parser.keyword`](String.Parser#keyword) except you provide a
 problem in case the parser fails:
 
     let_ : Parser Payload Problem {}
@@ -446,7 +445,7 @@ problem in case the parser fails:
       keyword "let" ExpectingLet
 
 Note that this would fail to chomp `letter` because of the subsequent
-characters. Use `token` if you do not want that last letter check.
+characters. Use [`token`](String.Parser.Advanced#token) if you do not want that last letter check.
 -}
 keyword : String -> x -> Parser c x {}
 keyword kwd expecting =
@@ -479,7 +478,7 @@ keyword kwd expecting =
 -- TOKEN
 
 
-{-| Just like [`Parser.token`](Parser#token) except you provide a
+{-| Just like [`String.Parser.token`](String.Parser#token) except you provide a
 problem in case the parser fails.
 -}
 token : String -> x -> Parser c x {}
@@ -512,7 +511,7 @@ token str expecting =
 -- INT
 
 
-{-| Just like [`Parser.int`](Parser#int) where you have to handle negation
+{-| Just like [`String.Parser.int`](String.Parser#int) where you have to handle negation
 yourself. The only difference is that you provide a problem in case
 the parser fails.
 -}
@@ -539,7 +538,7 @@ int invalid =
 -- END
 
 
-{-| Just like [`Parser.end`](Parser#end) except you provide the problem that
+{-| Just like [`String.Parser.end`](String.Parser#end) except you provide the problem that
 arises when the parser is not at the end of the input.
 -}
 end : x -> Parser c x {}
@@ -555,7 +554,7 @@ end x =
 -- CHOMPED STRINGS
 
 
-{-| Just like [`Parser.getChompedString`](Parser#getChompedString)
+{-| Just like [`String.Parser.getChompedString`](String.Parser#getChompedString)
 -}
 getChompedString : Parser c x a -> Parser c x String
 getChompedString parser =
@@ -579,7 +578,7 @@ mapChompedString func (Parser parse) =
 -- CHOMP IF
 
 
-{-| Just like [`Parser.chompIf`](Parser#chompIf) except you provide a problem
+{-| Just like [`String.Parser.chompIf`](String.Parser#chompIf) except you provide a problem
 in case a character cannot be chomped.
 -}
 chompIf : (Char -> Bool) -> x -> Parser c x {}
@@ -621,7 +620,7 @@ chompIf isGood expecting =
         }
 
 
-{-| Just like [`Parser.chompChar`](Parser#chompChar) except you provide a problem
+{-| Just like [`String.Parser.chompChar`](String.Parser#chompChar) except you provide a problem
 in case a character cannot be chomped.
 -}
 chompChar : Char -> x -> Parser c x {}
@@ -632,7 +631,7 @@ chompChar chr expecting =
 -- CHOMP WHILE
 
 
-{-| Just like [`Parser.chompWhile`](Parser#chompWhile)
+{-| Just like [`String.Parser.chompWhile`](String.Parser#chompWhile)
 -}
 chompWhile : (Char -> Bool) -> Parser c x {}
 chompWhile isGood =
@@ -672,7 +671,7 @@ chompWhileHelp isGood offset row col s0 =
 -- CHOMP UNTIL
 
 
-{-| Just like [`Parser.chompUntil`](Parser#chompUntil) except you provide the
+{-| Just like [`String.Parser.chompUntil`](String.Parser#chompUntil) except you provide the
 problem in case you chomp all the way to the end of the input without finding
 what you need.
 -}
@@ -700,7 +699,7 @@ chompUntil str expecting =
         }
 
 
-{-| Just like [`Parser.chompUntilEndOr`](Parser#chompUntilEndOr)
+{-| Just like [`String.Parser.chompUntilEndOr`](String.Parser#chompUntilEndOr)
 -}
 chompUntilEndOr : String -> Parser c x {}
 chompUntilEndOr str =
@@ -728,13 +727,24 @@ chompUntilEndOr str =
 
 -- PAYLOAD
 
+{-| This allows you to extract the payload from the parser. You might use this
+during parsing to consult the current, or previous, indentation level. Maybe you
+want the payload at the end of parsing to report some interesting statistics, or
+to include some optional constructs in certain cases (like comments while code formatting).
 
-{-| This is how you mark that you are in a certain payload. For example, here
-is a rough outline of some code that uses `inContext` to mark when you are
-parsing a specific definition:
+  intWithPayload : Parser Payload error { int : Int, payload : Payload }
+  intWithPayload =
+    succeed (\integer payload -> { int = integer, payload = payload })
+      |> keep int
+      |> keep getPayload
+-}
+getPayload : Parser payload x payload
+getPayload =
+  Parser <| \s -> Good { pred = False, value = s.payload, state = s }
 
-    import Char
-    import Parser.Advanced exposing (..)
+
+{-| This is how you set the payload. For example, here is a rough outline of some code
+that uses `setPayload` to mark when you are parsing a specific definition:
 
     type Payload
       = Definition String
@@ -747,7 +757,7 @@ parsing a specific definition:
 
     definitionBody : String -> Parser Payload Problem Expr
     definitionBody name =
-      inContext (Definition name) <|
+      setPayload (Definition name) <|
         succeed (Function name)
           |> keep arguments
           |> skip (token "=" ExpectingEquals)
@@ -762,20 +772,25 @@ parsing a specific definition:
         }
 
 First we parse the function name, and then we parse the rest of the definition.
-Importantly, we call `inContext` so that any dead end that occurs in
+Importantly, we call `setPayload` so that any dead end that occurs in
 `definitionBody` will get this extra payload information. That way you can say
-things like, "I was expecting an equals sign in the `view` definition." Payload!
+things like, "I was expecting an equals sign in the `view` definition".
+
+Keep in mind that the `payload` will be changed for the entire duration of
+parsing, and not just for this particular parser. Take a look at [scopedPayloadUpdate](String.Parser.Advanced#scopedPayloadUpdate)
+for more info.
 -}
 setPayload : payload -> Parser payload x a -> Parser payload x a
 setPayload payload parser =
   updatePayload (\_ -> payload) parser
 
 
-getPayload : Parser payload x payload
-getPayload =
-  Parser <| \s -> Good { pred = False, value = s.payload, state = s }
+{-| Like `setPayload`, but with the option of modifying a subset of the payload
+instead of replacing it entirely. This might be helpful when you're using the
+payload to keep track of multiple things.
 
-
+Like `setPayload`, the payload changes aren't automaticly reverted.
+-}
 updatePayload : (payload -> payload) -> Parser payload x a -> Parser payload x a
 updatePayload updater (Parser parse) =
   Parser <| \s -> parse (setStatePayload (updater s.payload) s)
@@ -791,6 +806,27 @@ setStatePayload payload s =
   }
 
 
+{-| This works like [updatePayload](String.Parser.Advanced#updatePayload), except it
+allows you to revert the payload back to it's original state when a parser is done.
+Effectively, it allows you to scope a payload value to a specific parser.
+
+    definitionBody : String -> Parser Payload Problem Expr
+    definitionBody name =
+      setPayload (Definition name) <|
+        succeed (Function name)
+          |> keep arguments
+          |> skip (token "=" ExpectingEquals)
+          |> keep
+            ( Parser.scopedUpdatePayload
+              (\payload -> payload.indentLevel + 1)
+              .indentLevel
+              (\nextValue payload -> { payload | indentLevel = nextValue })
+              expression
+            )
+
+In the above expression, the `indentLevel` is increased for parsing the `expression`, but
+reverted to its original value after.
+-}
 scopedUpdatePayload : (payload -> val) -> (payload -> val) -> (val -> payload -> payload) -> Parser payload x a -> Parser payload x a
 scopedUpdatePayload beforeGet afterGet update (Parser parse) =
   Parser <| \s ->
@@ -816,35 +852,35 @@ scopedUpdatePayload beforeGet afterGet update (Parser parse) =
 -- POSITION
 
 
-{-| Just like [`Parser.getPosition`](Parser#getPosition)
+{-| Just like [`String.Parser.getPosition`](String.Parser#getPosition)
 -}
 getPosition : Parser c x { row: Int, col: Int }
 getPosition =
   Parser <| \s -> Good { pred = False, value = { row = s.row, col = s.col }, state = s }
 
 
-{-| Just like [`Parser.getRow`](Parser#getRow)
+{-| Just like [`String.Parser.getRow`](String.Parser#getRow)
 -}
 getRow : Parser c x Int
 getRow =
   Parser <| \s -> Good { pred = False, value = s.row, state = s }
 
 
-{-| Just like [`Parser.getCol`](Parser#getCol)
+{-| Just like [`String.Parser.getCol`](String.Parser#getCol)
 -}
 getCol : Parser c x Int
 getCol =
   Parser <| \s -> Good { pred = False, value = s.col, state = s }
 
 
-{-| Just like [`Parser.getOffset`](Parser#getOffset)
+{-| Just like [`String.Parser.getOffset`](String.Parser#getOffset)
 -}
 getOffset : Parser c x Int
 getOffset =
   Parser <| \s -> Good { pred = False, value = s.offset, state = s }
 
 
-{-| Just like [`Parser.getSource`](Parser#getSource)
+{-| Just like [`String.Parser.getSource`](String.Parser#getSource)
 -}
 getSource : Parser c x String
 getSource =
@@ -997,7 +1033,7 @@ findSubString smallString offset row col bigString =
 -- VARIABLES
 
 
-{-| Just like [`Parser.variable`](Parser#variable) except you specify the
+{-| Just like [`String.Parser.variable`](String.Parser#variable) except you specify the
 problem yourself.
 -}
 variable :
@@ -1052,8 +1088,8 @@ varHelp isGood offset row col src payload =
 -- SEQUENCES
 
 
-{-| Contains a string that we expect to chomp and
-the problem we'll return in case the parser fails.
+{-| Contains a string that we expect to chomp and the problem we'll return in case
+the parser fails.
 -}
 type alias Token x =
   { string : String
@@ -1061,7 +1097,7 @@ type alias Token x =
   }
 
 
-{-| Just like [`Parser.sequence`](Parser#sequence) except with `Token` records for
+{-| Just like [`String.Parser.sequence`](String.Parser#sequence) except with `Token` records for
 the start, separator, and end. That way you can specify your custom type of
 problem for when something is not found.
 -}
@@ -1164,14 +1200,14 @@ sequenceEndMandatory ws parseItem sep items =
 -- WHITESPACE
 
 
-{-| Just like [`Parser.spaces`](Parser#spaces)
+{-| Just like [`String.Parser.spaces`](String.Parser#spaces)
 -}
 spaces : Parser c x {}
 spaces =
   chompWhile (\c -> c == ' ' || c == '\n' || c == '\r')
 
 
-{-| Just like [`Parser.lineComment`](Parser#lineComment) except you provide a
+{-| Just like [`String.Parser.lineComment`](String.Parser#lineComment) except you provide a
 problem in case the parser fails.
 -}
 lineComment : String -> x -> Parser c x {}
@@ -1179,7 +1215,7 @@ lineComment string expecting =
   skip (chompUntilEndOr "\n") (token string expecting)
 
 
-{-| Just like [`Parser.multiComment`](Parser#multiComment) except with a
+{-| Just like [`String.Parser.multiComment`](String.Parser#multiComment) except with a
 `Token` for the open and close symbols.
 -}
 multiComment : Token x -> Token x -> Nestable -> Parser c x {}
@@ -1192,7 +1228,7 @@ multiComment open close nestable =
       nestableComment open close
 
 
-{-| Works just like [`Parser.Nestable`](Parser#Nestable) to help distinguish
+{-| Works just like [`String.Parser.Nestable`](String.Parser#Nestable) to help distinguish
 between unnestable and nestable comments.
 -}
 type Nestable = NotNestable | Nestable
@@ -1255,7 +1291,8 @@ type alias Output out =
     }
 
 
-{-| Describes how to get the context stack from a `DeadEnd` and how to extract expectations information from a problem.
+{-| Describes how to get the context stack from a `DeadEnd` and how to extract expectations
+information from a problem.
 -}
 type alias Extract payload problem =
     { deadEndToString : DeadEnd payload problem -> { row : Int, col : Int, context : String }
@@ -1263,7 +1300,8 @@ type alias Extract payload problem =
     }
 
 
-{-| A problem is often of the form "expected `something`". This type is used to group those together.
+{-| A problem is often of the form "expected `something`". This type is used to group those
+together.
 -}
 type Expected
   -- TODO: just go with `Other`? 
