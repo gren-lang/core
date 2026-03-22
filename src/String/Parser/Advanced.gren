@@ -1,10 +1,10 @@
 module String.Parser.Advanced exposing
-  ( Parser, run, DeadEnd, Token
+  ( Parser, run, DeadEnd
   , getPayload, setPayload, updatePayload, scopedUpdatePayload
   , int, token, keyword, variable, end
   , succeed, keep, skip, lazy, andThen, problem
   , oneOf, map, mapError, backtrackable, commit 
-  , sequence, Trailing(..), loop, Step(..)
+  , sequence, Token, Trailing(..), loop, Step(..)
   , spaces, lineComment, multiComment, Nestable(..)
   , getChompedString, chompIf, chompChar, chompWhile, chompUntil, chompUntilEndOr, mapChompedString
   , getPosition, getRow, getCol, getOffset, getSource
@@ -12,42 +12,44 @@ module String.Parser.Advanced exposing
   )
 
 
-{-|
+{-| Functions for turning unstructured strings into structured data. This module
+extends [String.Parser](String.Parser) with custom errors and payloads, so you
+can better explain to end users what went wrong.
 
-# Parsers
-@docs Parser, run, DeadEnd, Token
+## Parsers
+@docs Parser, run, DeadEnd
 
-# Payload
+## Payload
 @docs getPayload, setPayload, updatePayload, scopedUpdatePayload
 
-# Error formatting
+## Error formatting
 @docs renderDeadEnds, Output, Extract, Expected
 
 * * *
 **Everything past here works just like in the
-[`String.Parser`](/String/Parser) module, except that
+[String.Parser](String.Parser) module, except that
 you need to provide a `Problem` for certain scenarios.**
 * * *
 
-# Building Blocks
+## Building Blocks
 @docs int, token, keyword, variable, end
 
-# Pipelines
+## Pipelines
 @docs succeed, keep, skip, lazy, andThen, problem
 
-# Branches
+## Branches
 @docs oneOf, map, mapError, backtrackable, commit 
 
-# Loops
-@docs sequence, Trailing, loop, Step
+## Loops
+@docs sequence, Token, Trailing, loop, Step
 
-# Whitespace
+## Whitespace
 @docs spaces, lineComment, multiComment, Nestable
 
-# Chompers
+## Chompers
 @docs getChompedString, chompIf, chompChar, chompWhile, chompUntil, chompUntilEndOr, mapChompedString
 
-# Positions
+## Positions
 @docs getPosition, getRow, getCol, getOffset, getSource
 
 -}
@@ -76,7 +78,7 @@ This could be things like comments for when you want to format code, indentation
 levels, or what you're currently trying to parse. The payload gives you a place
 to store arbitrary data, should you need it.
 
-I recommend starting with the simpler [`String.Parser`][String.Parser] module though, and
+I recommend starting with the simpler [String.Parser][String.Parser] module though, and
 when you feel comfortable and want better error messages, you can create a type
 alias like this:
 
@@ -115,7 +117,7 @@ type alias State payload =
 -- RUN
 
 
-{-| This works just like [`String.Parser.run`](String.Parser#run), except it requires
+{-| This works just like [String.Parser.run](String.Parser#run), except it requires
 an intial payload value and will return more precise information for each dead
 end.
 -}
@@ -201,7 +203,7 @@ bagToArray bag array =
 -- PRIMITIVES
 
 
-{-| Just like [`String.Parser.succeed`](String.Parser#succeed)
+{-| Just like [String.Parser.succeed](String.Parser#succeed)
 -}
 succeed : a -> Parser c x a
 succeed a =
@@ -209,7 +211,7 @@ succeed a =
     Good { pred = False, value = a, state = s }
 
 
-{-| Just like [`String.Parser.problem`](String.Parser#problem) except you provide a custom
+{-| Just like [String.Parser.problem](String.Parser#problem) except you provide a custom
 type for your problem.
 -}
 problem : x -> Parser c x a
@@ -222,7 +224,7 @@ problem x =
 -- MAPPING
 
 
-{-| Just like [`String.Parser.map`](String.Parser#map)
+{-| Just like [String.Parser.map](String.Parser#map)
 -}
 map : (a -> b) -> Parser c x a -> Parser c x b
 map func (Parser parse) =
@@ -305,7 +307,7 @@ skip ignoreParser keepParser =
 -- AND THEN
 
 
-{-| Just like [`String.Parser.andThen`](String.Parser#andThen)
+{-| Just like [String.Parser.andThen](String.Parser#andThen)
 -}
 andThen : (a -> Parser c x b) -> Parser c x a -> Parser c x b
 andThen callback (Parser parseA) =
@@ -331,7 +333,7 @@ andThen callback (Parser parseA) =
 -- LAZY
 
 
-{-| Just like [`String.Parser.lazy`](String.Parser#lazy)
+{-| Just like [String.Parser.lazy](String.Parser#lazy)
 -}
 lazy : ({} -> Parser c x a) -> Parser c x a
 lazy thunk =
@@ -347,7 +349,7 @@ lazy thunk =
 -- ONE OF
 
 
-{-| Just like [`String.Parser.oneOf`](String.Parser#oneOf)
+{-| Just like [String.Parser.oneOf](String.Parser#oneOf)
 -}
 oneOf : Array (Parser c x a) -> Parser c x a
 oneOf parsers =
@@ -376,14 +378,14 @@ oneOfHelp s0 bag parsers =
 -- LOOP
 
 
-{-| Just like [`String.Parser.Step`](String.Parser#Step)
+{-| Just like [String.Parser.Step](String.Parser#Step)
 -}
 type Step state a
   = Loop state
   | Done a
 
 
-{-| Just like [`String.Parser.loop`](String.Parser#loop)
+{-| Just like [String.Parser.loop](String.Parser#loop)
 -}
 loop : state -> (state -> Parser c x (Step state a)) -> Parser c x a
 loop state callback =
@@ -414,7 +416,7 @@ loopHelp p state callback s0 =
 -- BACKTRACKABLE
 
 
-{-| Just like [`String.Parser.backtrackable`](String.Parser#backtrackable)
+{-| Just like [String.Parser.backtrackable](String.Parser#backtrackable)
 -}
 backtrackable : Parser c x a -> Parser c x a
 backtrackable (Parser parse) =
@@ -427,7 +429,7 @@ backtrackable (Parser parse) =
         Good { pred = False, value = a, state = s1 }
 
 
-{-| Just like [`String.Parser.commit`](String.Parser#commit)
+{-| Just like [String.Parser.commit](String.Parser#commit)
 -}
 commit : a -> Parser c x a
 commit a =
@@ -437,15 +439,15 @@ commit a =
 -- KEYWORD
 
 
-{-| Just like [`String.Parser.keyword`](String.Parser#keyword) except you provide a
+{-| Just like [String.Parser.keyword](String.Parser#keyword) except you provide a
 problem in case the parser fails:
 
     let_ : Parser Payload Problem {}
     let_ =
       keyword "let" ExpectingLet
 
-Note that this would fail to chomp `letter` because of the subsequent
-characters. Use [`token`](String.Parser.Advanced#token) if you do not want that last letter check.
+**Note:** this would fail to chomp `letter` because of the subsequent
+characters. Use [token](String.Parser.Advanced#token) if you do not want that last letter check.
 -}
 keyword : String -> x -> Parser c x {}
 keyword kwd expecting =
@@ -478,7 +480,7 @@ keyword kwd expecting =
 -- TOKEN
 
 
-{-| Just like [`String.Parser.token`](String.Parser#token) except you provide a
+{-| Just like [String.Parser.token](String.Parser#token) except you provide a
 problem in case the parser fails.
 -}
 token : String -> x -> Parser c x {}
@@ -511,7 +513,7 @@ token str expecting =
 -- INT
 
 
-{-| Just like [`String.Parser.int`](String.Parser#int) where you have to handle negation
+{-| Just like [String.Parser.int](String.Parser#int) where you have to handle negation
 yourself. The only difference is that you provide a problem in case
 the parser fails.
 -}
@@ -538,7 +540,7 @@ int invalid =
 -- END
 
 
-{-| Just like [`String.Parser.end`](String.Parser#end) except you provide the problem that
+{-| Just like [String.Parser.end](String.Parser#end) except you provide the problem that
 arises when the parser is not at the end of the input.
 -}
 end : x -> Parser c x {}
@@ -554,14 +556,14 @@ end x =
 -- CHOMPED STRINGS
 
 
-{-| Just like [`String.Parser.getChompedString`](String.Parser#getChompedString)
+{-| Just like [String.Parser.getChompedString](String.Parser#getChompedString)
 -}
 getChompedString : Parser c x a -> Parser c x String
 getChompedString parser =
   mapChompedString (\str _ -> str) parser
 
 
-{-| Just like [`Parser.mapChompedString`](Parser#mapChompedString)
+{-| Just like [Parser.mapChompedString](Parser#mapChompedString)
 -}
 mapChompedString : (String -> a -> b) -> Parser c x a -> Parser c x b
 mapChompedString func (Parser parse) =
@@ -578,7 +580,7 @@ mapChompedString func (Parser parse) =
 -- CHOMP IF
 
 
-{-| Just like [`String.Parser.chompIf`](String.Parser#chompIf) except you provide a problem
+{-| Just like [String.Parser.chompIf](String.Parser#chompIf) except you provide a problem
 in case a character cannot be chomped.
 -}
 chompIf : (Char -> Bool) -> x -> Parser c x {}
@@ -620,7 +622,7 @@ chompIf isGood expecting =
         }
 
 
-{-| Just like [`String.Parser.chompChar`](String.Parser#chompChar) except you provide a problem
+{-| Just like [String.Parser.chompChar](String.Parser#chompChar) except you provide a problem
 in case a character cannot be chomped.
 -}
 chompChar : Char -> x -> Parser c x {}
@@ -631,7 +633,7 @@ chompChar chr expecting =
 -- CHOMP WHILE
 
 
-{-| Just like [`String.Parser.chompWhile`](String.Parser#chompWhile)
+{-| Just like [String.Parser.chompWhile](String.Parser#chompWhile)
 -}
 chompWhile : (Char -> Bool) -> Parser c x {}
 chompWhile isGood =
@@ -671,7 +673,7 @@ chompWhileHelp isGood offset row col s0 =
 -- CHOMP UNTIL
 
 
-{-| Just like [`String.Parser.chompUntil`](String.Parser#chompUntil) except you provide the
+{-| Just like [String.Parser.chompUntil](String.Parser#chompUntil) except you provide the
 problem in case you chomp all the way to the end of the input without finding
 what you need.
 -}
@@ -699,7 +701,7 @@ chompUntil str expecting =
         }
 
 
-{-| Just like [`String.Parser.chompUntilEndOr`](String.Parser#chompUntilEndOr)
+{-| Just like [String.Parser.chompUntilEndOr](String.Parser#chompUntilEndOr)
 -}
 chompUntilEndOr : String -> Parser c x {}
 chompUntilEndOr str =
@@ -852,35 +854,35 @@ scopedUpdatePayload beforeGet afterGet update (Parser parse) =
 -- POSITION
 
 
-{-| Just like [`String.Parser.getPosition`](String.Parser#getPosition)
+{-| Just like [String.Parser.getPosition](String.Parser#getPosition)
 -}
 getPosition : Parser c x { row: Int, col: Int }
 getPosition =
   Parser <| \s -> Good { pred = False, value = { row = s.row, col = s.col }, state = s }
 
 
-{-| Just like [`String.Parser.getRow`](String.Parser#getRow)
+{-| Just like [String.Parser.getRow](String.Parser#getRow)
 -}
 getRow : Parser c x Int
 getRow =
   Parser <| \s -> Good { pred = False, value = s.row, state = s }
 
 
-{-| Just like [`String.Parser.getCol`](String.Parser#getCol)
+{-| Just like [String.Parser.getCol](String.Parser#getCol)
 -}
 getCol : Parser c x Int
 getCol =
   Parser <| \s -> Good { pred = False, value = s.col, state = s }
 
 
-{-| Just like [`String.Parser.getOffset`](String.Parser#getOffset)
+{-| Just like [String.Parser.getOffset](String.Parser#getOffset)
 -}
 getOffset : Parser c x Int
 getOffset =
   Parser <| \s -> Good { pred = False, value = s.offset, state = s }
 
 
-{-| Just like [`String.Parser.getSource`](String.Parser#getSource)
+{-| Just like [String.Parser.getSource](String.Parser#getSource)
 -}
 getSource : Parser c x String
 getSource =
@@ -1033,7 +1035,7 @@ findSubString smallString offset row col bigString =
 -- VARIABLES
 
 
-{-| Just like [`String.Parser.variable`](String.Parser#variable) except you specify the
+{-| Just like [String.Parser.variable](String.Parser#variable) except you specify the
 problem yourself.
 -}
 variable :
@@ -1097,7 +1099,7 @@ type alias Token x =
   }
 
 
-{-| Just like [`String.Parser.sequence`](String.Parser#sequence) except with `Token` records for
+{-| Just like [String.Parser.sequence](String.Parser#sequence) except with `Token` records for
 the start, separator, and end. That way you can specify your custom type of
 problem for when something is not found.
 -}
@@ -1200,14 +1202,14 @@ sequenceEndMandatory ws parseItem sep items =
 -- WHITESPACE
 
 
-{-| Just like [`String.Parser.spaces`](String.Parser#spaces)
+{-| Just like [String.Parser.spaces](String.Parser#spaces)
 -}
 spaces : Parser c x {}
 spaces =
   chompWhile (\c -> c == ' ' || c == '\n' || c == '\r')
 
 
-{-| Just like [`String.Parser.lineComment`](String.Parser#lineComment) except you provide a
+{-| Just like [String.Parser.lineComment](String.Parser#lineComment) except you provide a
 problem in case the parser fails.
 -}
 lineComment : String -> x -> Parser c x {}
@@ -1215,7 +1217,7 @@ lineComment string expecting =
   skip (chompUntilEndOr "\n") (token string expecting)
 
 
-{-| Just like [`String.Parser.multiComment`](String.Parser#multiComment) except with a
+{-| Just like [String.Parser.multiComment](String.Parser#multiComment) except with a
 `Token` for the open and close symbols.
 -}
 multiComment : Token x -> Token x -> Nestable -> Parser c x {}
@@ -1228,7 +1230,7 @@ multiComment open close nestable =
       nestableComment open close
 
 
-{-| Works just like [`String.Parser.Nestable`](String.Parser#Nestable) to help distinguish
+{-| Works just like [String.Parser.Nestable](String.Parser#Nestable) to help distinguish
 between unnestable and nestable comments.
 -}
 type Nestable = NotNestable | Nestable
@@ -1315,9 +1317,9 @@ type Line a
 
 {-| Render an array of `DeadEnd`s.
 
-The `String` is the input to the parser.
+The [String](String#String) should be the same that was passed to the failing parser.
 
-This returns a list of renderable "pieces", explaining what went wrong.
+This returns a list of renderable "pieces", explaining what went wrong and where.
 -}
 renderDeadEnds :
     Output out
