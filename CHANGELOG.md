@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Started changelog
+- Support `Bytes` in flags and ports
 - **New Modules**:
   - `String.Parser` for turning unstructuered `String` into structured data.
   - `String.Parser.Advanced` similar to `String.Parser` but with more options to handle errors
