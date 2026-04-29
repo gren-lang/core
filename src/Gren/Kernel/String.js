@@ -279,7 +279,7 @@ var _String_getUnit = F2(function (index, str) {
 
 var _String_foldlUnits = F3(function (fn, state, str) {
   for (let i = 0; i < str.length; i++) {
-    state = A2(fn, str[i], state);
+    state = A2(fn, __Utils_chr(str[i]), state);
   }
 
   return state;
@@ -287,7 +287,7 @@ var _String_foldlUnits = F3(function (fn, state, str) {
 
 var _String_foldrUnits = F3(function (fn, state, str) {
   for (let i = str.length - 1; i >= 0; i--) {
-    state = A2(fn, str[i], state);
+    state = A2(fn, __Utils_chr(str[i]), state);
   }
 
   return state;

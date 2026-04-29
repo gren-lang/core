@@ -34,6 +34,10 @@ tests =
             , test "split slashes" <| \{} -> Expect.equal [ "home", "steve", "Desktop", "" ] (String.split "/" "home/steve/Desktop/")
             , test "join spaces" <| \{} -> Expect.equal "cat dog cow" (String.join " " [ "cat", "dog", "cow" ])
             , test "join slashes" <| \{} -> Expect.equal "home/steve/Desktop" (String.join "/" [ "home", "steve", "Desktop" ])
+            , test "foldl" <| \_ -> Expect.equal "time" (String.foldl String.pushFirst "" "emit")
+            , test "foldl eq" <| \_ -> Expect.equal True <| String.foldl (\unit soFar -> soFar || unit == '\n') False "\n"
+            , test "foldr" <| \_ -> Expect.equal "emit" (String.foldr String.pushFirst "" "emit")
+            , test "foldr eq" <| \_ -> Expect.equal True <| String.foldr (\unit soFar -> soFar || unit == '\n') False "\n"
             , test "slice 1" <| \{} -> Expect.equal "c" (String.slice 2 3 "abcd")
             , test "slice 2" <| \{} -> Expect.equal "abc" (String.slice 0 3 "abcd")
             , test "slice 3" <| \{} -> Expect.equal "abc" (String.slice 0 -1 "abcd")
@@ -81,7 +85,9 @@ tests =
             , test "getUnit (fail)" <| \_ -> Expect.equal Nothing (String.getUnit 10 "xyz")
             , test "getUnit (negative)" <| \_ -> Expect.equal (Just 'z') (String.getUnit -1 "xyz")
             , test "foldlUnits" <| \_ -> Expect.equal "time" (String.foldlUnits String.pushFirst "" "emit")
+            , test "foldlUnits eq" <| \_ -> Expect.equal True <| String.foldlUnits (\unit soFar -> soFar || unit == '\n') False "\n"
             , test "foldrUnits" <| \_ -> Expect.equal "emit" (String.foldrUnits String.pushFirst "" "emit")
+            , test "foldrUnits eq" <| \_ -> Expect.equal True <| String.foldrUnits (\unit soFar -> soFar || unit == '\n') False "\n"
             , test "sliceUnits" <| \_ -> Expect.equal "second" (String.sliceUnits 6 1000 "first second")
             , test "sliceUnits (negative end)" <| \_ -> Expect.equal "nake" (String.sliceUnits 1 -1 "snakes")
             , test "sliceUnits (unicode)" <| \_ -> Expect.equal "😎" (String.sliceUnits 3 5 "hi 😎 there")
