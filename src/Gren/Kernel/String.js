@@ -286,7 +286,7 @@ var _String_foldlUnits = F3(function (fn, state, str) {
 });
 
 var _String_foldrUnits = F3(function (fn, state, str) {
-  for (let i = str.length - 1; i < 0; i--) {
+  for (let i = str.length - 1; i >= 0; i--) {
     state = A2(fn, str[i], state);
   }
 
