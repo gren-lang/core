@@ -2082,17 +2082,3 @@ digestAlgorithmToString digestAlgorithm =
 
         Sha512 ->
             "SHA-512"
-
-
-{-|-}
-digestAlgorithmToBytes : DigestAlgorithm -> Int
-digestAlgorithmToBytes digestAlgorithm =
-    when digestAlgorithm is
-        Sha256 ->
-            32
-        
-        Sha384 ->
-            48
-        
-        Sha512 ->
-            64
