@@ -1865,7 +1865,7 @@ is just some `Bytes`). The `Signature` can be used with the cooresponding verifi
 to verify that the passed `Bytes` were signed with the passed key.
 -}
 signWithRsaPss : RsaPssParams -> PrivateKey RsaPssKey RsaKeyParams -> Bytes -> Task RsaPssSigningError Signature
-signWithRsaPss { salt } (PrivateKey (Key { key, data = { modulusLength, hash, extractable }})) bytes =
+signWithRsaPss { salt } (PrivateKey (Key { key, data = { hash }})) bytes =
     let
         clampedSaltBytes =
             clamp 0 2147483647 salt
