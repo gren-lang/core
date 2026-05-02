@@ -32,6 +32,7 @@ tests =
                     , hmacTests secureContext
                     , rsaPssTests secureContext
                     , ecdsaTests secureContext
+                    , ed25519Tests secureContext
                     , digestTests secureContext
                     ]
             )
@@ -2499,6 +2500,272 @@ ecdsaTestsHelper secureContext label { namedCurve, digestAlgorithm } =
                                 ]
                         )
                     ]
+            )
+        ]
+
+
+
+-- Ed25519 Tests
+
+
+{-|-}
+ed25519Tests secureContext =
+    concat
+        [ await
+            (Crypto.generateEd25519KeyPair
+                secureContext
+                Crypto.CannotBeExtracted
+            )
+            "Ed25519: Generating a key that cannot be extracted"
+            (\{ publicKey, privateKey } ->
+                concat
+                    [ await
+                        (Crypto.exportEd25519PublicKeyAsRaw publicKey)
+                        "Exporting public Ed25519 key as RAW when not extractable"
+                        (\exportedKey ->
+                            await
+                                (Crypto.importEd25519PublicKeyFromRaw
+                                    secureContext
+                                    exportedKey
+                                )
+                                "Importing the exported key"
+                                (\importedKey ->
+                                    test "Imported key equals the original key"
+                                        (\_ ->
+                                            Expect.equal importedKey publicKey
+                                        )
+                                )
+                        )
+                    , await
+                        (Crypto.exportEd25519PublicKeyAsSpki publicKey)
+                        "Exporting public Ed25519 key as SPKI when not extractable"
+                        (\exportedKey ->
+                            await
+                                (Crypto.importEd25519PublicKeyFromSpki
+                                    secureContext
+                                    exportedKey
+                                )
+                                "Importing the exported key"
+                                (\importedKey ->
+                                    test "Imported key equals the original key"
+                                        (\_ ->
+                                            Expect.equal importedKey publicKey
+                                        )
+                                )
+                        )
+                    , await
+                        (Crypto.exportEd25519PublicKeyAsJwk publicKey)
+                        "Exporting public Ed25519 key as JWK when not extractable"
+                        (\exportedKey ->
+                            await
+                                (Crypto.importEd25519PublicKeyFromJwk
+                                    secureContext
+                                    exportedKey
+                                )
+                                "Importing the exported key"
+                                (\importedKey ->
+                                    test "Imported key equals the original key"
+                                        (\_ ->
+                                            Expect.equal importedKey publicKey
+                                        )
+                                )
+                        )
+                    , awaitError
+                        (Crypto.exportEd25519PrivateKeyAsPkcs8 privateKey)
+                        "Exporting private Ed25519 key as PKCS8 when not extractable"
+                        (\err ->
+                            test "When exporting private key that isn't extractable, fails with expected message"
+                                (\_ ->
+                                    Expect.equal err Crypto.KeyNotExportable
+                                )
+                        )
+                    , awaitError
+                        (Crypto.exportEd25519PrivateKeyAsJwk privateKey)
+                        "Exporting private Ed25519 key as JWK when not extractable"
+                        (\err ->
+                            test "When exporting private key that isn't extractable, fails with expected message"
+                                (\_ ->
+                                    Expect.equal err Crypto.KeyNotExportable
+                                )
+                        )
+                    , await
+                        (Crypto.signWithEd25519 privateKey (Bytes.fromString "hello"))
+                        "Signing some bytes with a non-extractable key"
+                        (\signature ->
+                            await
+                                (Crypto.verifyWithEd25519 publicKey signature (Bytes.fromString "hello"))
+                                "Verifying signed bytes"
+                                (\verifiedBytes ->
+                                    test "The verified bytes equal the signed bytes"
+                                        (\_ ->
+                                            Expect.equal verifiedBytes (Bytes.fromString "hello")
+                                        )
+                                )
+                        )
+                    ]
+            )
+        , await
+            (Crypto.generateEd25519KeyPair
+                secureContext
+                Crypto.CanBeExtracted
+            )
+            "Ed25519: Generating a key that can be extracted"
+            (\{ publicKey, privateKey } ->
+                let
+                    bytesToSign =
+                        Bytes.fromString "hello"
+                in
+                concat
+                    [ await
+                        (Crypto.exportEd25519PublicKeyAsRaw publicKey)
+                        "Exporting public Ed25519 key as RAW when extractable"
+                        (\exportedKey ->
+                            await
+                                (Crypto.importEd25519PublicKeyFromRaw
+                                    secureContext
+                                    exportedKey
+                                )
+                                "Importing the exported key"
+                                (\importedKey ->
+                                    test "Imported key equals the original key"
+                                        (\_ ->
+                                            Expect.equal importedKey publicKey
+                                        )
+                                )
+                        )
+                    , await
+                        (Crypto.exportEd25519PublicKeyAsSpki publicKey)
+                        "Exporting public Ed25519 key as SPKI when extractable"
+                        (\exportedKey ->
+                            await
+                                (Crypto.importEd25519PublicKeyFromSpki
+                                    secureContext
+                                    exportedKey
+                                )
+                                "Importing the exported key"
+                                (\importedKey ->
+                                    test "Imported key equals the original key"
+                                        (\_ ->
+                                            Expect.equal importedKey publicKey
+                                        )
+                                )
+                        )
+                    , await
+                        (Crypto.exportEd25519PublicKeyAsJwk publicKey)
+                        "Exporting public Ed25519 key as JWK when extractable"
+                        (\exportedKey ->
+                            await
+                                (Crypto.importEd25519PublicKeyFromJwk
+                                    secureContext
+                                    exportedKey
+                                )
+                                "Importing the exported key"
+                                (\importedKey ->
+                                    test "Imported key equals the original key"
+                                        (\_ ->
+                                            Expect.equal importedKey publicKey
+                                        )
+                                )
+                        )
+                    , await
+                        (Crypto.exportEd25519PrivateKeyAsPkcs8 privateKey)
+                        "Exporting private Ed25519 key as PKCS8 when extractable"
+                        (\exportedKey ->
+                            await
+                                (Crypto.importEd25519PrivateKeyFromPkcs8
+                                    secureContext
+                                    Crypto.CanBeExtracted
+                                    exportedKey
+                                )
+                                "Importing the exported key"
+                                (\importedKey ->
+                                    test "Imported key equals the original key"
+                                        (\_ ->
+                                            Expect.equal importedKey privateKey
+                                        )
+                                )
+                        )
+                    , await
+                        (Crypto.exportEd25519PrivateKeyAsJwk privateKey)
+                        "Exporting private Ed25519 key as JWK when extractable"
+                        (\exportedKey ->
+                            await
+                                (Crypto.importEd25519PrivateKeyFromJwk
+                                    secureContext
+                                    Crypto.CanBeExtracted
+                                    exportedKey
+                                )
+                                "Importing the exported key"
+                                (\importedKey ->
+                                    test "Imported key equals the original key"
+                                        (\_ ->
+                                            Expect.equal importedKey privateKey
+                                        )
+                                )
+                        )
+                    , await
+                        (Crypto.signWithEd25519 privateKey bytesToSign)
+                        "Sign some bytes"
+                        (\signature ->
+                            concat
+                                [ await
+                                    (Crypto.verifyWithEd25519 publicKey signature bytesToSign)
+                                    "Verifying signed bytes"
+                                    (\verifiedBytes ->
+                                        test "The verified bytes are the same as the signed bytes"
+                                            (\_ ->
+                                                Expect.equal verifiedBytes bytesToSign
+                                            )
+                                    )
+                                , awaitError
+                                    (Crypto.verifyWithEd25519 publicKey signature (Bytes.fromString "some other bytes"))
+                                    "Verifying bytes that were not signed"
+                                    (\_ ->
+                                        test "Fails when bytes that are being verified are different than what was signed"
+                                            (\_ ->
+                                                Expect.pass
+                                            )
+                                    )
+                                ]
+                        )
+                    ]
+            )
+        , awaitError
+            (Crypto.importEd25519PublicKeyFromRaw
+                secureContext
+                (Bytes.fromString "obviously not a valid ed25519 public key")
+            )
+            "Importing an Ed25519 public key from invalid raw bytes"
+            (\err ->
+                test "Produces the expected error"
+                    (\_ ->
+                        Expect.equal err Crypto.ImportEd25519KeyError
+                    )
+            )
+        , awaitError
+            (Crypto.importEd25519PublicKeyFromSpki
+                secureContext
+                (Bytes.fromString "junk")
+            )
+            "Importing an Ed25519 public key from invalid SPKI bytes"
+            (\err ->
+                test "Produces the expected error"
+                    (\_ ->
+                        Expect.equal err Crypto.ImportEd25519KeyError
+                    )
+            )
+        , awaitError
+            (Crypto.importEd25519PrivateKeyFromPkcs8
+                secureContext
+                Crypto.CanBeExtracted
+                (Bytes.fromString "junk")
+            )
+            "Importing an Ed25519 private key from invalid PKCS8 bytes"
+            (\err ->
+                test "Produces the expected error"
+                    (\_ ->
+                        Expect.equal err Crypto.ImportEd25519KeyError
+                    )
             )
         ]
 
