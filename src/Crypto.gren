@@ -721,13 +721,6 @@ type EcdsaKey
     = EcdsaKey
 
 
-{-| Represents a key generated and for use with the ECDH algorithm used to
-derive keys and bits.
--}
-type EcdhKey
-    = EcdhKey
-
-
 {-| Parameters required to generates an AES key.
 
 - `namedCurve` is the curve used to generate the key. It must be one of the
@@ -761,17 +754,6 @@ generateEcdsaKeyPair _context { namedCurve, extractable } =
         (ecNamedCurveToString namedCurve)
         (extractableToBool extractable)
         [ "sign", "verify" ]
-
-
-{-| Generate a new key using the ECDH algorithm.
--}
-generateEcdhKeyPair : SecureContext -> EcKeyParams -> Task x (KeyPair EcdhKey EcKeyParams)
-generateEcdhKeyPair _context { namedCurve, extractable } =
-    Gren.Kernel.Crypto.generateEcKey
-        "ECDH"
-        (ecNamedCurveToString namedCurve)
-        (extractableToBool extractable)
-        [ "deriveKey", "deriveBits" ]
 
 
 
@@ -997,36 +979,6 @@ exportEcdsaPrivateKeyAsPkcs8 (PrivateKey key) =
 {-|-}
 exportEcdsaPrivateKeyAsJwk : PrivateKey EcdsaKey EcKeyParams -> Task ExportKeyError Json.Encode.Value
 exportEcdsaPrivateKeyAsJwk (PrivateKey key)=
-    exportKeyAsJwk key
-
-
-{-|-}
-exportEcdhPublicKeyAsRaw :  PublicKey EcdhKey EcKeyParams -> Task {} Bytes
-exportEcdhPublicKeyAsRaw (PublicKey key) =
-    exportPublicKeyAsRaw key
-
-
-{-|-}
-exportEcdhPublicKeyAsSpki : PublicKey EcdhKey EcKeyParams -> Task {} Bytes
-exportEcdhPublicKeyAsSpki (PublicKey key) =
-    exportPublicKeyAsSpki key
-
-
-{-|-}
-exportEcdhPublicKeyAsJwk : PublicKey EcdhKey EcKeyParams -> Task {} Json.Encode.Value
-exportEcdhPublicKeyAsJwk (PublicKey key) =
-    exportPublicKeyAsJwk key
-
-
-{-|-}
-exportEcdhPrivateKeyAsPkcs8 : PrivateKey EcdhKey EcKeyParams -> Task ExportKeyError Bytes
-exportEcdhPrivateKeyAsPkcs8 (PrivateKey key) =
-    exportKeyAsPkcs8 key
-
-
-{-|-}
-exportEcdhPrivateKeyAsJwk : PrivateKey EcdhKey EcKeyParams -> Task ExportKeyError Json.Encode.Value
-exportEcdhPrivateKeyAsJwk (PrivateKey key) =
     exportKeyAsJwk key
 
 
@@ -1403,45 +1355,6 @@ importEcdsaPublicKeyFromJwk _context namedCurve jwk =
 
 
 {-|-}
-importEcdhPublicKeyFromRaw : SecureContext -> EcNamedCurve -> Bytes -> Task ImportEcKeyError (PublicKey EcdhKey EcKeyParams)
-importEcdhPublicKeyFromRaw _context namedCurve bytes =
-    Gren.Kernel.Crypto.importEcKey
-        "public"
-        "raw"
-        bytes
-        "ECDH"
-        (ecNamedCurveToString namedCurve)
-        True
-        []
-
-
-{-|-}
-importEcdhPublicKeyFromSpki : SecureContext -> EcNamedCurve -> Bytes -> Task ImportEcKeyError (PublicKey EcdhKey EcKeyParams)
-importEcdhPublicKeyFromSpki _context namedCurve bytes =
-    Gren.Kernel.Crypto.importEcKey
-        "public"
-        "spki"
-        bytes
-        "ECDH"
-        (ecNamedCurveToString namedCurve)
-        True
-        []
-
-
-{-|-}
-importEcdhPublicKeyFromJwk : SecureContext -> EcNamedCurve -> Json.Encode.Value -> Task ImportEcKeyError (PublicKey EcdhKey EcKeyParams)
-importEcdhPublicKeyFromJwk _context namedCurve jwk =
-    Gren.Kernel.Crypto.importEcKey
-        "public"
-        "jwk"
-        (Gren.Kernel.Json.unwrap jwk)
-        "ECDH"
-        (ecNamedCurveToString namedCurve)
-        True
-        []
-
-
-{-|-}
 importEcdsaPrivateKeyFromPkcs8 : SecureContext -> Extractable -> EcNamedCurve -> Bytes -> Task ImportEcKeyError (PrivateKey EcdsaKey EcKeyParams)
 importEcdsaPrivateKeyFromPkcs8 _context extractable namedCurve bytes =
     Gren.Kernel.Crypto.importEcKey
@@ -1478,45 +1391,6 @@ importEcdsaPrivateKeyFromJwk _context extractable namedCurve jwk =
         (ecNamedCurveToString namedCurve)
         (extractableToBool extractable)
         [ "sign" ]
-
-
-{-|-}
-importEcdhPrivateKeyFromPkcs8 : SecureContext -> Extractable -> EcNamedCurve -> Bytes -> Task ImportEcKeyError (PrivateKey EcdhKey EcKeyParams)
-importEcdhPrivateKeyFromPkcs8 _context extractable namedCurve bytes =
-    Gren.Kernel.Crypto.importEcKey
-        "private"
-        "pkcs8"
-        bytes
-        "ECDH"
-        (ecNamedCurveToString namedCurve)
-        (extractableToBool extractable)
-        [ "deriveKey", "deriveBits" ]
-
-
-{-|-}
-importEcdhPrivateKeyFromSpki : SecureContext -> Extractable -> EcNamedCurve -> Bytes -> Task ImportEcKeyError (PrivateKey EcdhKey EcKeyParams)
-importEcdhPrivateKeyFromSpki _context extractable namedCurve bytes =
-    Gren.Kernel.Crypto.importEcKey
-        "private"
-        "spki"
-        bytes
-        "ECDH"
-        (ecNamedCurveToString namedCurve)
-        (extractableToBool extractable)
-        [ "deriveKey", "deriveBits" ]
-
-
-{-|-}
-importEcdhPrivateKeyFromJwk : SecureContext -> Extractable -> EcNamedCurve -> Json.Encode.Value -> Task ImportEcKeyError (PrivateKey EcdhKey EcKeyParams)
-importEcdhPrivateKeyFromJwk _context extractable namedCurve jwk =
-    Gren.Kernel.Crypto.importEcKey
-        "private"
-        "jwk"
-        (Gren.Kernel.Json.unwrap jwk)
-        "ECDH"
-        (ecNamedCurveToString namedCurve)
-        (extractableToBool extractable)
-        [ "deriveKey", "deriveBits" ]
 
 
 {-| Errors that can happen when importing a key using an HMAC algorithm. There are three 
@@ -1992,7 +1866,7 @@ is just some `Bytes`). The `Signature` can be used with the cooresponding verifi
 to verify that the passed `Bytes` were signed with the passed key.
 -}
 signWithRsaPss : RsaPssParams -> PrivateKey RsaPssKey RsaKeyParams -> Bytes -> Task RsaPssSigningError Signature
-signWithRsaPss { salt } (PrivateKey (Key { key, data = { modulusLength, hash, extractable }})) bytes =
+signWithRsaPss { salt } (PrivateKey (Key { key, data = { hash }})) bytes =
     let
         clampedSaltBytes =
             clamp 0 2147483647 salt
@@ -2209,17 +2083,3 @@ digestAlgorithmToString digestAlgorithm =
 
         Sha512 ->
             "SHA-512"
-
-
-{-|-}
-digestAlgorithmToBytes : DigestAlgorithm -> Int
-digestAlgorithmToBytes digestAlgorithm =
-    when digestAlgorithm is
-        Sha256 ->
-            32
-        
-        Sha384 ->
-            48
-        
-        Sha512 ->
-            64
