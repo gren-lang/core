@@ -817,10 +817,6 @@ generateEcdhKeyPair _context { namedCurve, extractable } =
 
 {-| A key generated for use with the Ed25519 algorithm. Used to sign and verify
 values.
-
-Unlike ECDSA, Ed25519 has no curve or hash parameters: the algorithm fully
-specifies the curve (Curve25519, in Edwards form) and the hash function (SHA-512)
-internally.
 -}
 type Ed25519Key
     = Ed25519Key
