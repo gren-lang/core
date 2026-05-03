@@ -22,6 +22,7 @@ import Test.Result as Result
 import Test.Runner.Node exposing (Program, run)
 import Test.Set as Set
 import Test.String as String
+import Test.String.Parser as StringParser
 import Test.Regex as Regex
 
 
@@ -42,6 +43,7 @@ main =
             , Result.tests
             , Set.tests
             , String.tests
+            , StringParser.tests
             , Maybe.tests
             , Math.tests
             , Regex.tests

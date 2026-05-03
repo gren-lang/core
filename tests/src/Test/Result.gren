@@ -34,10 +34,6 @@ add4 a b c d =
     a + b + c + d
 
 
-add5 a b c d e =
-    a + b + c + d + e
-
-
 tests : Test
 tests =
     describe "Result"
@@ -58,10 +54,8 @@ tests =
             , test "map2 Err" <| \{} -> Expect.equal (Err "x") (Result.map2 (+) (Ok 1) (Err "x"))
             , test "map3 Ok" <| \{} -> Expect.equal (Ok 6) (Result.map3 add3 (Ok 1) (Ok 2) (Ok 3))
             , test "map3 Err" <| \{} -> Expect.equal (Err "x") (Result.map3 add3 (Ok 1) (Ok 2) (Err "x"))
-            , test "map4 Ok" <| \{} -> Expect.equal (Ok 10) (Result.map4 add4 (Ok 1) (Ok 2) (Ok 3) (Ok 4))
-            , test "map4 Err" <| \{} -> Expect.equal (Err "x") (Result.map4 add4 (Ok 1) (Ok 2) (Ok 3) (Err "x"))
-            , test "map5 Ok" <| \{} -> Expect.equal (Ok 15) (Result.map5 add5 (Ok 1) (Ok 2) (Ok 3) (Ok 4) (Ok 5))
-            , test "map5 Err" <| \{} -> Expect.equal (Err "x") (Result.map5 add5 (Ok 1) (Ok 2) (Ok 3) (Ok 4) (Err "x"))
+            , test "andMap Ok" <| \{} -> Expect.equal (Ok 10) (Ok add4 |> Result.andMap (Ok 1) |> Result.andMap (Ok 2) |> Result.andMap (Ok 3) |> Result.andMap (Ok 4))
+            , test "andMap Err" <| \{} -> Expect.equal (Err "x") (Ok add4 |> Result.andMap (Ok 1) |> Result.andMap (Ok 2) |> Result.andMap (Ok 3) |> Result.andMap (Err "x"))
             ]
         , describe "andThen"
             [ test "andThen Ok" <| \{} -> Expect.equal (Ok 42) (toIntResult "42" |> Result.andThen isEven)

@@ -34,18 +34,32 @@ function _Platform_initialize(
   subscriptions,
   stepperBuilder,
 ) {
-  var result = A2(
-    __Json_run,
-    flagDecoder,
-    __Json_wrap(args ? args["flags"] : undefined),
-  );
-  __Result_isOk(result) ||
-    __Debug_crash(2 /**__DEBUG/, __Json_errorToString(result.a) /**/);
+  var flags;
+  var rawFlags = args ? args["flags"] : undefined;
+
+  if (flagDecoder === null) {
+    if (!(rawFlags instanceof DataView)) {
+      __Debug_crash(2 /**__DEBUG/, "Expected DataView as flags" /**/);
+    }
+
+    flags = new DataView(rawFlags.buffer.slice());
+  } else {
+    var result = A2(
+      __Json_run,
+      flagDecoder,
+      __Json_wrap(args ? args["flags"] : undefined),
+    );
+
+    __Result_isOk(result) ||
+      __Debug_crash(2 /**__DEBUG/, __Json_errorToString(result.a) /**/);
+
+    flags = result.a;
+  }
 
   _Platform_setupTaskPorts(args ? args["taskPorts"] : undefined);
 
   var managers = {};
-  var initPair = init(result.a);
+  var initPair = init(flags);
   var model = initPair.__$model;
   var stepper = stepperBuilder(sendToApp, model);
   var ports = _Platform_setupEffects(managers, sendToApp, executeCmd);
@@ -326,12 +340,12 @@ function _Platform_checkPortName(name) {
 
 // OUTGOING PORTS
 
-function _Platform_outgoingPort(name, converter) {
+function _Platform_outgoingPort(name, converter, isBytes) {
   _Platform_checkPortName(name);
   _Platform_effectManagers[name] = {
     __cmdMap: _Platform_outgoingPortMap,
     __converter: converter,
-    __portSetup: _Platform_setupOutgoingPort,
+    __portSetup: (n) => _Platform_setupOutgoingPort(n, isBytes),
   };
   return _Platform_leaf(name);
 }
@@ -340,7 +354,7 @@ var _Platform_outgoingPortMap = F2(function (tagger, value) {
   return value;
 });
 
-function _Platform_setupOutgoingPort(name) {
+function _Platform_setupOutgoingPort(name, isBytes) {
   var subs = [];
   var converter = _Platform_effectManagers[name].__converter;
 
@@ -354,7 +368,10 @@ function _Platform_setupOutgoingPort(name) {
       for (var idx = 0; idx < cmdArray.length; idx++) {
         // grab a separate reference to subs in case unsubscribe is called
         var currentSubs = subs;
-        var value = __Json_unwrap(converter(cmdArray[idx]));
+        var rawValue = converter(cmdArray[idx]);
+        var value = isBytes
+          ? new DataView(rawValue.buffer.slice())
+          : __Json_unwrap(rawValue);
         for (var subIdx = 0; subIdx < currentSubs.length; subIdx++) {
           currentSubs[subIdx](value);
         }
@@ -387,12 +404,12 @@ function _Platform_setupOutgoingPort(name) {
 
 // INCOMING PORTS
 
-function _Platform_incomingPort(name, converter) {
+function _Platform_incomingPort(name, converter, isBytes) {
   _Platform_checkPortName(name);
   _Platform_effectManagers[name] = {
     __subMap: _Platform_incomingPortMap,
     __converter: converter,
-    __portSetup: _Platform_setupIncomingPort,
+    __portSetup: (n, s) => _Platform_setupIncomingPort(n, s, isBytes),
   };
   return _Platform_leaf(name);
 }
@@ -403,7 +420,7 @@ var _Platform_incomingPortMap = F2(function (tagger, finalTagger) {
   };
 });
 
-function _Platform_setupIncomingPort(name, sendToApp) {
+function _Platform_setupIncomingPort(name, sendToApp, isBytes) {
   var subs = [];
   var converter = _Platform_effectManagers[name].__converter;
 
@@ -422,11 +439,22 @@ function _Platform_setupIncomingPort(name, sendToApp) {
   // PUBLIC API
 
   function send(incomingValue) {
-    var result = A2(__Json_run, converter, __Json_wrap(incomingValue));
+    var value;
 
-    __Result_isOk(result) || __Debug_crash(4, name, result.a);
+    if (isBytes) {
+      if (!(incomingValue instanceof DataView)) {
+        __Debug_crash(4, name, "Expected DataView");
+      }
 
-    var value = result.a;
+      value = new DataView(incomingValue.buffer.slice());
+    } else {
+      var result = A2(__Json_run, converter, __Json_wrap(incomingValue));
+
+      __Result_isOk(result) || __Debug_crash(4, name, result.a);
+
+      value = result.a;
+    }
+
     for (var idx = 0; idx < subs.length; idx++) {
       sendToApp(subs[idx](value));
     }
@@ -439,13 +467,21 @@ function _Platform_setupIncomingPort(name, sendToApp) {
 
 var _Platform_taskPorts = {};
 
-function _Platform_taskPort(name, inputConverter, converter) {
+function _Platform_taskPort(
+  name,
+  inputConverter,
+  converter,
+  inputIsBytes,
+  outputIsBytes,
+) {
   _Platform_checkPortName(name);
   _Platform_taskPorts[name] = {};
 
   return function (input) {
     var encodedInput = inputConverter
-      ? __Json_unwrap(inputConverter(input))
+      ? inputIsBytes
+        ? new DataView(input.buffer.slice())
+        : __Json_unwrap(inputConverter(input))
       : null;
 
     return __Scheduler_binding(function (callback) {
@@ -469,11 +505,23 @@ function _Platform_taskPort(name, inputConverter, converter) {
 
       promise.then(
         function (value) {
-          var result = A2(__Json_run, converter, __Json_wrap(value));
+          var checkedValue;
 
-          __Result_isOk(result) || __Debug_crash(4, name, value);
+          if (outputIsBytes) {
+            if (!(value instanceof DataView)) {
+              __Debug_crash(4, name, "Expected DataView");
+            }
 
-          callback(__Scheduler_succeed(result.a));
+            checkedValue = new DataView(value.buffer.slice());
+          } else {
+            var result = A2(__Json_run, converter, __Json_wrap(value));
+
+            __Result_isOk(result) || __Debug_crash(4, name, value);
+
+            checkedValue = result.a;
+          }
+
+          callback(__Scheduler_succeed(checkedValue));
         },
         function (err) {
           // If Error, convert to plain object. This is because Error doesn't have enumerable

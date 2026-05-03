@@ -51,11 +51,6 @@ relies on `toString` which has the same restriction and (2) it is not a pure
 function and would therefore have unpredictable behavior when paired with
 compiler optimizations that move code around.
 
-**Note:** If you want to create a terminal application that prints stuff out,
-use ports for now. That will give you full access to reading and writing in the
-terminal. We may have a package in Gren for this someday, but browser
-applications are the primary focus of platform development for now.
-
 -}
 log : String -> a -> a
 log =

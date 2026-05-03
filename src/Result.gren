@@ -1,7 +1,7 @@
 module Result exposing
     ( Result(..)
     , hasValue, checkValue, firstOk, allOk
-    , map, map2, map3, map4, map5
+    , map, map2, map3, andMap
     , andThen, onError
     , withDefault, withDefaultLazy, toMaybe, fromMaybe, mapError
     )
@@ -19,7 +19,7 @@ way to manage errors in Gren.
 
 ## Mapping
 
-@docs map, map2, map3, map4, map5
+@docs map, map2, map3, andMap
 
 
 ## Chaining
@@ -209,7 +209,18 @@ map2 func ra rb =
                     Ok (func a b)
 
 
-{-| -}
+{-| Apply a function if three results are `Ok`. If not, the first `Err` will
+propagate through.
+
+    map3 (+) (Ok 1) (Ok 3) (Ok 5) == Ok 9
+
+    map3 (+) (Err "x") (Ok 3) (Ok 5) == Err "x"
+
+    map3 (+) (Ok 1) (Err "y") (Ok 5) == Err "y"
+
+This can be useful if you have three computations that may fail, and you want
+to put them together quickly.
+-}
 map3 : (a -> b -> c -> value) -> Result x a -> Result x b -> Result x c -> Result x value
 map3 func ra rb rc =
     when ra is
@@ -230,61 +241,19 @@ map3 func ra rb rc =
                             Ok (func a b c)
 
 
-{-| -}
-map4 : (a -> b -> c -> d -> value) -> Result x a -> Result x b -> Result x c -> Result x d -> Result x value
-map4 func ra rb rc rd =
-    when ra is
-        Err x ->
-            Err x
+{-| This function lets you map over multiple values. Useful when [map2](#map2) and [map3](#map3)
+aren't enough.
 
-        Ok a ->
-            when rb is
-                Err x ->
-                    Err x
-
-                Ok b ->
-                    when rc is
-                        Err x ->
-                            Err x
-
-                        Ok c ->
-                            when rd is
-                                Err x ->
-                                    Err x
-
-                                Ok d ->
-                                    Ok (func a b c d)
-
-
-{-| -}
-map5 : (a -> b -> c -> d -> e -> value) -> Result x a -> Result x b -> Result x c -> Result x d -> Result x e -> Result x value
-map5 func ra rb rc rd re =
-    when ra is
-        Err x ->
-            Err x
-
-        Ok a ->
-            when rb is
-                Err x ->
-                    Err x
-
-                Ok b ->
-                    when rc is
-                        Err x ->
-                            Err x
-
-                        Ok c ->
-                            when rd is
-                                Err x ->
-                                    Err x
-
-                                Ok d ->
-                                    when re is
-                                        Err x ->
-                                            Err x
-
-                                        Ok e ->
-                                            Ok (func a b c d e)
+    Ok (\one two three four -> one + two + three + four)
+        |> andMap (Ok 1)
+        |> andMap (Ok 2)
+        |> andMap (Ok 3)
+        |> andMap (Ok 4)
+        == Ok 10
+-}
+andMap : Result x a -> Result x (a -> b) -> Result x b
+andMap =
+    map2 (|>)
 
 
 {-| Chain together a sequence of computations that may fail. It is helpful
