@@ -2510,100 +2510,118 @@ ecdsaTestsHelper secureContext label { namedCurve, digestAlgorithm } =
 
 {-|-}
 ed25519Tests secureContext =
+    await
+        (Crypto.generateEd25519KeyPair secureContext Crypto.CannotBeExtracted
+            |> Task.map Just
+            |> Task.onError
+                (\err ->
+                    when err is
+                        Crypto.Ed25519KeyGenerationNotSupported ->
+                            Task.succeed Nothing
+                )
+        )
+        "Ed25519: Checking runtime support"
+        (\maybeKeyPair ->
+            when maybeKeyPair is
+                Just keyPair ->
+                    ed25519SupportedTests secureContext keyPair
+
+                Nothing ->
+                    test "Ed25519 is not supported by this runtime, so Ed25519 tests are skipped"
+                        (\_ ->
+                            Expect.pass
+                        )
+        )
+
+
+{-|-}
+ed25519SupportedTests secureContext { publicKey, privateKey } =
     concat
-        [ await
-            (Crypto.generateEd25519KeyPair
-                secureContext
-                Crypto.CannotBeExtracted
-            )
-            "Ed25519: Generating a key that cannot be extracted"
-            (\{ publicKey, privateKey } ->
-                concat
-                    [ await
-                        (Crypto.exportEd25519PublicKeyAsRaw publicKey)
-                        "Exporting public Ed25519 key as RAW when not extractable"
-                        (\exportedKey ->
-                            await
-                                (Crypto.importEd25519PublicKeyFromRaw
-                                    secureContext
-                                    exportedKey
-                                )
-                                "Importing the exported key"
-                                (\importedKey ->
-                                    test "Imported key equals the original key"
-                                        (\_ ->
-                                            Expect.equal importedKey publicKey
-                                        )
-                                )
+        [ describe "Ed25519: Generated a key that cannot be extracted"
+            [ await
+                (Crypto.exportEd25519PublicKeyAsRaw publicKey)
+                "Exporting public Ed25519 key as RAW when not extractable"
+                (\exportedKey ->
+                    await
+                        (Crypto.importEd25519PublicKeyFromRaw
+                            secureContext
+                            exportedKey
                         )
-                    , await
-                        (Crypto.exportEd25519PublicKeyAsSpki publicKey)
-                        "Exporting public Ed25519 key as SPKI when not extractable"
-                        (\exportedKey ->
-                            await
-                                (Crypto.importEd25519PublicKeyFromSpki
-                                    secureContext
-                                    exportedKey
-                                )
-                                "Importing the exported key"
-                                (\importedKey ->
-                                    test "Imported key equals the original key"
-                                        (\_ ->
-                                            Expect.equal importedKey publicKey
-                                        )
-                                )
-                        )
-                    , await
-                        (Crypto.exportEd25519PublicKeyAsJwk publicKey)
-                        "Exporting public Ed25519 key as JWK when not extractable"
-                        (\exportedKey ->
-                            await
-                                (Crypto.importEd25519PublicKeyFromJwk
-                                    secureContext
-                                    exportedKey
-                                )
-                                "Importing the exported key"
-                                (\importedKey ->
-                                    test "Imported key equals the original key"
-                                        (\_ ->
-                                            Expect.equal importedKey publicKey
-                                        )
-                                )
-                        )
-                    , awaitError
-                        (Crypto.exportEd25519PrivateKeyAsPkcs8 privateKey)
-                        "Exporting private Ed25519 key as PKCS8 when not extractable"
-                        (\err ->
-                            test "When exporting private key that isn't extractable, fails with expected message"
+                        "Importing the exported key"
+                        (\importedKey ->
+                            test "Imported key equals the original key"
                                 (\_ ->
-                                    Expect.equal err Crypto.KeyNotExportable
+                                    Expect.equal importedKey publicKey
                                 )
                         )
-                    , awaitError
-                        (Crypto.exportEd25519PrivateKeyAsJwk privateKey)
-                        "Exporting private Ed25519 key as JWK when not extractable"
-                        (\err ->
-                            test "When exporting private key that isn't extractable, fails with expected message"
+                )
+            , await
+                (Crypto.exportEd25519PublicKeyAsSpki publicKey)
+                "Exporting public Ed25519 key as SPKI when not extractable"
+                (\exportedKey ->
+                    await
+                        (Crypto.importEd25519PublicKeyFromSpki
+                            secureContext
+                            exportedKey
+                        )
+                        "Importing the exported key"
+                        (\importedKey ->
+                            test "Imported key equals the original key"
                                 (\_ ->
-                                    Expect.equal err Crypto.KeyNotExportable
+                                    Expect.equal importedKey publicKey
                                 )
                         )
-                    , await
-                        (Crypto.signWithEd25519 privateKey (Bytes.fromString "hello"))
-                        "Signing some bytes with a non-extractable key"
-                        (\signature ->
-                            await
-                                (Crypto.verifyWithEd25519 publicKey signature (Bytes.fromString "hello"))
-                                "Verifying signed bytes"
-                                (\verifiedBytes ->
-                                    test "The verified bytes equal the signed bytes"
-                                        (\_ ->
-                                            Expect.equal verifiedBytes (Bytes.fromString "hello")
-                                        )
+                )
+            , await
+                (Crypto.exportEd25519PublicKeyAsJwk publicKey)
+                "Exporting public Ed25519 key as JWK when not extractable"
+                (\exportedKey ->
+                    await
+                        (Crypto.importEd25519PublicKeyFromJwk
+                            secureContext
+                            exportedKey
+                        )
+                        "Importing the exported key"
+                        (\importedKey ->
+                            test "Imported key equals the original key"
+                                (\_ ->
+                                    Expect.equal importedKey publicKey
                                 )
                         )
-                    ]
-            )
+                )
+            , awaitError
+                (Crypto.exportEd25519PrivateKeyAsPkcs8 privateKey)
+                "Exporting private Ed25519 key as PKCS8 when not extractable"
+                (\err ->
+                    test "When exporting private key that isn't extractable, fails with expected message"
+                        (\_ ->
+                            Expect.equal err Crypto.KeyNotExportable
+                        )
+                )
+            , awaitError
+                (Crypto.exportEd25519PrivateKeyAsJwk privateKey)
+                "Exporting private Ed25519 key as JWK when not extractable"
+                (\err ->
+                    test "When exporting private key that isn't extractable, fails with expected message"
+                        (\_ ->
+                            Expect.equal err Crypto.KeyNotExportable
+                        )
+                )
+            , await
+                (Crypto.signWithEd25519 privateKey (Bytes.fromString "hello"))
+                "Signing some bytes with a non-extractable key"
+                (\signature ->
+                    await
+                        (Crypto.verifyWithEd25519 publicKey signature (Bytes.fromString "hello"))
+                        "Verifying signed bytes"
+                        (\verifiedBytes ->
+                            test "The verified bytes equal the signed bytes"
+                                (\_ ->
+                                    Expect.equal verifiedBytes (Bytes.fromString "hello")
+                                )
+                        )
+                )
+            ]
         , await
             (Crypto.generateEd25519KeyPair
                 secureContext
