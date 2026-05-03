@@ -22,6 +22,7 @@ module Crypto exposing
     , RsaPssParams, RsaPssSigningError(..)
     , signWithRsaPss, verifyWithRsaPss
     , signWithEcdsa, verifyWithEcdsa
+    , signWithEd25519, verifyWithEd25519
     , signWithHmac, verifyWithHmac
     , DigestAlgorithm(..), digest
     , Key, PublicKey, PrivateKey, KeyPair
@@ -33,6 +34,8 @@ module Crypto exposing
     , generateAesCtrKey, generateAesCbcKey, generateAesGcmKey
     , EcdsaKey, EcdhKey, EcKeyParams, EcNamedCurve(..)
     , generateEcdsaKeyPair
+    , Ed25519Key, Ed25519KeyGenerationError(..)
+    , generateEd25519KeyPair
     , HmacKey, HmacKeyParams, HmacKeyGenerationError(..)
     , generateHmacKey
     , ExportKeyError(..)
@@ -47,6 +50,8 @@ module Crypto exposing
     , exportAesGcmKeyAsRaw, exportAesGcmKeyAsJwk
     , exportEcdsaPublicKeyAsRaw, exportEcdsaPublicKeyAsSpki, exportEcdsaPublicKeyAsJwk
     , exportEcdsaPrivateKeyAsPkcs8, exportEcdsaPrivateKeyAsJwk
+    , exportEd25519PublicKeyAsRaw, exportEd25519PublicKeyAsSpki, exportEd25519PublicKeyAsJwk
+    , exportEd25519PrivateKeyAsPkcs8, exportEd25519PrivateKeyAsJwk
     , exportHmacKeyAsRaw, exportHmacKeyAsJwk
     , ImportRsaKeyError(..)
     , importRsaOaepPublicKeyFromJwk, importRsaOaepPublicKeyFromSpki
@@ -62,6 +67,9 @@ module Crypto exposing
     , ImportEcKeyError(..)
     , importEcdsaPublicKeyFromRaw, importEcdsaPublicKeyFromSpki, importEcdsaPublicKeyFromJwk
     , importEcdsaPrivateKeyFromPkcs8, importEcdsaPrivateKeyFromSpki, importEcdsaPrivateKeyFromJwk
+    , ImportEd25519KeyError(..)
+    , importEd25519PublicKeyFromRaw, importEd25519PublicKeyFromSpki, importEd25519PublicKeyFromJwk
+    , importEd25519PrivateKeyFromPkcs8, importEd25519PrivateKeyFromJwk
     , ImportHmacKeyError(..)
     , importHmacKeyFromJwk, importHmacKeyFromRaw
     )
@@ -82,6 +90,7 @@ module supports the following algorithms and operations:
 - RSA-SSAPKCS1v1.5 - [Signing](#signWithRsaSsaPkcs1V1_5) and [verifying](#verifyWithRsaSsaPkcs1V1_5)
 - RSA-PSS - [Signing](#signWithRsaPss) and [verifying](#verifyWithRsaPss)
 - ECDSA - [Signing](#signWithEcdsa) and [verifying](#verifyWithEcdsa)
+- Ed25519 - [Signing](#signWithEd25519) and [verifying](#verifyWithEd25519)
 - HMAC - [Signing](#signWithHmac) and [verifying](#verifyWithHmac)
 - SHA - [Digest](#digest)
 
@@ -209,6 +218,13 @@ These functions require an RSA-PSS key. You can generate one with the
 
 @docs signWithEcdsa, verifyWithEcdsa
 
+### Sign & verify with the Ed25519 algorithm
+
+Sign and verify some `Bytes` with the Ed25519 algorithm. These functions require an Ed25519 key.
+You can generate one with the [`generateEd25519KeyPair`](#generateEd25519KeyPair) function.
+
+@docs signWithEd25519, verifyWithEd25519
+
 ### Sign & verify with the HMAC algorithm
 
 Sign and verify some `Bytes` with the HMAC (Hash-Based Message Authentication Code) algorithm. 
@@ -252,6 +268,14 @@ Generate keys to use with EC (Elliptic Curve) algorithm.
 @docs EcdsaKey, EcdhKey, EcKeyParams, EcNamedCurve
 
 @docs generateEcdsaKeyPair
+
+### Generate Ed25519 Keys
+
+Generate keys to use with the Ed25519 algorithm.
+
+@docs Ed25519Key, Ed25519KeyGenerationError
+
+@docs generateEd25519KeyPair
 
 ### Generate HMAC Keys
 
@@ -297,6 +321,12 @@ for the Web Crypto API.
 
 @docs exportEcdsaPrivateKeyAsPkcs8, exportEcdsaPrivateKeyAsJwk
 
+### Export Ed25519 Keys
+
+@docs exportEd25519PublicKeyAsRaw, exportEd25519PublicKeyAsSpki, exportEd25519PublicKeyAsJwk
+
+@docs exportEd25519PrivateKeyAsPkcs8, exportEd25519PrivateKeyAsJwk
+
 ### Export HMAC Keys 
 
 @docs exportHmacKeyAsRaw, exportHmacKeyAsJwk
@@ -341,7 +371,15 @@ for the Web Crypto API.
 
 @docs importEcdsaPublicKeyFromJwk, importEcdsaPublicKeyFromRaw, importEcdsaPublicKeyFromSpki
 
-### Import HMAC Keys 
+### Import Ed25519 Keys
+
+@docs ImportEd25519KeyError
+
+@docs importEd25519PublicKeyFromRaw, importEd25519PublicKeyFromSpki, importEd25519PublicKeyFromJwk
+
+@docs importEd25519PrivateKeyFromPkcs8, importEd25519PrivateKeyFromJwk
+
+### Import HMAC Keys
 
 @docs ImportHmacKeyError
 
@@ -751,7 +789,7 @@ type EcNamedCurve
 
 {-| Generate a new key using the ECDSA algorithm.
 
-Produces a `KeyPair` that can be used to sign data with [`signWithEcdsa`](#signWithEcdsa) 
+Produces a `KeyPair` that can be used to sign data with [`signWithEcdsa`](#signWithEcdsa)
 and verify data with [`verifyWithEcdsa`](#verifyWithEcdsa).
 -}
 generateEcdsaKeyPair : SecureContext -> EcKeyParams -> Task x (KeyPair EcdsaKey EcKeyParams)
@@ -772,6 +810,39 @@ generateEcdhKeyPair _context { namedCurve, extractable } =
         (ecNamedCurveToString namedCurve)
         (extractableToBool extractable)
         [ "deriveKey", "deriveBits" ]
+
+
+
+-- ED25519 KEYS
+
+
+{-| A key generated for use with the Ed25519 algorithm. Used to sign and verify
+values.
+-}
+type Ed25519Key
+    = Ed25519Key
+
+
+{-| Errors that can happen when generating a key for use with the Ed25519
+algorithm.
+
+- `Ed25519KeyGenerationNotSupported` happens when the runtime's Web Crypto API
+does not implement Ed25519.
+-}
+type Ed25519KeyGenerationError
+    = Ed25519KeyGenerationNotSupported
+
+
+{-| Generate a new key using the Ed25519 algorithm.
+
+Produces a `KeyPair` that can be used to sign data with [`signWithEd25519`](#signWithEd25519)
+and verify data with [`verifyWithEd25519`](#verifyWithEd25519).
+-}
+generateEd25519KeyPair : SecureContext -> Extractable -> Task Ed25519KeyGenerationError (KeyPair Ed25519Key {})
+generateEd25519KeyPair _context extractable =
+    Gren.Kernel.Crypto.generateEd25519Key
+        (extractableToBool extractable)
+        [ "sign", "verify" ]
 
 
 
@@ -1005,10 +1076,20 @@ exportEcdhPublicKeyAsRaw :  PublicKey EcdhKey EcKeyParams -> Task {} Bytes
 exportEcdhPublicKeyAsRaw (PublicKey key) =
     exportPublicKeyAsRaw key
 
+{-|-}
+exportEd25519PublicKeyAsRaw : PublicKey Ed25519Key {} -> Task {} Bytes
+exportEd25519PublicKeyAsRaw (PublicKey key) =
+    exportPublicKeyAsRaw key
+
 
 {-|-}
 exportEcdhPublicKeyAsSpki : PublicKey EcdhKey EcKeyParams -> Task {} Bytes
 exportEcdhPublicKeyAsSpki (PublicKey key) =
+    exportPublicKeyAsSpki key
+
+{-|-}
+exportEd25519PublicKeyAsSpki : PublicKey Ed25519Key {} -> Task {} Bytes
+exportEd25519PublicKeyAsSpki (PublicKey key) =
     exportPublicKeyAsSpki key
 
 
@@ -1019,14 +1100,32 @@ exportEcdhPublicKeyAsJwk (PublicKey key) =
 
 
 {-|-}
+exportEd25519PublicKeyAsJwk : PublicKey Ed25519Key {} -> Task {} Json.Encode.Value
+exportEd25519PublicKeyAsJwk (PublicKey key) =
+    exportPublicKeyAsJwk key
+
+
+{-|-}
 exportEcdhPrivateKeyAsPkcs8 : PrivateKey EcdhKey EcKeyParams -> Task ExportKeyError Bytes
 exportEcdhPrivateKeyAsPkcs8 (PrivateKey key) =
+    exportKeyAsPkcs8 key
+    
+
+{-|-}
+exportEd25519PrivateKeyAsPkcs8 : PrivateKey Ed25519Key {} -> Task ExportKeyError Bytes
+exportEd25519PrivateKeyAsPkcs8 (PrivateKey key) =
     exportKeyAsPkcs8 key
 
 
 {-|-}
 exportEcdhPrivateKeyAsJwk : PrivateKey EcdhKey EcKeyParams -> Task ExportKeyError Json.Encode.Value
 exportEcdhPrivateKeyAsJwk (PrivateKey key) =
+    exportKeyAsJwk key
+
+
+{-|-}
+exportEd25519PrivateKeyAsJwk : PrivateKey Ed25519Key {} -> Task ExportKeyError Json.Encode.Value
+exportEd25519PrivateKeyAsJwk (PrivateKey key) =
     exportKeyAsJwk key
 
 
@@ -1517,6 +1616,74 @@ importEcdhPrivateKeyFromJwk _context extractable namedCurve jwk =
         (ecNamedCurveToString namedCurve)
         (extractableToBool extractable)
         [ "deriveKey", "deriveBits" ]
+
+
+{-| Errors that can happen when importing a key using the Ed25519 algorithm.
+There are two reasons this error can happen:
+
+- `ImportEd25519KeyError`: the passed key value (either `Json.Encode.Value` or
+`Bytes`) is not a valid key and cannot be imported.
+- `ImportEd25519KeyNotSupported`: the runtime's Web Crypto API does not
+implement Ed25519.
+-}
+type ImportEd25519KeyError
+    = ImportEd25519KeyError
+    | ImportEd25519KeyNotSupported
+
+
+{-|-}
+importEd25519PublicKeyFromRaw : SecureContext -> Bytes -> Task ImportEd25519KeyError (PublicKey Ed25519Key {})
+importEd25519PublicKeyFromRaw _context bytes =
+    Gren.Kernel.Crypto.importEd25519Key
+        "public"
+        "raw"
+        bytes
+        True
+        [ "verify" ]
+
+
+{-|-}
+importEd25519PublicKeyFromSpki : SecureContext -> Bytes -> Task ImportEd25519KeyError (PublicKey Ed25519Key {})
+importEd25519PublicKeyFromSpki _context bytes =
+    Gren.Kernel.Crypto.importEd25519Key
+        "public"
+        "spki"
+        bytes
+        True
+        [ "verify" ]
+
+
+{-|-}
+importEd25519PublicKeyFromJwk : SecureContext -> Json.Encode.Value -> Task ImportEd25519KeyError (PublicKey Ed25519Key {})
+importEd25519PublicKeyFromJwk _context jwk =
+    Gren.Kernel.Crypto.importEd25519Key
+        "public"
+        "jwk"
+        (Gren.Kernel.Json.unwrap jwk)
+        True
+        [ "verify" ]
+
+
+{-|-}
+importEd25519PrivateKeyFromPkcs8 : SecureContext -> Extractable -> Bytes -> Task ImportEd25519KeyError (PrivateKey Ed25519Key {})
+importEd25519PrivateKeyFromPkcs8 _context extractable bytes =
+    Gren.Kernel.Crypto.importEd25519Key
+        "private"
+        "pkcs8"
+        bytes
+        (extractableToBool extractable)
+        [ "sign" ]
+
+
+{-|-}
+importEd25519PrivateKeyFromJwk : SecureContext -> Extractable -> Json.Encode.Value -> Task ImportEd25519KeyError (PrivateKey Ed25519Key {})
+importEd25519PrivateKeyFromJwk _context extractable jwk =
+    Gren.Kernel.Crypto.importEd25519Key
+        "private"
+        "jwk"
+        (Gren.Kernel.Json.unwrap jwk)
+        (extractableToBool extractable)
+        [ "sign" ]
 
 
 {-| Errors that can happen when importing a key using an HMAC algorithm. There are three 
@@ -2031,7 +2198,21 @@ signWithEcdsa : DigestAlgorithm -> PrivateKey EcdsaKey EcKeyParams -> Bytes -> T
 signWithEcdsa hash (PrivateKey (Key { key })) bytes =
     Gren.Kernel.Crypto.signWithEcdsa
         (digestAlgorithmToString hash)
-        key 
+        key
+        bytes
+
+
+{-| Sign some `Bytes` with the Ed25519 algorithm. This produces a `Signature`
+(which is just some `Bytes`). The `Signature` can be used with the
+corresponding verification function to verify that the passed `Bytes` were
+signed with the passed key.
+
+The returned `Task` should not fail. If it does, please file a ticket!
+-}
+signWithEd25519 : PrivateKey Ed25519Key {} -> Bytes -> Task x Signature
+signWithEd25519 (PrivateKey (Key { key })) bytes =
+    Gren.Kernel.Crypto.signWithEd25519
+        key
         bytes
 
 
@@ -2096,7 +2277,21 @@ verifyWithEcdsa hash (PublicKey (Key { key })) signature bytes =
         bytes
 
 
-{-| Verify that some `Bytes` were signed with the passed `Signature` with the 
+{-| Verify that some `Bytes` were signed with the passed `Signature` with the
+Ed25519 algorithm.
+
+The `Task` succeeds with the verified `Bytes` if the passed signature is valid
+and fails otherwise.
+-}
+verifyWithEd25519 : PublicKey Ed25519Key {} -> Signature -> Bytes -> Task {} Bytes
+verifyWithEd25519 (PublicKey (Key { key })) signature bytes =
+    Gren.Kernel.Crypto.verifyWithEd25519
+        key
+        signature
+        bytes
+
+
+{-| Verify that some `Bytes` were signed with the passed `Signature` with the
 HMAC algorithm.
 
 The `Task` succeeds with the verified `Bytes` if the passed signature is valid and 

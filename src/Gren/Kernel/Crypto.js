@@ -2,7 +2,7 @@
 
 import Gren.Kernel.Scheduler exposing (binding, succeed, fail)
 import Gren.Kernel.Bytes exposing (writeBytes)
-import Crypto exposing (RsaSsaPkcs1V1_5SigningError, RsaPssSigningError, AesCtrEncryptionError, RsaOaepEncryptionError, RsaOaepDecryptionError, P256, P384, P521, AesLength128, AesLength192, AesLength256, CanBeExtracted, CannotBeExtracted, HmacKey, Sha256, Sha384, Sha512, SignWithRsaPssError, AesGcmDecryptionError, AesGcmEncryptionError, AesCbcDecryptionError, AesCbcEncryptionError, AesCtrDecryptionError, DecryptWithRsaOaepError, ImportRsaKeyError, ImportHmacKeyError, ImportEcKeyError, ImportAesKeyError, Key, SecureContext, PublicKey, PrivateKey, KeyNotExportable)
+import Crypto exposing (RsaSsaPkcs1V1_5SigningError, RsaPssSigningError, AesCtrEncryptionError, RsaOaepEncryptionError, RsaOaepDecryptionError, P256, P384, P521, AesLength128, AesLength192, AesLength256, CanBeExtracted, CannotBeExtracted, HmacKey, Ed25519Key, Sha256, Sha384, Sha512, SignWithRsaPssError, AesGcmDecryptionError, AesGcmEncryptionError, AesCbcDecryptionError, AesCbcEncryptionError, AesCtrDecryptionError, DecryptWithRsaOaepError, ImportRsaKeyError, ImportHmacKeyError, ImportEcKeyError, ImportEd25519KeyError, ImportEd25519KeyNotSupported, Ed25519KeyGenerationNotSupported, ImportAesKeyError, Key, SecureContext, PublicKey, PrivateKey, KeyNotExportable)
 import Maybe exposing (Just, Nothing)
 import Bytes exposing (Bytes)
 
@@ -100,6 +100,13 @@ var _Crypto_constructEcKey = function (key) {
   return __Crypto_Key({
     __$key: key,
     __$data: ecKeyData,
+  });
+};
+
+var _Crypto_constructEd25519Key = function (key) {
+  return __Crypto_Key({
+    __$key: key,
+    __$data: {},
   });
 };
 
@@ -235,6 +242,33 @@ var _Crypto_generateEcKey = F4(
     });
   },
 );
+
+var _Crypto_generateEd25519Key = F2(function (extractable, permissions) {
+  return __Scheduler_binding(function (callback) {
+    var algorithm = {
+      name: "Ed25519",
+    };
+    _Crypto_impl.subtle
+      .generateKey(algorithm, extractable, permissions)
+      .then(function (key) {
+        return callback(
+          __Scheduler_succeed({
+            __$publicKey: __Crypto_PublicKey(
+              _Crypto_constructEd25519Key(key.publicKey),
+            ),
+            __$privateKey: __Crypto_PrivateKey(
+              _Crypto_constructEd25519Key(key.privateKey),
+            ),
+          }),
+        );
+      })
+      .catch(function (err) {
+        return callback(
+          __Scheduler_fail(__Crypto_Ed25519KeyGenerationNotSupported),
+        );
+      });
+  });
+});
 
 var _Crypto_generateHmacKey = F5(
   function (name, hash, length, extractable, permissions) {
@@ -380,6 +414,44 @@ var _Crypto_importEcKey = F7(
         })
         .catch(function (err) {
           return callback(__Scheduler_fail(__Crypto_ImportEcKeyError));
+        });
+    });
+  },
+);
+
+var _Crypto_importEd25519Key = F5(
+  function (wrapper, format, keyData, extractable, keyUsages) {
+    return __Scheduler_binding(function (callback) {
+      _Crypto_impl.subtle
+        .importKey(
+          format,
+          keyData,
+          { name: "Ed25519" },
+          extractable,
+          keyUsages,
+        )
+        .then(function (key) {
+          switch (wrapper) {
+            case "public":
+              return callback(
+                __Scheduler_succeed(
+                  __Crypto_PublicKey(_Crypto_constructEd25519Key(key)),
+                ),
+              );
+            case "private":
+              return callback(
+                __Scheduler_succeed(
+                  __Crypto_PrivateKey(_Crypto_constructEd25519Key(key)),
+                ),
+              );
+            default:
+              return callback(
+                __Scheduler_fail(__Crypto_ImportEd25519KeyError),
+              );
+          }
+        })
+        .catch(function (err) {
+          return callback(__Scheduler_fail(__Crypto_ImportEd25519KeyError));
         });
     });
   },
@@ -651,6 +723,22 @@ var _Crypto_signWithEcdsa = F3(function (hash, key, bytes) {
   });
 });
 
+var _Crypto_signWithEd25519 = F2(function (key, bytes) {
+  return __Scheduler_binding(function (callback) {
+    var algorithm = {
+      name: "Ed25519",
+    };
+    _Crypto_impl.subtle
+      .sign(algorithm, key, bytes)
+      .then(function (res) {
+        return callback(__Scheduler_succeed(new DataView(res)));
+      })
+      .catch(function (err) {
+        throw "There was an unforseen error that occured when attempting to sign using the Ed25519 algorithm. This shouldn't happen! Please file a ticket in the `gren-lang/core` Github repo (https://github.com/gren-lang/core)";
+      });
+  });
+});
+
 var _Crypto_signWithHmac = F2(function (key, bytes) {
   return __Scheduler_binding(function (callback) {
     var algorithm = {
@@ -724,6 +812,25 @@ var _Crypto_verifyWithEcdsa = F4(function (hash, key, signature, bytes) {
       })
       .catch(function (err) {
         throw "There was an unforseen error that occured when attempting to verify with the ECDSA algorithm. This shouldn't happen! Please file a ticket in the `gren-lang/core` Github repo (https://github.com/gren-lang/core)";
+      });
+  });
+});
+
+var _Crypto_verifyWithEd25519 = F3(function (key, signature, bytes) {
+  return __Scheduler_binding(function (callback) {
+    var algorithm = {
+      name: "Ed25519",
+    };
+    _Crypto_impl.subtle
+      .verify(algorithm, key, signature, bytes)
+      .then(function (res) {
+        if (res) {
+          return callback(__Scheduler_succeed(bytes));
+        }
+        return callback(__Scheduler_fail());
+      })
+      .catch(function (err) {
+        throw "There was an unforseen error that occured when attempting to verify with the Ed25519 algorithm. This shouldn't happen! Please file a ticket in the `gren-lang/core` Github repo (https://github.com/gren-lang/core)";
       });
   });
 });
