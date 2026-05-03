@@ -2510,6 +2510,10 @@ ecdsaTestsHelper secureContext label { namedCurve, digestAlgorithm } =
 
 {-|-}
 ed25519Tests secureContext =
+    -- Checks to see if generating a key pair succeeds. This assumes that the platform that's
+    -- running the tests supports this algorithm and other tests can be run. If this fails, 
+    -- it's assumed the platform does not support the algorithm and does not run the test that
+    -- will, ultimately, fail.
     await
         (Crypto.generateEd25519KeyPair secureContext Crypto.CannotBeExtracted
             |> Task.map Just
