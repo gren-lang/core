@@ -1,8 +1,6 @@
 .gren
-tests/app
-integration_tests/app
-tests/.gren
 *.dat
 doc*.json
 *~
 .DS_Store
+node_modules

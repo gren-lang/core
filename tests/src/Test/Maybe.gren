@@ -114,71 +114,41 @@ tests =
                 )
             , describe "map4"
                 (let
-                    f =
-                        \a b c d -> a + b + c + d
+                    f a b c d =
+                        a + b + c + d
+
+                    map4 fn a b c d =
+                        Just fn
+                            |> Maybe.andMap a
+                            |> Maybe.andMap b
+                            |> Maybe.andMap c
+                            |> Maybe.andMap d
                  in
                  [ test "on (Just, Just, Just, Just)" <|
                     \{} ->
                         Expect.equal
                             (Just 4)
-                            (Maybe.map4 f (Just 1) (Just 1) (Just 1) (Just 1))
+                            (map4 f (Just 1) (Just 1) (Just 1) (Just 1))
                  , test "on (Just, Just, Just, Nothing)" <|
                     \{} ->
                         Expect.equal
                             Nothing
-                            (Maybe.map4 f (Just 1) (Just 1) (Just 1) Nothing)
+                            (map4 f (Just 1) (Just 1) (Just 1) Nothing)
                  , test "on (Just, Just, Nothing, Just)" <|
                     \{} ->
                         Expect.equal
                             Nothing
-                            (Maybe.map4 f (Just 1) (Just 1) Nothing (Just 1))
+                            (map4 f (Just 1) (Just 1) Nothing (Just 1))
                  , test "on (Just, Nothing, Just, Just)" <|
                     \{} ->
                         Expect.equal
                             Nothing
-                            (Maybe.map4 f (Just 1) Nothing (Just 1) (Just 1))
+                            (map4 f (Just 1) Nothing (Just 1) (Just 1))
                  , test "on (Nothing, Just, Just, Just)" <|
                     \{} ->
                         Expect.equal
                             Nothing
-                            (Maybe.map4 f Nothing (Just 1) (Just 1) (Just 1))
-                 ]
-                )
-            , describe "map5"
-                (let
-                    f =
-                        \a b c d e -> a + b + c + d + e
-                 in
-                 [ test "on (Just, Just, Just, Just, Just)" <|
-                    \{} ->
-                        Expect.equal
-                            (Just 5)
-                            (Maybe.map5 f (Just 1) (Just 1) (Just 1) (Just 1) (Just 1))
-                 , test "on (Just, Just, Just, Just, Nothing)" <|
-                    \{} ->
-                        Expect.equal
-                            Nothing
-                            (Maybe.map5 f (Just 1) (Just 1) (Just 1) (Just 1) Nothing)
-                 , test "on (Just, Just, Just, Nothing, Just)" <|
-                    \{} ->
-                        Expect.equal
-                            Nothing
-                            (Maybe.map5 f (Just 1) (Just 1) (Just 1) Nothing (Just 1))
-                 , test "on (Just, Just, Nothing, Just, Just)" <|
-                    \{} ->
-                        Expect.equal
-                            Nothing
-                            (Maybe.map5 f (Just 1) (Just 1) Nothing (Just 1) (Just 1))
-                 , test "on (Just, Nothing, Just, Just, Just)" <|
-                    \{} ->
-                        Expect.equal
-                            Nothing
-                            (Maybe.map5 f (Just 1) Nothing (Just 1) (Just 1) (Just 1))
-                 , test "on (Nothing, Just, Just, Just, Just)" <|
-                    \{} ->
-                        Expect.equal
-                            Nothing
-                            (Maybe.map5 f Nothing (Just 1) (Just 1) (Just 1) (Just 1))
+                            (map4 f Nothing (Just 1) (Just 1) (Just 1))
                  ]
                 )
             , describe "keepIf"

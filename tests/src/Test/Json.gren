@@ -13,6 +13,7 @@ tests =
     describe "Json decode"
         [ intTests
         , customTests
+        , andMapTests
         ]
 
 
@@ -85,3 +86,67 @@ customTests =
                                 ++ Json.errorToString message
     in
     test "customDecoder preserves user error messages" <| \{} -> assertion
+
+-- Used for testing andMap
+type alias TestRecord1 =
+    { stringField : String
+    , intField : Int
+    , boolField: Bool
+    , floatField: Float
+    , stringArrayField: Array String
+    }
+
+-- The constructor for TestRecord1
+mkTestRecord1: String -> Int -> Bool -> Float -> Array String -> TestRecord1
+mkTestRecord1 s i b f sa =
+    { stringField = s
+    , intField = i
+    , boolField = b
+    , floatField = f
+    , stringArrayField = sa
+    }
+
+andMapTests : Test
+andMapTests =
+    let
+        jsonString =
+            """
+            {
+                "stringField": "bar",
+                "intField": 42,
+                "boolField": true,
+                "floatField": 1.5,
+                "stringArrayField": [ "a", "b" ]
+            }
+            """
+
+        myDecoder =
+            Json.succeed mkTestRecord1
+                |> Json.andMap (Json.field "stringField" Json.string)
+                |> Json.andMap (Json.field "intField" Json.int)
+                |> Json.andMap (Json.field "boolField" Json.bool)
+                |> Json.andMap (Json.field "floatField" Json.float)
+                |> Json.andMap (Json.field "stringArrayField" (Json.array Json.string))
+
+        parse = Json.decodeString myDecoder jsonString
+
+        record = when parse is
+            Ok r -> r
+            Err _ -> mkTestRecord1 "" 0 False 0.0 []
+
+    in
+        describe "Json andMap "
+            [test "string field" <|
+                \{} -> Expect.equal record.stringField "bar"
+            , test "int field" <|
+                \{} -> Expect.equal record.intField 42
+            , test "bool field" <|
+                \{} -> Expect.equal record.boolField True
+            , test "float field" <|
+                \{} -> Expect.within (Expect.Relative 0.001) record.floatField 1.5
+            , test "string-array field" <|
+                \{} -> Expect.equalArrays record.stringArrayField [ "a", "b" ]
+            , test "parse error" <|
+                \{} -> Expect.ok parse
+
+            ]

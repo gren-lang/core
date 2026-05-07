@@ -677,7 +677,6 @@ identity x =
 {-| A value that can never happen! For context:
 
   - The boolean type `Bool` has two values: `True` and `False`
-  - The unit type `()` has one value: `()`
   - The never type `Never` has no values!
 
 You may see it in the wild in `Html Never` which means this HTML will never

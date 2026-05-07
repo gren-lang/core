@@ -231,7 +231,7 @@ function _Json_runHelp(decoder, value) {
 
       var keyValuePairs = [];
       for (var key in value) {
-        if (value.hasOwnProperty(key)) {
+        if (Object.hasOwn(value, key)) {
           var result = _Json_runHelp(decoder.__decoder, value[key]);
           if (!__Result_isOk(result)) {
             return __Result_Err(
@@ -385,7 +385,11 @@ function _Json_arrayEquality(aDecoders, bDecoders) {
 // ENCODE
 
 var _Json_encode = F2(function (indentLevel, value) {
-  return JSON.stringify(_Json_unwrap(value), null, indentLevel) + "";
+  return (
+    (indentLevel === 0
+      ? JSON.stringify(_Json_unwrap(value))
+      : JSON.stringify(_Json_unwrap(value), null, indentLevel)) + ""
+  );
 });
 
 function _Json_wrap__DEBUG(value) {
@@ -410,7 +414,10 @@ function _Json_emptyObject() {
 }
 
 var _Json_addField = F3(function (key, value, object) {
-  object[key] = _Json_unwrap(value);
+  var unwrapped = _Json_unwrap(value);
+  if (!(key === "toJSON" && typeof unwrapped === "function")) {
+    object[key] = unwrapped;
+  }
   return object;
 });
 
