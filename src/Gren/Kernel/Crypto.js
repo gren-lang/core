@@ -423,13 +423,7 @@ var _Crypto_importEd25519Key = F5(
   function (wrapper, format, keyData, extractable, keyUsages) {
     return __Scheduler_binding(function (callback) {
       _Crypto_impl.subtle
-        .importKey(
-          format,
-          keyData,
-          { name: "Ed25519" },
-          extractable,
-          keyUsages,
-        )
+        .importKey(format, keyData, { name: "Ed25519" }, extractable, keyUsages)
         .then(function (key) {
           switch (wrapper) {
             case "public":
@@ -445,9 +439,7 @@ var _Crypto_importEd25519Key = F5(
                 ),
               );
             default:
-              return callback(
-                __Scheduler_fail(__Crypto_ImportEd25519KeyError),
-              );
+              return callback(__Scheduler_fail(__Crypto_ImportEd25519KeyError));
           }
         })
         .catch(function (err) {
