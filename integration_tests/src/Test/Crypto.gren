@@ -2632,14 +2632,14 @@ ed25519SupportedTests secureContext { publicKey, privateKey } =
                 Crypto.CanBeExtracted
             )
             "Ed25519: Generating a key that can be extracted"
-            (\{ publicKey, privateKey } ->
+            (\extractableKey ->
                 let
                     bytesToSign =
                         Bytes.fromString "hello"
                 in
                 concat
                     [ await
-                        (Crypto.exportEd25519PublicKeyAsRaw publicKey)
+                        (Crypto.exportEd25519PublicKeyAsRaw extractableKey.publicKey)
                         "Exporting public Ed25519 key as RAW when extractable"
                         (\exportedKey ->
                             await
@@ -2651,12 +2651,12 @@ ed25519SupportedTests secureContext { publicKey, privateKey } =
                                 (\importedKey ->
                                     test "Imported key equals the original key"
                                         (\_ ->
-                                            Expect.equal importedKey publicKey
+                                            Expect.equal importedKey extractableKey.publicKey
                                         )
                                 )
                         )
                     , await
-                        (Crypto.exportEd25519PublicKeyAsSpki publicKey)
+                        (Crypto.exportEd25519PublicKeyAsSpki extractableKey.publicKey)
                         "Exporting public Ed25519 key as SPKI when extractable"
                         (\exportedKey ->
                             await
@@ -2668,12 +2668,12 @@ ed25519SupportedTests secureContext { publicKey, privateKey } =
                                 (\importedKey ->
                                     test "Imported key equals the original key"
                                         (\_ ->
-                                            Expect.equal importedKey publicKey
+                                            Expect.equal importedKey extractableKey.publicKey
                                         )
                                 )
                         )
                     , await
-                        (Crypto.exportEd25519PublicKeyAsJwk publicKey)
+                        (Crypto.exportEd25519PublicKeyAsJwk extractableKey.publicKey)
                         "Exporting public Ed25519 key as JWK when extractable"
                         (\exportedKey ->
                             await
@@ -2685,12 +2685,12 @@ ed25519SupportedTests secureContext { publicKey, privateKey } =
                                 (\importedKey ->
                                     test "Imported key equals the original key"
                                         (\_ ->
-                                            Expect.equal importedKey publicKey
+                                            Expect.equal importedKey extractableKey.publicKey
                                         )
                                 )
                         )
                     , await
-                        (Crypto.exportEd25519PrivateKeyAsPkcs8 privateKey)
+                        (Crypto.exportEd25519PrivateKeyAsPkcs8 extractableKey.privateKey)
                         "Exporting private Ed25519 key as PKCS8 when extractable"
                         (\exportedKey ->
                             await
@@ -2703,12 +2703,12 @@ ed25519SupportedTests secureContext { publicKey, privateKey } =
                                 (\importedKey ->
                                     test "Imported key equals the original key"
                                         (\_ ->
-                                            Expect.equal importedKey privateKey
+                                            Expect.equal importedKey extractableKey.privateKey
                                         )
                                 )
                         )
                     , await
-                        (Crypto.exportEd25519PrivateKeyAsJwk privateKey)
+                        (Crypto.exportEd25519PrivateKeyAsJwk extractableKey.privateKey)
                         "Exporting private Ed25519 key as JWK when extractable"
                         (\exportedKey ->
                             await
@@ -2721,17 +2721,17 @@ ed25519SupportedTests secureContext { publicKey, privateKey } =
                                 (\importedKey ->
                                     test "Imported key equals the original key"
                                         (\_ ->
-                                            Expect.equal importedKey privateKey
+                                            Expect.equal importedKey extractableKey.privateKey
                                         )
                                 )
                         )
                     , await
-                        (Crypto.signWithEd25519 privateKey bytesToSign)
+                        (Crypto.signWithEd25519 extractableKey.privateKey bytesToSign)
                         "Sign some bytes"
                         (\signature ->
                             concat
                                 [ await
-                                    (Crypto.verifyWithEd25519 publicKey signature bytesToSign)
+                                    (Crypto.verifyWithEd25519 extractableKey.publicKey signature bytesToSign)
                                     "Verifying signed bytes"
                                     (\verifiedBytes ->
                                         test "The verified bytes are the same as the signed bytes"
@@ -2740,7 +2740,7 @@ ed25519SupportedTests secureContext { publicKey, privateKey } =
                                             )
                                     )
                                 , awaitError
-                                    (Crypto.verifyWithEd25519 publicKey signature (Bytes.fromString "some other bytes"))
+                                    (Crypto.verifyWithEd25519 extractableKey.publicKey signature (Bytes.fromString "some other bytes"))
                                     "Verifying bytes that were not signed"
                                     (\_ ->
                                         test "Fails when bytes that are being verified are different than what was signed"
