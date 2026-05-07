@@ -31,7 +31,7 @@ module Crypto exposing
     , generateRsaOaepKeyPair, generateRsaPssKeyPair, generateRsaSsaPkcs1V1_5KeyPair
     , AesCtrKey, AesCbcKey, AesGcmKey, AesKeyParams, AesLength(..)
     , generateAesCtrKey, generateAesCbcKey, generateAesGcmKey
-    , EcdsaKey, EcdhKey, EcKeyParams, EcNamedCurve(..)
+    , EcdsaKey, EcKeyParams, EcNamedCurve(..)
     , generateEcdsaKeyPair
     , HmacKey, HmacKeyParams, HmacKeyGenerationError(..)
     , generateHmacKey
