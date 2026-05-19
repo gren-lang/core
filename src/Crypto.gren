@@ -72,6 +72,9 @@ module Crypto exposing
     , importEd25519PrivateKeyFromPkcs8, importEd25519PrivateKeyFromJwk
     , ImportHmacKeyError(..)
     , importHmacKeyFromJwk, importHmacKeyFromRaw
+    , Pbkdf2Key, Pbkdf2Params
+    , ImportPbkdf2KeyError(..), importPbkdf2KeyFromRaw
+    , Pbkdf2DeriveBitsError(..), deriveBitsWithPbkdf2
     )
 
 
@@ -93,8 +96,9 @@ module supports the following algorithms and operations:
 - Ed25519 - [Signing](#signWithEd25519) and [verifying](#verifyWithEd25519)
 - HMAC - [Signing](#signWithHmac) and [verifying](#verifyWithHmac)
 - SHA - [Digest](#digest)
+- PBKDF2 - [Derive bits](#deriveBitsWithPbkdf2) for password hashing
 
-All of the above algorithms also have appropriate key generation, import, and 
+All of the above algorithms also have appropriate key generation, import, and
 export functions.
 
 ## Secure Context
@@ -384,6 +388,31 @@ for the Web Crypto API.
 @docs ImportHmacKeyError
 
 @docs importHmacKeyFromJwk, importHmacKeyFromRaw
+
+## Password Hashing (PBKDF2)
+
+Derive bits from a password using the PBKDF2 (Password-Based Key Derivation Function 2)
+algorithm. This is the recommended way to hash passwords for storage.
+
+To hash a password:
+
+1. Convert the password to `Bytes` (for example, with `Bytes.fromString`) and import
+   it using [`importPbkdf2KeyFromRaw`](#importPbkdf2KeyFromRaw).
+2. Generate a random salt (at least 16 bytes) using
+   [`getRandomUInt8Values`](#getRandomUInt8Values). Store this salt alongside the
+   resulting hash so the same hash can be reproduced later.
+3. Call [`deriveBitsWithPbkdf2`](#deriveBitsWithPbkdf2) with the imported key,
+   the salt, an iteration count (at least 600,000 for SHA-256 and SHA-384, or
+   210,000 for SHA-512 — higher is better), a hash algorithm, and an optional
+   length of the hash in bits. Pass `Nothing` for the length to default to the
+   hash's native output size (256 bits for SHA-256, 384 for SHA-384, 512 for
+   SHA-512), which is the recommended choice for password hashing.
+
+@docs Pbkdf2Key, Pbkdf2Params
+
+@docs ImportPbkdf2KeyError, importPbkdf2KeyFromRaw
+
+@docs Pbkdf2DeriveBitsError, deriveBitsWithPbkdf2
 
 -}
 
@@ -2204,6 +2233,146 @@ digest _context algorithm data =
     Gren.Kernel.Crypto.digest
         (digestAlgorithmToString algorithm)
         data
+
+
+{-| The native output size, in bits, of the given `DigestAlgorithm`.
+-}
+digestAlgorithmOutputBits : DigestAlgorithm -> Int
+digestAlgorithmOutputBits hash =
+    when hash is
+        Sha256 ->
+            256
+
+        Sha384 ->
+            384
+
+        Sha512 ->
+            512
+
+
+
+-- PBKDF2
+
+
+{-| A key, imported from password material, for use with the PBKDF2 algorithm.
+-}
+type Pbkdf2Key
+    = Pbkdf2Key
+
+
+{-| Parameters required to derive bits using the PBKDF2 algorithm.
+
+- `salt` must be at least 16 bytes. The same salt must be reused to reproduce
+the same hash for a given password. Generate one with
+[`getRandomUInt8Values`](#getRandomUInt8Values).
+- `iterations` is the number of times the underlying hash function is applied.
+Higher values are more resistant to brute force attacks. A minimum is enforced
+based on the `hash` algorithm, per OWASP recommendations: 600,000 for SHA-256
+and SHA-384, and 210,000 for SHA-512. These are minimums — higher values are
+better.
+- `hash` is the `DigestAlgorithm` used internally by PBKDF2.
+-}
+type alias Pbkdf2Params =
+    { salt : Bytes
+    , iterations : Int
+    , hash : DigestAlgorithm
+    }
+
+
+{-| Errors that can happen when importing a key for use with the PBKDF2
+algorithm.
+
+- `ImportPbkdf2KeyError` happens when the passed `Bytes` cannot be imported as
+a PBKDF2 key.
+-}
+type ImportPbkdf2KeyError
+    = ImportPbkdf2KeyError
+
+
+{-| Errors that can happen when deriving bits with the PBKDF2 algorithm.
+
+- `Pbkdf2DeriveBitsErrorSaltTooShort` happens when the `salt` in `Pbkdf2Params`
+is less than 16 bytes.
+- `Pbkdf2DeriveBitsErrorIterationsInvalid` happens when `iterations` is lower
+than the OWASP-recommended minimum for the chosen `hash` (600,000 for SHA-256
+and SHA-384, 210,000 for SHA-512), including zero or negative values.
+- `Pbkdf2DeriveBitsErrorInvalidLength` happens when the requested length, in
+bits, is not a non-zero multiple of 8.
+- `Pbkdf2DeriveBitsError` captures any other unexpected errors.
+-}
+type Pbkdf2DeriveBitsError
+    = Pbkdf2DeriveBitsErrorSaltTooShort
+    | Pbkdf2DeriveBitsErrorIterationsInvalid
+    | Pbkdf2DeriveBitsErrorInvalidLength
+    | Pbkdf2DeriveBitsError
+
+
+{-| Import some `Bytes` as a PBKDF2 key. Typically these `Bytes` are produced
+by encoding a password (for example, with `Bytes.fromString`).
+
+The resulting key can be used with [`deriveBitsWithPbkdf2`](#deriveBitsWithPbkdf2)
+to produce a hash of the password.
+-}
+importPbkdf2KeyFromRaw : SecureContext -> Bytes -> Task ImportPbkdf2KeyError (Key Pbkdf2Key {})
+importPbkdf2KeyFromRaw _context bytes =
+    Gren.Kernel.Crypto.importPbkdf2Key
+        bytes
+        [ "deriveBits" ]
+
+
+{-| Derive some `Bytes` from a PBKDF2 key. 
+
+The `Maybe Int` is the number of bits to derive: if `Just`, the value must be 
+a non-zero multiple of 8; if `Nothing`, defaults to the native output size of 
+the chosen `hash` (256 bits for SHA-256, 384 for SHA-384, 512 for SHA-512), 
+which is the recommended size for password hashing.
+
+Be sure to store the resulting `Bytes` together with the `salt` and `iterations` 
+from the [`Pbkdf2Params`](#Pbkdf2Params) so the hash can be reproduced when 
+verifying a password later.
+-}
+deriveBitsWithPbkdf2 : Pbkdf2Params -> Maybe Int -> Key Pbkdf2Key {} -> Task Pbkdf2DeriveBitsError Bytes
+deriveBitsWithPbkdf2 { salt, iterations, hash } maybeLength (Key { key }) =
+    let
+        length =
+            maybeLength
+                |> Maybe.withDefault (digestAlgorithmOutputBits hash)
+    in
+    if Bytes.length salt < 16 then
+        Task.fail Pbkdf2DeriveBitsErrorSaltTooShort
+
+    else if iterations < pbkdf2MinIterations hash then
+        Task.fail Pbkdf2DeriveBitsErrorIterationsInvalid
+
+    else if length > 0 && Math.remainderBy 8 length == 0 then
+        Gren.Kernel.Crypto.deriveBitsWithPbkdf2
+            salt
+            iterations
+            (digestAlgorithmToString hash)
+            length
+            key
+
+    else
+        Task.fail Pbkdf2DeriveBitsErrorInvalidLength
+
+
+{-| The minimum number of iterations required by the PBKDF2 algorithm for the
+given `DigestAlgorithm`. These values match the OWASP recommendations for
+password hashing — see the current figures at:
+
+https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html#pbkdf2
+-}
+pbkdf2MinIterations : DigestAlgorithm -> Int
+pbkdf2MinIterations hash =
+    when hash is
+        Sha256 ->
+            600000
+
+        Sha384 ->
+            600000
+
+        Sha512 ->
+            210000
 
 
 

@@ -34,6 +34,7 @@ tests =
                     , ecdsaTests secureContext
                     , ed25519Tests secureContext
                     , digestTests secureContext
+                    , pbkdf2Tests secureContext
                     ]
             )
         , await Bytes.getHostEndianness
@@ -3033,6 +3034,358 @@ digestTestsHelper secureContext label digestAlgorithm =
                                 (\_ ->
                                     Expect.notEqual hashWithDifferentAlgorithm hash
                                 )
+                        )
+                    ]
+            )
+        ]
+
+
+
+-- PBKDF2 Tests
+
+
+{-|-}
+pbkdf2Tests secureContext =
+    let
+        password =
+            Bytes.fromString "examplepassword12345"
+
+        -- 16 bytes — meets the minimum salt length
+        salt =
+            Bytes.fromString "0123456789abcdef"
+
+        differentSalt =
+            Bytes.fromString "fedcba9876543210"
+
+        -- SHA-512 with the OWASP minimum iterations: the cheapest valid combo
+        baseParams =
+            { salt = salt
+            , iterations = 210000
+            , hash = Crypto.Sha512
+            }
+    in
+    concat
+        [ await
+            (Crypto.importPbkdf2KeyFromRaw secureContext password)
+            "PBKDF2: Importing a password as raw bytes"
+            (\key ->
+                concat
+                    [ await
+                        (Crypto.deriveBitsWithPbkdf2 baseParams (Just 256) key)
+                        "Deriving 256 bits with SHA-512"
+                        (\hash ->
+                            concat
+                                [ test "The derived bytes are not equal to the original password"
+                                    (\_ ->
+                                        Expect.notEqual hash password
+                                    )
+                                , await
+                                    (Crypto.deriveBitsWithPbkdf2 baseParams (Just 256) key)
+                                    "Deriving with the same parameters again"
+                                    (\secondHash ->
+                                        test "Deriving with the same parameters produces the same bytes"
+                                            (\_ ->
+                                                Expect.equal hash secondHash
+                                            )
+                                    )
+                                , await
+                                    (Crypto.deriveBitsWithPbkdf2
+                                        { salt = differentSalt
+                                        , iterations = 210000
+                                        , hash = Crypto.Sha512
+                                        }
+                                        (Just 256)
+                                        key
+                                    )
+                                    "Deriving with a different salt"
+                                    (\hashWithDifferentSalt ->
+                                        test "A different salt produces different bytes"
+                                            (\_ ->
+                                                Expect.notEqual hashWithDifferentSalt hash
+                                            )
+                                    )
+                                , await
+                                    (Crypto.deriveBitsWithPbkdf2
+                                        { salt = salt
+                                        , iterations = 220000
+                                        , hash = Crypto.Sha512
+                                        }
+                                        (Just 256)
+                                        key
+                                    )
+                                    "Deriving with a different iteration count"
+                                    (\hashWithDifferentIterations ->
+                                        test "A different iteration count produces different bytes"
+                                            (\_ ->
+                                                Expect.notEqual hashWithDifferentIterations hash
+                                            )
+                                    )
+                                , await
+                                    (Crypto.deriveBitsWithPbkdf2
+                                        { salt = salt
+                                        , iterations = 600000
+                                        , hash = Crypto.Sha256
+                                        }
+                                        (Just 256)
+                                        key
+                                    )
+                                    "Deriving with a different hash algorithm"
+                                    (\hashWithDifferentAlgorithm ->
+                                        test "A different hash algorithm produces different bytes"
+                                            (\_ ->
+                                                Expect.notEqual hashWithDifferentAlgorithm hash
+                                            )
+                                    )
+                                , await
+                                    (Crypto.deriveBitsWithPbkdf2 baseParams Nothing key)
+                                    "Deriving with the default length (Nothing) for SHA-512"
+                                    (\defaultHash ->
+                                        concat
+                                            [ test "Defaults to 512 bits (64 bytes) for SHA-512"
+                                                (\_ ->
+                                                    Expect.equal (Bytes.length defaultHash) 64
+                                                )
+                                            , await
+                                                (Crypto.deriveBitsWithPbkdf2 baseParams (Just 512) key)
+                                                "Deriving with an explicit 512-bit length"
+                                                (\explicitHash ->
+                                                    test "Nothing matches an explicit Just 512 for SHA-512"
+                                                        (\_ ->
+                                                            Expect.equal defaultHash explicitHash
+                                                        )
+                                                )
+                                            ]
+                                    )
+                                , await
+                                    (Crypto.deriveBitsWithPbkdf2
+                                        { salt = salt
+                                        , iterations = 600000
+                                        , hash = Crypto.Sha256
+                                        }
+                                        Nothing
+                                        key
+                                    )
+                                    "Deriving with the default length (Nothing) for SHA-256"
+                                    (\defaultHash ->
+                                        test "Defaults to 256 bits (32 bytes) for SHA-256"
+                                            (\_ ->
+                                                Expect.equal (Bytes.length defaultHash) 32
+                                            )
+                                    )
+                                , await
+                                    (Crypto.deriveBitsWithPbkdf2
+                                        { salt = salt
+                                        , iterations = 600000
+                                        , hash = Crypto.Sha384
+                                        }
+                                        Nothing
+                                        key
+                                    )
+                                    "Deriving with the default length (Nothing) for SHA-384"
+                                    (\defaultHash ->
+                                        test "Defaults to 384 bits (48 bytes) for SHA-384"
+                                            (\_ ->
+                                                Expect.equal (Bytes.length defaultHash) 48
+                                            )
+                                    )
+                                ]
+                        )
+                    , awaitError
+                        (Crypto.deriveBitsWithPbkdf2 baseParams (Just 100) key)
+                        "Deriving bits with a length that is not a multiple of 8"
+                        (\err ->
+                            test "Fails with Pbkdf2DeriveBitsErrorInvalidLength"
+                                (\_ ->
+                                    Expect.equal err Crypto.Pbkdf2DeriveBitsErrorInvalidLength
+                                )
+                        )
+                    , awaitError
+                        (Crypto.deriveBitsWithPbkdf2 baseParams (Just 0) key)
+                        "Deriving bits with a length of 0"
+                        (\err ->
+                            test "Fails with Pbkdf2DeriveBitsErrorInvalidLength"
+                                (\_ ->
+                                    Expect.equal err Crypto.Pbkdf2DeriveBitsErrorInvalidLength
+                                )
+                        )
+                    , awaitError
+                        (Crypto.deriveBitsWithPbkdf2
+                            { salt = Bytes.fromString "tooshort"
+                            , iterations = 210000
+                            , hash = Crypto.Sha512
+                            }
+                            (Just 256)
+                            key
+                        )
+                        "Deriving bits with an 8-byte salt"
+                        (\err ->
+                            test "Fails with Pbkdf2DeriveBitsErrorSaltTooShort"
+                                (\_ ->
+                                    Expect.equal err Crypto.Pbkdf2DeriveBitsErrorSaltTooShort
+                                )
+                        )
+                    , awaitError
+                        (Crypto.deriveBitsWithPbkdf2
+                            -- 15 bytes — one short of the minimum
+                            { salt = Bytes.fromString "0123456789abcde"
+                            , iterations = 210000
+                            , hash = Crypto.Sha512
+                            }
+                            (Just 256)
+                            key
+                        )
+                        "Deriving bits with a salt of exactly 15 bytes (one below minimum)"
+                        (\err ->
+                            test "Fails with Pbkdf2DeriveBitsErrorSaltTooShort"
+                                (\_ ->
+                                    Expect.equal err Crypto.Pbkdf2DeriveBitsErrorSaltTooShort
+                                )
+                        )
+                    , awaitError
+                        (Crypto.deriveBitsWithPbkdf2
+                            { salt = Bytes.fromString ""
+                            , iterations = 210000
+                            , hash = Crypto.Sha512
+                            }
+                            (Just 256)
+                            key
+                        )
+                        "Deriving bits with an empty salt"
+                        (\err ->
+                            test "Fails with Pbkdf2DeriveBitsErrorSaltTooShort"
+                                (\_ ->
+                                    Expect.equal err Crypto.Pbkdf2DeriveBitsErrorSaltTooShort
+                                )
+                        )
+                    , awaitError
+                        (Crypto.deriveBitsWithPbkdf2
+                            { salt = salt
+                            , iterations = 209999
+                            , hash = Crypto.Sha512
+                            }
+                            (Just 256)
+                            key
+                        )
+                        "Deriving bits with iterations one below the SHA-512 minimum"
+                        (\err ->
+                            test "Fails with Pbkdf2DeriveBitsErrorIterationsInvalid"
+                                (\_ ->
+                                    Expect.equal err Crypto.Pbkdf2DeriveBitsErrorIterationsInvalid
+                                )
+                        )
+                    , awaitError
+                        (Crypto.deriveBitsWithPbkdf2
+                            { salt = salt
+                            , iterations = 599999
+                            , hash = Crypto.Sha256
+                            }
+                            (Just 256)
+                            key
+                        )
+                        "Deriving bits with iterations one below the SHA-256 minimum"
+                        (\err ->
+                            test "Fails with Pbkdf2DeriveBitsErrorIterationsInvalid"
+                                (\_ ->
+                                    Expect.equal err Crypto.Pbkdf2DeriveBitsErrorIterationsInvalid
+                                )
+                        )
+                    , awaitError
+                        (Crypto.deriveBitsWithPbkdf2
+                            { salt = salt
+                            , iterations = 599999
+                            , hash = Crypto.Sha384
+                            }
+                            (Just 256)
+                            key
+                        )
+                        "Deriving bits with iterations one below the SHA-384 minimum"
+                        (\err ->
+                            test "Fails with Pbkdf2DeriveBitsErrorIterationsInvalid"
+                                (\_ ->
+                                    Expect.equal err Crypto.Pbkdf2DeriveBitsErrorIterationsInvalid
+                                )
+                        )
+                    , awaitError
+                        (Crypto.deriveBitsWithPbkdf2
+                            { salt = salt
+                            , iterations = 0
+                            , hash = Crypto.Sha512
+                            }
+                            (Just 256)
+                            key
+                        )
+                        "Deriving bits with zero iterations"
+                        (\err ->
+                            test "Fails with Pbkdf2DeriveBitsErrorIterationsInvalid"
+                                (\_ ->
+                                    Expect.equal err Crypto.Pbkdf2DeriveBitsErrorIterationsInvalid
+                                )
+                        )
+                    , awaitError
+                        (Crypto.deriveBitsWithPbkdf2
+                            { salt = salt
+                            , iterations = -1
+                            , hash = Crypto.Sha512
+                            }
+                            (Just 256)
+                            key
+                        )
+                        "Deriving bits with negative iterations"
+                        (\err ->
+                            test "Fails with Pbkdf2DeriveBitsErrorIterationsInvalid"
+                                (\_ ->
+                                    Expect.equal err Crypto.Pbkdf2DeriveBitsErrorIterationsInvalid
+                                )
+                        )
+                    , await
+                        (Crypto.importPbkdf2KeyFromRaw secureContext (Bytes.fromString "different password"))
+                        "Importing a different password"
+                        (\differentKey ->
+                            await
+                                (Crypto.deriveBitsWithPbkdf2 baseParams (Just 256) differentKey)
+                                "Deriving from the different password"
+                                (\differentPasswordHash ->
+                                    await
+                                        (Crypto.deriveBitsWithPbkdf2 baseParams (Just 256) key)
+                                        "Deriving from the original password again"
+                                        (\originalPasswordHash ->
+                                            test "Different passwords produce different bytes"
+                                                (\_ ->
+                                                    Expect.notEqual differentPasswordHash originalPasswordHash
+                                                )
+                                        )
+                                )
+                        )
+                    , await
+                        (Crypto.deriveBitsWithPbkdf2 baseParams Nothing key)
+                        "Password validation: deriving the stored hash"
+                        (\storedHash ->
+                            concat
+                                [ await
+                                    (Crypto.importPbkdf2KeyFromRaw secureContext password
+                                        |> Task.mapError (\_ -> Crypto.Pbkdf2DeriveBitsError)
+                                        |> Task.andThen (Crypto.deriveBitsWithPbkdf2 baseParams Nothing)
+                                    )
+                                    "Re-deriving with the correct password"
+                                    (\correctHash ->
+                                        test "Correct password produces a hash equal to the stored hash"
+                                            (\_ ->
+                                                Expect.equal correctHash storedHash
+                                            )
+                                    )
+                                , await
+                                    (Crypto.importPbkdf2KeyFromRaw secureContext (Bytes.fromString "wrong password")
+                                        |> Task.mapError (\_ -> Crypto.Pbkdf2DeriveBitsError)
+                                        |> Task.andThen (Crypto.deriveBitsWithPbkdf2 baseParams Nothing)
+                                    )
+                                    "Re-deriving with an incorrect password"
+                                    (\wrongHash ->
+                                        test "Incorrect password produces a hash not equal to the stored hash"
+                                            (\_ ->
+                                                Expect.notEqual wrongHash storedHash
+                                            )
+                                    )
+                                ]
                         )
                     ]
             )
