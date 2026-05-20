@@ -2,7 +2,7 @@
 
 import Gren.Kernel.Scheduler exposing (binding, succeed, fail)
 import Gren.Kernel.Bytes exposing (writeBytes)
-import Crypto exposing (RsaSsaPkcs1V1_5SigningError, RsaPssSigningError, AesCtrEncryptionError, RsaOaepEncryptionError, RsaOaepDecryptionError, P256, P384, P521, AesLength128, AesLength192, AesLength256, CanBeExtracted, CannotBeExtracted, HmacKey, Ed25519Key, Sha256, Sha384, Sha512, SignWithRsaPssError, AesGcmDecryptionError, AesGcmEncryptionError, AesCbcDecryptionError, AesCbcEncryptionError, AesCtrDecryptionError, DecryptWithRsaOaepError, ImportRsaKeyError, ImportHmacKeyError, ImportEcKeyError, ImportEd25519KeyError, ImportEd25519KeyNotSupported, Ed25519KeyGenerationNotSupported, ImportAesKeyError, Key, SecureContext, PublicKey, PrivateKey, KeyNotExportable)
+import Crypto exposing (RsaSsaPkcs1V1_5SigningError, RsaPssSigningError, AesCtrEncryptionError, RsaOaepEncryptionError, RsaOaepDecryptionError, P256, P384, P521, AesLength128, AesLength192, AesLength256, CanBeExtracted, CannotBeExtracted, HmacKey, Ed25519Key, Sha256, Sha384, Sha512, SignWithRsaPssError, AesGcmDecryptionError, AesGcmEncryptionError, AesCbcDecryptionError, AesCbcEncryptionError, AesCtrDecryptionError, DecryptWithRsaOaepError, ImportRsaKeyError, ImportHmacKeyError, ImportEcKeyError, ImportEd25519KeyError, ImportEd25519KeyNotSupported, Ed25519KeyGenerationNotSupported, ImportAesKeyError, ImportPbkdf2KeyError, Pbkdf2DeriveBitsError, Key, SecureContext, PublicKey, PrivateKey, KeyNotExportable)
 import Maybe exposing (Just, Nothing)
 import Bytes exposing (Bytes)
 
@@ -845,6 +845,49 @@ var _Crypto_verifyWithHmac = F3(function (key, signature, bytes) {
       });
   });
 });
+
+// PBKDF2
+
+var _Crypto_importPbkdf2Key = F2(function (keyData, keyUsages) {
+  return __Scheduler_binding(function (callback) {
+    _Crypto_impl.subtle
+      .importKey("raw", keyData, { name: "PBKDF2" }, false, keyUsages)
+      .then(function (key) {
+        return callback(
+          __Scheduler_succeed(
+            __Crypto_Key({
+              __$key: key,
+              __$data: {},
+            }),
+          ),
+        );
+      })
+      .catch(function (err) {
+        return callback(__Scheduler_fail(__Crypto_ImportPbkdf2KeyError));
+      });
+  });
+});
+
+var _Crypto_deriveBitsWithPbkdf2 = F5(
+  function (salt, iterations, hash, length, key) {
+    return __Scheduler_binding(function (callback) {
+      var algorithm = {
+        name: "PBKDF2",
+        salt: salt,
+        iterations: iterations,
+        hash: hash,
+      };
+      _Crypto_impl.subtle
+        .deriveBits(algorithm, key, length)
+        .then(function (res) {
+          return callback(__Scheduler_succeed(new DataView(res)));
+        })
+        .catch(function (err) {
+          return callback(__Scheduler_fail(__Crypto_Pbkdf2DeriveBitsError));
+        });
+    });
+  },
+);
 
 // Digest
 
