@@ -703,7 +703,8 @@ popFirst =
 {-| Split a non-empty string into its last character and its remaining characters. This lets you
 pattern match on strings exactly as you would with arrays.
 
-    popLast "abc" == Just { first = 'c', rest = "ab" }
+    popLast "abc" == Just { last = 'c', rest = "ab" }
+    popLast "hi 🙂" == Just { last = '🙂', rest = "hi " }
 
     popLast "" == Nothing
 

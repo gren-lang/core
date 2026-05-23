@@ -38,10 +38,35 @@ tests =
             , test "foldl eq" <| \_ -> Expect.equal True <| String.foldl (\unit soFar -> soFar || unit == '\n') False "\n"
             , test "foldr" <| \_ -> Expect.equal "emit" (String.foldr String.pushFirst "" "emit")
             , test "foldr eq" <| \_ -> Expect.equal True <| String.foldr (\unit soFar -> soFar || unit == '\n') False "\n"
-            , test "slice 1" <| \{} -> Expect.equal "c" (String.slice 2 3 "abcd")
-            , test "slice 2" <| \{} -> Expect.equal "abc" (String.slice 0 3 "abcd")
-            , test "slice 3" <| \{} -> Expect.equal "abc" (String.slice 0 -1 "abcd")
-            , test "slice 4" <| \{} -> Expect.equal "cd" (String.slice -2 4 "abcd")
+            ]
+        , describe "slice"
+            [ test "empty" <| \{} -> Expect.equal "" (String.slice 2 3 "")
+            , test "neg empty" <| \{} -> Expect.equal "" (String.slice -3 -2 "")
+            , test "1" <| \{} -> Expect.equal "c" (String.slice 2 3 "abcd")
+            , test "2" <| \{} -> Expect.equal "abc" (String.slice 0 3 "abcd")
+            , test "3" <| \{} -> Expect.equal "abc" (String.slice 0 -1 "abcd")
+            , test "4" <| \{} -> Expect.equal "cd" (String.slice -2 4 "abcd")
+            , test "point 1" <| \{} -> Expect.equal "🙂" (String.slice 1 2 "🙃🙂🤔")
+            , test "point 2" <| \{} -> Expect.equal "🙂" (String.slice -2 -1 "🙃🙂🤔")
+            , test "point 3" <| \{} -> Expect.equal "🙂" (String.slice -5 -4 "abc🙃🙂🤔abc")
+            ]
+        , describe "popLast"
+            [ test "empty" <|
+                \_ ->
+                    String.popLast ""
+                        |> Expect.equal Nothing
+            , test "single-char" <|
+                \_ ->
+                    String.popLast "x"
+                        |> Expect.equal (Just { last = 'x', rest = "" })
+            , test "suffix/prefix" <|
+                \_ ->
+                    String.popLast "abcd"
+                        |> Expect.equal (Just { last = 'd', rest = "abc" })
+            , test "suffix/prefix surrogate-pair" <|
+                \_ ->
+                    String.popLast "hi 😀"
+                        |> Expect.equal (Just { last = '😀', rest = "hi " })
             ]
         , describe "toInt"
             [ goodInt "1234" 1234
