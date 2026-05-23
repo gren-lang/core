@@ -28,25 +28,34 @@ var _String_popFirst = function (string) {
 };
 
 var _String_popLast = function (string) {
-  if (string.length <= 0) {
+  var strLen = string.length;
+
+  if (strLen === 0) {
     return __Maybe_Nothing;
-  }
-
-  var possibleLastPointIdx = string.length - 2;
-  var possibleLastPoint = string.codePointAt(possibleLastPointIdx);
-
-  if (possibleLastPoint === string.charCodeAt(possibleLastPointIdx)) {
-    // last char is a unit
+  } else if (strLen === 1) {
     return __Maybe_Just({
-      __$last: __Utils_chr(string[string.length - 1]),
-      __$rest: string.slice(string.length - 1),
+      __$last: __Utils_chr(string),
+      __$rest: "",
     });
   }
 
-  // last char is a point
+  var possibleLastPointIdx = string.length - 2;
+  var possibleLastPoint = String.fromCodePoint(
+    string.codePointAt(possibleLastPointIdx),
+  );
+
+  if (possibleLastPoint.length === 2) {
+    // last char is a point
+    return __Maybe_Just({
+      __$last: __Utils_chr(possibleLastPoint),
+      __$rest: string.slice(0, string.length - 2),
+    });
+  }
+
+  // last char is a unit
   return __Maybe_Just({
-    __$last: __Utils_chr(String.fromCodePoint(possibleLastPoint)),
-    __$rest: string.slice(string.length - 2),
+    __$last: __Utils_chr(string[string.length - 1]),
+    __$rest: string.slice(0, string.length - 1),
   });
 };
 

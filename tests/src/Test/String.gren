@@ -43,6 +43,24 @@ tests =
             , test "slice 3" <| \{} -> Expect.equal "abc" (String.slice 0 -1 "abcd")
             , test "slice 4" <| \{} -> Expect.equal "cd" (String.slice -2 4 "abcd")
             ]
+        , describe "popLast"
+            [ test "empty" <|
+                \_ ->
+                    String.popLast ""
+                        |> Expect.equal Nothing
+            , test "single-char" <|
+                \_ ->
+                    String.popLast "x"
+                        |> Expect.equal (Just { last = 'x', rest = "" })
+            , test "suffix/prefix" <|
+                \_ ->
+                    String.popLast "abcd"
+                        |> Expect.equal (Just { last = 'd', rest = "abc" })
+            , test "suffix/prefix surrogate-pair" <|
+                \_ ->
+                    String.popLast "hi 😀"
+                        |> Expect.equal (Just { last = '😀', rest = "hi " })
+            ]
         , describe "toInt"
             [ goodInt "1234" 1234
             , goodInt "+1234" 1234
