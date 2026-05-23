@@ -39,23 +39,20 @@ var _String_popLast = function (string) {
     });
   }
 
-  var possibleLastPointIdx = string.length - 2;
-  var possibleLastPoint = String.fromCodePoint(
-    string.codePointAt(possibleLastPointIdx),
-  );
+  var secondLastIdx = strLen - 2;
+  var possiblyLastPoint = string.codePointAt(secondLastIdx);
 
-  if (possibleLastPoint.length === 2) {
-    // last char is a point
+  if (possiblyLastPoint > 0xffff) {
+    // last character is two units
     return __Maybe_Just({
-      __$last: __Utils_chr(possibleLastPoint),
-      __$rest: string.slice(0, string.length - 2),
+      __$last: __Utils_chr(String.fromCodePoint(possiblyLastPoint)),
+      __$rest: string.slice(0, strLen - 2),
     });
   }
 
-  // last char is a unit
   return __Maybe_Just({
-    __$last: __Utils_chr(string[string.length - 1]),
-    __$rest: string.slice(0, string.length - 1),
+    __$last: __Utils_chr(string[strLen - 1]),
+    __$rest: string.slice(0, strLen - 1),
   });
 };
 
@@ -106,36 +103,7 @@ var _String_join = F2(function (sep, strs) {
 });
 
 var _String_slice = F3(function (start, end, str) {
-  if (start < 0) {
-    start = str.length + start;
-  }
-
-  if (end < 0) {
-    end = str.length + end;
-  }
-
-  if (start >= end) {
-    return "";
-  }
-
-  let index = 0;
-  let result = "";
-
-  for (let char of str) {
-    if (index < start) {
-      index++;
-      continue;
-    }
-
-    if (index >= end) {
-      break;
-    }
-
-    result += char;
-    index++;
-  }
-
-  return result;
+  return Array.from(str).slice(start, end).join("");
 });
 
 function _String_trim(str) {
