@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [7.4.2] - 2026-04-29
+
+### Fixed
+
+- Fixed possible runtime exception in `String.popLast`
+- Fixed value of `rest` when calling `String.popLast`, it was the last character when it should've been anything but
+- Fixed `String.slice` when using negative indices in a `String` containing characters that were two units wide
+
 ## [7.4.1] - 2026-04-29
 
 ### Fixed
