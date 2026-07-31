@@ -54,52 +54,104 @@ var _Stream_cancellationErrorString = function (err) {
   return "Unknown error";
 };
 
-var _Stream_write = F2(function (value, stream) {
-  return __Scheduler_binding(function (callback) {
-    if (stream.locked) {
-      return callback(__Scheduler_fail(__Stream_Locked));
-    }
+// One FIFO chain per WritableStream, shared by every writer-acquiring
+// operation (write, enqueue, closeWritable). Concurrent operations on the same
+// stream serialize through this chain instead of colliding on
+// getWriter()/releaseLock(), which would otherwise surface a spurious `Locked`
+// because the lock is acquired synchronously but released in a later microtask.
+var _Stream_writeChains = new WeakMap();
 
-    if (value instanceof DataView) {
-      value = new Uint8Array(value.buffer, value.byteOffset, value.byteLength);
-    }
+function _Stream_writeNoop() {}
 
-    const writer = stream.getWriter();
-    writer.ready
-      .then(() => {
-        const writePromise = writer.write(value);
-        writer.releaseLock();
-        return writePromise;
-      })
-      .then(() => {
-        callback(__Scheduler_succeed(stream));
-      })
-      .catch((err) => {
+// Schedule `work` (which must acquire and release its own writer) on the
+// per-stream FIFO chain. Returns a promise that resolves with `work`'s outcome.
+// The chain itself is kept alive on both success and failure
+// (`run.then(noop, noop)`) so one failed write can't starve the queue. If
+// `work` rejects with { __grenStreamLocked: true } the caller translates it to
+// the `Locked` error.
+function _Stream_runChained(stream, work) {
+  var prev = _Stream_writeChains.get(stream);
+  if (!prev) {
+    prev = Promise.resolve();
+  }
+  var run = prev.then(work);
+  _Stream_writeChains.set(
+    stream,
+    run.then(_Stream_writeNoop, _Stream_writeNoop),
+  );
+  return run;
+}
+
+// Rejects the promise with the sentinel value that identifies an error of Locked.
+function _Stream_rejectLocked() {
+  return Promise.reject({ __grenStreamLocked: true });
+}
+
+// Routes the settled `run` promise to a Scheduler callback, mapping the
+// `__grenStreamLocked` sentinel to `Locked` and everything else to `Cancelled`.
+function _Stream_reportRun(run, callback, onSuccess) {
+  run.then(
+    function () {
+      callback(onSuccess());
+    },
+    function (err) {
+      if (err && err.__grenStreamLocked) {
+        callback(__Scheduler_fail(__Stream_Locked));
+      } else {
         callback(
           __Scheduler_fail(
             __Stream_Cancelled(_Stream_cancellationErrorString(err)),
           ),
         );
+      }
+    },
+  );
+}
+
+function _Stream_toUint8Array(value) {
+  if (value instanceof DataView) {
+    return new Uint8Array(value.buffer, value.byteOffset, value.byteLength);
+  }
+  return value;
+}
+
+var _Stream_write = F2(function (value, stream) {
+  return __Scheduler_binding(function (callback) {
+    var bytes = _Stream_toUint8Array(value);
+    var run = _Stream_runChained(stream, function () {
+      if (stream.locked) {
+        return _Stream_rejectLocked();
+      }
+      var writer = stream.getWriter();
+      return writer.ready.then(function () {
+        var writePromise = writer.write(bytes);
+        writer.releaseLock();
+        return writePromise;
       });
+    });
+
+    _Stream_reportRun(run, callback, function () {
+      return __Scheduler_succeed(stream);
+    });
   });
 });
 
 var _Stream_enqueue = F2(function (value, stream) {
   return __Scheduler_binding(function (callback) {
-    if (stream.locked) {
-      return callback(__Scheduler_fail(__Stream_Locked));
-    }
+    var bytes = _Stream_toUint8Array(value);
+    var run = _Stream_runChained(stream, function () {
+      if (stream.locked) {
+        return _Stream_rejectLocked();
+      }
+      var writer = stream.getWriter();
+      return writer.ready.then(function () {
+        writer.write(bytes);
+        writer.releaseLock();
+      });
+    });
 
-    if (value instanceof DataView) {
-      value = new Uint8Array(value.buffer, value.byteOffset, value.byteLength);
-    }
-
-    const writer = stream.getWriter();
-    writer.ready.then(() => {
-      writer.write(value);
-      writer.releaseLock();
-
-      callback(__Scheduler_succeed(stream));
+    _Stream_reportRun(run, callback, function () {
+      return __Scheduler_succeed(stream);
     });
   });
 });
@@ -130,25 +182,25 @@ var _Stream_cancelWritable = F2(function (reason, stream) {
 
 var _Stream_closeWritable = function (stream) {
   return __Scheduler_binding(function (callback) {
-    if (stream.locked) {
-      return callback(__Scheduler_fail(__Stream_Locked));
-    }
+    var run = _Stream_runChained(stream, function () {
+      if (stream.locked) {
+        return _Stream_rejectLocked();
+      }
+      var writer = stream.getWriter();
+      return writer.close().then(
+        function () {
+          writer.releaseLock();
+        },
+        function (err) {
+          writer.releaseLock();
+          throw err;
+        },
+      );
+    });
 
-    const writer = stream.getWriter();
-    writer
-      .close()
-      .then(() => {
-        writer.releaseLock();
-        callback(__Scheduler_succeed({}));
-      })
-      .catch((err) => {
-        writer.releaseLock();
-        callback(
-          __Scheduler_fail(
-            __Stream_Cancelled(_Stream_cancellationErrorString(err)),
-          ),
-        );
-      });
+    _Stream_reportRun(run, callback, function () {
+      return __Scheduler_succeed({});
+    });
   });
 };
 

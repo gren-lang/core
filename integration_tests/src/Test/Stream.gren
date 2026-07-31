@@ -1,0 +1,217 @@
+module Test.Stream exposing (tests)
+
+import Bytes exposing (Bytes)
+import Expect
+import Process
+import Stream
+import Task exposing (Task)
+import Test.Runner.Effectful exposing (await, awaitError, concat, describe, test)
+
+
+tests : Test.Runner.Effectful.Test
+tests =
+    describe "Stream"
+        [ describe "concurrent operations on one writable stream"
+            [ await
+                (writableSink
+                    |> Task.andThen
+                        (\w ->
+                            Task.concurrent
+                                [ toUnit (Stream.write chunk w)
+                                , toUnit (Stream.write chunk w)
+                                ]
+                        )
+                )
+                "two writes issued in the same tick"
+                (\_ ->
+                    test "both writes succeed (no Locked)"
+                        (\_ -> Expect.pass)
+                )
+            , await
+                (writableSink
+                    |> Task.andThen
+                        (\w ->
+                            Task.concurrent
+                                [ toUnit (Stream.enqueue chunk w)
+                                , toUnit (Stream.enqueue chunk w)
+                                ]
+                        )
+                )
+                "two enqueues issued in the same tick"
+                (\_ ->
+                    test "both enqueues succeed (no Locked)"
+                        (\_ -> Expect.pass)
+                )
+            , await
+                (writableSink
+                    |> Task.andThen
+                        (\w ->
+                            Task.concurrent
+                                [ toUnit (Stream.write chunk w)
+                                , toUnit (Stream.enqueue chunk w)
+                                ]
+                        )
+                )
+                "a write and an enqueue issued in the same tick"
+                (\_ ->
+                    test "both succeed (no Locked)"
+                        (\_ -> Expect.pass)
+                )
+            , await
+                (writableSink
+                    |> Task.andThen
+                        (\w ->
+                            Task.concurrent
+                                [ toUnit (Stream.write chunk w)
+                                , toUnit (Stream.write chunk w)
+                                ]
+                                |> Task.andThen
+                                    (\_ ->
+                                        Task.concurrent
+                                            [ toUnit (Stream.write chunk w)
+                                            , toUnit (Stream.write chunk w)
+                                            ]
+                                    )
+                        )
+                )
+                "two writes, then two more writes on the next tick"
+                (\_ ->
+                    test "all four writes succeed (no Locked)"
+                        (\_ -> Expect.pass)
+                )
+            ]
+        , describe "write and close ordering"
+            [ await
+                (writableSink
+                    |> Task.andThen
+                        (\w ->
+                            Stream.write chunk w
+                                |> Task.andThen (\_ -> Stream.closeWritable w)
+                        )
+                )
+                "write then close"
+                (\_ ->
+                    test "both succeed"
+                        (\_ -> Expect.pass)
+                )
+            , awaitError
+                (writableSink
+                    |> Task.andThen
+                        (\w ->
+                            Stream.closeWritable w
+                                |> Task.andThen (\_ -> Stream.write chunk w)
+                        )
+                )
+                "close then write"
+                (\err ->
+                    test "the write fails with Cancelled once the stream is closed"
+                        (\_ ->
+                            when err is
+                                Stream.Cancelled _ ->
+                                    Expect.pass
+
+                                _ ->
+                                    Expect.fail "expected the write to fail with Cancelled"
+                        )
+                )
+            ]
+        , describe "writes to a pipe-locked stream report Locked"
+            [ awaitError
+                writeToPipeThroughLockedWritable
+                "write to a writable locked by an active pipeThrough"
+                (\err ->
+                    test "fails with Locked"
+                        (\_ -> Expect.equal Stream.Locked err)
+                )
+            , awaitError
+                writeToPipeToLockedWritable
+                "write to a writable locked by an active pipeTo"
+                (\err ->
+                    test "fails with Locked"
+                        (\_ -> Expect.equal Stream.Locked err)
+                )
+            ]
+        ]
+
+
+
+-- HELPERS
+
+
+{-| A writable byte stream that accepts writes without applying indefinite
+backpressure: `nullTransformation` discards input synchronously, yet it is a
+real `WritableStream` whose `getWriter()` / `releaseLock()` locking is identical
+to a file or stdout stream. That locking is what these tests exercise.
+-}
+writableSink : Task x (Stream.Writable Bytes)
+writableSink =
+    Stream.nullTransformation Bytes.empty
+        |> Task.map Stream.writable
+
+
+{-| Contents are irrelevant; only the locking behaviour matters.
+-}
+chunk : Bytes
+chunk =
+    Bytes.fromString "x"
+
+
+{-| Discard the result so heterogeneous stream operations (which return
+different success types) can be combined in a single `Task.concurrent`.
+-}
+toUnit : Task x a -> Task x {}
+toUnit task =
+    Task.map (\_ -> {}) task
+
+
+{-| Establish a `pipeThrough` pipe, which locks the target transformation's
+writable side for the lifetime of the pipe, then write to that writable. The
+write is expected to fail with `Locked`. Closing the source writable lets the
+background pipe drain so the process exits cleanly.
+-}
+writeToPipeThroughLockedWritable : Task Stream.Error (Stream.Writable Bytes)
+writeToPipeThroughLockedWritable =
+    Stream.identityTransformation
+        |> Task.andThen
+            (\source ->
+                Stream.identityTransformation
+                    |> Task.andThen
+                        (\target ->
+                            Stream.pipeThrough target (Stream.readable source)
+                                |> Task.andThen (\_ -> Stream.write chunk (Stream.writable target))
+                                |> Task.onError
+                                    (\err ->
+                                        Stream.closeWritable (Stream.writable source)
+                                            |> Task.andThen (\_ -> Task.fail err)
+                                    )
+                        )
+            )
+
+
+{-| Spawn a long-lived `pipeTo` (it resolves only once the source readable
+closes) so it locks the writable in the background, then write to that
+writable. The write is expected to fail with `Locked`. Closing the source
+writable completes the pipe so the spawned process finishes and the process
+exits cleanly.
+-}
+writeToPipeToLockedWritable : Task Stream.Error (Stream.Writable Bytes)
+writeToPipeToLockedWritable =
+    Stream.identityTransformation
+        |> Task.andThen
+            (\source ->
+                Stream.nullTransformation Bytes.empty
+                    |> Task.andThen
+                        (\sink ->
+                            Stream.pipeTo (Stream.writable sink) (Stream.readable source)
+                                |> Process.spawn
+                                |> Task.andThen
+                                    (\_ ->
+                                        Stream.write chunk (Stream.writable sink)
+                                            |> Task.onError
+                                                (\err ->
+                                                    Stream.closeWritable (Stream.writable source)
+                                                        |> Task.andThen (\_ -> Task.fail err)
+                                                )
+                                    )
+                        )
+            )
