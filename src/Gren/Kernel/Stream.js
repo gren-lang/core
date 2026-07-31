@@ -135,10 +135,20 @@ var _Stream_closeWritable = function (stream) {
     }
 
     const writer = stream.getWriter();
-    writer.close();
-    writer.releaseLock();
-
-    callback(__Scheduler_succeed({}));
+    writer
+      .close()
+      .then(() => {
+        writer.releaseLock();
+        callback(__Scheduler_succeed({}));
+      })
+      .catch((err) => {
+        writer.releaseLock();
+        callback(
+          __Scheduler_fail(
+            __Stream_Cancelled(_Stream_cancellationErrorString(err)),
+          ),
+        );
+      });
   });
 };
 
