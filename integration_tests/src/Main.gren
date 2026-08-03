@@ -5,6 +5,7 @@ module Main exposing ( .. )
 
 import Test.Crypto as Crypto
 import Test.Task as Task
+import Test.Stream as Stream
 import Test.Runner.Effectful exposing (concat)
 import Node
 
@@ -18,6 +19,7 @@ main =
             (concat
                 [ Crypto.tests
                 , Task.tests
+                , Stream.tests
                 ]
             )
     )
