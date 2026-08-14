@@ -214,7 +214,7 @@ function _String_toInt(str) {
     if (code < 0x30 || 0x39 < code) {
       return __Maybe_Nothing;
     }
-    total = 10 * total + code - 0x30;
+    total = 10 * total + (code - 0x30);
   }
 
   return i == start
