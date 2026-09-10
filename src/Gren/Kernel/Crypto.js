@@ -74,10 +74,13 @@ var _Crypto_constructAesKey = function (key) {
   switch (key.algorithm.length) {
     case 128:
       aesKeyData.__$length = __Crypto_AesLength128;
+      break;
     case 192:
       aesKeyData.__$length = __Crypto_AesLength192;
+      break;
     case 256:
       aesKeyData.__$length = __Crypto_AesLength256;
+      break;
   }
   return __Crypto_Key({
     __$key: key,
@@ -92,10 +95,13 @@ var _Crypto_constructEcKey = function (key) {
   switch (key.algorithm.namedCurve) {
     case "P-256":
       ecKeyData.__$namedCurve = __Crypto_P256;
+      break;
     case "P-384":
       ecKeyData.__$namedCurve = __Crypto_P384;
+      break;
     case "P-521":
       ecKeyData.__$namedCurve = __Crypto_P521;
+      break;
   }
   return __Crypto_Key({
     __$key: key,
