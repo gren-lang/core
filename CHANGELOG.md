@@ -5,7 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [7.4.3] - ?
+## [7.5.0] - ?
+
+### Added
+
+- `Char.replacementChar` makes it easier to test if `Char.fromCode` was successful.
 
 ### Fixed
 
@@ -14,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `String.fromInt` could return incorrect results for integers close to maximum int size
 - Missing `break` in switch-statements in Crypto kernel code
 - Improved performance of `Task.sequence` for large sequences
+- `Char.fromCode` crashed the program on invalid codepoints
 
 ## [7.4.2] - 2026-04-29
 

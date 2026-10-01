@@ -66,6 +66,7 @@ tests =
             , test "A-Z" <| \{} -> Expect.equal upper (Array.map fromCode upperCodes)
             , test "0-9" <| \{} -> Expect.equal dec (Array.map fromCode decCodes)
             , test "UTF-16" <| \{} -> Expect.equal '𝌆' (Char.fromCode 0x0001D306)
+            , test "Invalid" <| \{} -> Expect.equal Char.replacementChar (Char.fromCode -1)
             ]
         , describe "isLower"
             [ test "a-z" <| \{} -> Expect.equal True (Array.all isLower lower)

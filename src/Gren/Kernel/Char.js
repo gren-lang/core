@@ -1,6 +1,7 @@
 /*
 
 import Gren.Kernel.Utils exposing (chr)
+import Char exposing (replacementChar)
 
 */
 
@@ -9,5 +10,9 @@ function _Char_toCode(char) {
 }
 
 function _Char_fromCode(code) {
-  return __Utils_chr(String.fromCodePoint(code));
+  try {
+    return __Utils_chr(String.fromCodePoint(code));
+  } catch (e) {
+    return __Char_replacementChar;
+  }
 }

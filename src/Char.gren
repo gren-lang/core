@@ -3,6 +3,7 @@ module Char exposing
     , isUpper, isLower, isAlpha, isAlphaNum
     , isDigit, isOctDigit, isHexDigit
     , toCode, fromCode
+    , replacementChar
     )
 
 {-| Functions for working with characters. Character literals are enclosed in
@@ -25,6 +26,10 @@ module Char exposing
 ## Unicode Code Points
 
 @docs toCode, fromCode
+
+## Special characters
+
+@docs replacementChar
 
 -}
 
@@ -282,12 +287,19 @@ toCode =
     fromCode -1 == '�'
 
 The full range of unicode is from `0` to `0x10FFFF`. With numbers outside that
-range, you get [the replacement character][fffd].
+range, you get [the replacement character][#replacementChar].
 
 [cp]: https://en.wikipedia.org/wiki/Code_point
-[fffd]: https://en.wikipedia.org/wiki/Specials_(Unicode_block)#Replacement_character
 
 -}
 fromCode : Int -> Char
 fromCode =
     Gren.Kernel.Char.fromCode
+
+
+{-| The replacement character represents an unknown, unrecognized or unrepresentable
+character.
+-}
+replacementChar : Char
+replacementChar =
+    '\u{FFFD}'
