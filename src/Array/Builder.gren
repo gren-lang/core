@@ -14,9 +14,8 @@ in the `Array` module.
 -}
 
 import Array exposing (Array)
-import Basics exposing (Int, clamp)
+import Basics exposing (Int, (<))
 import Gren.Kernel.Array
-import Random
 
 
 {-| A `Builder` represents an `Array` under construction. The functionality
@@ -41,7 +40,11 @@ empty : Int -> Builder a
 empty capacity =
     let
         clampedCapacity =
-            clamp 0 Random.maxInt capacity
+            if capacity < 0 then
+                0
+
+            else
+                capacity
     in
     Gren.Kernel.Array.emptyBuilder clampedCapacity
 

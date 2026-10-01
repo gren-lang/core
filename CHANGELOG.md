@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Stream.closeWritable` now resolves _after_ the stream has been closed
 - `String.fromInt` could return incorrect results for integers close to maximum int size
 - Missing `break` in switch-statements in Crypto kernel code
+- Improved performance of `Task.sequence` for large sequences
 
 ## [7.4.2] - 2026-04-29
 
