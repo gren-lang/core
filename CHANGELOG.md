@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Missing `break` in switch-statements in Crypto kernel code
 - Improved performance of `Task.sequence` for large sequences
 - `Char.fromCode` crashed the program on invalid codepoints
+- `Bytes.flatten` could copy the wrong bytes from incoming bytearrays
 
 ## [7.4.2] - 2026-04-29
 

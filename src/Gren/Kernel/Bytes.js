@@ -51,13 +51,16 @@ function _Bytes_flatten(arrayOfBytes) {
   var result = new Uint8Array(requiredSize);
 
   for (var i = 0; i < arrayOfBytes.length; i++) {
-    var currentBytes = new Uint8Array(arrayOfBytes[i].buffer);
-    var currentByteLength = arrayOfBytes[i].byteLength;
+    var dataView = arrayOfBytes[i];
+    var currentBytes = new Uint8Array(
+      dataView.buffer,
+      dataView.byteOffset,
+      dataView.byteLength,
+    );
 
-    for (var j = 0; j < currentByteLength; j++) {
-      result[offset] = currentBytes[j];
-      offset++;
-    }
+    result.set(currentBytes, offset);
+
+    offset += currentBytes.byteLength;
   }
 
   return new DataView(result.buffer);

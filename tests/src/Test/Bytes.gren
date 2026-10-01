@@ -15,13 +15,26 @@ encodeInt i =
 
 tests : Test
 tests =
-    describe "Byte comparison"
-        [ fuzz Fuzz.string "same strings are equal" <| \s ->
-            Expect.equal (Bytes.fromString s) (Bytes.fromString s)
-        , fuzz (Fuzz.intRange -128 127) "same ints are equal" <| \i ->
-            Expect.equal (encodeInt i) (encodeInt i)
-        , fuzz Fuzz.string "different strings are not equal" <| \s ->
-            Expect.notEqual (Bytes.fromString s) (Bytes.fromString (s ++ "a"))
-        , fuzz (Fuzz.intRange -100 100) "different ints are not equal" <| \i ->
-            Expect.notEqual (encodeInt i) (encodeInt (i + 1))
+    describe "Bytes"
+        [ describe "Byte comparison"
+            [ fuzz Fuzz.string "same strings are equal" <| \s ->
+                Expect.equal (Bytes.fromString s) (Bytes.fromString s)
+            , fuzz (Fuzz.intRange -128 127) "same ints are equal" <| \i ->
+                Expect.equal (encodeInt i) (encodeInt i)
+            , fuzz Fuzz.string "different strings are not equal" <| \s ->
+                Expect.notEqual (Bytes.fromString s) (Bytes.fromString (s ++ "a"))
+            , fuzz (Fuzz.intRange -100 100) "different ints are not equal" <| \i ->
+                Expect.notEqual (encodeInt i) (encodeInt (i + 1))
+            ]
+        , describe "Flatten"
+            [ fuzz Fuzz.string "Joins bytes together" <| \s ->
+                Expect.equal
+                    (Bytes.fromString (s ++ s ++ s))
+                    (Bytes.flatten
+                        [ Bytes.fromString s
+                        , Bytes.fromString s
+                        , Bytes.fromString s
+                        ]
+                    )
+            ]
         ]
