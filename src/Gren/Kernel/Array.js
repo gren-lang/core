@@ -11,6 +11,10 @@ var _Array_length = function (array) {
 };
 
 var _Array_initialize = F3(function (size, offset, func) {
+  if (size < 0) {
+    return [];
+  }
+
   var result = new Array(size);
 
   for (var i = 0; i < size; i++) {

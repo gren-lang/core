@@ -135,7 +135,16 @@ testArrayOfN n =
             , test "all" <| \{} -> Expect.equal [] (dropFirst n xs)
             , test "all+" <| \{} -> Expect.equal [] (dropFirst (n + 1) xs)
             ]
-        , test "repeat" <| \{} -> Expect.equal (map (\x -> -1) xs) (repeat n -1)
+        , describe "initialize"
+            [ test "negative" <| \{} -> Expect.equal [] (initialize -1 0 identity)
+            , test "zero" <| \{} -> Expect.equal [] (initialize 0 0 identity)
+            , test "positive" <| \{} -> Expect.equal [0, 1, 2] (initialize 3 0 identity)
+            ]
+        , describe "repeat"
+            [ test "negative" <| \{} -> Expect.equal [] (repeat -1 1)
+            , test "zero" <| \{} -> Expect.equal [] (repeat 0 1)
+            , test "positive" <| \{} -> Expect.equal [1, 1, 1] (repeat 3 1)
+            ]
         , test "prepend" <| \{} -> Expect.equal (xsSum * 2) (prepend xs xs |> foldl (+) 0)
         , test "append" <| \{} -> Expect.equal (xsSum * 2) (append xs xs |> foldl (+) 0)
         , describe "update"
