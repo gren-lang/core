@@ -591,14 +591,14 @@ errorToStringHelp error context =
                     else
                         "['" ++ f ++ "']"
             in
-            errorToStringHelp err ([ fieldName ] ++ context)
+            errorToStringHelp err (Array.pushLast fieldName context)
 
         Index { index = i, error = err } ->
             let
                 indexName =
                     "[" ++ String.fromInt i ++ "]"
             in
-            errorToStringHelp err ([ indexName ] ++ context)
+            errorToStringHelp err (Array.pushLast indexName context)
 
         OneOf errors ->
             when errors is
