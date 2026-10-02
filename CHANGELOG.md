@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Char.fromCode` crashed the program on invalid codepoints
 - `Bytes.flatten` could copy the wrong bytes from incoming bytearrays
 - `Bytes.toString` no longer drops initial BOM (Byte Order Mark)
+- `Bytes.getHostEndianess` always returned LE
 
 ## [7.4.2] - 2026-04-29
 
