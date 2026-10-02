@@ -1,6 +1,6 @@
 module Array exposing
     ( Array
-    , singleton, initialize, repeat, range
+    , singleton, initialize, repeat, range, maxLength
     , map, indexedMap, foldl, foldr, indexedFoldl, indexedFoldr, keepIf, indexedKeepIf, mapAndKeepJust, reverse
     , isEmpty, length, get, findFirst, findLast, member, any, all, minimum, maximum
     , set, setMany, update, insert, insertMany, remove, removeMany, pushFirst, pushLast, splice
@@ -14,7 +14,7 @@ functions to help you work with them.
 
 @docs Array
 
-@docs singleton, initialize, repeat, range
+@docs singleton, initialize, maxLength, repeat, range 
 
 
 ## Transform
@@ -77,16 +77,30 @@ resulting from calling `fn` with `offset + index`.
 
 In the above example, we create an array containing 3 integers
 starting at 5.
+
+Note: initialize will clamp the size to be between 0 and [maxLength](#maxLength).
 -}
 initialize : Int -> Int -> (Int -> a) -> Array a
-initialize =
-    Gren.Kernel.Array.initialize
+initialize len offset fn =
+    let
+        clampedLength =
+            clamp 0 maxLength len
+    in
+    Gren.Kernel.Array.initialize clampedLength offset fn
+
+
+{-| The maximum safe length of an Array. Defined to be 2^32 - 1 (inclusive).
+-}
+maxLength : Int
+maxLength =
+    (2^32) - 1
 
 
 {-| Create an array with `n` copies of a value:
 
     repeat 5 3 == [ 3, 3, 3, 3, 3 ]
 
+Note: repeat will clamp the size to be between 0 and [maxLength](#maxLength).
 -}
 repeat : Int -> a -> Array a
 repeat n val =

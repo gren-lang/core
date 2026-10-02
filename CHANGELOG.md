@@ -10,10 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - `Char.replacementChar` makes it easier to test if `Char.fromCode` was successful.
+- `Array.maxLength` contains the maximum length of an `Array`
 
 ### Fixed
 
 - `Array.initialize` and `Array.repeat` would crash if given a negative int
+- `Array.initialize`, `Array.repeat` and `Array.Builder.empty` now clamps the length to a safe integer instead of potentially crashing
 - `Stream.closeWritable` now resolves _after_ the stream has been closed
 - `String.fromInt` could return incorrect results for integers close to maximum int size
 - Missing `break` in switch-statements in Crypto kernel code
