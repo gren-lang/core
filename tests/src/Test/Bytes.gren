@@ -37,4 +37,14 @@ tests =
                         ]
                     )
             ]
+        , describe "String conversion"
+            [ test "Byte order mark at start of bytes survives" <| \{} ->
+                Expect.equal
+                    (Just "\u{FEFF}a")
+                    (Bytes.toString (Bytes.fromString "\u{FEFF}a"))
+            , fuzz Fuzz.string "fromString -> toString ends up the same" <| \str ->
+                Expect.equal
+                    (Just str)
+                    (Bytes.toString (Bytes.fromString str))
+            ]
         ]

@@ -19,9 +19,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Stream.closeWritable` now resolves _after_ the stream has been closed
 - `String.fromInt` could return incorrect results for integers close to maximum int size
 - Missing `break` in switch-statements in Crypto kernel code
-- Improved performance of `Task.sequence` for large sequences
+- `Task.sequence` has improved performance for large sequences
 - `Char.fromCode` crashed the program on invalid codepoints
 - `Bytes.flatten` could copy the wrong bytes from incoming bytearrays
+- `Bytes.toString` no longer drops initial BOM (Byte Order Mark)
 
 ## [7.4.2] - 2026-04-29
 

@@ -32,7 +32,7 @@ function _Bytes_fromString(str) {
 }
 
 function _Bytes_toString(bytes) {
-  var decoder = new TextDecoder("utf-8", { fatal: true });
+  var decoder = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
 
   try {
     return __Maybe_Just(decoder.decode(bytes));
