@@ -167,12 +167,24 @@ var _Bytes_read_f64 = F3(function (isLE, bytes, offset) {
 });
 
 var _Bytes_read_bytes = F3(function (len, bytes, offset) {
+  var nextOffset = offset + len;
+  var value = new DataView(
+    bytes.buffer.slice(
+      bytes.byteOffset + offset,
+      bytes.byteOffset + nextOffset,
+    ),
+  );
+
+  if (value.byteLength < len) {
+    throw new RangeError("Not enough bytes");
+  }
+
   return {
-    __$offset: offset + len,
-    __$value: new DataView(bytes.buffer, bytes.byteOffset + offset, len),
+    __$offset: nextOffset,
+    __$value: value,
   };
 });
 
 var _Bytes_decodeFailure = F2(function () {
-  throw 0;
+  throw new RangeError("Bytes decodeFailure");
 });
