@@ -63,6 +63,7 @@ import Char exposing (Char)
 import Result exposing (Result(..))
 import Maybe exposing (Maybe(..))
 import Set
+import String.Regex as Regex exposing (Regex)
 
 
 -- PARSERS
@@ -460,7 +461,7 @@ keyword kwd expecting =
       { newOffset, newRow, newCol } =
         isSubString kwd s.offset s.row s.col s.src
     in
-    if newOffset == -1 || 0 <= isSubChar (\c -> Char.isAlphaNum c || c == '_') newOffset s.src then
+    if newOffset == -1 || 0 <= isSubChar isKeywordInner newOffset s.src then
       Bad { pred = False, bag = (fromState s expecting) }
     else
       Good 
@@ -475,6 +476,17 @@ keyword kwd expecting =
           }
         }
 
+
+letterRegex : Regex
+letterRegex =
+    Regex.fromString "\\p{L}"
+        |> Maybe.withDefault Regex.never
+
+
+isKeywordInner : Char -> Bool
+isKeywordInner c =
+  (String.fromChar c |> Regex.contains letterRegex)
+    || c == '_'
 
 
 -- TOKEN

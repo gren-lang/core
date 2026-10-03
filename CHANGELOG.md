@@ -33,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Json.Decode.errorToString` reported error fields in reverse order
 - `Parser.chompIf`/`Parser.chompWhile` operated on code units, not code points
 - `Parser.chompUntilEndOr` when reaching the end of the string, the column position was off by one
+- `Parser.keyword` only considered ASCII letters, not unicode letters
 - Improved the scheduler so callbacks passed to `Task.andThen` only ever run once, and that killed processes stay dead.
 
 ## [7.4.2] - 2026-04-29

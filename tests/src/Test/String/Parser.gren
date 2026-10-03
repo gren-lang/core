@@ -22,9 +22,6 @@ type Json
 type alias Point = { x : Int, y : Int }
 
 
-type alias Stmt = String
-
-
 type alias Located a =
   { start : { row: Int, col: Int }
   , value : a
@@ -34,29 +31,12 @@ type alias Located a =
 
 -- Helper functions for testing
 
--- Test that a parser succeeds with expected result
-testOk : String -> Parser a -> a -> Test
-testOk description parser expected =
-    test description <| \{} ->
-        when run parser description is
-            Ok actual -> Expect.equal expected actual
-            Err problems -> Expect.equal "Should succeed" "Parser failed"
 
--- Test that a parser fails
-testErr : String -> Parser a -> Test
-testErr description parser =
-    test description <| \{} ->
-        when run parser description is
-            Ok actual -> Expect.fail "Parser succeeded unexpectedly"
-            Err _ -> Expect.pass
-
--- Test that a parser succeeds and reaches end
-testOkEnd : String -> Parser a -> a -> Test
-testOkEnd description parser expected =
-    test description <| \{} ->
-        when run (parser |> andThen (\a -> succeed a |> skip end)) description is
-            Ok actual -> Expect.equal expected actual
-            Err problems -> Expect.equal "Should succeed and reach end" "Parser failed or didn't reach end"
+expectErr : Result err ok -> Expect.Expectation
+expectErr res =
+    when res is
+        Ok _ -> Expect.fail "Parser succeeded unexpectedly"
+        Err _ -> Expect.pass
 
 
 tests : Test
@@ -73,17 +53,25 @@ tests =
                 Expect.equal (Ok {}) (run (keyword "true") "true")
             
             , test "run keyword true with wrong case fails" <| \{} ->
-                when run (keyword "true") "True" is
-                    Ok _ -> Expect.fail "Unexpected success"
-                    Err _ -> Expect.pass
+                expectErr (run (keyword "true") "True")
             
             , test "run keyword true with different keyword fails" <| \{} ->
-                when run (keyword "true") "false" is
-                    Ok _ -> Expect.fail "Unexpected success"
-                    Err _ -> Expect.pass
+                expectErr (run (keyword "true") "false")
             
-            , test "run keyword true with trailing characters succeeds" <| \{} ->
+            , test "run keyword true with trailing punctuation succeeds" <| \{} ->
                 Expect.equal (Ok {}) (run (keyword "true") "true!")
+
+            , test "run keyword true with trailing letters fails" <| \{} ->
+                expectErr (run (keyword "true") "trues")
+
+            , test "run keyword true with trailing letters fails 2" <| \{} ->
+                expectErr (run (keyword "true") "true\u{00E9}s")
+
+            , test "run keyword true with trailing letters fails 3" <| \{} ->
+                expectErr (run (keyword "true") "true\u{FF5A}s")
+
+            , test "run keyword true with trailing letters fails 4" <| \{} ->
+                expectErr (run (keyword "true") "true\u{1D41A}s")
             
             , test "run int with leading zeros" <| \{} ->
                 Expect.equal (Ok 0) (run int "0123")
@@ -179,11 +167,11 @@ tests =
         , describe "Loop Functions"
             [ test "statements parser with loop" <| \{} ->
                 let
-                    statements : Parser (Array Stmt)
+                    statements : Parser (Array String)
                     statements =
                       loop [] statementsHelp
                     
-                    statementsHelp : Array Stmt -> Parser (Step (Array Stmt) (Array Stmt))
+                    statementsHelp : Array String -> Parser (Step (Array String) (Array String))
                     statementsHelp stmts =
                       oneOf
                         [ succeed (\stmt -> Loop (Array.pushLast stmt stmts))
@@ -195,7 +183,7 @@ tests =
                             |> map (\_ -> Done stmts)
                         ]
                     
-                    statement : Parser Stmt
+                    statement : Parser String
                     statement =
                       getChompedString (chompWhile (\c -> c /= ';' && c /= ' '))
                 in
