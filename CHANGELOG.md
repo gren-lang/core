@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Bytes.getHostEndianess` always returned LE
 - `Bytes.Decode.fail` would crash the program
 - `Bytes.Decode.bytes` would reference the original `Bytes` instead of copying it
+- `Bytes` based `Flags`/`port`s didn't copied the underlying buffer, not the intended bytes
 - `Json.Decode.errorToString` reported error fields in reverse order
 
 ## [7.4.2] - 2026-04-29
