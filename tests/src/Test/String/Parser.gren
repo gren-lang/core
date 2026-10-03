@@ -362,6 +362,34 @@ tests =
 
                     Err errs ->
                         Expect.fail <| "Unexpected failure " ++ Debug.toString errs
+
+            , test "chompUntilEndOr with match" <| \{} ->
+                let
+                    parser =
+                        succeed identity
+                            |> skip (chompUntilEndOr "X")
+                            |> keep getPosition
+                in
+                when run parser "a\nbcX" is
+                    Ok pos ->
+                        Expect.equal { row = 2, col = 3 } pos
+
+                    Err errs ->
+                        Expect.fail <| "Unexpected failure " ++ Debug.toString errs
+
+            , test "chompUntilEndOr with end" <| \{} ->
+                let
+                    parser =
+                        succeed identity
+                            |> skip (chompUntilEndOr "X")
+                            |> keep getPosition
+                in
+                when run parser "a\nbc" is
+                    Ok pos ->
+                        Expect.equal { row = 2, col = 3 } pos
+
+                    Err errs ->
+                        Expect.fail <| "Unexpected failure " ++ Debug.toString errs
             ]
         
         , describe "Variable Functions" <|
