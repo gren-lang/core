@@ -964,7 +964,7 @@ isSubChar pred offset str =
       if Bitwise.and (Char.toCode unit) 0xF800 == 0xD800 then
         when String.popFirst (String.sliceUnits offset (offset + 2) str) is
           Just { first = uniChar } ->
-            if pred unit then
+            if pred uniChar then
               offset + 2
 
             else

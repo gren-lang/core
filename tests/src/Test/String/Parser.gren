@@ -225,6 +225,15 @@ tests =
                       chompIf Char.isUpper
                 in
                 Expect.equal (Ok {}) (run chompUpper "Test")
+
+            , test "chomp with multi-unit char" <| \{} ->
+                let
+                    chomper : Parser String
+                    chomper =
+                      chompWhile (\c -> Char.toCode c >= 0x10000)
+                        |> getChompedString
+                in
+                Expect.equal (Ok "😀") (run chomper "😀b")
             
             , test "chompChar with specific char" <| \{} ->
                 Expect.equal (Ok {}) (run (chompChar 'c') "cat")
