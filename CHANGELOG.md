@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Array.initialize` and `Array.repeat` would crash if given a negative int
 - `Array.initialize`, `Array.repeat` and `Array.Builder.empty` now clamps the length to a safe integer instead of potentially crashing
 - `Stream.closeWritable` now resolves _after_ the stream has been closed
+- `Stream` runtime exceptions (like `Debug.todo`) was caught in kernel code and returned a `Cancelled` error
 - `String.fromInt` could return incorrect results for integers close to maximum int size
 - `String.split` would split apart codepoints when passed the empty string as seperator
 - `Crypto` kernel module was missing `break` in certain switch-statements

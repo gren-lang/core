@@ -14,6 +14,14 @@ var _Stream_read = function (stream) {
     const reader = stream.getReader();
     reader
       .read()
+      .catch((err) => {
+        reader.releaseLock();
+        callback(
+          __Scheduler_fail(
+            __Stream_Cancelled(_Stream_cancellationErrorString(err)),
+          ),
+        );
+      })
       .then(({ done, value }) => {
         reader.releaseLock();
 
@@ -30,14 +38,6 @@ var _Stream_read = function (stream) {
         }
 
         callback(__Scheduler_succeed(value));
-      })
-      .catch((err) => {
-        reader.releaseLock();
-        callback(
-          __Scheduler_fail(
-            __Stream_Cancelled(_Stream_cancellationErrorString(err)),
-          ),
-        );
       });
   });
 };
@@ -71,15 +71,15 @@ var _Stream_write = F2(function (value, stream) {
         writer.releaseLock();
         return writePromise;
       })
-      .then(() => {
-        callback(__Scheduler_succeed(stream));
-      })
       .catch((err) => {
         callback(
           __Scheduler_fail(
             __Stream_Cancelled(_Stream_cancellationErrorString(err)),
           ),
         );
+      })
+      .then(() => {
+        callback(__Scheduler_succeed(stream));
       });
   });
 });
@@ -137,10 +137,6 @@ var _Stream_closeWritable = function (stream) {
     const writer = stream.getWriter();
     writer
       .close()
-      .then(() => {
-        writer.releaseLock();
-        callback(__Scheduler_succeed({}));
-      })
       .catch((err) => {
         writer.releaseLock();
         callback(
@@ -148,6 +144,10 @@ var _Stream_closeWritable = function (stream) {
             __Stream_Cancelled(_Stream_cancellationErrorString(err)),
           ),
         );
+      })
+      .then(() => {
+        writer.releaseLock();
+        callback(__Scheduler_succeed({}));
       });
   });
 };
@@ -171,15 +171,15 @@ var _Stream_pipeTo = F2(function (writable, readable) {
 
     readable
       .pipeTo(writable)
-      .then(() => {
-        callback(__Scheduler_succeed({}));
-      })
       .catch((err) => {
         callback(
           __Scheduler_fail(
             __Stream_Cancelled(_Stream_cancellationErrorString(err)),
           ),
         );
+      })
+      .then(() => {
+        callback(__Scheduler_succeed({}));
       });
   });
 });
