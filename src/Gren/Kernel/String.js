@@ -95,7 +95,7 @@ var _String_foldr = F3(function (func, state, string) {
 });
 
 var _String_split = F2(function (sep, str) {
-  return str.split(sep);
+  return sep === "" ? Array.from(str) : str.split(sep);
 });
 
 var _String_join = F2(function (sep, strs) {

@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Array.initialize`, `Array.repeat` and `Array.Builder.empty` now clamps the length to a safe integer instead of potentially crashing
 - `Stream.closeWritable` now resolves _after_ the stream has been closed
 - `String.fromInt` could return incorrect results for integers close to maximum int size
+- `String.split` would split apart codepoints when passed the empty string as seperator
 - `Crypto` kernel module was missing `break` in certain switch-statements
 - `Task.sequence` has improved performance for large sequences
 - `Char.fromCode` crashed the program on invalid codepoints
