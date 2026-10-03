@@ -39,11 +39,16 @@ tests =
     describe "Result"
         [ describe "firstOk"
             [ test "Ok" <| \{} -> Expect.equal (Just 5) (Result.firstOk [ Ok 5, Err 0, Ok 10 ])
+            , test "Ok last" <| \{} -> Expect.equal (Just 10) (Result.firstOk [ Err 0, Err 1, Ok 10 ])
             , test "Err" <| \{} -> Expect.equal Nothing (Result.firstOk [ Err 1, Err 2, Err 3 ])
             ]
         , describe "allOk"
             [ test "Ok" <| \{} -> Expect.equal (Ok [ 0, 1 ]) (Result.allOk [ Ok 0, Ok 1 ])
             , test "Err" <| \{} -> Expect.equal (Err [ 0 ]) (Result.allOk [ Ok 5, Err 0, Ok 10 ])
+            ]
+        , describe "sequence"
+            [ test "Ok" <| \{} -> Expect.equal (Ok [ 0, 1]) (Result.sequence [ Ok 0, Ok 1 ])
+            , test "Err" <| \{} -> Expect.equal (Err "first") (Result.sequence [ Ok 0, Err "first", Err "second", Ok 1 ])
             ]
         , describe "map"
             [ test "Ok" <| \{} -> Expect.equal (Ok 3) (Result.map ((+) 1) (Ok 2))

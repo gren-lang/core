@@ -1,6 +1,6 @@
 module Result exposing
     ( Result(..)
-    , hasValue, checkValue, firstOk, allOk
+    , hasValue, checkValue, firstOk, allOk, sequence
     , map, map2, map3, andMap
     , andThen, onError
     , withDefault, withDefaultLazy, toMaybe, fromMaybe, mapError
@@ -14,7 +14,7 @@ way to manage errors in Gren.
 
 ## Query
 
-@docs hasValue, checkValue, firstOk, allOk
+@docs hasValue, checkValue, firstOk, allOk, sequence
 
 
 ## Mapping
@@ -36,6 +36,7 @@ way to manage errors in Gren.
 import Basics exposing (..)
 import Maybe exposing (Maybe(..))
 import Array exposing (Array)
+import Array.Builder
 
 
 {-| A `Result` is either `Ok` meaning the computation succeeded, or it is an
@@ -109,14 +110,41 @@ receive an `Ok` if there are no `Err` values in the `Array`.
 allOk : Array (Result err ok) -> Result (Array err) (Array ok)
 allOk array =
     let
-        errors =
-            Array.mapAndKeepJust errToMaybe array
+        oks =
+            Array.mapAndKeepJust toMaybe array
     in
-    if Array.length errors > 0 then
-        Err errors
+    if Array.length oks /= Array.length array then
+        Err (Array.mapAndKeepJust errToMaybe array)
 
     else
-        Ok <| Array.mapAndKeepJust toMaybe array
+        Ok oks 
+
+
+{-| Convert an `Array` of `Result err ok` to `Array ok`. You'll only
+receive an `Ok` if there are no `Err` values in the `Array`. If an `Err` is present,
+you'll receive the first one.
+
+    Result.sequence [ Ok 5, Err 0, Ok 10 ] == Err 0
+
+    Result.sequence [ Ok 0, Ok 1 ] == Ok [ 0, 1 ]
+
+-}
+sequence : Array (Result err ok) -> Result err (Array ok)
+sequence results =
+    sequenceHelp results 0 (Array.Builder.empty (Array.length results))
+
+
+sequenceHelp : Array (Result err ok) -> Int -> Array.Builder.Builder ok -> Result err (Array ok)
+sequenceHelp results idx oks =
+    when Array.get idx results is
+        Nothing ->
+            Ok (Array.Builder.toArray oks)
+
+        Just (Ok val) ->
+            sequenceHelp results (idx + 1) (Array.Builder.pushLast val oks)
+
+        Just (Err err) ->
+            Err err
 
 
 errToMaybe : Result err ok -> Maybe err
