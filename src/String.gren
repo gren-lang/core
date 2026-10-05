@@ -9,7 +9,7 @@ module String exposing
     , toArray, fromArray
     , toUpper, toLower, pad, padLeft, padRight, trim, trimLeft, trimRight
     , map, keepIf, foldl, foldr, any, all
-    , unitLength, getUnit, foldlUnits, foldrUnits, sliceUnits, unitFirstIndexOf, unitFirstIndexOfFrom, unitLastIndexOf, unitIndices
+    , unitLength, getUnit, foldlUnits, foldrUnits, sliceUnits, unitFirstIndexOf, unitFirstIndexOfFrom, unitLastIndexOf, unitIndices, unitStartsWithFrom
     )
 
 {-| A built-in representation for efficient string manipulation. When it comes to strings,
@@ -78,7 +78,7 @@ Cosmetic operations such as padding with extra characters or trimming whitespace
 
 Functions that operates on units instead of code points.
 
-@docs unitLength, getUnit, foldlUnits, foldrUnits, sliceUnits, unitFirstIndexOf, unitFirstIndexOfFrom, unitLastIndexOf, unitIndices
+@docs unitLength, getUnit, foldlUnits, foldrUnits, sliceUnits, unitFirstIndexOf, unitFirstIndexOfFrom, unitLastIndexOf, unitIndices, unitStartsWithFrom
 
 -}
 
@@ -382,8 +382,8 @@ contains =
 
 -}
 startsWith : String -> String -> Bool
-startsWith =
-    Gren.Kernel.String.startsWith
+startsWith sub str =
+    unitStartsWithFrom 0 sub str
 
 
 {-| See if the second string ends with the first one.
@@ -939,3 +939,17 @@ unitLastIndexOf =
 unitIndices : String -> String -> Array Int
 unitIndices =
     Gren.Kernel.String.unitIndices
+
+
+{-| See if the second string contains the first one at the specific unit index.
+
+    unitStartsWithFrom 0 "the" "theory" == True
+
+    unitStartsWithFrom 0 "ory" "theory" == False
+
+    unitStartsWithFrom 3 "ory" "theory" == True
+
+-}
+unitStartsWithFrom : Int -> String -> String -> Bool
+unitStartsWithFrom =
+    Gren.Kernel.String.startsWith

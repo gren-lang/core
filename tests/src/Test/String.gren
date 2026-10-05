@@ -147,10 +147,22 @@ tests =
             , badFloat "6.022.31"
             ]
         , describe "Queries"
-            [ test "any true" <| \{} -> Expect.equal True (String.any Char.isDigit "one is 1")
-            , test "any false" <| \{} -> Expect.equal False (String.any Char.isDigit "one is one")
-            , test "all true" <| \{} -> Expect.equal True (String.all Char.isDigit "123")
-            , test "all false" <| \{} -> Expect.equal False (String.all Char.isDigit "1 2 3")
+            [ test "any true" <| \{} ->
+                Expect.equal True (String.any Char.isDigit "one is 1")
+            , test "any false" <| \{} ->
+                Expect.equal False (String.any Char.isDigit "one is one")
+            , test "all true" <| \{} ->
+                Expect.equal True (String.all Char.isDigit "123")
+            , test "all false" <| \{} ->
+                Expect.equal False (String.all Char.isDigit "1 2 3")
+            , test "startsWith" <| \ {} ->
+                Expect.equal True (String.startsWith "start" "starting positions")
+            , test "startsWith fail" <| \ {} ->
+                Expect.equal False (String.startsWith "final" "starting positions")
+            , test "unitStartsWithFrom" <| \ {} ->
+                Expect.equal True (String.unitStartsWithFrom 9 "pos" "starting positions")
+            , test "unitStartsWithFrom fail" <| \ {} ->
+                Expect.equal False (String.unitStartsWithFrom 8 "pos" "starting positions")
             ]
         , describe "Unit operations"
             [ test "length" <| \_ -> Expect.equal 3 (String.unitLength "abc")

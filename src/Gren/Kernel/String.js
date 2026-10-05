@@ -148,8 +148,8 @@ var _String_contains = F2(function (sub, str) {
   return str.indexOf(sub) > -1;
 });
 
-var _String_startsWith = F2(function (sub, str) {
-  return str.indexOf(sub) === 0;
+var _String_startsWith = F3(function (offset, sub, str) {
+  return str.startsWith(sub, offset);
 });
 
 var _String_endsWith = F2(function (sub, str) {

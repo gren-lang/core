@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Char.replacementChar` makes it easier to test if `Char.fromCode` was successful
 - `String.firstIndexOfFrom` start an indexOf search from a specific index
 - `String` index functions now has unit equivalent implementations
+- `String.unitStartsWithFrom` lets you test if a specific substring starts from an offset in a larger string
 - `Array.maxLength` contains the maximum length of an `Array`
 - `Result.sequence` is like `Result.allOk` but only returns the first `Err` instead of all `Err`s
 
