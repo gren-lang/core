@@ -21,17 +21,51 @@ tests =
             , test "reverse" <| \{} -> Expect.equal "desserts" (String.reverse "stressed")
             , test "repeat" <| \{} -> Expect.equal "hahaha" (String.repeat 3 "ha")
             ]
-        , describe "indices"
+        , describe "index functions"
             [ test "firstIndexOf" <| \ {} ->
                 Expect.equal (Just 4) (String.firstIndexOf "and" "try and try and try again")
-            , test "firstIndexOf emtpy" <| \ {} ->
+            , test "firstIndexOf empty" <| \ {} ->
                 Expect.equal Nothing (String.firstIndexOf "agent" "try and try and try again")
             , test "firstIndexOf code point" <| \ {} ->
                 Expect.equal (Just 4) (String.firstIndexOf "and" "try😎and try and try again")
+            , test "lastIndexOf" <| \ {} ->
+                Expect.equal (Just 12) (String.lastIndexOf "and" "try and try and try again")
+            , test "lastIndexOf empty" <| \ {} ->
+                Expect.equal Nothing (String.lastIndexOf "agent" "try and try and try again")
+            , test "lastIndexOf code point" <| \ {} ->
+                Expect.equal (Just 12) (String.lastIndexOf "and" "try😎and try and try again")
             , test "firstIndexOfFrom" <| \ {} ->
                 Expect.equal (Just 12) (String.firstIndexOfFrom 8 "and" "try and try and try again")
-            , test "indexes" <| \{} -> Expect.equal [ 0, 2 ] (String.indices "a" "aha")
-            , test "empty indexes" <| \{} -> Expect.equal [] (String.indices "" "aha")
+            , test "indices" <| \{} ->
+                Expect.equal [ 0, 2 ] (String.indices "a" "aha")
+            , test "indices code points" <| \{} ->
+                Expect.equal [ 0, 8 ] (String.indices "try" "try😎and try again")
+            , test "indices empty" <| \{} ->
+                Expect.equal [] (String.indices "" "aha")
+            ]
+        , describe "unit index functions"
+            [ test "unitFirstIndexOf" <| \ {} ->
+                Expect.equal (Just 4) (String.unitFirstIndexOf "and" "try and try and try again")
+            , test "unitFirstIndexOf empty" <| \ {} ->
+                Expect.equal Nothing (String.unitFirstIndexOf "agent" "try and try and try again")
+            , test "unitFirstIndexOf code point" <| \ {} ->
+                Expect.equal (Just 5) (String.unitFirstIndexOf "and" "try😎and try and try again")
+            , test "unitLastIndexOf" <| \ {} ->
+                Expect.equal (Just 12) (String.unitLastIndexOf "and" "try and try and try again")
+            , test "unitLastIndexOf empty" <| \ {} ->
+                Expect.equal Nothing (String.unitLastIndexOf "agent" "try and try and try again")
+            , test "unitLastIndexOf code point" <| \ {} ->
+                Expect.equal (Just 13) (String.unitLastIndexOf "and" "try😎and try and try again")
+            , test "unitFirstIndexOfFrom" <| \ {} ->
+                Expect.equal (Just 12) (String.unitFirstIndexOfFrom 8 "and" "try and try and try again")
+            , test "unitIndices" <| \{} ->
+                Expect.equal [ 0, 2 ] (String.unitIndices "a" "aha")
+            , test "unitIndices advanced" <| \{} ->
+                Expect.equal [ 3 ] (String.unitIndices "hh" "aaahhaaa")
+            , test "unitIndices code points" <| \{} ->
+                Expect.equal [ 0, 9 ] (String.unitIndices "try" "try😎and try again")
+            , test "unitIndices empty" <| \{} ->
+                Expect.equal [] (String.unitIndices "" "aha")
             ]
         , describe "Combining"
             [ test "popFirst non-empty" <| \{} -> Expect.equal (Just { first = 'a', rest = "bc" }) (String.popFirst "abc")
