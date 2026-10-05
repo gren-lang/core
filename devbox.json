@@ -10,8 +10,8 @@
       "echo 'Welcome to devbox!' > /dev/null"
     ],
     "scripts": {
-      "format": "prettier -w \"!**/*.json\" .",
-      "format:check": "prettier -c \"!**/*.json\" .",
+      "format": "prettier -w \"**/*.{js,mjs}\"",
+      "format:check": "prettier -c \"**/*.{js,mjs}\"",
       "test": [
         "devbox run test:unit",
         "devbox run test:integration"

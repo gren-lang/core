@@ -1,4 +1,6 @@
 .gren
+.devbox
+.envrc
 *.dat
 doc*.json
 *~
