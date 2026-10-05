@@ -66,6 +66,7 @@ tests =
             , test "A-Z" <| \{} -> Expect.equal upper (Array.map fromCode upperCodes)
             , test "0-9" <| \{} -> Expect.equal dec (Array.map fromCode decCodes)
             , test "UTF-16" <| \{} -> Expect.equal '𝌆' (Char.fromCode 0x0001D306)
+            , test "Invalid" <| \{} -> Expect.equal Char.replacementChar (Char.fromCode -1)
             ]
         , describe "isLower"
             [ test "a-z" <| \{} -> Expect.equal True (Array.all isLower lower)
@@ -91,5 +92,9 @@ tests =
             [ test "a-z" <| \{} -> Expect.equal False (Array.any isOctDigit lower)
             , test "A-Z" <| \{} -> Expect.equal False (Array.any isOctDigit upper)
             , test "0-9" <| \{} -> Expect.equal (Array.map (oneOf oct) dec) (Array.map isOctDigit dec)
+            ]
+        , describe "unitLength"
+            [ test "one unit" <| \{} -> Expect.equal 1 (unitLength 'x')
+            , test "two unit" <| \{} -> Expect.equal 2 (unitLength '😀')
             ]
         ]

@@ -95,7 +95,7 @@ var _String_foldr = F3(function (func, state, string) {
 });
 
 var _String_split = F2(function (sep, str) {
-  return str.split(sep);
+  return sep === "" ? Array.from(str) : str.split(sep);
 });
 
 var _String_join = F2(function (sep, strs) {
@@ -148,8 +148,8 @@ var _String_contains = F2(function (sub, str) {
   return str.indexOf(sub) > -1;
 });
 
-var _String_startsWith = F2(function (sub, str) {
-  return str.indexOf(sub) === 0;
+var _String_startsWith = F3(function (offset, sub, str) {
+  return str.startsWith(sub, offset);
 });
 
 var _String_endsWith = F2(function (sub, str) {
@@ -158,8 +158,24 @@ var _String_endsWith = F2(function (sub, str) {
   );
 });
 
-var _String_indexOf = F2(function (sub, str) {
-  var ret = str.indexOf(sub);
+var _String_indexOf = F3(function (offset, sub, str) {
+  let unitIdx = 0;
+  let pointIdx = 0;
+
+  for (const char of str) {
+    if (pointIdx >= offset && str.startsWith(sub, unitIdx)) {
+      return __Maybe_Just(pointIdx);
+    }
+
+    unitIdx += char.length;
+    pointIdx += 1;
+  }
+
+  return __Maybe_Nothing;
+});
+
+var _String_unitIndexOf = F3(function (offset, sub, str) {
+  var ret = str.indexOf(sub, offset);
 
   if (ret > -1) {
     return __Maybe_Just(ret);
@@ -168,7 +184,7 @@ var _String_indexOf = F2(function (sub, str) {
   return __Maybe_Nothing;
 });
 
-var _String_lastIndexOf = F2(function (sub, str) {
+var _String_unitLastIndexOf = F2(function (sub, str) {
   var ret = str.lastIndexOf(sub);
 
   if (ret > -1) {
@@ -179,6 +195,27 @@ var _String_lastIndexOf = F2(function (sub, str) {
 });
 
 var _String_indexes = F2(function (sub, str) {
+  if (sub.length === 0) {
+    return [];
+  }
+
+  let unitIdx = 0;
+  let pointIdx = 0;
+  let result = [];
+
+  for (let char of str) {
+    if (str.startsWith(sub, unitIdx)) {
+      result.push(pointIdx);
+    }
+
+    unitIdx += char.length;
+    pointIdx += 1;
+  }
+
+  return result;
+});
+
+var _String_unitIndices = F2(function (sub, str) {
   var subLen = sub.length;
 
   if (subLen < 1) {

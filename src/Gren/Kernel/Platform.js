@@ -42,7 +42,7 @@ function _Platform_initialize(
       __Debug_crash(2 /**__DEBUG/, "Expected DataView as flags" /**/);
     }
 
-    flags = new DataView(rawFlags.buffer.slice());
+    flags = _Platform_copyBytes(rawFlags);
   } else {
     var result = A2(
       __Json_run,
@@ -78,6 +78,12 @@ function _Platform_initialize(
 
   return ports ? { ports: ports } : {};
 }
+
+var _Platform_copyBytes = function (bytes) {
+  return new DataView(
+    bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength),
+  );
+};
 
 // TRACK PRELOADS
 //
@@ -370,7 +376,7 @@ function _Platform_setupOutgoingPort(name, isBytes) {
         var currentSubs = subs;
         var rawValue = converter(cmdArray[idx]);
         var value = isBytes
-          ? new DataView(rawValue.buffer.slice())
+          ? _Platform_copyBytes(rawValue)
           : __Json_unwrap(rawValue);
         for (var subIdx = 0; subIdx < currentSubs.length; subIdx++) {
           currentSubs[subIdx](value);
@@ -446,7 +452,7 @@ function _Platform_setupIncomingPort(name, sendToApp, isBytes) {
         __Debug_crash(4, name, "Expected DataView");
       }
 
-      value = new DataView(incomingValue.buffer.slice());
+      value = _Platform_copyBytes(incomingValue);
     } else {
       var result = A2(__Json_run, converter, __Json_wrap(incomingValue));
 
@@ -480,7 +486,7 @@ function _Platform_taskPort(
   return function (input) {
     var encodedInput = inputConverter
       ? inputIsBytes
-        ? new DataView(input.buffer.slice())
+        ? _Platform_copyBytes(input)
         : __Json_unwrap(inputConverter(input))
       : null;
 
@@ -512,7 +518,7 @@ function _Platform_taskPort(
               __Debug_crash(4, name, "Expected DataView");
             }
 
-            checkedValue = new DataView(value.buffer.slice());
+            checkedValue = _Platform_copyBytes(value);
           } else {
             var result = A2(__Json_run, converter, __Json_wrap(value));
 

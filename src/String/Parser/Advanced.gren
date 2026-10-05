@@ -63,6 +63,7 @@ import Char exposing (Char)
 import Result exposing (Result(..))
 import Maybe exposing (Maybe(..))
 import Set
+import String.Regex as Regex exposing (Regex)
 
 
 -- PARSERS
@@ -457,24 +458,40 @@ keyword kwd expecting =
   in
   Parser <| \s ->
     let
-      { newOffset, newRow, newCol } =
-        isSubString kwd s.offset s.row s.col s.src
+      newOffset =
+        s.offset + String.unitLength kwd
     in
-    if newOffset == -1 || 0 <= isSubChar (\c -> Char.isAlphaNum c || c == '_') newOffset s.src then
-      Bad { pred = False, bag = (fromState s expecting) }
+    if not (String.unitStartsWithFrom s.offset kwd s.src) || 0 <= isSubChar isKeywordInner newOffset s.src then
+      Bad { pred = False, bag = fromState s expecting }
+
     else
+      let
+        newPos =
+          advanceRowColToAfter s.row s.col kwd
+      in
       Good 
         { pred = progress
         , value = {}
         , state =
           { src = s.src
           , offset = newOffset
-          , row = newRow
-          , col = newCol
+          , row = newPos.row
+          , col = newPos.col
           , payload = s.payload
           }
         }
 
+
+letterRegex : Regex
+letterRegex =
+    Regex.fromString "\\p{L}"
+        |> Maybe.withDefault Regex.never
+
+
+isKeywordInner : Char -> Bool
+isKeywordInner c =
+  (String.fromChar c |> Regex.contains letterRegex)
+    || c == '_'
 
 
 -- TOKEN
@@ -490,25 +507,25 @@ token str expecting =
       not (String.isEmpty str)
   in
   Parser <| \s ->
-    let
-      { newOffset, newRow, newCol } =
-        isSubString str s.offset s.row s.col s.src
-    in
-    if newOffset == -1 then
-      Bad { pred = False, bag = (fromState s expecting) }
-    else
+    if String.unitStartsWithFrom s.offset str s.src then
+      let
+        newPos =
+          advanceRowColToAfter s.row s.col str
+      in
       Good
         { pred = progress
         , value = {}
         , state =
           { src = s.src
-          , offset = newOffset
-          , row = newRow
-          , col = newCol
+          , offset = s.offset + String.unitLength str
+          , row = newPos.row
+          , col = newPos.col
           , payload = s.payload
           }
         }
 
+    else
+        Bad { pred = False, bag = fromState s expecting }
 
 -- INT
 
@@ -893,45 +910,17 @@ getSource =
 -- LOW-LEVEL HELPERS
 
 
-{-| When making a fast parser, you want to avoid allocation as much as
-possible. That means you never want to mess with the source string, only
-keep track of an offset into that string.
-
-You use `isSubString` like this:
-
-    isSubString "let" offset row col "let x = 4 in x"
-        --==> ( newOffset, newRow, newCol )
-
-You are looking for `"let"` at a given `offset`. On failure, the
-`newOffset` is `-1`. On success, the `newOffset` is the new offset. With
-our `"let"` example, it would be `offset + 3`.
-
-You also provide the current `row` and `col` which do not align with
-`offset` in a clean way. For example, when you see a `\n` you are at
-`row = row + 1` and `col = 1`. Furthermore, some UTF16 characters are
-two words wide, so even if there are no newlines, `offset` and `col`
-may not be equal.
--}
-isSubString : String -> Int -> Int -> Int -> String -> { newOffset: Int, newRow: Int, newCol: Int }
-isSubString smallString offset row col bigString =
+advanceRowColToAfter : Int -> Int -> String -> { row: Int, col: Int }
+advanceRowColToAfter row col str =
   let
-    slice =
-      String.sliceUnits offset (offset + String.unitLength smallString) bigString
-
     newlineIndices =
-      String.indices "\n" smallString
+      String.indices "\n" str
 
     sliceLength =
-      String.unitLength slice
+      String.count str
   in
-  { newOffset =
-    if smallString == slice then
-      offset + sliceLength
-
-    else
-      -1
-  , newRow = row + Array.length newlineIndices
-  , newCol =
+  { row = row + Array.length newlineIndices
+  , col =
     newlineIndices
       |> Array.last
       |> Maybe.map (\newlineIndex -> sliceLength - newlineIndex)
@@ -964,7 +953,7 @@ isSubChar pred offset str =
       if Bitwise.and (Char.toCode unit) 0xF800 == 0xD800 then
         when String.popFirst (String.sliceUnits offset (offset + 2) str) is
           Just { first = uniChar } ->
-            if pred unit then
+            if pred uniChar then
               offset + 2
 
             else
@@ -995,38 +984,44 @@ If `offset = 7` we would get `(-1, 1, 18)`
 -}
 findSubString : String -> Int -> Int -> Int -> String -> { newOffset: Int, newRow: Int, newCol: Int }
 findSubString smallString offset row col bigString =
-  let
-    slice =
-      String.sliceUnits offset (String.unitLength bigString) bigString
-
-    sliceLength =
-      String.unitLength slice
-
-    newlines =
-      String.indices "\n" slice
-  in
-  when String.firstIndexOf smallString slice is
+  when String.unitFirstIndexOfFrom offset smallString bigString is
     Just idx ->
       let
+        slice =
+          String.sliceUnits offset idx bigString
+
+        sliceLength =
+          String.count slice
+        
         relevantNewlines =
-          Array.keepIf (\newlineIdx -> newlineIdx < idx) newlines
+          String.indices "\n" slice
       in
       { newOffset = offset + idx
       , newRow = row + Array.length relevantNewlines
       , newCol =
         relevantNewlines
           |> Array.last
-          |> Maybe.map (\lastNewlineIdx -> idx - lastNewlineIdx)
-          |> Maybe.withDefault (col + idx)
+          |> Maybe.map (\lastNewlineIdx -> sliceLength - lastNewlineIdx)
+          |> Maybe.withDefault (col + sliceLength)
       }
 
     Nothing ->
+      let
+        slice =
+          String.sliceUnits offset (String.unitLength bigString) bigString
+
+        sliceLength =
+          String.count slice
+
+        newlines =
+          String.indices "\n" slice
+      in
       { newOffset = -1
       , newRow = row + Array.length newlines
       , newCol =
         newlines
           |> Array.last
-          |> Maybe.map (\lastNewlineIdx -> sliceLength - lastNewlineIdx - 1)
+          |> Maybe.map (\lastNewlineIdx -> sliceLength - lastNewlineIdx)
           |> Maybe.withDefault (col + sliceLength)
       }
 

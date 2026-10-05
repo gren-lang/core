@@ -2,14 +2,14 @@ module String exposing
     ( String, isEmpty, count, reverse, repeat, replace
     , prepend, append, split, join, words, lines
     , slice, takeFirst, takeLast, dropFirst, dropLast
-    , contains, startsWith, endsWith, firstIndexOf, lastIndexOf, indices
+    , contains, startsWith, endsWith, firstIndexOf, firstIndexOfFrom, lastIndexOf, indices
     , toInt, fromInt
     , toFloat, fromFloat
     , fromChar, pushFirst, pushLast, popFirst, popLast
     , toArray, fromArray
     , toUpper, toLower, pad, padLeft, padRight, trim, trimLeft, trimRight
     , map, keepIf, foldl, foldr, any, all
-    , unitLength, getUnit, foldlUnits, foldrUnits, sliceUnits
+    , unitLength, getUnit, foldlUnits, foldrUnits, sliceUnits, unitFirstIndexOf, unitFirstIndexOfFrom, unitLastIndexOf, unitIndices, unitStartsWithFrom
     )
 
 {-| A built-in representation for efficient string manipulation. When it comes to strings,
@@ -41,7 +41,7 @@ Unless otherwise noted, all functions in this module deal with code points.
 
 ## Check for Substrings
 
-@docs contains, startsWith, endsWith, firstIndexOf, lastIndexOf, indices
+@docs contains, startsWith, endsWith, firstIndexOf, firstIndexOfFrom, lastIndexOf, indices
 
 
 ## Int Conversions
@@ -78,7 +78,7 @@ Cosmetic operations such as padding with extra characters or trimming whitespace
 
 Functions that operates on units instead of code points.
 
-@docs unitLength, getUnit, foldlUnits, foldrUnits, sliceUnits
+@docs unitLength, getUnit, foldlUnits, foldrUnits, sliceUnits, unitFirstIndexOf, unitFirstIndexOfFrom, unitLastIndexOf, unitIndices, unitStartsWithFrom
 
 -}
 
@@ -382,8 +382,8 @@ contains =
 
 -}
 startsWith : String -> String -> Bool
-startsWith =
-    Gren.Kernel.String.startsWith
+startsWith sub str =
+    unitStartsWithFrom 0 sub str
 
 
 {-| See if the second string ends with the first one.
@@ -400,15 +400,26 @@ endsWith =
 
 {-| Find the index of the first string within the second one, if it's there.
 
-    indexOf "the" "theory" == Just 0
+    firstIndexOf "the" "theory" == Just 0
 
-    indexOf "ory" "theory" == Just 3
+    firstIndexOf "ory" "theory" == Just 3
     
-    indexOf "a" "theory" == Nothing
+    firstIndexOf "a" "theory" == Nothing
 
 -}
 firstIndexOf : String -> String -> Maybe Int
-firstIndexOf =
+firstIndexOf sub str =
+    firstIndexOfFrom 0 sub str
+
+
+{-| Same as [firstIndexOf](#firstIndexOf) but allows you to start the search
+from a specific index
+
+    firstIndexOfFrom 4 "try" "try and try again" == Just 8
+
+-}
+firstIndexOfFrom : Int -> String -> String -> Maybe Int
+firstIndexOfFrom =
     Gren.Kernel.String.indexOf
 
 
@@ -420,23 +431,26 @@ firstIndexOf =
 
 -}
 lastIndexOf : String -> String -> Maybe Int
-lastIndexOf =
-    Gren.Kernel.String.lastIndexOf
+lastIndexOf sub str =
+    indices sub str
+        |> Array.last
 
 
-{-| Get all of the indices for a substring in another string.
+{-| Get all of the indices for a substring in another string. If the substring
+is the empty string, you will get an empty result.
 
-    indexes "i" "Mississippi" == [ 1, 4, 7, 10 ]
+    indices "i" "Mississippi" == [ 1, 4, 7, 10 ]
 
-    indexes "ss" "Mississippi" == [ 2, 5 ]
+    indices "ss" "Mississippi" == [ 2, 5 ]
 
-    indexes "needle" "haystack" == []
+    indices "needle" "haystack" == []
+
+    indices "" "lllloooooonnnnnggg" == []
 
 -}
 indices : String -> String -> Array Int
 indices =
     Gren.Kernel.String.indexes
-
 
 
 -- FORMATTING
@@ -872,3 +886,70 @@ _not_ code points!
 sliceUnits : Int -> Int -> String -> String
 sliceUnits =
     Gren.Kernel.String.sliceUnits
+
+
+{-| Same as [firstIndexOf](#firstIndexOf) but operates on character units, not code points.
+
+    unitFirstIndexOf "the" "theory" == Just 0
+
+    unitFirstIndexOf "ory" "theory" == Just 3
+    
+    unitFirstIndexOf "a" "theory" == Nothing
+
+-}
+unitFirstIndexOf : String -> String -> Maybe Int
+unitFirstIndexOf sub str =
+    unitFirstIndexOfFrom 0 sub str
+
+
+{-| Same as [firstIndexOfFrom](#firstIndexOfFrom) but operates on character units,
+not code points.
+
+    unitFirstIndexOfFrom 4 "try" "try and try again" == Just 8
+
+-}
+unitFirstIndexOfFrom : Int -> String -> String -> Maybe Int
+unitFirstIndexOfFrom =
+    Gren.Kernel.String.unitIndexOf
+
+
+{-| Same as [lastIndexOf](#lastIndexOf) but operates on character units, not code points.
+
+    unitLastIndexOf "abra" "abracadabra" == Just 7
+
+    unitLastIndexOf "barb" "abracadabra" == Nothing
+
+-}
+unitLastIndexOf : String -> String -> Maybe Int
+unitLastIndexOf =
+    Gren.Kernel.String.unitLastIndexOf
+
+
+{-| Same as [indices](#indices) but operates on character units, not code points.
+
+    unitIndices "i" "Mississippi" == [ 1, 4, 7, 10 ]
+
+    unitIndices "ss" "Mississippi" == [ 2, 5 ]
+
+    unitIndices "needle" "haystack" == []
+
+    unitIndices "" "lllloooooonnnnnggg" == []
+
+-}
+unitIndices : String -> String -> Array Int
+unitIndices =
+    Gren.Kernel.String.unitIndices
+
+
+{-| See if the second string contains the first one at the specific unit index.
+
+    unitStartsWithFrom 0 "the" "theory" == True
+
+    unitStartsWithFrom 0 "ory" "theory" == False
+
+    unitStartsWithFrom 3 "ory" "theory" == True
+
+-}
+unitStartsWithFrom : Int -> String -> String -> Bool
+unitStartsWithFrom =
+    Gren.Kernel.String.startsWith

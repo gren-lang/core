@@ -12,7 +12,7 @@ import Fuzz
 tests : Test
 tests =
     describe "Array.Builder Tests"
-        [ fuzz Fuzz.int "An empty builder makes for an empty array, regardless of capacity" <| \capacity ->
+        [ fuzz Fuzz.int "An empty builder makes for empty array, regardless of capacity" <| \capacity ->
             Builder.empty capacity
                 |> Builder.toArray
                 |> Expect.equalArrays []
@@ -38,6 +38,12 @@ tests =
                         |> Builder.toArray
             in
             Expect.equalArrays correctCapacity wrongCapacity
+        , test "Capacity will be at least 0" <| \{} ->
+            Expect.equal (Builder.empty 0) (Builder.empty -1)
+        , test "Capacity will be at most Array.maxLength" <| \{} ->
+            Expect.equal
+                (Builder.empty Array.maxLength)
+                (Builder.empty (Array.maxLength + 100))
         , fuzz (Fuzz.array Fuzz.int) "Builder API is just a optimization, it's the same as using Array.pushLast" <| \array ->
             Array.foldl (\val builder -> Builder.pushLast val builder) (Builder.empty 0) array
                 |> Builder.toArray

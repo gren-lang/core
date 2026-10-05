@@ -23,6 +23,7 @@ function _Scheduler_binding(callback) {
     $: __1_BINDING,
     __callback: callback,
     __kill: null,
+    __running: false,
   };
 }
 
@@ -189,7 +190,17 @@ function _Scheduler_step(proc) {
       proc.__root = proc.__stack.__callback(proc.__root.__value);
       proc.__stack = proc.__stack.__rest;
     } else if (rootTag === __1_BINDING) {
+      // root.__callback might not finish before another step run
+      // mark running bindings to avoid executing callback twice
+      if (proc.__root.__running) {
+        return;
+      }
+      proc.__root.__running = true;
       proc.__root.__kill = proc.__root.__callback(function (newRoot) {
+        // the process might have been killed, in which case root will be null
+        if (proc.__root == null) {
+          return;
+        }
         proc.__root = newRoot;
         _Scheduler_enqueue(proc);
       });

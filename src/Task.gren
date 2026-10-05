@@ -29,6 +29,7 @@ HTTP requests or writing to a database.
 -}
 
 import Array exposing (Array)
+import Array.Builder
 import Basics exposing ((<<), (|>), Never)
 import Gren.Kernel.Scheduler
 import Maybe exposing (Maybe(..))
@@ -194,8 +195,19 @@ sequence fails.
 
 -}
 sequence : Array (Task x a) -> Task x (Array a)
-sequence =
-    Array.foldr (\task combined -> task |> andThen (\x -> map (Array.pushFirst x) combined)) (succeed []) 
+sequence taskArray =
+    Array.foldl
+        (\task combined ->
+            combined
+                |> andThen
+                    (\acc ->
+                        task
+                            |> map (\v -> Array.Builder.pushLast v acc)
+                    )
+        )
+        (succeed (Array.Builder.empty (Array.length taskArray))) 
+        taskArray
+        |> map Array.Builder.toArray
 
 
 {-| Start with an array of tasks, and turn them into a single task that returns a

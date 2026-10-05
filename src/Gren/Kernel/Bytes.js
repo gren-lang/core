@@ -19,7 +19,7 @@ var _Bytes_getHostEndianness = F2(function (le, be) {
   return __Scheduler_binding(function (callback) {
     callback(
       __Scheduler_succeed(
-        new Uint8Array(new Uint32Array([1]))[0] === 1 ? le : be,
+        new Uint8Array(new Uint32Array([1]).buffer)[0] === 1 ? le : be,
       ),
     );
   });
@@ -32,7 +32,7 @@ function _Bytes_fromString(str) {
 }
 
 function _Bytes_toString(bytes) {
-  var decoder = new TextDecoder("utf-8", { fatal: true });
+  var decoder = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
 
   try {
     return __Maybe_Just(decoder.decode(bytes));
@@ -51,13 +51,16 @@ function _Bytes_flatten(arrayOfBytes) {
   var result = new Uint8Array(requiredSize);
 
   for (var i = 0; i < arrayOfBytes.length; i++) {
-    var currentBytes = new Uint8Array(arrayOfBytes[i].buffer);
-    var currentByteLength = arrayOfBytes[i].byteLength;
+    var dataView = arrayOfBytes[i];
+    var currentBytes = new Uint8Array(
+      dataView.buffer,
+      dataView.byteOffset,
+      dataView.byteLength,
+    );
 
-    for (var j = 0; j < currentByteLength; j++) {
-      result[offset] = currentBytes[j];
-      offset++;
-    }
+    result.set(currentBytes, offset);
+
+    offset += currentBytes.byteLength;
   }
 
   return new DataView(result.buffer);
@@ -164,12 +167,24 @@ var _Bytes_read_f64 = F3(function (isLE, bytes, offset) {
 });
 
 var _Bytes_read_bytes = F3(function (len, bytes, offset) {
+  var nextOffset = offset + len;
+  var value = new DataView(
+    bytes.buffer.slice(
+      bytes.byteOffset + offset,
+      bytes.byteOffset + nextOffset,
+    ),
+  );
+
+  if (value.byteLength < len) {
+    throw new RangeError("Not enough bytes");
+  }
+
   return {
-    __$offset: offset + len,
-    __$value: new DataView(bytes.buffer, bytes.byteOffset + offset, len),
+    __$offset: nextOffset,
+    __$value: value,
   };
 });
 
 var _Bytes_decodeFailure = F2(function () {
-  throw 0;
+  throw new RangeError("Bytes decodeFailure");
 });
