@@ -246,7 +246,22 @@ tests =
                 Expect.equal (Ok "myVar") (run grenVar "myVar")
             ]
         
-        , describe "Position Functions"
+        , describe "Position Functions" <|
+            let
+                expectPos str par pos =
+                    let
+                        parser =
+                            succeed identity
+                                |> skip par
+                                |> keep getPosition
+                    in
+                    when run parser str is
+                        Ok actualPos ->
+                            Expect.equal pos actualPos
+
+                        Err errs ->
+                            Expect.fail <| "Unexpected failure " ++ Debug.toString errs
+            in
             [ test "located parser with getPosition" <| \{} ->
                 let
                     located : Parser a -> Parser (Located a)
@@ -279,60 +294,34 @@ tests =
                     Err _ -> Expect.equal "Should succeed" "Parser failed"
 
             , test "token with whitespace" <| \{} ->
-                let
-                    parser =
-                        succeed identity
-                            |> skip (token "\n")
-                            |> keep getPosition
-                in
-                when run parser "\n" is
-                    Ok ret ->
-                        Expect.equal { row = 2, col = 1 } ret
-
-                    Err err ->
-                        Expect.fail <| "Unexpected failure: " ++ Debug.toString err
+                expectPos
+                    "\n"
+                    (token "\n")
+                    { row = 2, col = 1 }
 
             , test "token with infix whitespace" <| \{} ->
-                let
-                    parser =
-                        succeed identity
-                            |> skip (token "one\ntwo")
-                            |> keep getPosition
-                in
-                when run parser "one\ntwo" is
-                    Ok ret ->
-                        Expect.equal { row = 2, col = 4 } ret
+                expectPos
+                    "one\ntwo"
+                    (token "one\ntwo")
+                    { row = 2, col = 4 }
 
-                    Err err ->
-                        Expect.fail <| "Unexpected failure: " ++ Debug.toString err
+            , test "token with emoji" <| \{} ->
+                expectPos
+                    "😀b"
+                    (token "😀")
+                    { row = 1, col = 2 }
 
             , test "chompUntil with whitespace" <| \{} ->
-                let
-                    parser =
-                        succeed identity
-                            |> skip (chompUntil "\n")
-                            |> keep getPosition
-                in
-                when run parser "test\n" is
-                    Ok ret ->
-                        Expect.equal { row = 1, col = 5 } ret
-
-                    Err err ->
-                        Expect.fail <| "Unexpected failure: " ++ Debug.toString err
+                expectPos
+                    "test\n"
+                    (chompUntil "\n")
+                    { row = 1, col = 5 }
 
             , test "chompUntil with suffix whitespace" <| \{} ->
-                let
-                    parser =
-                        succeed identity
-                            |> skip (chompUntil "\nboo")
-                            |> keep getPosition
-                in
-                when run parser "test\nboo" is
-                    Ok ret ->
-                        Expect.equal { row = 1, col = 5 } ret
-
-                    Err err ->
-                        Expect.fail <| "Unexpected failure: " ++ Debug.toString err
+                expectPos
+                    "test\nboo"
+                    (chompUntil "\nboo")
+                    { row = 1, col = 5 }
 
             , test "chompUntil with non-matching whitespace" <| \{} ->
                 let
@@ -351,33 +340,41 @@ tests =
                     Err errs ->
                         Expect.fail <| "Unexpected failure " ++ Debug.toString errs
 
-            , test "chompUntilEndOr with match" <| \{} ->
-                let
-                    parser =
-                        succeed identity
-                            |> skip (chompUntilEndOr "X")
-                            |> keep getPosition
-                in
-                when run parser "a\nbcX" is
-                    Ok pos ->
-                        Expect.equal { row = 2, col = 3 } pos
+            , test "chompUntil with emoji" <| \{} ->
+                expectPos
+                    "😀b"
+                    (chompUntil "b")
+                    { row = 1, col = 2 }
 
-                    Err errs ->
-                        Expect.fail <| "Unexpected failure " ++ Debug.toString errs
+            , test "chompUntilEndOr with match" <| \{} ->
+                expectPos
+                    "a\nbcX"
+                    (chompUntilEndOr "X")
+                    { row = 2, col = 3 }
 
             , test "chompUntilEndOr with end" <| \{} ->
-                let
-                    parser =
-                        succeed identity
-                            |> skip (chompUntilEndOr "X")
-                            |> keep getPosition
-                in
-                when run parser "a\nbc" is
-                    Ok pos ->
-                        Expect.equal { row = 2, col = 3 } pos
+                expectPos
+                    "a\nbc"
+                    (chompUntilEndOr "X")
+                    { row = 2, col = 3 }
 
-                    Err errs ->
-                        Expect.fail <| "Unexpected failure " ++ Debug.toString errs
+            , test "chompUntilEndOr with emoji" <| \{} ->
+                expectPos
+                    "😀b"
+                    (chompUntilEndOr "b")
+                    { row = 1, col = 2 }
+
+            , test "chompUntilEndOr with emoji 2" <| \{} ->
+                expectPos
+                    "😀b"
+                    (chompUntilEndOr "X")
+                    { row = 1, col = 3 }
+
+            , test "line comment with emoji" <| \{} ->
+                expectPos
+                    "--😀\nb"
+                    (lineComment "--")
+                    { row = 1, col = 4 }
             ]
         
         , describe "Variable Functions" <|

@@ -927,17 +927,14 @@ may not be equal.
 isSubString : String -> Int -> Int -> Int -> String -> { newOffset: Int, newRow: Int, newCol: Int }
 isSubString smallString offset row col bigString =
   let
-    slice =
-      String.sliceUnits offset (offset + String.unitLength smallString) bigString
-
     newlineIndices =
       String.indices "\n" smallString
 
     sliceLength =
-      String.unitLength slice
+      String.count smallString
   in
   { newOffset =
-    if smallString == slice then
+    if String.unitStartsWithFrom offset smallString bigString then
       offset + sliceLength
 
     else
@@ -1007,32 +1004,38 @@ If `offset = 7` we would get `(-1, 1, 18)`
 -}
 findSubString : String -> Int -> Int -> Int -> String -> { newOffset: Int, newRow: Int, newCol: Int }
 findSubString smallString offset row col bigString =
-  let
-    slice =
-      String.sliceUnits offset (String.unitLength bigString) bigString
-
-    sliceLength =
-      String.unitLength slice
-
-    newlines =
-      String.indices "\n" slice
-  in
-  when String.firstIndexOf smallString slice is
+  when String.unitFirstIndexOfFrom offset smallString bigString is
     Just idx ->
       let
+        slice =
+          String.sliceUnits offset idx bigString
+
+        sliceLength =
+          String.count slice
+        
         relevantNewlines =
-          Array.keepIf (\newlineIdx -> newlineIdx < idx) newlines
+          String.indices "\n" slice
       in
       { newOffset = offset + idx
       , newRow = row + Array.length relevantNewlines
       , newCol =
         relevantNewlines
           |> Array.last
-          |> Maybe.map (\lastNewlineIdx -> idx - lastNewlineIdx)
-          |> Maybe.withDefault (col + idx)
+          |> Maybe.map (\lastNewlineIdx -> sliceLength - lastNewlineIdx)
+          |> Maybe.withDefault (col + sliceLength)
       }
 
     Nothing ->
+      let
+        slice =
+          String.sliceUnits offset (String.unitLength bigString) bigString
+
+        sliceLength =
+          String.count slice
+
+        newlines =
+          String.indices "\n" slice
+      in
       { newOffset = -1
       , newRow = row + Array.length newlines
       , newCol =
