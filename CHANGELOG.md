@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `Char.unitLength` tells you have many code units a `Char` consists of
 - `Char.replacementChar` makes it easier to test if `Char.fromCode` was successful
+- `String.firstIndexOfFrom` start an indexOf search from a specific index.
+- `String` index functions now has a unit specific implementation.
 - `Array.maxLength` contains the maximum length of an `Array`
 - `Result.sequence` is like `Result.allOk` but only returns the first `Err` instead of all `Err`s
 
@@ -22,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Stream` runtime exceptions (like `Debug.todo`) was caught in kernel code and returned a `Cancelled` error
 - `String.fromInt` could return incorrect results for integers close to maximum int size
 - `String.split` would split apart codepoints when passed the empty string as seperator
+- `String.firstIndexOf`, `String.lastIndexOf`, `String.indices` now operate on code points.
 - `Crypto` kernel module was missing `break` in certain switch-statements
 - `Task.sequence` has improved performance for large sequences
 - `Char.fromCode` crashed the program on invalid codepoints

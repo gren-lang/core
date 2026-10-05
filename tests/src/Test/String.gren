@@ -20,6 +20,16 @@ tests =
             , test "endsWith" <| \{} -> Expect.equal True <| String.endsWith "ship" "spaceship"
             , test "reverse" <| \{} -> Expect.equal "desserts" (String.reverse "stressed")
             , test "repeat" <| \{} -> Expect.equal "hahaha" (String.repeat 3 "ha")
+            ]
+        , describe "indices"
+            [ test "firstIndexOf" <| \ {} ->
+                Expect.equal (Just 4) (String.firstIndexOf "and" "try and try and try again")
+            , test "firstIndexOf emtpy" <| \ {} ->
+                Expect.equal Nothing (String.firstIndexOf "agent" "try and try and try again")
+            , test "firstIndexOf code point" <| \ {} ->
+                Expect.equal (Just 4) (String.firstIndexOf "and" "try😎and try and try again")
+            , test "firstIndexOfFrom" <| \ {} ->
+                Expect.equal (Just 12) (String.firstIndexOfFrom 8 "and" "try and try and try again")
             , test "indexes" <| \{} -> Expect.equal [ 0, 2 ] (String.indices "a" "aha")
             , test "empty indexes" <| \{} -> Expect.equal [] (String.indices "" "aha")
             ]

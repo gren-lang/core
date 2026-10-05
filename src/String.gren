@@ -2,7 +2,7 @@ module String exposing
     ( String, isEmpty, count, reverse, repeat, replace
     , prepend, append, split, join, words, lines
     , slice, takeFirst, takeLast, dropFirst, dropLast
-    , contains, startsWith, endsWith, firstIndexOf, lastIndexOf, indices
+    , contains, startsWith, endsWith, firstIndexOf, firstIndexOfFrom, lastIndexOf, indices
     , toInt, fromInt
     , toFloat, fromFloat
     , fromChar, pushFirst, pushLast, popFirst, popLast
@@ -41,7 +41,7 @@ Unless otherwise noted, all functions in this module deal with code points.
 
 ## Check for Substrings
 
-@docs contains, startsWith, endsWith, firstIndexOf, lastIndexOf, indices
+@docs contains, startsWith, endsWith, firstIndexOf, firstIndexOfFrom, lastIndexOf, indices
 
 
 ## Int Conversions
@@ -400,15 +400,26 @@ endsWith =
 
 {-| Find the index of the first string within the second one, if it's there.
 
-    indexOf "the" "theory" == Just 0
+    firstIndexOf "the" "theory" == Just 0
 
-    indexOf "ory" "theory" == Just 3
+    firstIndexOf "ory" "theory" == Just 3
     
-    indexOf "a" "theory" == Nothing
+    firstIndexOf "a" "theory" == Nothing
 
 -}
 firstIndexOf : String -> String -> Maybe Int
-firstIndexOf =
+firstIndexOf sub str =
+    firstIndexOfFrom 0 sub str
+
+
+{-| Same as [firstIndexOf](#firstIndexOf) but allows you to start the search
+from a specific index
+
+    firstIndexOfFrom 4 "try" "try and try again" == Just 8
+
+-}
+firstIndexOfFrom : Int -> String -> String -> Maybe Int
+firstIndexOfFrom =
     Gren.Kernel.String.indexOf
 
 
