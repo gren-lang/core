@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- `Char.unitLength` tells you have many code units a `Char` consists of
+- `Char.unitLength` tells you how many code units a `Char` consists of
 - `Char.replacementChar` makes it easier to test if `Char.fromCode` was successful
 - `String.firstIndexOfFrom` start an indexOf search from a specific index
 - `String` index functions now has unit equivalent implementations
