@@ -9,7 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- `Char.replacementChar` makes it easier to test if `Char.fromCode` was successful.
+- `Char.unitLength` tells you have many code units a `Char` consists of
+- `Char.replacementChar` makes it easier to test if `Char.fromCode` was successful
 - `Array.maxLength` contains the maximum length of an `Array`
 - `Result.sequence` is like `Result.allOk` but only returns the first `Err` instead of all `Err`s
 

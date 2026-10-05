@@ -1,5 +1,5 @@
 module Char exposing
-    ( Char
+    ( Char, unitLength
     , isUpper, isLower, isAlpha, isAlphaNum
     , isDigit, isOctDigit, isHexDigit
     , toCode, fromCode
@@ -7,10 +7,10 @@ module Char exposing
     )
 
 {-| Functions for working with characters. Character literals are enclosed in
-`'a'` pair of single quotes.
+`'a'` pair of single quotes, and represent a unicode code point.
 
 
-@docs Char
+@docs Char, unitLength
 
 
 ## ASCII Letters
@@ -35,7 +35,7 @@ module Char exposing
 
 import Basics exposing ((&&), (<=), (>=), (||), Bool, Int)
 import Gren.Kernel.Char
-
+import Gren.Kernel.String
 
 
 -- CHAR
@@ -80,6 +80,13 @@ many whitespace characters with different widths.
 type Char
     = Char -- NOTE: The compiler provides the real implementation.
 
+
+{-| A [Char](#Char) represents a single unicode code point, which again might be either one or two
+units (16-bit values). This function let's you know the number of units in a single character.
+-}
+unitLength : Char -> Int
+unitLength =
+    Gren.Kernel.String.unitLength
 
 
 -- CLASSIFICATION
