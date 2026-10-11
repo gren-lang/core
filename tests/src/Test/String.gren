@@ -34,10 +34,14 @@ tests =
                 Expect.equal Nothing (String.lastIndexOf "agent" "try and try and try again")
             , test "lastIndexOf code point" <| \ {} ->
                 Expect.equal (Just 12) (String.lastIndexOf "and" "try😎and try and try again")
+            , test "lastIndexOf matches behaviour of firstIndexOf regarding the empty string" <| \ {} ->
+                Expect.equal (Just 24) (String.lastIndexOf "" "try and try and try again")
             , test "firstIndexOfFrom" <| \ {} ->
                 Expect.equal (Just 12) (String.firstIndexOfFrom 8 "and" "try and try and try again")
             , test "indices" <| \{} ->
                 Expect.equal [ 0, 2 ] (String.indices "a" "aha")
+            , test "indices works same as unitIndices when there's no codepoints" <| \{} ->
+                Expect.equal (String.unitIndices "aa" "aaaa") (String.indices "aa" "aaaa")
             , test "indices code points" <| \{} ->
                 Expect.equal [ 0, 8 ] (String.indices "try" "try😎and try again")
             , test "indices empty" <| \{} ->

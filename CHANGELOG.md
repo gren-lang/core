@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Error handling in `Crypto` and `Stream` kernel modules
+- `String.indices` now doesn't report indices to substrings allready matched
+- `String.lastIndexOf` now returns the last code point index if passed `""` as the substring to match, to match the behaviour of `firstIndexOf`
 
 ## [7.5.0] - 2026-10-05
 

@@ -199,17 +199,28 @@ var _String_indexes = F2(function (sub, str) {
     return [];
   }
 
+  let subPoints = 0;
+  for (let _ of sub) {
+    subPoints++;
+  }
+
   let unitIdx = 0;
   let pointIdx = 0;
+  let skipPoints = 0;
   let result = [];
 
   for (let char of str) {
-    if (str.startsWith(sub, unitIdx)) {
+    if (skipPoints === 0 && str.startsWith(sub, unitIdx)) {
+      skipPoints += subPoints;
       result.push(pointIdx);
     }
 
     unitIdx += char.length;
     pointIdx += 1;
+
+    if (skipPoints > 0) {
+      skipPoints--;
+    }
   }
 
   return result;
