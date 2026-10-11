@@ -41,6 +41,25 @@ function _Bytes_toString(bytes) {
   }
 }
 
+var _Bytes_toHexString = F2(function (padding, inBytes) {
+  const bytes = new Uint8Array(
+    inBytes.buffer,
+    inBytes.byteOffset,
+    inBytes.byteLength,
+  );
+
+  let hex = [];
+  for (let i = 0; i < bytes.length; i++) {
+    let current = bytes[i];
+    let first = (current >>> 4).toString(16);
+    let second = (current & 0xf).toString(16);
+    hex.push(first + second);
+  }
+
+  const sep = padding ? " " : "";
+  return hex.join(sep);
+});
+
 function _Bytes_flatten(arrayOfBytes) {
   var requiredSize = 0;
   for (var i = 0; i < arrayOfBytes.length; i++) {

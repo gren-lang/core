@@ -9,6 +9,7 @@ module Bytes exposing
   --
   , fromString
   , toString
+  , toHexString
   --
   , flatten
   )
@@ -22,7 +23,7 @@ module Bytes exposing
 @docs Endianness, getHostEndianness
 
 ## Strings
-@docs fromString, toString
+@docs fromString, toString, toHexString
 
 ## Combine
 @docs flatten
@@ -189,6 +190,15 @@ valid UTF-8, `Nothing` will be returned.
 toString : Bytes -> Maybe String
 toString =
   Gren.Kernel.Bytes.toString
+
+
+{-| Convert any `Bytes` to a hex-encoded `String`. Setting `padding` to `True`
+will insert a space between every byte (every two hex characters) to make it
+easier for humans to read.
+-}
+toHexString : { padding : Bool } -> Bytes -> String
+toHexString { padding } bytes =
+  Gren.Kernel.Bytes.toHexString padding bytes
 
 
 -- COMBINE

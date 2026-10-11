@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `Crypto` now has support for `Ed25519` key operations
 - `Crypto` now has support for `Pbkdf2` key operations
+- `Bytes.toHexString` returns a hex-encoded string representation of `Bytes`
 
 ### Fixed
 

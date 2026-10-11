@@ -47,6 +47,18 @@ tests =
                 Expect.equal
                     (Just str)
                     (Bytes.toString (Bytes.fromString str))
+            , test "toHexString" <| \{} ->
+                Expect.equal
+                    "546865736520617265206d7920f09f988e204279746573"
+                    (Bytes.toHexString { padding = False } (Bytes.fromString "These are my 😎 Bytes"))
+            , test "toHexString padded" <| \{} ->
+                Expect.equal
+                    "54 68 65 73 65 20 61 72 65 20 6d 79 20 f0 9f 98 8e 20 42 79 74 65 73"
+                    (Bytes.toHexString { padding = True } (Bytes.fromString "These are my 😎 Bytes"))
+            , test "toHexString empty" <| \{} ->
+                Expect.equal
+                    ""
+                    (Bytes.toHexString { padding = False } Bytes.empty)
             ]
         , describe "Decode"
             [ test "Decode.bytes returns a new Bytes, it isn't a view of the original" <| \{} ->
