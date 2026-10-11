@@ -23,7 +23,6 @@ function _Scheduler_binding(callback) {
     $: __1_BINDING,
     __callback: callback,
     __kill: null,
-    __running: false,
   };
 }
 
@@ -99,6 +98,7 @@ function _Scheduler_rawSpawn(task) {
   var proc = {
     $: __2_PROCESS,
     __id: _Scheduler_guid++,
+    __parked: false,
     __root: task,
     __stack: null,
     __mailbox: [],
@@ -149,6 +149,7 @@ function _Scheduler_rawKill(proc) {
 type alias Process =
   { $ : tag
   , id : unique_id
+  , parked : Bool
   , root : Task
   , stack : null | { $: SUCCEED | FAIL, a: callback, b: stack }
   , mailbox : [msg]
@@ -171,7 +172,9 @@ function _Scheduler_enqueue(proc) {
     _Scheduler_queue = [];
 
     for (const proc of activeProcs) {
-      _Scheduler_step(proc);
+      if (!proc.__parked) {
+        _Scheduler_step(proc);
+      }
     }
   }
   _Scheduler_working = false;
@@ -190,17 +193,16 @@ function _Scheduler_step(proc) {
       proc.__root = proc.__stack.__callback(proc.__root.__value);
       proc.__stack = proc.__stack.__rest;
     } else if (rootTag === __1_BINDING) {
-      // root.__callback might not finish before another step run
-      // mark running bindings to avoid executing callback twice
-      if (proc.__root.__running) {
-        return;
-      }
-      proc.__root.__running = true;
+      // prevents new step while waiting for binding to complete
+      proc.__parked = true;
       proc.__root.__kill = proc.__root.__callback(function (newRoot) {
+        proc.__parked = false;
+
         // the process might have been killed, in which case root will be null
         if (proc.__root == null) {
           return;
         }
+
         proc.__root = newRoot;
         _Scheduler_enqueue(proc);
       });
