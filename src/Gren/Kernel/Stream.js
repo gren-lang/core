@@ -12,17 +12,8 @@ var _Stream_read = function (stream) {
     }
 
     const reader = stream.getReader();
-    reader
-      .read()
-      .catch((err) => {
-        reader.releaseLock();
-        callback(
-          __Scheduler_fail(
-            __Stream_Cancelled(_Stream_cancellationErrorString(err)),
-          ),
-        );
-      })
-      .then(({ done, value }) => {
+    reader.read().then(
+      ({ done, value }) => {
         reader.releaseLock();
 
         if (done) {
@@ -38,7 +29,16 @@ var _Stream_read = function (stream) {
         }
 
         callback(__Scheduler_succeed(value));
-      });
+      },
+      (err) => {
+        reader.releaseLock();
+        callback(
+          __Scheduler_fail(
+            __Stream_Cancelled(_Stream_cancellationErrorString(err)),
+          ),
+        );
+      },
+    );
   });
 };
 
@@ -71,16 +71,18 @@ var _Stream_write = F2(function (value, stream) {
         writer.releaseLock();
         return writePromise;
       })
-      .catch((err) => {
-        callback(
-          __Scheduler_fail(
-            __Stream_Cancelled(_Stream_cancellationErrorString(err)),
-          ),
-        );
-      })
-      .then(() => {
-        callback(__Scheduler_succeed(stream));
-      });
+      .then(
+        () => {
+          callback(__Scheduler_succeed(stream));
+        },
+        (err) => {
+          callback(
+            __Scheduler_fail(
+              __Stream_Cancelled(_Stream_cancellationErrorString(err)),
+            ),
+          );
+        },
+      );
   });
 });
 
@@ -135,20 +137,20 @@ var _Stream_closeWritable = function (stream) {
     }
 
     const writer = stream.getWriter();
-    writer
-      .close()
-      .then(() => {
+    writer.close().then(
+      () => {
         writer.releaseLock();
         callback(__Scheduler_succeed({}));
-      })
-      .catch((err) => {
+      },
+      (err) => {
         writer.releaseLock();
         callback(
           __Scheduler_fail(
             __Stream_Cancelled(_Stream_cancellationErrorString(err)),
           ),
         );
-      });
+      },
+    );
   });
 };
 
@@ -169,18 +171,18 @@ var _Stream_pipeTo = F2(function (writable, readable) {
       return callback(__Scheduler_fail(__Stream_Locked));
     }
 
-    readable
-      .pipeTo(writable)
-      .catch((err) => {
+    readable.pipeTo(writable).then(
+      () => {
+        callback(__Scheduler_succeed({}));
+      },
+      (err) => {
         callback(
           __Scheduler_fail(
             __Stream_Cancelled(_Stream_cancellationErrorString(err)),
           ),
         );
-      })
-      .then(() => {
-        callback(__Scheduler_succeed({}));
-      });
+      },
+    );
   });
 });
 

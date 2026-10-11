@@ -181,9 +181,8 @@ var _Crypto_generateRsaKey = F6(
         publicExponent: new Uint8Array(publicExponent),
         hash: hash,
       };
-      _Crypto_impl.subtle
-        .generateKey(algorithm, extractable, permissions)
-        .then(function (key) {
+      _Crypto_impl.subtle.generateKey(algorithm, extractable, permissions).then(
+        function (key) {
           return callback(
             __Scheduler_succeed({
               __$publicKey: __Crypto_PublicKey(
@@ -194,10 +193,11 @@ var _Crypto_generateRsaKey = F6(
               ),
             }),
           );
-        })
-        .catch(function (err) {
+        },
+        function (err) {
           throw "There was an unforseen error that occured when attempting to generate an RSA key. This shouldn't happen! Please file a ticket in the `gren-lang/core` Github repo (https://github.com/gren-lang/core)";
-        });
+        },
+      );
     });
   },
 );
@@ -209,14 +209,14 @@ var _Crypto_generateAesKey = F4(
         name: name,
         length: length,
       };
-      _Crypto_impl.subtle
-        .generateKey(algorithm, extractable, permissions)
-        .then(function (key) {
+      _Crypto_impl.subtle.generateKey(algorithm, extractable, permissions).then(
+        function (key) {
           return callback(__Scheduler_succeed(_Crypto_constructAesKey(key)));
-        })
-        .catch(function (err) {
+        },
+        function (err) {
           throw "There was an unforseen error that occured when attempting to generate an AES key. This shouldn't happen! Please file a ticket in the `gren-lang/core` Github repo (https://github.com/gren-lang/core)";
-        });
+        },
+      );
     });
   },
 );
@@ -228,9 +228,8 @@ var _Crypto_generateEcKey = F4(
         name: name,
         namedCurve: namedCurve,
       };
-      _Crypto_impl.subtle
-        .generateKey(algorithm, extractable, permissions)
-        .then(function (key) {
+      _Crypto_impl.subtle.generateKey(algorithm, extractable, permissions).then(
+        function (key) {
           return callback(
             __Scheduler_succeed({
               __$publicKey: __Crypto_PublicKey(
@@ -241,10 +240,11 @@ var _Crypto_generateEcKey = F4(
               ),
             }),
           );
-        })
-        .catch(function (err) {
+        },
+        function (err) {
           throw "There was an unforseen error that occured when attempting to generate an EC key. This shouldn't happen! Please file a ticket in the `gren-lang/core` Github repo (https://github.com/gren-lang/core)";
-        });
+        },
+      );
     });
   },
 );
@@ -254,9 +254,8 @@ var _Crypto_generateEd25519Key = F2(function (extractable, permissions) {
     var algorithm = {
       name: "Ed25519",
     };
-    _Crypto_impl.subtle
-      .generateKey(algorithm, extractable, permissions)
-      .then(function (key) {
+    _Crypto_impl.subtle.generateKey(algorithm, extractable, permissions).then(
+      function (key) {
         return callback(
           __Scheduler_succeed({
             __$publicKey: __Crypto_PublicKey(
@@ -267,12 +266,13 @@ var _Crypto_generateEd25519Key = F2(function (extractable, permissions) {
             ),
           }),
         );
-      })
-      .catch(function (err) {
+      },
+      function (err) {
         return callback(
           __Scheduler_fail(__Crypto_Ed25519KeyGenerationNotSupported),
         );
-      });
+      },
+    );
   });
 });
 
@@ -292,14 +292,14 @@ var _Crypto_generateHmacKey = F5(
           length: length,
         };
       }
-      _Crypto_impl.subtle
-        .generateKey(algorithm, extractable, permissions)
-        .then(function (key) {
+      _Crypto_impl.subtle.generateKey(algorithm, extractable, permissions).then(
+        function (key) {
           return callback(__Scheduler_succeed(_Crypto_constructHmacKey(key)));
-        })
-        .catch(function (err) {
+        },
+        function (err) {
           throw "There was an unforseen error that occured when attempting to generate an HMAC key. This shouldn't happen! Please file a ticket in the `gren-lang/core` Github repo (https://github.com/gren-lang/core)";
-        });
+        },
+      );
     });
   },
 );
@@ -308,9 +308,8 @@ var _Crypto_generateHmacKey = F5(
 
 var _Crypto_exportKey = F2(function (format, key) {
   return __Scheduler_binding(function (callback) {
-    _Crypto_impl.subtle
-      .exportKey(format, key)
-      .then(function (res) {
+    _Crypto_impl.subtle.exportKey(format, key).then(
+      function (res) {
         switch (format) {
           case "jwk":
             return callback(__Scheduler_succeed(res));
@@ -318,10 +317,11 @@ var _Crypto_exportKey = F2(function (format, key) {
           default:
             return callback(__Scheduler_succeed(new DataView(res)));
         }
-      })
-      .catch(function (err) {
+      },
+      function (err) {
         return callback(__Scheduler_fail(__Crypto_KeyNotExportable));
-      });
+      },
+    );
   });
 });
 
@@ -338,27 +338,29 @@ var _Crypto_importRsaKey = F7(
           extractable,
           keyUsages,
         )
-        .then(function (key) {
-          switch (wrapper) {
-            case "public":
-              return callback(
-                __Scheduler_succeed(
-                  __Crypto_PublicKey(_Crypto_constructRsaKey(key)),
-                ),
-              );
-            case "private":
-              return callback(
-                __Scheduler_succeed(
-                  __Crypto_PrivateKey(_Crypto_constructRsaKey(key)),
-                ),
-              );
-            default:
-              return callback(__Scheduler_fail(__Crypto_ImportRsaKeyError));
-          }
-        })
-        .catch(function (err) {
-          return callback(__Scheduler_fail(__Crypto_ImportRsaKeyError));
-        });
+        .then(
+          function (key) {
+            switch (wrapper) {
+              case "public":
+                return callback(
+                  __Scheduler_succeed(
+                    __Crypto_PublicKey(_Crypto_constructRsaKey(key)),
+                  ),
+                );
+              case "private":
+                return callback(
+                  __Scheduler_succeed(
+                    __Crypto_PrivateKey(_Crypto_constructRsaKey(key)),
+                  ),
+                );
+              default:
+                return callback(__Scheduler_fail(__Crypto_ImportRsaKeyError));
+            }
+          },
+          function (err) {
+            return callback(__Scheduler_fail(__Crypto_ImportRsaKeyError));
+          },
+        );
     });
   },
 );
@@ -368,12 +370,14 @@ var _Crypto_importAesKey = F5(
     return __Scheduler_binding(function (callback) {
       _Crypto_impl.subtle
         .importKey(format, keyData, { name: algorithm }, extractable, keyUsages)
-        .then(function (key) {
-          return callback(__Scheduler_succeed(_Crypto_constructAesKey(key)));
-        })
-        .catch(function (err) {
-          return callback(__Scheduler_fail(__Crypto_ImportAesKeyError));
-        });
+        .then(
+          function (key) {
+            return callback(__Scheduler_succeed(_Crypto_constructAesKey(key)));
+          },
+          function (err) {
+            return callback(__Scheduler_fail(__Crypto_ImportAesKeyError));
+          },
+        );
     });
   },
 );
@@ -400,27 +404,29 @@ var _Crypto_importEcKey = F7(
           extractable,
           keyUsages,
         )
-        .then(function (key) {
-          switch (wrapper) {
-            case "public":
-              return callback(
-                __Scheduler_succeed(
-                  __Crypto_PublicKey(_Crypto_constructEcKey(key)),
-                ),
-              );
-            case "private":
-              return callback(
-                __Scheduler_succeed(
-                  __Crypto_PrivateKey(_Crypto_constructEcKey(key)),
-                ),
-              );
-            default:
-              return callback(__Scheduler_fail(__Crypto_ImportEcKeyError));
-          }
-        })
-        .catch(function (err) {
-          return callback(__Scheduler_fail(__Crypto_ImportEcKeyError));
-        });
+        .then(
+          function (key) {
+            switch (wrapper) {
+              case "public":
+                return callback(
+                  __Scheduler_succeed(
+                    __Crypto_PublicKey(_Crypto_constructEcKey(key)),
+                  ),
+                );
+              case "private":
+                return callback(
+                  __Scheduler_succeed(
+                    __Crypto_PrivateKey(_Crypto_constructEcKey(key)),
+                  ),
+                );
+              default:
+                return callback(__Scheduler_fail(__Crypto_ImportEcKeyError));
+            }
+          },
+          function (err) {
+            return callback(__Scheduler_fail(__Crypto_ImportEcKeyError));
+          },
+        );
     });
   },
 );
@@ -430,27 +436,31 @@ var _Crypto_importEd25519Key = F5(
     return __Scheduler_binding(function (callback) {
       _Crypto_impl.subtle
         .importKey(format, keyData, { name: "Ed25519" }, extractable, keyUsages)
-        .then(function (key) {
-          switch (wrapper) {
-            case "public":
-              return callback(
-                __Scheduler_succeed(
-                  __Crypto_PublicKey(_Crypto_constructEd25519Key(key)),
-                ),
-              );
-            case "private":
-              return callback(
-                __Scheduler_succeed(
-                  __Crypto_PrivateKey(_Crypto_constructEd25519Key(key)),
-                ),
-              );
-            default:
-              return callback(__Scheduler_fail(__Crypto_ImportEd25519KeyError));
-          }
-        })
-        .catch(function (err) {
-          return callback(__Scheduler_fail(__Crypto_ImportEd25519KeyError));
-        });
+        .then(
+          function (key) {
+            switch (wrapper) {
+              case "public":
+                return callback(
+                  __Scheduler_succeed(
+                    __Crypto_PublicKey(_Crypto_constructEd25519Key(key)),
+                  ),
+                );
+              case "private":
+                return callback(
+                  __Scheduler_succeed(
+                    __Crypto_PrivateKey(_Crypto_constructEd25519Key(key)),
+                  ),
+                );
+              default:
+                return callback(
+                  __Scheduler_fail(__Crypto_ImportEd25519KeyError),
+                );
+            }
+          },
+          function (err) {
+            return callback(__Scheduler_fail(__Crypto_ImportEd25519KeyError));
+          },
+        );
     });
   },
 );
@@ -481,12 +491,14 @@ var _Crypto_importHmacKey = F7(
       }
       _Crypto_impl.subtle
         .importKey(format, keyData, algorithm, extractable, keyUsages)
-        .then(function (key) {
-          return callback(__Scheduler_succeed(_Crypto_constructHmacKey(key)));
-        })
-        .catch(function (err) {
-          return callback(__Scheduler_fail(__Crypto_ImportHmacKeyError));
-        });
+        .then(
+          function (key) {
+            return callback(__Scheduler_succeed(_Crypto_constructHmacKey(key)));
+          },
+          function (err) {
+            return callback(__Scheduler_fail(__Crypto_ImportHmacKeyError));
+          },
+        );
     });
   },
 );
@@ -506,14 +518,14 @@ var _Crypto_encryptWithRsaOaep = F3(function (label, key, bytes) {
         label: label,
       };
     }
-    _Crypto_impl.subtle
-      .encrypt(algorithm, key, bytes)
-      .then(function (res) {
+    _Crypto_impl.subtle.encrypt(algorithm, key, bytes).then(
+      function (res) {
         return callback(__Scheduler_succeed(new DataView(res)));
-      })
-      .catch(function (err) {
+      },
+      function (err) {
         throw "There was an unforseen error that occured when attempting encrypt some bytes with RSA-OAEP. This shouldn't happen! Please file a ticket in the `gren-lang/core` Github repo (https://github.com/gren-lang/core)";
-      });
+      },
+    );
   });
 });
 
@@ -524,14 +536,14 @@ var _Crypto_encryptWithAesCtr = F4(function (counter, length, key, bytes) {
       counter: counter,
       length: length,
     };
-    _Crypto_impl.subtle
-      .encrypt(algorithm, key, bytes)
-      .then(function (res) {
+    _Crypto_impl.subtle.encrypt(algorithm, key, bytes).then(
+      function (res) {
         return callback(__Scheduler_succeed(new DataView(res)));
-      })
-      .catch(function (err) {
+      },
+      function (err) {
         return callback(__Scheduler_fail(__Crypto_AesCtrEncryptionError));
-      });
+      },
+    );
   });
 });
 
@@ -541,14 +553,14 @@ var _Crypto_encryptWithAesCbc = F3(function (iv, key, bytes) {
       name: "AES-CBC",
       iv: iv,
     };
-    _Crypto_impl.subtle
-      .encrypt(algorithm, key, bytes)
-      .then(function (res) {
+    _Crypto_impl.subtle.encrypt(algorithm, key, bytes).then(
+      function (res) {
         return callback(__Scheduler_succeed(new DataView(res)));
-      })
-      .catch(function (err) {
+      },
+      function (err) {
         return callback(__Scheduler_fail(__Crypto_AesCbcEncryptionError));
-      });
+      },
+    );
   });
 });
 
@@ -565,14 +577,14 @@ var _Crypto_encryptWithAesGcm = F5(
       if (tagLength != "") {
         algorithm.tagLength = tagLength;
       }
-      _Crypto_impl.subtle
-        .encrypt(algorithm, key, bytes)
-        .then(function (res) {
+      _Crypto_impl.subtle.encrypt(algorithm, key, bytes).then(
+        function (res) {
           return callback(__Scheduler_succeed(new DataView(res)));
-        })
-        .catch(function (err) {
+        },
+        function (err) {
           return callback(__Scheduler_fail(__Crypto_AesGcmEncryptionError));
-        });
+        },
+      );
     });
   },
 );
@@ -592,14 +604,14 @@ var _Crypto_decryptWithRsaOaep = F3(function (label, key, bytes) {
         label: label,
       };
     }
-    _Crypto_impl.subtle
-      .decrypt(algorithm, key, bytes)
-      .then(function (res) {
+    _Crypto_impl.subtle.decrypt(algorithm, key, bytes).then(
+      function (res) {
         return callback(__Scheduler_succeed(new DataView(res)));
-      })
-      .catch(function (err) {
+      },
+      function (err) {
         return callback(__Scheduler_fail(__Crypto_RsaOaepDecryptionError));
-      });
+      },
+    );
   });
 });
 
@@ -610,14 +622,14 @@ var _Crypto_decryptWithAesCtr = F4(function (counter, length, key, bytes) {
       counter: counter,
       length: length,
     };
-    _Crypto_impl.subtle
-      .decrypt(algorithm, key, bytes)
-      .then(function (res) {
+    _Crypto_impl.subtle.decrypt(algorithm, key, bytes).then(
+      function (res) {
         return callback(__Scheduler_succeed(new DataView(res)));
-      })
-      .catch(function (err) {
+      },
+      function (err) {
         return callback(__Scheduler_fail(__Crypto_AesCtrDecryptionError));
-      });
+      },
+    );
   });
 });
 
@@ -627,14 +639,14 @@ var _Crypto_decryptWithAesCbc = F3(function (iv, key, bytes) {
       name: "AES-CBC",
       iv: iv,
     };
-    _Crypto_impl.subtle
-      .decrypt(algorithm, key, bytes)
-      .then(function (res) {
+    _Crypto_impl.subtle.decrypt(algorithm, key, bytes).then(
+      function (res) {
         return callback(__Scheduler_succeed(new DataView(res)));
-      })
-      .catch(function (err) {
+      },
+      function (err) {
         return callback(__Scheduler_fail(__Crypto_AesCbcDecryptionError));
-      });
+      },
+    );
   });
 });
 
@@ -659,12 +671,14 @@ var _Crypto_decryptWithAesGcm = F5(
           key,
           new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength),
         )
-        .then(function (res) {
-          return callback(__Scheduler_succeed(new DataView(res)));
-        })
-        .catch(function (err) {
-          return callback(__Scheduler_fail(__Crypto_AesGcmDecryptionError));
-        });
+        .then(
+          function (res) {
+            return callback(__Scheduler_succeed(new DataView(res)));
+          },
+          function (err) {
+            return callback(__Scheduler_fail(__Crypto_AesGcmDecryptionError));
+          },
+        );
     });
   },
 );
@@ -676,14 +690,14 @@ var _Crypto_signWithRsaSsaPkcs1V1_5 = F2(function (key, bytes) {
     var algorithm = {
       name: "RSASSA-PKCS1-v1_5",
     };
-    _Crypto_impl.subtle
-      .sign(algorithm, key, bytes)
-      .then(function (res) {
+    _Crypto_impl.subtle.sign(algorithm, key, bytes).then(
+      function (res) {
         return callback(__Scheduler_succeed(new DataView(res)));
-      })
-      .catch(function (err) {
+      },
+      function (err) {
         throw "There was an unforseen error that occured when attempting sign some bytes with RSASSA-PKCS1-v1_5. This shouldn't happen! Please file a ticket in the `gren-lang/core` Github repo (https://github.com/gren-lang/core)";
-      });
+      },
+    );
   });
 });
 
@@ -693,14 +707,14 @@ var _Crypto_signWithRsaPss = F3(function (saltLength, key, bytes) {
       name: "RSA-PSS",
       saltLength: saltLength,
     };
-    _Crypto_impl.subtle
-      .sign(algorithm, key, bytes)
-      .then(function (res) {
+    _Crypto_impl.subtle.sign(algorithm, key, bytes).then(
+      function (res) {
         return callback(__Scheduler_succeed(new DataView(res)));
-      })
-      .catch(function (err) {
+      },
+      function (err) {
         return callback(__Scheduler_fail(__Crypto_RsaPssSigningError));
-      });
+      },
+    );
   });
 });
 
@@ -710,14 +724,14 @@ var _Crypto_signWithEcdsa = F3(function (hash, key, bytes) {
       name: "ECDSA",
       hash: hash,
     };
-    _Crypto_impl.subtle
-      .sign(algorithm, key, bytes)
-      .then(function (res) {
+    _Crypto_impl.subtle.sign(algorithm, key, bytes).then(
+      function (res) {
         return callback(__Scheduler_succeed(new DataView(res)));
-      })
-      .catch(function (err) {
+      },
+      function (err) {
         throw "There was an unforseen error that occured when attempting to sign using the ECDSA algorithm. This shouldn't happen! Please file a ticket in the `gren-lang/core` Github repo (https://github.com/gren-lang/core)";
-      });
+      },
+    );
   });
 });
 
@@ -726,14 +740,14 @@ var _Crypto_signWithEd25519 = F2(function (key, bytes) {
     var algorithm = {
       name: "Ed25519",
     };
-    _Crypto_impl.subtle
-      .sign(algorithm, key, bytes)
-      .then(function (res) {
+    _Crypto_impl.subtle.sign(algorithm, key, bytes).then(
+      function (res) {
         return callback(__Scheduler_succeed(new DataView(res)));
-      })
-      .catch(function (err) {
+      },
+      function (err) {
         throw "There was an unforseen error that occured when attempting to sign using the Ed25519 algorithm. This shouldn't happen! Please file a ticket in the `gren-lang/core` Github repo (https://github.com/gren-lang/core)";
-      });
+      },
+    );
   });
 });
 
@@ -742,14 +756,14 @@ var _Crypto_signWithHmac = F2(function (key, bytes) {
     var algorithm = {
       name: "HMAC",
     };
-    _Crypto_impl.subtle
-      .sign(algorithm, key, bytes)
-      .then(function (res) {
+    _Crypto_impl.subtle.sign(algorithm, key, bytes).then(
+      function (res) {
         return callback(__Scheduler_succeed(new DataView(res)));
-      })
-      .catch(function (err) {
+      },
+      function (err) {
         throw "There was an unforseen error that occured when attempting to sign with the HMAC algorithm. This shouldn't happen! Please file a ticket in the `gren-lang/core` Github repo (https://github.com/gren-lang/core)";
-      });
+      },
+    );
   });
 });
 
@@ -760,17 +774,17 @@ var _Crypto_verifyWithRsaSsaPkcs1V1_5 = F3(function (key, signature, bytes) {
     var algorithm = {
       name: "RSASSA-PKCS1-v1_5",
     };
-    _Crypto_impl.subtle
-      .verify(algorithm, key, signature, bytes)
-      .then(function (res) {
+    _Crypto_impl.subtle.verify(algorithm, key, signature, bytes).then(
+      function (res) {
         if (res) {
           return callback(__Scheduler_succeed(bytes));
         }
         return callback(__Scheduler_fail());
-      })
-      .catch(function (err) {
+      },
+      function (err) {
         throw "There was an unforseen error that occured when attempting to verify with the RSA-SSA-PKCS v1.5 algorithm. This shouldn't happen! Please file a ticket in the `gren-lang/core` Github repo (https://github.com/gren-lang/core)";
-      });
+      },
+    );
   });
 });
 
@@ -780,17 +794,17 @@ var _Crypto_verifyWithRsaPss = F4(function (saltLength, key, signature, bytes) {
       name: "RSA-PSS",
       saltLength: saltLength,
     };
-    _Crypto_impl.subtle
-      .verify(algorithm, key, signature, bytes)
-      .then(function (res) {
+    _Crypto_impl.subtle.verify(algorithm, key, signature, bytes).then(
+      function (res) {
         if (res) {
           return callback(__Scheduler_succeed(bytes));
         }
         return callback(__Scheduler_fail());
-      })
-      .catch(function (err) {
+      },
+      function (err) {
         throw "There was an unforseen error that occured when attempting to verify with the RSA-PSS algorithm. This shouldn't happen! Please file a ticket in the `gren-lang/core` Github repo (https://github.com/gren-lang/core)";
-      });
+      },
+    );
   });
 });
 
@@ -800,17 +814,17 @@ var _Crypto_verifyWithEcdsa = F4(function (hash, key, signature, bytes) {
       name: "ECDSA",
       hash: hash,
     };
-    _Crypto_impl.subtle
-      .verify(algorithm, key, signature, bytes)
-      .then(function (res) {
+    _Crypto_impl.subtle.verify(algorithm, key, signature, bytes).then(
+      function (res) {
         if (res) {
           return callback(__Scheduler_succeed(bytes));
         }
         return callback(__Scheduler_fail());
-      })
-      .catch(function (err) {
+      },
+      function (err) {
         throw "There was an unforseen error that occured when attempting to verify with the ECDSA algorithm. This shouldn't happen! Please file a ticket in the `gren-lang/core` Github repo (https://github.com/gren-lang/core)";
-      });
+      },
+    );
   });
 });
 
@@ -819,17 +833,17 @@ var _Crypto_verifyWithEd25519 = F3(function (key, signature, bytes) {
     var algorithm = {
       name: "Ed25519",
     };
-    _Crypto_impl.subtle
-      .verify(algorithm, key, signature, bytes)
-      .then(function (res) {
+    _Crypto_impl.subtle.verify(algorithm, key, signature, bytes).then(
+      function (res) {
         if (res) {
           return callback(__Scheduler_succeed(bytes));
         }
         return callback(__Scheduler_fail());
-      })
-      .catch(function (err) {
+      },
+      function (err) {
         throw "There was an unforseen error that occured when attempting to verify with the Ed25519 algorithm. This shouldn't happen! Please file a ticket in the `gren-lang/core` Github repo (https://github.com/gren-lang/core)";
-      });
+      },
+    );
   });
 });
 
@@ -838,17 +852,17 @@ var _Crypto_verifyWithHmac = F3(function (key, signature, bytes) {
     var algorithm = {
       name: "HMAC",
     };
-    _Crypto_impl.subtle
-      .verify(algorithm, key, signature, bytes)
-      .then(function (res) {
+    _Crypto_impl.subtle.verify(algorithm, key, signature, bytes).then(
+      function (res) {
         if (res) {
           return callback(__Scheduler_succeed(bytes));
         }
         return callback(__Scheduler_fail());
-      })
-      .catch(function (err) {
+      },
+      function (err) {
         throw "There was an unforseen error that occured when attempting to verify with the HMAC algorithm. This shouldn't happen! Please file a ticket in the `gren-lang/core` Github repo (https://github.com/gren-lang/core)";
-      });
+      },
+    );
   });
 });
 
@@ -858,19 +872,21 @@ var _Crypto_importPbkdf2Key = F2(function (keyData, keyUsages) {
   return __Scheduler_binding(function (callback) {
     _Crypto_impl.subtle
       .importKey("raw", keyData, { name: "PBKDF2" }, false, keyUsages)
-      .then(function (key) {
-        return callback(
-          __Scheduler_succeed(
-            __Crypto_Key({
-              __$key: key,
-              __$data: {},
-            }),
-          ),
-        );
-      })
-      .catch(function (err) {
-        return callback(__Scheduler_fail(__Crypto_ImportPbkdf2KeyError));
-      });
+      .then(
+        function (key) {
+          return callback(
+            __Scheduler_succeed(
+              __Crypto_Key({
+                __$key: key,
+                __$data: {},
+              }),
+            ),
+          );
+        },
+        function (err) {
+          return callback(__Scheduler_fail(__Crypto_ImportPbkdf2KeyError));
+        },
+      );
   });
 });
 
@@ -883,14 +899,14 @@ var _Crypto_deriveBitsWithPbkdf2 = F5(
         iterations: iterations,
         hash: hash,
       };
-      _Crypto_impl.subtle
-        .deriveBits(algorithm, key, length)
-        .then(function (res) {
+      _Crypto_impl.subtle.deriveBits(algorithm, key, length).then(
+        function (res) {
           return callback(__Scheduler_succeed(new DataView(res)));
-        })
-        .catch(function (err) {
+        },
+        function (err) {
           return callback(__Scheduler_fail(__Crypto_Pbkdf2DeriveBitsError));
-        });
+        },
+      );
     });
   },
 );
@@ -899,13 +915,13 @@ var _Crypto_deriveBitsWithPbkdf2 = F5(
 
 var _Crypto_digest = F2(function (algorithm, bytes) {
   return __Scheduler_binding(function (callback) {
-    _Crypto_impl.subtle
-      .digest(algorithm, bytes)
-      .then(function (res) {
+    _Crypto_impl.subtle.digest(algorithm, bytes).then(
+      function (res) {
         return callback(__Scheduler_succeed(new DataView(res)));
-      })
-      .catch(function (err) {
+      },
+      function (err) {
         throw "There was an unforseen error that occured when attempting to digest some bytes. This shouldn't happen! Please file a ticket in the `gren-lang/core` Github repo (https://github.com/gren-lang/core)";
-      });
+      },
+    );
   });
 });
