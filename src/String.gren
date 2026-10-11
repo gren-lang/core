@@ -88,7 +88,7 @@ import Math exposing (floor, ceiling)
 import Bitwise
 import Char exposing (Char)
 import Gren.Kernel.String
-import Maybe exposing (Maybe)
+import Maybe exposing (Maybe(..))
 import Result exposing (Result)
 
 
@@ -432,8 +432,15 @@ firstIndexOfFrom =
 -}
 lastIndexOf : String -> String -> Maybe Int
 lastIndexOf sub str =
-    indices sub str
-        |> Array.last
+    if sub == "" then
+        if str == "" then
+            Just 0
+        else
+            Just (count str - 1)
+
+    else
+        indices sub str
+            |> Array.last
 
 
 {-| Get all of the indices for a substring in another string. If the substring
