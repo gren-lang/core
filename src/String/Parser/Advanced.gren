@@ -996,7 +996,7 @@ findSubString smallString offset row col bigString =
         relevantNewlines =
           String.indices "\n" slice
       in
-      { newOffset = offset + idx
+      { newOffset = idx
       , newRow = row + Array.length relevantNewlines
       , newCol =
         relevantNewlines

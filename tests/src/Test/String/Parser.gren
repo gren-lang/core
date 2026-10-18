@@ -346,6 +346,17 @@ tests =
                     (chompUntil "b")
                     { row = 1, col = 2 }
 
+            , test "chompUntil after token" <| \{} ->
+                expectPos
+                    "a  \ny"
+                    ( succeed {}
+                        |> skip (token "a")
+                        |> skip (chompUntil "\n")
+                        |> skip (token "\n")
+                        |> skip (token "y")
+                    )
+                    { row = 2, col = 2 }
+
             , test "chompUntilEndOr with match" <| \{} ->
                 expectPos
                     "a\nbcX"
@@ -357,6 +368,17 @@ tests =
                     "a\nbc"
                     (chompUntilEndOr "X")
                     { row = 2, col = 3 }
+
+            , test "chompUntilEndOr after token" <| \{} ->
+                expectPos
+                    "a  \ny"
+                    ( succeed {}
+                        |> skip (token "a")
+                        |> skip (chompUntilEndOr "\n")
+                        |> skip (token "\n")
+                        |> skip (token "y")
+                    )
+                    { row = 2, col = 2 }
 
             , test "chompUntilEndOr with emoji" <| \{} ->
                 expectPos
