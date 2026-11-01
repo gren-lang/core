@@ -13,6 +13,7 @@ tests =
     describe "Json decode"
         [ intTests
         , customTests
+        , indexTests
         , andMapTests
         ]
 
@@ -86,6 +87,33 @@ customTests =
                                 ++ Json.errorToString message
     in
     test "customDecoder preserves user error messages" <| \{} -> assertion
+
+indexTests : Test
+indexTests =
+    let
+        jsonString =
+            "[ 1, 2, 3 ]"
+
+        expectedErrorMessage =
+            "a NON-NEGATIVE index. Need index -1 but indices start at 0"
+
+        assertion =
+            when Json.decodeString (Json.index -1 Json.int) jsonString is
+                Ok _ ->
+                    Expect.fail "expected `index -1` to produce a value of type Err, but got Ok"
+
+                Err message ->
+                    if String.contains expectedErrorMessage (Json.errorToString message) then
+                        Expect.pass
+
+                    else
+                        Expect.fail <|
+                            "expected `index -1` to report '"
+                                ++ expectedErrorMessage
+                                ++ "', but instead got: "
+                                ++ Json.errorToString message
+    in
+    test "index rejects negative index" <| \{} -> assertion
 
 -- Used for testing andMap
 type alias TestRecord1 =
