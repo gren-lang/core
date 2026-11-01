@@ -209,6 +209,14 @@ function _Json_runHelp(decoder, value) {
       if (!_Json_isArray(value)) {
         return _Json_expecting("an ARRAY", value);
       }
+      if (index < 0) {
+        return _Json_expecting(
+          "a NON-NEGATIVE index. Need index " +
+            index +
+            " but indices start at 0",
+          value,
+        );
+      }
       if (index >= value.length) {
         return _Json_expecting(
           "a LONGER array. Need index " +
